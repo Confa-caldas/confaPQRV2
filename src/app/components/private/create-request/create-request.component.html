@@ -1,0 +1,157 @@
+<p-card class="container">
+  <div class="container-content">
+    <form [formGroup]="optionsRequest">
+      <p-card class="container-card">
+        <h4 class="card-form-banner-title">¡Bienvenidos!</h4>
+
+        <div [ngStyle]="{ 'text-align': 'left' }" class="container-card_text">
+          A través de este formulario, que reemplaza los correos electrónicos,
+          <b>podrás hacer tus solicitudes</b> relacionadas con los subsidios de cuota monetaria,
+          paquete y calzado escolar, computadores, además de gestiones como aportes y afiliaciones.
+        </div>
+
+        <br />
+
+        <div [ngStyle]="{ 'text-align': 'left' }" class="container-card_text">
+          <b>Si eres empresa, podrás solicitar:</b> afiliación de tu empresa, novedades o
+          actualización de información, certificados empresa, devoluciones, cartera y traslados.
+        </div>
+
+        <br />
+
+        <div [ngStyle]="{ 'text-align': 'left' }" class="container-card_text">
+          <b
+            >Si eres trabajador dependiente o beneficiario, trabajador independiente, pensionado o
+            particular, podrás solicitar:</b
+          >
+          afiliación como independiente, afiliación pensionado, afiliación trabajadores y
+          beneficiarios, novedades o actualización de información de cualquier índole o
+          certificados.
+        </div>
+
+        <br />
+
+        <div [ngStyle]="{ 'text-align': 'left' }" class="container-card_text">
+          <b
+            >Recuerda que a través de
+            <a
+              href="https://app.confa.co:8376/#/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              style="color: #07c1ff"
+              >Mi perfil</a
+            ></b
+          >
+          , podrás descargar tu certificado de afiliación, el carné digital de afiliación, cambiar
+          contraseña o actualizar tu dirección.
+        </div>
+
+        <br />
+
+        <div [ngStyle]="{ 'text-align': 'left' }" class="container-card_text">
+          Ten presente que para resolver tu solicitud de manera correcta, deberás relacionar en la
+          descripción los nombres completos y documentos de identidad de las personas a cargo
+          relacionadas con el requerimiento, así mismo, deberás describir detalladamente lo que
+          requieres de Aportes y Subsidios.
+        </div>
+
+        <div class="container-card-select">
+          <div class="container-select">
+            <div class="container-select-item">
+              <label class="container-select-placeholder">Tipo del solicitante*</label>
+              <p-dropdown
+                (onChange)="getRequest()"
+                formControlName="applicant_id"
+                [style]="{ 'border-radius': '20px' }"
+                class="container-select-options"
+                [options]="applicantList"
+                optionLabel="applicant_type_name"
+                (onChange)="changeRequest()"
+                placeholder="*Tipo del solicitante"></p-dropdown>
+
+              <label class="container-select-invalid">
+                {{
+                  optionsRequest.get('applicant_id')?.hasError('required') &&
+                  optionsRequest.get('applicant_id')?.touched
+                    ? 'Seleccione un tipo de solicitante'
+                    : ''
+                }}</label
+              >
+            </div>
+            <div class="container-select-item">
+              <label class="container-select-placeholder">Tipo de solicitud*</label>
+              <p-dropdown
+                formControlName="request_id"
+                [style]="{ 'border-radius': '20px' }"
+                class="container-select-options"
+                [options]="requestList"
+                emptyMessage="Seleccione un tipo de solicitante"
+                optionLabel="request_type_name"
+                placeholder="*Tú solicitud esta asociada con"
+                [panelStyle]="{ 'max-height': 'none' }"></p-dropdown>
+
+              <label class="container-select-invalid">
+                {{
+                  optionsRequest.get('request_id')?.hasError('required') &&
+                  optionsRequest.get('request_id')?.touched
+                    ? 'Seleccione un tipo de solicitud'
+                    : ''
+                }}</label
+              >
+            </div>
+          </div>
+        </div>
+      </p-card>
+      <!-- <p-card *ngIf="!optionsRequest.get('request_id')?.invalid" class="container-card">
+      <ng-template pTemplate="header">
+        <h3 class="container-card_header">
+          Conoce algunas de las recomendaciones antes de continuar
+        </h3>
+      </ng-template>
+      <div class="container-card_textRecomendations">
+        {{ optionsRequest.get('request_id')?.value?.request_type_description }}
+      </div>
+    </p-card> -->
+
+      <div class="container-checkbox" *ngIf="applicantId1()">
+        <p-checkbox formControlName="authorize" [value]="true" [binary]="true"></p-checkbox>
+        <p class="container-checkbox_a">
+          Si, autorizo el
+          <a class="container-checkbox_link" (click)="openDataTreatment()" style="color: #07c1ff"
+            >tratamiento de datos personales</a
+          >
+        </p>
+      </div>
+      <p-button
+        [style]="{ 'border-radius': '20px', 'background-color': '#00aeef', width: '275px' }"
+        label="Continuar"
+        [disabled]="!optionsRequest.valid"
+        (onClick)="sendOptions()"
+        class="container-button"></p-button>
+    </form>
+  </div>
+  <!-- <div class="centered-box">
+    <div class="content">
+      <img
+        src="../../../../assets/images/admiracion.svg"
+        alt="Descripción de la imagen"
+        class="small-image" />
+      <p>
+        Para preguntas, quejas, reclamos, sugerencias o felicitaciones, ingresa a este enlace
+        <a
+          href="https://t.almeraim.com/form?data=eyJhcGlrZXkiOiJwcXJzZiIsImNvbm5lY3Rpb24iOiJzZ2ljb25mYSIsImVuZHBvaW50IjoiaHR0cHMlM0ElMkYlMkZzZ2kuYWxtZXJhaW0uY29tJTJGc2dpJTJGYXBpJTJGdjIlMkYiLCJjb2RlIjoicHFyc2YifQ=="
+          target="_blank"
+          rel="noopener noreferrer"
+          style="color: #07c1ff"
+          >PQRS</a
+        >
+      </p>
+    </div> 
+  </div> -->
+</p-card>
+<p-toast></p-toast>
+<app-modal-data-treatment
+  *ngIf="visibleDialogDataT"
+  [visible]="visibleDialogDataT"
+  (setRta)="closeDialogDataT($event)"
+  (setRtaParameter)="setParameterDataT($event)"></app-modal-data-treatment>

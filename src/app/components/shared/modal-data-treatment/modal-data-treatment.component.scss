@@ -1,0 +1,300 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+/* Estilos para el overlay del modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Asegura que el modal esté por encima de otros elementos */
+}
+
+/* Estilos para el contenido del modal */
+.modal-content {
+  background-color: $color-white;
+  padding: 20px;
+  border-radius: 5px;
+  width: 60%; 
+  box-sizing: border-box;
+  overflow-y: auto;
+  max-height: 90vh;
+
+  @media (max-width: 1360px) {
+    width: 90%;
+    padding: 15px;
+  }
+
+  @media (max-width: 1024px) {
+    width: 90%;
+    padding: 10px;
+  }
+
+  @media (max-width: 480px) {
+    width: 95% !important;
+    padding: 2%;
+  }
+}
+
+/* Estilos para etiquetas de error */
+.error-label {
+  color: $color-red;
+  font-weight: 500;
+  text-align: center;
+  font-size: 14px;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
+}
+
+/* Estilos para elementos inválidos */
+.invalid {
+  color: $color-red;
+  font-size: small;
+
+  @media (max-width: 480px) {
+    font-size: x-small;
+  }
+}
+
+/* Estilos para botones más */
+.button-more {
+  background-color: transparent;
+  border: none;
+  text-decoration: underline;
+}
+
+/* Estilos para el botón de cerrar */
+.button-close {
+  background-color: $color-gray;
+  color: white;
+  width: 275px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+
+  @media (max-width: 480px) {
+    width: 100%;
+    font-size: 14px;
+  }
+}
+
+.button-close-plus {
+  font-size: 15px;
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+  }
+}
+
+/* Estilos para el texto dentro del contenedor */
+.container-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: justify;
+  font-size: small;
+
+  @media (max-width: 480px) {
+    font-size: x-small;
+  }
+}
+
+/* Estilos para el contenedor de checkbox */
+.container-checkbox {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+  }
+}
+
+/* Estilos para el enlace del contenedor */
+.container-link {
+  font-weight: 700;
+  color: $color-tab-blue;
+
+  @media (max-width: 480px) {
+    font-size: small;
+  }
+}
+
+/* Estilos para el botón dentro del contenedor */
+.container-button {
+  display: flex;
+  justify-content: center;
+  color: $color-blue;
+
+  @media (max-width: 480px) {
+    width: 100%;
+    justify-content: space-around;
+  }
+}
+
+/* Estilos para el texto justificado */
+.text-justify {
+  text-align: justify;
+}
+
+/* Estilos para las imágenes en el modal de políticas */
+div.modal-policies div.card-politica div img {
+  width: 80px;
+
+  @media (max-width: 480px) {
+    width: 60px;
+  }
+}
+
+div.modal-policies div.card-politica-body div span {
+  font-size: 17px;
+  color: #03a9f4;
+  font-weight: bold;
+
+  @media (max-width: 480px) {
+    font-size: 11px;
+  }
+}
+
+div.modal-policies div.card-politica-body div h4 {
+  font-weight: bold;
+  font-size: 30px;
+  width: 80%;
+  line-height: normal;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 16px;
+  }
+}
+
+div.modal-policies div.card-politica-body div p {
+  font-size: 18px;
+  text-align: justify;
+  line-height: 18px;
+
+  @media (max-width: 768px) {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+    line-height: 16px;
+  }
+}
+
+#imag-h4 {
+  align-items: center;
+}
+
+div.modal-policies div.modal-body img {
+  max-width: 160px;
+  max-height: 77.83px;
+  font-weight: bold;
+  margin-bottom: 15px;
+
+  @media (max-width: 480px) {
+    max-width: 120px;
+    max-height: 58px;
+  }
+}
+
+div.modal-policies div.modal-body h4 {
+  color: #858585;
+  margin-left: 20px;
+  font-size: 25px;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+    margin-left: -12px;
+  }
+}
+
+div.modal-policies div.modal-body p,
+div.modal-policies div.modal-body ul li {
+  font-size: 15px;
+  text-align: justify;
+  line-height: 18px;
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+    line-height: 16px;
+  }
+}
+
+div.modal-policies div.modal-body img {
+  max-width: 160px;
+  max-height: 77.83px;
+  font-weight: 700;
+
+  @media (max-width: 1024px) {
+    max-width: 120px;
+    max-height: 58px;
+    font-size: 15px;
+  }
+
+  @media (max-width: 480px) {
+    max-width: 120px;
+    max-height: 58px;
+    font-size: 15px;
+  }
+}
+
+/* Estilos para el botón de cerrar */
+.close {
+  background: none;
+  border: none;
+  font-size: 45px;
+  color: #000;
+  cursor: pointer;
+  margin-top: -100px;
+  font-weight: bold;
+
+  @media (max-width: 768px) {
+    font-size: 35px;
+    margin-top: -205px;
+    margin-right: -9px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 30px;
+    margin-top: -200px;
+    margin-right: -15px;
+  }
+
+  @media (max-width: 446px) {
+    font-size: 30px;
+    margin-top: -230px;
+    margin-right: -15px;
+  }
+}
+
+/* Estilos para el divisor */
+.divider {
+  height: 2px;
+  background-color: #a8a8a8;
+  width: 100%;
+
+  @media (max-width: 480px) {
+    height: 2px;
+    background-color: #a8a8a8;
+    width: 100%;
+  }
+}
+
+a {
+  color: #03a9f4;
+}
