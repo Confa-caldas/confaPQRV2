@@ -4,10 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build:develop": "ng build --configuration=develop",
-    "build:devPruebas": "ng build --configuration=devPruebas",
-    "build:qa": "ng build --configuration=qa",
-    "build:production": "ng build --configuration=production",
+    "build:devPruebasV2": "ng build --configuration=devPruebasV2",
     "build:master": "ng build --configuration=master",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",

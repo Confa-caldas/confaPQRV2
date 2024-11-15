@@ -1,13 +1,14 @@
 {
-  "projectName": "analyzerProDev",
+  "whyContinueWithGen1": "Prefer not to answer",
+  "projectName": "ConfaPQRV2",
   "version": "3.1",
   "frontend": "javascript",
   "javascript": {
     "framework": "angular",
     "config": {
       "SourceDir": "src",
-      "DistributionDir": "dist/analyzer-pro",
-      "BuildCommand": "npm run-script build",
+      "DistributionDir": "dist",
+      "BuildCommand": "npm.cmd run-script build",
       "StartCommand": "ng serve"
     }
   },
