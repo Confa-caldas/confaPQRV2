@@ -131,6 +131,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.REQUESTTYPE_MANAGER_ASSOCIATE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import(
+        './components/private/requestype-manager-associate/requestype-manager-associate.module'
+      ).then(m => m.RequestypeManagerAssociateModule),
+  },
+  {
     path: RoutesApp.MAIN_PAGE,
     canActivate: [sessionGuard],
     component: LayoutComponent,

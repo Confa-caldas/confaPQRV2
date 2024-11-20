@@ -40,6 +40,8 @@ import {
   RequestReportStatusByAssignedUser,
   ErrorAttachLog,
   RequestAnswerTemp,
+  AssociationRequestUserList,
+  AssociateRequestUser,
 } from '../models/users.interface';
 import { Observable } from 'rxjs';
 import { MD5 } from 'crypto-js';
@@ -490,6 +492,25 @@ export class Users {
   registerErrorAttach(payload: ErrorAttachLog) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.ATTACHMENTS_ERROR_LOG}`,
+      payload
+    );
+  }
+
+  getRequestsUserAssociation(payload: Pagination) {
+    return this.http.post<BodyResponse<AssociationRequestUserList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GET_ASSOCIATE_REQUEST_USER}`,
+      payload
+    );
+  }
+  createAssociationRequestUser(payload: AssociateRequestUser) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ASSOCIATE_REQUEST_USER}`,
+      payload
+    );
+  }
+  inactivateAssociationRequestUser(payload: AssociationRequestUserList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVE_ASSOCIATE_REQUEST_USER}`,
       payload
     );
   }

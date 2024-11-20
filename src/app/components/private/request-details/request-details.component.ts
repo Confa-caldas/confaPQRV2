@@ -813,7 +813,7 @@ export class RequestDetailsComponent implements OnInit {
   showModalReasignada(user_name: string) {
     this.dialogHeader = 'Descripción de la reasignación';
     this.requestHistoric.forEach((request: RequestHistoric) => {
-      if (user_name === request.user_name_completed) {
+      if (user_name === request.user_name_completed && request.status_name === 'Reasignada') {
         this.dialogContent = request.answer_request;
       }
     });

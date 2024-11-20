@@ -11,6 +11,7 @@ import { ModalDataTreatmentModule } from './modal-data-treatment/modal-data-trea
 import { ModalNotificationModule } from './modal-notification/modal-notification.module';
 import { ModalCharacterizationModule } from './modal-characterization/modal-characterization.module';
 import { ModalFilingModule } from './modal-filing/modal-filing.module';
+import { ModalManagerSelectorModule } from './modal-manager-selector/modal-manager-selector.module';
 
 @NgModule({
   declarations: [],
@@ -26,6 +27,7 @@ import { ModalFilingModule } from './modal-filing/modal-filing.module';
     ModalNotificationModule,
     ModalCharacterizationModule,
     ModalFilingModule,
+    ModalManagerSelectorModule,
   ],
   exports: [
     ModalDinamicModule,
@@ -39,6 +41,7 @@ import { ModalFilingModule } from './modal-filing/modal-filing.module';
     ModalNotificationModule,
     ModalCharacterizationModule,
     ModalFilingModule,
+    ModalManagerSelectorModule,
   ],
 })
 export class SharedModule {}

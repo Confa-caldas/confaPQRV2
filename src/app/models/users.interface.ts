@@ -470,3 +470,34 @@ export interface RequestAnswerTemp {
   request_id: number;
   mensaje_temp: string;
 }
+
+export interface AssociationRequestUserList {
+  request_type_id: number;
+  request_type_name: string;
+  user_id: string;
+  user_name_completed: string;
+  is_active: number | boolean;
+}
+
+export interface AssociateRequestUser {
+  request_type_id: number;
+  user_id: string;
+}
+
+export interface RequestAnswerTemp {
+  request_id: number;
+  mensaje_temp: string;
+}
+
+export interface AssociationRequestUserList {
+  request_type_id: number;
+  request_type_name: string;
+  user_id: string;
+  user_name_completed: string;
+  is_active: number | boolean;
+}
+
+export interface AssociateRequestUser {
+  request_type_id: number;
+  user_id: string;
+}

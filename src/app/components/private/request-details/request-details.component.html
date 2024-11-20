@@ -339,21 +339,20 @@
                   </p-button>
                 </div> -->
               </label>
-                <div
-                  *ngIf="requestDetails.status_name !== 'Cerrado'"
-                  class="formProcess-card-text-placeholder"
-                  [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
-                  [ngClass]="{ 'text-respuesta': existEraserAsnwer }"
-                  >Guardar borrador
-                  <p-button
-                    icon="pi pi-save"
-                    [styleClass]="'btn-icon-info'"
-                    (click)="borradorRespuesta(requestDetails)"
-                    [style]="{ 'border-radius': '10px' }"
-                    title="Guardar en borrador">
-                  </p-button>
-                </div>
-              
+              <div
+                *ngIf="requestDetails.status_name !== 'Cerrado'"
+                class="formProcess-card-text-placeholder"
+                [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
+                [ngClass]="{ 'text-respuesta': existEraserAsnwer }">
+                Guardar borrador
+                <p-button
+                  icon="pi pi-save"
+                  [styleClass]="'btn-icon-info'"
+                  (click)="borradorRespuesta(requestDetails)"
+                  [style]="{ 'border-radius': '10px' }"
+                  title="Guardar en borrador">
+                </p-button>
+              </div>
 
               <!-- <label class="formProcess-card-text-placeholder"
                 >Generar reporte afiliacion
@@ -482,7 +481,8 @@
                     (click)="showModalRadicada()"></p-button>
                   <p-button
                     *ngIf="
-                      requestHistoric.status_name === 'Reasignada' &&
+                      (requestHistoric.status_name === 'Reasignada' ||
+                        requestHistoric.status_name === 'Cerrada') &&
                       requestHistoric.answer_request !== null
                     "
                     icon="pi pi-eye"

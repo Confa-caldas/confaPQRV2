@@ -16,6 +16,7 @@ export enum RoutesApp {
   NOTIFICATIONS = 'configure-notifications',
   PROCESS_REQUEST = 'process-request',
   REPORT_DETAILS = 'report-details',
+  REQUESTTYPE_MANAGER_ASSOCIATE = 'requestype-manager-associate',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
@@ -81,4 +82,7 @@ export enum EndPointRoute {
   ATTACHMENTS_ERROR_LOG = 'error/log_attachment',
   CREATE_ANSWER_TEM = 'answer_temp/create',
   GET_ANSWER_TEMP_REQUEST = 'answer_temp/filter_request',
+  GET_ASSOCIATE_REQUEST_USER = 'request_user/association',
+  ASSOCIATE_REQUEST_USER = 'request_user/created',
+  INACTIVE_ASSOCIATE_REQUEST_USER = 'request_user/in-activate',
 }
