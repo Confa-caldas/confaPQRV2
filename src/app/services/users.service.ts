@@ -53,6 +53,7 @@ export class Users {
   private apiKey = 'AIabZtSVgS2nIVD03HQxY1cM6qLmRS8B3zHlw3qo'; // La API key que te dieron
   private apiUrlAdjuntos = 'https://api-utilitarios.confa.co/IA/analizartextov2';
   private apiUrlIngresoConfa = 'https://app.confa.co:8687/ingresoConfaWSSGC/rest/confa/metodo26';
+  private apiUrlCorreccionIA = 'https://zj761286ik.execute-api.us-east-1.amazonaws.com/PD/IA/analizarTextoOrtogRedac';
 
   constructor(private http: HttpClient) {}
 
@@ -400,6 +401,17 @@ export class Users {
       mensaje: requestDescription,
     };
     return this.http.post(this.apiUrl, payload, { headers }); // Envía la petición con headers
+  }
+
+  correccionIaWs(respuestaSolicitud?: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json', // Asegura que se envíe como JSON
+      'x-api-key': this.apiKey, // Incluye la API key en los headers
+    });
+    const payload = {
+      mensaje: respuestaSolicitud,
+    };
+    return this.http.post(this.apiUrlCorreccionIA, payload, { headers }); // Envía la petición con headers
   }
 
   respuestaIaAdjuntos(mensaje?: string): Observable<any> {

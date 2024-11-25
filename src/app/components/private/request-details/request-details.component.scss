@@ -303,11 +303,11 @@ td {
       transition: background-color 0.3s ease !important;
 
       &.btn-yes {
-        background-color: #28a745 !important;
+        background-color: #a0bf1b !important;
         color: white !important;
 
         &:hover {
-          background-color: #218838 !important;
+          background-color: #94af18 !important;
         }
       }
 
@@ -321,9 +321,46 @@ td {
       }
     }
   }
-
-
-
-
 }
 
+.custom-dialog .dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  color: #555;
+}
+
+.custom-textarea {
+  width: 100%;
+  padding: 0.5em;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  resize: none; /* Evita redimensionamiento */
+  height: 100px;
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.btn {
+  padding: 0.75em 1.5em;
+  font-size: 1em;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
