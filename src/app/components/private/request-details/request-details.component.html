@@ -698,6 +698,18 @@
   [contentStyle]="{ padding: '1em' }"
   [responsive]="true"
   [styleClass]="'custom-dialog'">
+
+  <ng-template pTemplate="header">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <img
+        src="../../../../assets/images/ia_.gif"
+        alt="GIF animado"
+        style="width: 40px; height: 40px; border-radius: 50%;"
+      />
+      <span>Respuesta sugerida por IA</span>
+    </div>
+  </ng-template>
+
   <div class="dialog-content">
     <p><strong>Categoría:</strong> {{ categoria }}</p>
     <p>
@@ -747,6 +759,17 @@
   [contentStyle]="{ padding: '1em' }"
   [responsive]="true"
   [styleClass]="'custom-dialog'">
+
+  <ng-template pTemplate="header">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <img
+        src="../../../../assets/images/ia_.gif"
+        alt="GIF animado"
+        style="width: 40px; height: 40px; border-radius: 50%;"
+      />
+      <span>Corrección de ortografía sugerida por IA</span>
+    </div>
+  </ng-template>
   
   <div class="dialog-content">
     <!-- Respuesta original -->
@@ -789,6 +812,17 @@
   [contentStyle]="{ padding: '1em' }"
   [responsive]="true"
   [styleClass]="'custom-dialog'">
+
+  <ng-template pTemplate="header">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <img
+        src="../../../../assets/images/ia_.gif"
+        alt="GIF animado"
+        style="width: 40px; height: 40px; border-radius: 50%;"
+      />
+      <span>Corrección de ortografía sugerida por IA</span>
+    </div>
+  </ng-template>
   
   <div class="dialog-content">
     <!-- Respuesta original -->
