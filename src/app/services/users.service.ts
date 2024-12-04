@@ -3,6 +3,8 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { BodyResponse, ZionResponse } from '../models/shared/body-response.inteface';
 import { EndPointRoute } from '../enums/routes.enum';
+import { map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import {
   ApplicantTypeList,
   AssignUserRequest,
@@ -42,6 +44,7 @@ import {
   RequestAnswerTemp,
   AssociationRequestUserList,
   AssociateRequestUser,
+  ProcessRequest
 } from '../models/users.interface';
 import { Observable } from 'rxjs';
 import { MD5 } from 'crypto-js';
@@ -524,6 +527,22 @@ export class Users {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.INACTIVE_ASSOCIATE_REQUEST_USER}`,
       payload
+    );
+  }
+  registerProcessRequest(payload: ProcessRequest) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PROCESS_REQUEST_LOG}`,
+      payload
+    );
+  }
+  getIpAddress(): Observable<any> {
+    return this.http.get('https://api.ipify.org/?format=json');
+  }
+
+  checkServiceAvailability(): Observable<boolean> {
+    return this.http.head(this.apiUrlCorreccionIA, { observe: 'response' }).pipe(
+      map(() => true), // Si la respuesta es exitosa, el servicio está disponible
+      catchError(() => of(false)) // Si hay un error, marcamos como no disponible
     );
   }
 }

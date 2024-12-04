@@ -932,6 +932,18 @@ export class RequestDetailsComponent implements OnInit {
     this.visibleDialogIa = false;
   }
 
+  guardarBorrador(requestDetails: RequestsDetails){
+    this.userService.checkServiceAvailability().subscribe((isAvailable) => {
+      if (isAvailable) {
+        console.log('Servicio disponible en este momento.');
+        this.correccionSugeridaIa(requestDetails);
+      } else {
+        console.error('El servicio no está disponible en este momento.');
+        this.showSuccessMessage('error', 'Fallida', 'IA no disponible en este momento!');
+      }
+    });
+  }
+
   correccionSugeridaIa(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
     console.log(respuestaForm);

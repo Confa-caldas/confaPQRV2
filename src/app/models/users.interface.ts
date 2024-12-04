@@ -501,3 +501,24 @@ export interface AssociateRequestUser {
   request_type_id: number;
   user_id: string;
 }
+
+export interface ProcessRequest {
+  operation: string;
+  transaction_id: string;
+  status: string;
+  navigator?: string;
+  leng_nav?: string;
+  ip?: string;
+  resolution?: string;
+  platform?: string;
+  request_id?: number;
+  validation_attachemens?: boolean;
+}
+
+export interface UserEnvironment {
+  userAgent: string;
+  platform: string;
+  browserLanguage: string;
+  screenResolution: string;
+  ipUser: string;
+}

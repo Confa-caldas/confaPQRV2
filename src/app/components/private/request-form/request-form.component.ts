@@ -8,6 +8,7 @@ import {
   RequestFormList,
   RequestTypeList,
   ErrorAttachLog,
+  ProcessRequest
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { Router } from '@angular/router';
@@ -74,6 +75,8 @@ export class RequestFormComponent implements OnInit {
   visibleDialogProgress: boolean = false;
   isSpinnerVisible = false;
   hasPendingChanges: boolean = false;
+
+  useIaAttach: boolean = false;
 
   ngOnInit(): void {
     let applicant = localStorage.getItem('applicant-type');
@@ -290,6 +293,10 @@ export class RequestFormComponent implements OnInit {
           } else {
             this.attachApplicantFiles(response.data);
           }
+
+          // Actualiza el registro cuando la operación sea exitosa
+          this.actualizarLogProceso(response.data);
+
         } else {
           setTimeout(() => {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -305,11 +312,46 @@ export class RequestFormComponent implements OnInit {
     });
   }
 
+  actualizarLogProceso (request_id: number){
+    const transactionId = localStorage.getItem('id-transaction');
+
+    if (!transactionId) {
+      console.error('No se encontró un ID de transacción para actualizar el registro.');
+      return;
+    }
+
+    const payload: ProcessRequest = {
+      operation: 'update',
+      transaction_id: transactionId,
+      status: "Finalizado",
+      request_id: request_id,
+      validation_attachemens: this.useIaAttach,
+    };
+
+    console.log(payload);
+
+    this.userService.registerProcessRequest(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200){
+          localStorage.removeItem('id-transaction');
+          console.log('Actualizacion exitoso en log de proceso de solicitud');
+          console.log('ID de transacción eliminado del LocalStorage.');
+        }else{
+          console.log('Error actualizando en log de proceso de solicitud');
+        }
+      },
+      error: (err) => {
+        console.error('Error consumiendo el servicio de registro request:', err);
+      },
+    })
+  }
+
   showAdjuntarArchivoModal(): Promise<boolean> {
     return new Promise(resolve => {
       this.modalTitle = 'Adjuntar archivo';
       this.modalMessage = '¿Desea enviar su solicitud sin documentos o archivos adjuntos?';
       this.showModal = true; // Muestra el modal
+      this.useIaAttach = true;
 
       // Asignar funciones para aceptar o cancelar
       this.onAccept = () => {
@@ -569,7 +611,7 @@ export class RequestFormComponent implements OnInit {
       this.requestForm.reset();
       this.fileNameList.clear();
 
-      console.log('Ejecucion completa!!!');
+      //console.log('Ejecucion completa!!!');
 
       this.showAlertModal(request_id); // Muestra el modal después de que todo haya terminado
     } catch (error) {

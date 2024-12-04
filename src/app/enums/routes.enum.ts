@@ -85,4 +85,5 @@ export enum EndPointRoute {
   GET_ASSOCIATE_REQUEST_USER = 'request_user/association',
   ASSOCIATE_REQUEST_USER = 'request_user/created',
   INACTIVE_ASSOCIATE_REQUEST_USER = 'request_user/in-activate',
+  PROCESS_REQUEST_LOG = 'request/process_log',
 }
