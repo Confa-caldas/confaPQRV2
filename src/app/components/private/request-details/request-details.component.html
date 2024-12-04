@@ -711,15 +711,22 @@
   </ng-template>
 
   <div class="dialog-content">
+    <span class="disclaimer">
+      El asistente de IA puede cometer errores. Comprueba siempre la información importante.
+    </span>
+    <br>
     <p><strong>Categoría:</strong> {{ categoria }}</p>
     <p>
       <strong>Respuesta sugerida:</strong> <br />
-      Hola, buen día! <br /><br />
-      {{ respuestaPredefinida }} <br /><br />
+      <textarea id="respuesta-corregida" class="custom-textarea" readonly>
+      Hola, buen día!
+      {{ respuestaPredefinida }}
       Cordialmente, {{ requestDetails?.user_name_completed }}
+      </textarea>
     </p>
     <div class="confirmation-text">
       <p>¿Desea usar esta respuesta para la solicitud?</p>
+      
     </div>
     <div class="dialog-buttons">
       <button type="button" class="btn btn-yes" (click)="confirmarRespuesta()">Sí</button>
@@ -772,6 +779,10 @@
   </ng-template>
   
   <div class="dialog-content">
+    <span class="disclaimer">
+      El asistente de IA puede cometer errores. Comprueba siempre la información importante.
+    </span>
+    <br>
     <!-- Respuesta original -->
     <div class="form-group">
       <label for="respuesta-original">Respuesta original:</label>
@@ -787,7 +798,7 @@
     <!-- Palabras corregidas -->
     <div class="form-group">
       <label for="palabras-error">Palabras corregidas por IA:</label>
-      <textarea id="palabras-error" class="custom-textarea" readonly>{{ palabrasError }}</textarea>
+      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{ palabrasError }}</textarea>
     </div>
     <br>
     <!-- Pregunta de confirmación -->
@@ -825,6 +836,10 @@
   </ng-template>
   
   <div class="dialog-content">
+    <span class="disclaimer">
+      El asistente de IA puede cometer errores. Comprueba siempre la información importante.
+    </span>
+    <br>
     <!-- Respuesta original -->
     <div class="form-group">
       <label for="respuesta-original">Respuesta original:</label>
@@ -840,7 +855,7 @@
     <!-- Palabras corregidas -->
     <div class="form-group">
       <label for="palabras-error">Palabras corregidas por IA:</label>
-      <textarea id="palabras-error" class="custom-textarea" readonly>{{ palabrasError }}</textarea>
+      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{ palabrasError }}</textarea>
     </div>
     <br>
     <!-- Pregunta de confirmación -->
