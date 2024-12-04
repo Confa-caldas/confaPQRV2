@@ -4,7 +4,7 @@ import { environment } from '../../environments/environment';
 import { BodyResponse, ZionResponse } from '../models/shared/body-response.inteface';
 import { EndPointRoute } from '../enums/routes.enum';
 import { map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { of, Observable } from 'rxjs';
 import {
   ApplicantTypeList,
   AssignUserRequest,
@@ -46,7 +46,6 @@ import {
   AssociateRequestUser,
   ProcessRequest
 } from '../models/users.interface';
-import { catchError, Observable, of } from 'rxjs';
 import { MD5 } from 'crypto-js';
 @Injectable({
   providedIn: 'root',
