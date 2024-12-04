@@ -43,7 +43,7 @@ import {
   AssociationRequestUserList,
   AssociateRequestUser,
 } from '../models/users.interface';
-import { Observable } from 'rxjs';
+import { catchError, Observable, of } from 'rxjs';
 import { MD5 } from 'crypto-js';
 @Injectable({
   providedIn: 'root',
@@ -53,7 +53,8 @@ export class Users {
   private apiKey = 'AIabZtSVgS2nIVD03HQxY1cM6qLmRS8B3zHlw3qo'; // La API key que te dieron
   private apiUrlAdjuntos = 'https://api-utilitarios.confa.co/IA/analizartextov2';
   private apiUrlIngresoConfa = 'https://app.confa.co:8687/ingresoConfaWSSGC/rest/confa/metodo26';
-  private apiUrlCorreccionIA = 'https://zj761286ik.execute-api.us-east-1.amazonaws.com/PD/IA/analizarTextoOrtogRedac';
+  private apiUrlCorreccionIA =
+    'https://zj761286ik.execute-api.us-east-1.amazonaws.com/PD/IA/analizarTextoOrtogRedac';
 
   constructor(private http: HttpClient) {}
 
@@ -419,14 +420,26 @@ export class Users {
       'Content-Type': 'application/json',
       'x-api-key': this.apiKey,
     });
-    // Serializa el mensaje como un objeto JSON en una cadena
     const payload = {
       body: JSON.stringify({
         userMessage: mensaje,
       }),
     };
     console.log(payload);
-    return this.http.post(this.apiUrlAdjuntos, payload, { headers }); // Envía la petición con headers
+    return this.http
+      .post(this.apiUrlAdjuntos, payload, { headers }) // Envía la petición con headers
+      .pipe(
+        catchError(error => {
+          console.error('Error en la solicitud:', error);
+
+          // Retorna un observable con un mensaje de error personalizado
+          return of({
+            statusCode: '500',
+            status: 'error',
+            message: 'No es posible procesar la solicitud en este momento. Inténtelo más tarde.',
+          });
+        })
+      );
   }
 
   getRequestReportDetail(): Observable<BodyResponse<RequestReportDetail[]>> {

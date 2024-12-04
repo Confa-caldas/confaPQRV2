@@ -9,6 +9,7 @@ export interface ISession {
   perfiles: IPerfil[];
   links: ILink[];
   expire: string;
+  mensaje: string;
 }
 
 export interface IPerfil {

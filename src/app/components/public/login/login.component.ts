@@ -63,14 +63,22 @@ export class LoginComponent implements OnInit {
         if (response.code === 200) {
           sessionStorage.setItem(SessionStorageItems.SESSION, response.data);
           const decodedToken: ISession = jwtDecode(response.data);
-          const menu: TreeNode[] = this.convertirLinks(decodedToken.links);
-          sessionStorage.setItem(SessionStorageItems.USER, decodedToken.usuario);
-          const perfil = decodedToken.perfiles[0].nombre;
-          if (perfil) {
-            sessionStorage.setItem(SessionStorageItems.PERFIL, perfil);
-          }
-          if (menu) {
-            sessionStorage.setItem(SessionStorageItems.MENU, JSON.stringify(menu));
+          let estado = false;
+          if (decodedToken.estado !== true) {
+            this.message = 'Contraseña incorrecta';
+            this.visibleDialog = true;
+            estado = true;
+          } else {
+            const menu: TreeNode[] = this.convertirLinks(decodedToken.links);
+            sessionStorage.setItem(SessionStorageItems.USER, decodedToken.usuario);
+            const perfil = decodedToken.perfiles[0].nombre;
+            if (perfil) {
+              sessionStorage.setItem(SessionStorageItems.PERFIL, perfil);
+            }
+            if (menu) {
+              sessionStorage.setItem(SessionStorageItems.MENU, JSON.stringify(menu));
+            }
+            this.router.navigate([RoutesApp.MAIN_PAGE]);
           }
 
           // Redirigir al usuario con el taskId si existe
@@ -79,9 +87,10 @@ export class LoginComponent implements OnInit {
             this.router.navigate([`/request-details/${this.taskId}`]);
             // console.log('Task IDz:', this.taskId);
             // this.router.navigate(['/task-detail'], { queryParams: { taskId: this.taskId } });
-          } else {
-            this.router.navigate([RoutesApp.MAIN_PAGE]);
           }
+          // else {
+          //   this.router.navigate([RoutesApp.MAIN_PAGE]);
+          // }
         } else {
           this.message = response.data;
           this.visibleDialog = true;
@@ -100,6 +109,7 @@ export class LoginComponent implements OnInit {
 
   convertirLinks(links: ILink[]): TreeNode[] {
     const arrayResultante: TreeNode[] = [];
+    console.log(links, 'kinks');
     links.forEach(link => {
       if (link.perfilLinks) {
         const objetoConvertido: TreeNode = {

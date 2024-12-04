@@ -258,26 +258,56 @@ export class RequestFormComponent implements OnInit {
       },
     });
   }
+  // async setParameter(inputValue: RequestFormList) {
+  //   const mensaje = inputValue.request_description;
+  //   inputValue.count_attacments = this.getAplicant().length;
+
+  //   // Si es necesario adjuntar archivo y no hay aplicantes
+  //   if (this.getAplicant().length == 0) {
+  //     const adjuntarArchivo = await this.validarMensaje(mensaje);
+
+  //     if (adjuntarArchivo) {
+  //       const continuar = await this.showAdjuntarArchivoModal(); // Espera la acción del usuario en el modal
+  //       console.log(continuar);
+  //       if (!continuar) {
+  //         // Si el usuario canceló, no continuar con la creación de la solicitud
+  //         return;
+  //       } else {
+  //         this.continuarCreacionSolicitud(inputValue);
+  //       }
+  //     } else {
+  //       this.continuarCreacionSolicitud(inputValue);
+  //     }
+  //   } else {
+  //     // Continúa con la creación de la solicitud
+  //     this.continuarCreacionSolicitud(inputValue);
+  //   }
+  // }
   async setParameter(inputValue: RequestFormList) {
-    const mensaje = inputValue.request_description;
-    const adjuntarArchivo = await this.validarMensaje(mensaje);
     inputValue.count_attacments = this.getAplicant().length;
 
-    // Si es necesario adjuntar archivo y no hay aplicantes
-    if (adjuntarArchivo && this.getAplicant().length == 0) {
-      const continuar = await this.showAdjuntarArchivoModal(); // Espera la acción del usuario en el modal
-      if (!continuar) {
-        // Si el usuario canceló, no continuar con la creación de la solicitud
-        return;
+    // Si no hay adjuntos
+    if (inputValue.count_attacments === 0) {
+      const mensaje = inputValue.request_description;
+
+      // Validar si es necesario adjuntar archivo
+      const necesitaAdjuntar = await this.validarMensaje(mensaje);
+
+      if (necesitaAdjuntar) {
+        const usuarioAcepta = await this.showAdjuntarArchivoModal(); // Mostrar modal
+
+        if (!usuarioAcepta) {
+          // Si el usuario cancela, salir
+          return;
+        }
       }
     }
 
-    // Continúa con la creación de la solicitud
+    // Continuar con la creación de la solicitud
     this.continuarCreacionSolicitud(inputValue);
   }
 
   continuarCreacionSolicitud(inputValue: RequestFormList) {
-    console.log(inputValue);
     this.userService.createRequest(inputValue).subscribe({
       next: (response: BodyResponse<number>) => {
         if (response.code === 200) {
@@ -655,14 +685,15 @@ export class RequestFormComponent implements OnInit {
               .replace(/[\u0300-\u036f]/g, '');
 
             const contieneSi = mensajeNormalizado.includes('si');
-            console.log(contieneSi, 'respuesta');
             resolve(contieneSi); // Resolves la promesa con true o false
           } else {
-            reject('Error en la respuesta del servicio');
+            resolve(false);
+            // reject('Error en la respuesta del servicio');
           }
         },
         error => {
-          reject(error); // Rechaza la promesa en caso de error
+          resolve(false);
+          console.error('Error en la solicitud:', error);
         }
       );
     });
