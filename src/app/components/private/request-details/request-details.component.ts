@@ -947,7 +947,7 @@ export class RequestDetailsComponent implements OnInit {
   correccionSugeridaIa(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
     console.log(respuestaForm);
-    
+
     this.userService.correccionIaWs(respuestaForm).subscribe(response => {
       if (response.statusCode === 200) {
         // El cuerpo de la respuesta está en response.body y es un string JSON
@@ -963,21 +963,20 @@ export class RequestDetailsComponent implements OnInit {
           // Asignar estos valores a variables locales o a propiedades del componente
           this.respuestaCorregida = respuesta.texto_corregido;
           this.palabrasError = respuesta.palabras_con_errores;
-          this.respuestaSolicitud = respuestaForm
-          this.errores = respuesta.errores_encontrados
+          this.respuestaSolicitud = respuestaForm;
+          this.errores = respuesta.errores_encontrados;
 
           console.log(this.respuestaCorregida);
           console.log(this.palabrasError);
           console.log(this.errores);
 
           // Mostrar el modal si hay errores
-          if (this.errores){
+          if (this.errores) {
             this.visibleCorreccionIa = true;
             this.informative = true;
-          }else{
+          } else {
             this.borradorRespuesta(requestDetails);
           }
-          
         } catch (error) {
           console.error('Error al procesar la respuesta del servicio:', error);
         }
@@ -991,7 +990,7 @@ export class RequestDetailsComponent implements OnInit {
   correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
     console.log(respuestaForm);
-    
+
     this.userService.correccionIaWs(respuestaForm).subscribe(response => {
       if (response.statusCode === 200) {
         // El cuerpo de la respuesta está en response.body y es un string JSON
@@ -1007,21 +1006,20 @@ export class RequestDetailsComponent implements OnInit {
           // Asignar estos valores a variables locales o a propiedades del componente
           this.respuestaCorregida = respuesta.texto_corregido;
           this.palabrasError = respuesta.palabras_con_errores;
-          this.respuestaSolicitud = respuestaForm
-          this.errores = respuesta.errores_encontrados
+          this.respuestaSolicitud = respuestaForm;
+          this.errores = respuesta.errores_encontrados;
 
           console.log(this.respuestaCorregida);
           console.log(this.palabrasError);
           console.log(this.errores);
 
           // Mostrar el modal si hay errores
-          if (this.errores){
+          if (this.errores) {
             this.visibleCorreccionIaEnviar = true;
             this.informative = true;
-          } else{
+          } else {
             this.characterizeRequest(requestDetails);
           }
-          
         } catch (error) {
           console.error('Error al procesar la respuesta del servicio:', error);
         }
@@ -1032,7 +1030,7 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   confirmarCorreccion() {
-    console.log(this.respuestaCorregida)
+    console.log(this.respuestaCorregida);
     // Establece el valor del textarea en el formulario
     this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
 
@@ -1110,7 +1108,7 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
-  borradorRespuesta(requestDetails: RequestsDetails) { 
+  borradorRespuesta(requestDetails: RequestsDetails) {
     //const respuestaBorrador = this.requestProcess.get('mensage')?.value;
     this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
     const respuestaBorrador = this.requestProcess.get('mensage')?.value;
