@@ -522,3 +522,30 @@ export interface UserEnvironment {
   screenResolution: string;
   ipUser: string;
 }
+
+export interface RequestsReview {
+  request_id: number;
+  filing_number: number;
+  filing_date: string;
+  filing_date_date?: Date;
+  filing_time: string;
+  request_status: number;
+  applicant_type: number;
+  request_type: number;
+  doc_type: number;
+  doc_id: string;
+  applicant_name: string;
+  applicant_email: string;
+  applicant_cellphone: string;
+  request_description: string;
+  request_days: number;
+  assigned_user: string;
+  request_answer: string;
+  data_treatment: boolean;
+  applicant_attachments: string[];
+  assigned_attachments: string[];
+  form_id: number;
+  status_name: string;
+  user_name_completed: string;
+  mensaje_revision: string;
+}

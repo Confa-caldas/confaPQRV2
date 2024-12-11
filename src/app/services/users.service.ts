@@ -44,7 +44,8 @@ import {
   RequestAnswerTemp,
   AssociationRequestUserList,
   AssociateRequestUser,
-  ProcessRequest
+  ProcessRequest,
+  RequestsReview,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -555,6 +556,13 @@ export class Users {
     return this.http.head(this.apiUrlCorreccionIA, { observe: 'response' }).pipe(
       map(() => true), // Si la respuesta es exitosa, el servicio está disponible
       catchError(() => of(false)) // Si hay un error, marcamos como no disponible
+    );
+  }
+
+  changeStateReview(payload: RequestsReview) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CHANGE_STATE_REVIEW}`,
+      payload
     );
   }
 }

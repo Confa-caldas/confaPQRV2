@@ -348,7 +348,7 @@
                 <p-button
                   icon="pi pi-save"
                   [styleClass]="'btn-icon-info'"
-                  (click)="borradorRespuesta(requestDetails)"
+                  (click)="correccionSugeridaIa(requestDetails)"
                   [style]="{ 'border-radius': '10px' }"
                   title="Guardar en borrador">
                 </p-button>
@@ -424,7 +424,7 @@
             <p-button
               label="Enviar respuesta"
               [disabled]="requestProcess.invalid"
-              (click)="characterizeRequest(requestDetails)"
+              (click)="correccionSugeridaIaEnviar(requestDetails)"
               [style]="{ 'border-radius': '10px' }"></p-button>
           </div>
         </div>
@@ -481,13 +481,26 @@
                     (click)="showModalRadicada()"></p-button>
                   <p-button
                     *ngIf="
-                      (requestHistoric.status_name === 'Reasignada' ||
-                        requestHistoric.status_name === 'Cerrada') &&
+                      requestHistoric.status_name === 'Reasignada' &&
                       requestHistoric.answer_request !== null
                     "
                     icon="pi pi-eye"
                     [styleClass]="'btn-icon-info'"
                     (click)="showModalReasignada(requestHistoric.user_name_completed)"></p-button>
+                  <p-button
+                    *ngIf="
+                      (requestHistoric.status_name === 'Asignada - En revisión' ||
+                        requestHistoric.status_name === 'Reasignada - En revisión') &&
+                      requestHistoric.answer_request !== null
+                    "
+                    icon="pi pi-eye"
+                    [styleClass]="'btn-icon-info'"
+                    (click)="
+                      showModalReview(
+                        requestHistoric.user_name_completed,
+                        requestHistoric.status_name
+                      )
+                    "></p-button>
                 </td>
               </tr>
             </ng-template>

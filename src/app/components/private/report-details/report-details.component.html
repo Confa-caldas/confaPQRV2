@@ -7,7 +7,6 @@
 <div class="card flex justify-content-center">
   <p-accordion [activeIndex]="0">
     <p-accordionTab header="DETALLE DE SOLICITUDES">
-
       <div class="row mt-5" *ngIf="requestReportDetailAll">
         <!-- <div class="col-12 mt-5"> -->
         <p-table
@@ -17,7 +16,6 @@
           styleClass="p-datatable-striped"
           [globalFilterFields]="dynamicColumns"
           (onFilter)="updateChart(dt1.filteredValue)">
-
           <ng-template pTemplate="header">
             <tr>
               <th *ngFor="let col of dynamicColumns">
@@ -30,7 +28,9 @@
           <!-- Filas de la tabla -->
           <ng-template pTemplate="body" let-rowData>
             <tr>
-              <td *ngFor="let col of dynamicColumns" style="text-align: center;">{{ rowData[col] }}</td>
+              <td *ngFor="let col of dynamicColumns" style="text-align: center">
+                {{ rowData[col] }}
+              </td>
             </tr>
           </ng-template>
         </p-table>
@@ -50,7 +50,6 @@
           styleClass="p-datatable-striped"
           [globalFilterFields]="dynamicColumns"
           (onFilter)="updateChart(dt1.filteredValue)">
-
           <ng-template pTemplate="header">
             <tr>
               <th *ngFor="let col of dynamicColumnsStatus">
@@ -63,7 +62,9 @@
           <!-- Filas de la tabla -->
           <ng-template pTemplate="body" let-rowData>
             <tr>
-              <td *ngFor="let col of dynamicColumnsStatus" style="text-align: center;">{{ rowData[col] }}</td>
+              <td *ngFor="let col of dynamicColumnsStatus" style="text-align: center">
+                {{ rowData[col] }}
+              </td>
             </tr>
           </ng-template>
         </p-table>
@@ -79,7 +80,6 @@
           styleClass="p-datatable-striped"
           [globalFilterFields]="dynamicColumns"
           (onFilter)="updateChart(dt1.filteredValue)">
-
           <ng-template pTemplate="header">
             <tr>
               <th *ngFor="let col of dynamicColumnsForStatus">
@@ -97,14 +97,14 @@
           </ng-template> -->
           <ng-template pTemplate="body" let-rowData>
             <tr>
-              <td *ngFor="let col of dynamicColumnsForStatus" 
-                  [ngStyle]="{ 'font-weight': rowData[col] === 'Total' ? 'bold' : 'normal' }" 
-                  style="text-align: center;">
+              <td
+                *ngFor="let col of dynamicColumnsForStatus"
+                [ngStyle]="{ 'font-weight': rowData[col] === 'Total' ? 'bold' : 'normal' }"
+                style="text-align: center">
                 {{ rowData[col] }}
               </td>
             </tr>
           </ng-template>
-          
         </p-table>
       </div>
     </p-accordionTab>
@@ -118,7 +118,6 @@
           styleClass="p-datatable-striped"
           [globalFilterFields]="dynamicColumns"
           (onFilter)="updateChart(dt1.filteredValue)">
-
           <ng-template pTemplate="header">
             <tr>
               <th *ngFor="let col of dynamicColumnStatusByUser">
@@ -131,7 +130,9 @@
           <!-- Filas de la tabla -->
           <ng-template pTemplate="body" let-rowData>
             <tr>
-              <td *ngFor="let col of dynamicColumnStatusByUser" style="text-align: center;">{{ rowData[col] }}</td>
+              <td *ngFor="let col of dynamicColumnStatusByUser" style="text-align: center">
+                {{ rowData[col] }}
+              </td>
             </tr>
           </ng-template>
         </p-table>

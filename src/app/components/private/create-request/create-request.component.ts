@@ -4,8 +4,9 @@ import { Users } from '../../../services/users.service';
 import {
   ApplicantTypeList,
   RequestTypeList,
-  UserEnvironment, 
-  ProcessRequest} from '../../../models/users.interface';
+  UserEnvironment,
+  ProcessRequest,
+} from '../../../models/users.interface';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Router } from '@angular/router';
 import { RoutesApp } from '../../../enums/routes.enum';
@@ -32,13 +33,12 @@ export class CreateRequestComponent {
     private router: Router,
     private formBuilder: FormBuilder,
     private userService: Users,
-    private messageService: MessageService,
+    private messageService: MessageService
   ) {
     this.optionsRequest = this.formBuilder.group({
       applicant_id: ['', Validators.required],
       request_id: ['', Validators.required],
       authorize: [null, Validators.requiredTrue],
-      
     });
 
     localStorage.removeItem('visitedFirstPage');
@@ -113,7 +113,6 @@ export class CreateRequestComponent {
       const data = await this.userService.getIpAddress().toPromise();
       const ip = data.ip || 'No disponible';
       return ip; // Retornamos el objeto con los datos del entorno
-
     } catch (err) {
       console.error('Error obteniendo la IP', err);
       throw err; // Rechazamos la promesa en caso de error
@@ -128,14 +127,20 @@ export class CreateRequestComponent {
     } catch (err) {
       console.error('Error obteniendo el entorno del usuario:', err);
       // Si ocurre un error, usamos valores por defecto
-      ip = 'No disponible'
+      ip = 'No disponible';
     }
 
     this.transactionId = uuidv4(); // Genera un identificador único
 
     localStorage.setItem('visitedFirstPage', 'true');
-    localStorage.setItem('applicant-type', JSON.stringify(this.optionsRequest.controls['applicant_id'].value));
-    localStorage.setItem('request-type', JSON.stringify(this.optionsRequest.controls['request_id'].value));
+    localStorage.setItem(
+      'applicant-type',
+      JSON.stringify(this.optionsRequest.controls['applicant_id'].value)
+    );
+    localStorage.setItem(
+      'request-type',
+      JSON.stringify(this.optionsRequest.controls['request_id'].value)
+    );
     localStorage.setItem('id-transaction', this.transactionId);
 
     if (
@@ -145,17 +150,17 @@ export class CreateRequestComponent {
       window.open(
         'https://docs.google.com/forms/d/e/1FAIpQLSc11ps8y0lrKKZEa83wtJC2VrtoSe7p1IMXfeM2bzDSxFagdg/viewform',
         '_blank'
-      )
+      );
     } else {
       const payload: ProcessRequest = {
-          operation: "insert",
-          transaction_id: this.transactionId,
-          status: "Iniciado",
-          navigator: navigator.userAgent || 'No disponible',
-          leng_nav: navigator.language || 'No disponible',
-          ip: ip,
-          resolution: `${window.screen.width}x${window.screen.height}` || 'No disponible',
-          platform: navigator.platform || 'No disponible',
+        operation: 'insert',
+        transaction_id: this.transactionId,
+        status: 'Iniciado',
+        navigator: navigator.userAgent || 'No disponible',
+        leng_nav: navigator.language || 'No disponible',
+        ip: ip,
+        resolution: `${window.screen.width}x${window.screen.height}` || 'No disponible',
+        platform: navigator.platform || 'No disponible',
       };
 
       console.log(payload);
@@ -168,7 +173,7 @@ export class CreateRequestComponent {
             console.log('Error registrando en log de proceso de solicitud');
           }
         },
-        error: (err) => {
+        error: err => {
           console.error('Error consumiendo el servicio de registro request:', err);
         },
       });
