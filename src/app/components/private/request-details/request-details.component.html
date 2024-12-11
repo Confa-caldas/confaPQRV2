@@ -711,14 +711,12 @@
   [contentStyle]="{ padding: '1em' }"
   [responsive]="true"
   [styleClass]="'custom-dialog'">
-
   <ng-template pTemplate="header">
-    <div style="display: flex; align-items: center; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 10px">
       <img
         src="../../../../assets/images/ia_.gif"
         alt="GIF animado"
-        style="width: 40px; height: 40px; border-radius: 50%;"
-      />
+        style="width: 40px; height: 40px; border-radius: 50%" />
       <span>Respuesta sugerida por IA</span>
     </div>
   </ng-template>
@@ -727,7 +725,7 @@
     <span class="disclaimer">
       El asistente de IA puede cometer errores. Comprueba siempre la información importante.
     </span>
-    <br>
+    <br />
     <p><strong>Categoría:</strong> {{ categoria }}</p>
     <p>
       <strong>Respuesta sugerida:</strong> <br />
@@ -739,7 +737,6 @@
     </p>
     <div class="confirmation-text">
       <p>¿Desea usar esta respuesta para la solicitud?</p>
-      
     </div>
     <div class="dialog-buttons">
       <button type="button" class="btn btn-yes" (click)="confirmarRespuesta()">Sí</button>
@@ -779,41 +776,45 @@
   [contentStyle]="{ padding: '1em' }"
   [responsive]="true"
   [styleClass]="'custom-dialog'">
-
   <ng-template pTemplate="header">
-    <div style="display: flex; align-items: center; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 10px">
       <img
         src="../../../../assets/images/ia_.gif"
         alt="GIF animado"
-        style="width: 40px; height: 40px; border-radius: 50%;"
-      />
+        style="width: 40px; height: 40px; border-radius: 50%" />
       <span>Corrección de ortografía sugerida por IA</span>
     </div>
   </ng-template>
-  
+
   <div class="dialog-content">
     <span class="disclaimer">
       El asistente de IA puede cometer errores. Comprueba siempre la información importante.
     </span>
-    <br>
+    <br />
     <!-- Respuesta original -->
     <div class="form-group">
       <label for="respuesta-original">Respuesta original:</label>
-      <textarea id="respuesta-original" class="custom-textarea" readonly>{{ respuestaSolicitud }}</textarea>
+      <textarea id="respuesta-original" class="custom-textarea" readonly>{{
+        respuestaSolicitud
+      }}</textarea>
     </div>
-    <br>
+    <br />
     <!-- Respuesta corregida -->
     <div class="form-group">
       <label for="respuesta-corregida">Respuesta corregida por IA:</label>
-      <textarea id="respuesta-corregida" class="custom-textarea" readonly>{{ respuestaCorregida }}</textarea>
+      <textarea id="respuesta-corregida" class="custom-textarea" readonly>{{
+        respuestaCorregida
+      }}</textarea>
     </div>
-    <br>
+    <br />
     <!-- Palabras corregidas -->
     <div class="form-group">
       <label for="palabras-error">Palabras corregidas por IA:</label>
-      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{ palabrasError }}</textarea>
+      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{
+        palabrasError
+      }}</textarea>
     </div>
-    <br>
+    <br />
     <!-- Pregunta de confirmación -->
     <div class="confirmation-text">
       <p>¿Desea usar esta respuesta para la solicitud?</p>
@@ -821,12 +822,18 @@
 
     <!-- Botones -->
     <div class="dialog-buttons">
-      <button type="button" class="btn btn-yes" (click)="borradorRespuesta(requestDetails!)">Sí</button>
-      <button type="button" class="btn btn-no" (click)="borradorRespuestaNoCorregida(requestDetails!)">No</button>
+      <button type="button" class="btn btn-yes" (click)="borradorRespuesta(requestDetails!)">
+        Sí
+      </button>
+      <button
+        type="button"
+        class="btn btn-no"
+        (click)="borradorRespuestaNoCorregida(requestDetails!)">
+        No
+      </button>
     </div>
   </div>
 </p-dialog>
-
 
 <p-dialog
   header="Corrección de ortografía sugerida por IA"
@@ -836,41 +843,45 @@
   [contentStyle]="{ padding: '1em' }"
   [responsive]="true"
   [styleClass]="'custom-dialog'">
-
   <ng-template pTemplate="header">
-    <div style="display: flex; align-items: center; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 10px">
       <img
         src="../../../../assets/images/ia_.gif"
         alt="GIF animado"
-        style="width: 40px; height: 40px; border-radius: 50%;"
-      />
+        style="width: 40px; height: 40px; border-radius: 50%" />
       <span>Corrección de ortografía sugerida por IA</span>
     </div>
   </ng-template>
-  
+
   <div class="dialog-content">
     <span class="disclaimer">
       El asistente de IA puede cometer errores. Comprueba siempre la información importante.
     </span>
-    <br>
+    <br />
     <!-- Respuesta original -->
     <div class="form-group">
       <label for="respuesta-original">Respuesta original:</label>
-      <textarea id="respuesta-original" class="custom-textarea" readonly>{{ respuestaSolicitud }}</textarea>
+      <textarea id="respuesta-original" class="custom-textarea" readonly>{{
+        respuestaSolicitud
+      }}</textarea>
     </div>
-    <br>
+    <br />
     <!-- Respuesta corregida -->
     <div class="form-group">
       <label for="respuesta-corregida">Respuesta corregida por IA:</label>
-      <textarea id="respuesta-corregida" class="custom-textarea" readonly>{{ respuestaCorregida }}</textarea>
+      <textarea id="respuesta-corregida" class="custom-textarea" readonly>{{
+        respuestaCorregida
+      }}</textarea>
     </div>
-    <br>
+    <br />
     <!-- Palabras corregidas -->
     <div class="form-group">
       <label for="palabras-error">Palabras corregidas por IA:</label>
-      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{ palabrasError }}</textarea>
+      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{
+        palabrasError
+      }}</textarea>
     </div>
-    <br>
+    <br />
     <!-- Pregunta de confirmación -->
     <div class="confirmation-text">
       <p>¿Desea usar esta respuesta para la solicitud?</p>
@@ -878,8 +889,15 @@
 
     <!-- Botones -->
     <div class="dialog-buttons">
-      <button type="button" class="btn btn-yes" (click)="characterizeRequest(requestDetails!)">Sí</button>
-      <button type="button" class="btn btn-no" (click)="characterizeRequestNoCorreccion(requestDetails!)">No</button>
+      <button type="button" class="btn btn-yes" (click)="characterizeRequest(requestDetails!)">
+        Sí
+      </button>
+      <button
+        type="button"
+        class="btn btn-no"
+        (click)="characterizeRequestNoCorreccion(requestDetails!)">
+        No
+      </button>
     </div>
   </div>
 </p-dialog>
