@@ -106,6 +106,30 @@
               >
             </div>
           </div>
+
+          <!-- NUEVO 
+          <div class="container-row" *ngIf="modalBoolean || !formGroup.invalid">
+            <div class="container-col">
+              <label class="label-select"> Estado final de la solicitud </label>
+              <p-dropdown
+                [style]="{ width: '300px', height: '30px', 'align-items': 'center' }"
+                formControlName="quality_dimension_id"
+                [options]="statusFinalList"
+                optionLabel="statusFinalList"
+                optionValue="quality_dimension_id"
+                placeholder="Seleccione"></p-dropdown>
+              <label class="invalid">
+                {{
+                  formGroup.get('quality_dimension_id')?.hasError('required') &&
+                  formGroup.get('quality_dimension_id')?.touched
+                    ? 'Campo Requerido'
+                    : ''
+                }}</label
+              >
+            </div>
+          </div>
+          NUEVO FIN -->
+
           <div class="container-row" *ngIf="categoryBoolean && modalBoolean">
             <div class="container-col">
               <label class="label-select"> Categoría</label>
@@ -190,14 +214,15 @@
             </div>
           </div>
         </div>
-        <!--
+        
         <div>
           <div class="row my-4 px-5">
             <div class="col-12 d-flex justify-content-evenly">
-              <p-button label="Cancelar" severity="secondary" (click)="closeDialogCharacte()"></p-button>
+              <p-button label="Cancelar" severity="secondary" (click)="closeDialogCharacte(false)"></p-button>
             </div>
           </div>
-        </div> -->
+        </div>
+
       </div>
     </div>
   </ng-template>
