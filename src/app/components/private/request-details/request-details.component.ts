@@ -1048,9 +1048,10 @@ export class RequestDetailsComponent implements OnInit {
     this.visibleCorreccionIa = false;
   }
 
+  /*
   cancelarCorreccion() {
     this.visibleCorreccionIa = false;
-  }
+  } */
 
   cancelarCorreccionEnviar(requestDetails: RequestsDetails) {
     this.visibleCorreccionIaEnviar = false;
@@ -1121,6 +1122,34 @@ export class RequestDetailsComponent implements OnInit {
   borradorRespuesta(requestDetails: RequestsDetails) {
     //const respuestaBorrador = this.requestProcess.get('mensage')?.value;
     this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
+    const respuestaBorrador = this.requestProcess.get('mensage')?.value;
+    const payload: RequestAnswerTemp = {
+      request_id: requestDetails.request_id,
+      mensaje_temp: respuestaBorrador || '',
+    };
+
+    this.userService.createAnswerTemp(payload).subscribe({
+      next: (response: BodyResponse<string>): void => {
+        if (response.code === 200) {
+          this.respuestaTemp = response.data;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        this.existEraserAsnwer = true;
+        console.log('La suscripción ha sido completada.');
+        this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        return this.respuestaTemp;
+      },
+    });
+    this.visibleCorreccionIa = false;
+  }
+
+  borradorRespuestaNoCorregida(requestDetails: RequestsDetails) {
     const respuestaBorrador = this.requestProcess.get('mensage')?.value;
     const payload: RequestAnswerTemp = {
       request_id: requestDetails.request_id,
