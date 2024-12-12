@@ -298,4 +298,9 @@ export class ModalCharacterizationComponent implements OnInit {
     this.setRtaParameter.emit(payload);
     this.visible = false;
   }
+
+  closeDialogCharacte(value: boolean) {
+    this.setRta.emit(value);
+    this.visible = false;
+  }
 }

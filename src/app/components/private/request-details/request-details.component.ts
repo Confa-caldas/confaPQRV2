@@ -316,11 +316,11 @@ export class RequestDetailsComponent implements OnInit {
       return true; // Si la extensión es 'xls', devolver false para no mostrar el botón
     } else if (fileSize.includes('KB')) {
       return true;
-    } else if (this.extractFileSize(fileSize) < 20 && fileExt === 'pdf') {
+    } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'pdf') {
       return true;
-    } else if (this.extractFileSize(fileSize) < 20 && fileExt === 'jpg') {
+    } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'jpg') {
       return true;
-    } else if (this.extractFileSize(fileSize) < 20 && fileExt === 'png') {
+    } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'png') {
       return true;
     } else {
       return false;
