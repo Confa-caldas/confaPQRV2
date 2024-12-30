@@ -344,6 +344,20 @@
                 class="formProcess-card-text-placeholder"
                 [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
                 [ngClass]="{ 'text-respuesta': existEraserAsnwer }">
+                
+                <p-button
+                label="Solicitud pendiente"
+                severity="warn"
+                icon="pi pi-stopwatch"
+                [style]="{ 'border-radius': '10px' }"
+                (click)="solicitudPendiente()"/>
+              </div>
+              <br>
+              <div
+                *ngIf="requestDetails.status_name !== 'Cerrado'"
+                class="formProcess-card-text-placeholder"
+                [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
+                [ngClass]="{ 'text-respuesta': existEraserAsnwer }">
                 Guardar borrador
                 <p-button
                   icon="pi pi-save"
@@ -490,8 +504,7 @@
                     (click)="showModalRadicada()"></p-button>
                   <p-button
                     *ngIf="
-                      (requestHistoric.status_name === 'Reasignada' ||
-                        requestHistoric.status_name === 'Cerrada') &&
+                      (requestHistoric.status_name === 'Reasignada') &&
                       requestHistoric.answer_request !== null
                     "
                     icon="pi pi-eye"
@@ -870,3 +883,76 @@
     </div>
   </div>
 </p-dialog>
+
+<p-dialog
+  header="Solicitud pendiente"
+  [(visible)]="visibleSolicitudPendiente"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Solicitud pendiente</span>
+    </div>
+  </ng-template>
+
+  <!-- Formulario -->
+  <form [formGroup]="pendingRequestForm" (ngSubmit)="onSubmit()">
+    <!-- Mensaje -->
+    <div class="form-group">
+      <label for="message">Mensaje</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        rows="4"
+        class="form-control"
+        placeholder="Escribe tu mensaje aquí"
+        required>
+      </textarea>
+    </div>
+
+    <!-- Archivos adjuntos -->
+    <div class="form-group">
+      <label for="file">Archivos adjuntos</label>
+      <input
+        id="file"
+        type="file"
+        (change)="onFileSelect($event)"
+        class="form-control"
+        multiple
+        accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" />
+    </div>
+
+    <!-- Lista de archivos seleccionados -->
+    <div class="file-list" *ngIf="selectedFilesPending.length > 0">
+      <ul>
+        <li *ngFor="let file of selectedFilesPending; index as i">
+          {{ file.name }}
+          <button type="button" (click)="removeFile(i)" class="btn-remove">Quitar</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button
+        type="submit"
+        class="btn btn-yes"
+        >
+        Enviar
+      </button>
+      <button
+        type="button"
+        class="btn btn-cancel"
+        (click)="closeDialogPending()">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</p-dialog>
+

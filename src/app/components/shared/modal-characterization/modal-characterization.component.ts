@@ -9,10 +9,12 @@ import {
   RequestTypeList,
   RequestsDetails,
   TipologiesCauses,
+  PendingRequest,
 } from '../../../models/users.interface';
 import { Users } from '../../../services/users.service';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { MessageService } from 'primeng/api';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-modal-characterization',
@@ -42,6 +44,12 @@ export class ModalCharacterizationComponent implements OnInit {
   modalBoolean!: boolean;
   categoryBoolean!: boolean;
   causeBoolean!: boolean;
+
+  opciones = [
+    { id: 0, nombre: 'Cerrada' },
+    { id: 1, nombre: 'Pendiente' },
+  ];
+  seleccionada: number | null = null;
 
   formGroup: FormGroup<any> = new FormGroup<any>({});
 
@@ -279,6 +287,56 @@ export class ModalCharacterizationComponent implements OnInit {
       },
     });
   }
+
+  /*
+  closeDialogPendiente(value: boolean) {
+    const token = this.generateToken();
+
+    console.log(token)
+
+    const payload: PendingRequest = {
+      request_id: this.request_details?.request_id || 0,
+      token: token,
+      pending: true,
+    };
+    this.userService.registerPendingRequest(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        console.log("Solicitud en estado pendiente"); 
+      },
+    });   
+  }
+    */
+
+  generateToken() {
+    const uuid = uuidv4().replace(/-/g, '');
+
+    // Crear la fecha local
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    const formattedDate = `${year}${month}${day}T${hours}${minutes}${seconds}`;
+    
+    // UUID + fecha
+    const token = `${uuid}${formattedDate}`;
+    return token;
+}
+
   closeDialog(value: boolean) {
     this.setRta.emit(value);
 
@@ -302,5 +360,9 @@ export class ModalCharacterizationComponent implements OnInit {
   closeDialogCharacte(value: boolean) {
     this.setRta.emit(value);
     this.visible = false;
+  }
+
+  onDropdownChange(event: any): void {
+    this.seleccionada = event.value
   }
 }

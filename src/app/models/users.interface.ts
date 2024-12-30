@@ -522,3 +522,11 @@ export interface UserEnvironment {
   screenResolution: string;
   ipUser: string;
 }
+
+export interface PendingRequest {
+  request_id: number;
+  token: string;
+  pending: boolean;
+  message: string;
+  previus_state?: string;
+}
