@@ -523,6 +523,13 @@ export interface UserEnvironment {
   ipUser: string;
 }
 
+export interface PendingRequest {
+  request_id: number;
+  token: string;
+  pending: boolean;
+  message: string;
+  previus_state?: string;
+}
 export interface RequestsReview {
   request_id: number;
   filing_number: number;

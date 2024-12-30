@@ -15,6 +15,7 @@ import {
   MiPerfilConfa,
   Afiliado,
   RequestAnswerTemp,
+  PendingRequest,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -22,6 +23,7 @@ import { RoutesApp } from '../../../enums/routes.enum';
 import { SessionStorageItems } from '../../../enums/session-storage-items.enum';
 import { HttpClient } from '@angular/common/http';
 import { PaginatorState } from 'primeng/paginator';
+import { v4 as uuidv4 } from 'uuid';
 //Esto es nuevo
 import { Observable } from 'rxjs';
 import { MenuModule } from 'primeng/menu';
@@ -112,6 +114,7 @@ export class RequestDetailsComponent implements OnInit {
   visibleDialogIa = false;
   visibleCorreccionIa = false;
   visibleCorreccionIaEnviar = false;
+  visibleSolicitudPendiente = false;
   categoria: string = '';
   respuestaPredefinida: string = '';
   respuestaCorregida: string = '';
@@ -134,18 +137,27 @@ export class RequestDetailsComponent implements OnInit {
 
   //utilitarios
   items: MenuModule[] | undefined;
+  pendingRequestForm: FormGroup;
+  selectedFilesPending: File[] = [];
+
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
     private router: Router,
     private route: ActivatedRoute,
     private messageService: MessageService,
-    private http: HttpClient
+    private http: HttpClient,
+    private fb: FormBuilder
   ) {
     // (window as any).pdfMake.vfs = pdfFonts.pdfMake.vfs;
     this.requestProcess = this.formBuilder.group({
       mensage: [null, [Validators.required, Validators.maxLength(6000)]],
       //mensage: [null, [Validators.required]],
+    });
+
+    this.pendingRequestForm = this.fb.group({
+      message: ['', [Validators.required, Validators.maxLength(6000)]],
+      //file: [null, Validators.required],
     });
   }
 
@@ -1236,5 +1248,143 @@ export class RequestDetailsComponent implements OnInit {
         return this.respuestaTemp;
       },
     });
+  }
+
+  solicitudPendiente() {
+    this.visibleSolicitudPendiente = true;
+  }
+
+  onFileSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      Array.from(input.files).forEach(file => this.selectedFilesPending.push(file));
+    }
+  }
+
+  onSubmit1(): void {
+    const formData = new FormData();
+    formData.append('message', this.pendingRequestForm.get('message')?.value);
+
+    // Agregar todos los archivos al FormData
+    this.selectedFilesPending.forEach(file => formData.append('files', file));
+
+    console.log('Formulario enviado:', this.requestDetails?.status_name);
+    console.log('Mensaje:', this.pendingRequestForm.get('message')?.value);
+    //console.log('Formulario enviado:', formData);
+
+    // Aquí enviarías los datos al backend
+    // this.myService.submitRequest(formData).subscribe(response => ...);
+
+    // Cerrar el diálogo después de enviar
+    this.closeDialogPending();
+  }
+
+  onSubmit(): void {
+    if (this.pendingRequestForm.valid) {
+      // Captura el valor del formulario
+      const formValue = this.pendingRequestForm.value;
+
+      // Prepara FormData para incluir archivos y datos
+      const formData = new FormData();
+      formData.append('message', formValue.message);
+
+      // Agrega los archivos seleccionados al FormData
+      this.selectedFilesPending.forEach(file => {
+        formData.append('files', file);
+      });
+
+      // Llama al servicio para enviar los datos
+      const token = this.generateToken();
+
+      console.log(token);
+
+      const payload: PendingRequest = {
+        request_id: this.requestDetails?.filing_number || 0,
+        token: token,
+        pending: true,
+        message: this.pendingRequestForm.get('message')?.value,
+        previus_state: this.requestDetails?.status_name,
+      };
+
+      console.log(payload);
+
+      this.userService.registerPendingRequest(payload).subscribe({
+        next: (response: BodyResponse<string>) => {
+          if (response.code === 200) {
+            this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+          } else {
+            this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+          }
+        },
+        error: (err: any) => {
+          console.log(err);
+        },
+        complete: () => {
+          console.log('La suscripción ha sido completada.');
+          console.log('Solicitud en estado pendiente');
+          this.closeDialogPending();
+        },
+      });
+    } else {
+      this.pendingRequestForm.markAllAsTouched(); // Marca los campos para mostrar errores
+    }
+  }
+
+  closeDialogPending(): void {
+    this.visibleSolicitudPendiente = false;
+    this.pendingRequestForm.reset();
+    this.selectedFile = null;
+  }
+
+  removeFile(index: number): void {
+    this.selectedFilesPending.splice(index, 1);
+  }
+
+  /*
+  closeDialogPendiente(value: boolean) {
+    const token = this.generateToken();
+
+    console.log(token)
+
+    const payload: PendingRequest = {
+      request_id: this.request_details?.request_id || 0,
+      token: token,
+      pending: true,
+    };
+    this.userService.registerPendingRequest(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        console.log("Solicitud en estado pendiente"); 
+      },
+    });   
+  } */
+
+  generateToken() {
+    const uuid = uuidv4().replace(/-/g, '');
+
+    // Crear la fecha local
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    const formattedDate = `${year}${month}${day}T${hours}${minutes}${seconds}`;
+
+    // UUID + fecha
+    const token = `${uuid}${formattedDate}`;
+    return token;
   }
 }
