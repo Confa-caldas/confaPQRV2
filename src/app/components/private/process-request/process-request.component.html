@@ -138,6 +138,7 @@
                 Responsable solicitud
               </th>
               <th style="width: 5%"></th>
+              <th style="min-width: 7rem"></th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-requestListByAssigned>
@@ -163,6 +164,18 @@
                   icon="pi pi-eye"
                   [styleClass]="'btn-icon-info'"
                   (click)="redirectDetails(requestListByAssigned.request_id)"></p-button>
+              </td>
+              <td>
+                <button
+                  class="custom-button"
+                  *ngIf="
+                    requestListByAssigned.status_name !== 'Asignada - En revisión' &&
+                    requestListByAssigned.status_name !== 'Reasignada - En revisión' &&
+                    requestListByAssigned.status_name !== 'Cerrada'
+                  "
+                  (click)="assignStateReviewRequest(requestListByAssigned)">
+                  En revisión
+                </button>
               </td>
             </tr>
           </ng-template>
@@ -352,4 +365,11 @@
     </p-tabView>
   </div>
 </div>
+<app-modal-review-state
+  *ngIf="visibleDialogInput"
+  [visible]="visibleDialogInput"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  (setRta)="closeDialogInput($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-review-state>
 <p-toast></p-toast>

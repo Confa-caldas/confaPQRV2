@@ -160,7 +160,7 @@ export class RequestDetailsComponent implements OnInit {
     this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
     this.user = sessionStorage.getItem(SessionStorageItems.USER) || '';
 
-    console.log(localStorage.getItem);
+    // console.log(localStorage.getItem);
     let routeIf = localStorage.getItem('route');
     if (routeIf?.includes(RoutesApp.SEARCH_REQUEST)) {
       this.routeTab = routeIf;
@@ -371,7 +371,7 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestHistoric[]>) => {
         if (response.code === 200) {
           this.requestHistoric = response.data;
-          console.log(this.requestHistoric);
+          console.log(this.requestHistoric, 'historico');
           this.totalRowsHistoric = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -848,6 +848,16 @@ export class RequestDetailsComponent implements OnInit {
     this.isDialogVisible = true;
   }
 
+  showModalReview(user_name: string, request_name: string) {
+    this.dialogHeader = 'Descripción de la revisión';
+    this.requestHistoric.forEach((request: RequestHistoric) => {
+      if (user_name === request.user_name_completed && request.status_name === request_name) {
+        this.dialogContent = request.answer_request;
+      }
+    });
+    this.isDialogVisible = true;
+  }
+
   /*
   respuestaSugeridaIa(requestDescription: string): void {
 
@@ -944,8 +954,8 @@ export class RequestDetailsComponent implements OnInit {
     this.visibleDialogIa = false;
   }
 
-  guardarBorrador(requestDetails: RequestsDetails){
-    this.userService.checkServiceAvailability().subscribe((isAvailable) => {
+  guardarBorrador(requestDetails: RequestsDetails) {
+    this.userService.checkServiceAvailability().subscribe(isAvailable => {
       if (isAvailable) {
         console.log('Servicio disponible en este momento.');
         this.correccionSugeridaIa(requestDetails);

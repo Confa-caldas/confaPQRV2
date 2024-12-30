@@ -45,7 +45,8 @@ import {
   AssociationRequestUserList,
   AssociateRequestUser,
   ProcessRequest,
-  PendingRequest
+  PendingRequest,
+  RequestsReview,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -562,6 +563,13 @@ export class Users {
   registerPendingRequest(payload: PendingRequest) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.CREATE_PENDING_REQUEST}`,
+      payload
+    );
+  }
+  
+  changeStateReview(payload: RequestsReview) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CHANGE_STATE_REVIEW}`,
       payload
     );
   }

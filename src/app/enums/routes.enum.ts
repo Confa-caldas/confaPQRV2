@@ -86,5 +86,6 @@ export enum EndPointRoute {
   ASSOCIATE_REQUEST_USER = 'request_user/created',
   INACTIVE_ASSOCIATE_REQUEST_USER = 'request_user/in-activate',
   PROCESS_REQUEST_LOG = 'request/process_log',
-  CREATE_PENDING_REQUEST = 'request/create_pending'
+  CREATE_PENDING_REQUEST = 'request/create_pending',
+  CHANGE_STATE_REVIEW = 'request/review_answer',
 }
