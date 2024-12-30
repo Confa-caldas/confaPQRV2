@@ -24,6 +24,9 @@ import { HttpClient } from '@angular/common/http';
 import { PaginatorState } from 'primeng/paginator';
 //Esto es nuevo
 import { Observable } from 'rxjs';
+import { MenuModule } from 'primeng/menu';
+import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
 // import { Util } from '../../../utils/utils';
 // import * as pdfMake from 'pdfmake/build/pdfmake';
 // import * as pdfFonts from 'pdfmake/build/vfs_fonts';
@@ -129,6 +132,8 @@ export class RequestDetailsComponent implements OnInit {
   respuestaTemp: string = '';
   existEraserAsnwer: boolean = false;
 
+  //utilitarios
+  items: MenuModule[] | undefined;
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
@@ -175,6 +180,34 @@ export class RequestDetailsComponent implements OnInit {
     // Util.getImageDataUrl('assets/imagenes/footer.png').then(
     //   imagenConfaFooter => (this.imgPdf1 = imagenConfaFooter)
     // );
+
+    this.items = [
+      {
+        items: [
+          {
+            label: 'Reabrir',
+            icon: 'pi pi-history',
+            command: () => this.accionOpcion1Reabrir(),
+          },
+          {
+            label: 'Envio de respuesta',
+            icon: 'pi pi-send',
+            command: () => this.accionOpcion2EnviarCorreo(),
+          },
+        ],
+      },
+    ];
+  }
+
+  // Métodos para las acciones
+  accionOpcion1Reabrir() {
+    console.log('Opción 1 seleccionada');
+    // Aquí puedes agregar la lógica de la acción
+  }
+
+  accionOpcion2EnviarCorreo() {
+    console.log('Opción 2 seleccionada');
+    // Aquí puedes agregar la lógica de la acción
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
