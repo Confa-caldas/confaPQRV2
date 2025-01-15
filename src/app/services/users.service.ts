@@ -47,6 +47,7 @@ import {
   ProcessRequest,
   PendingRequest,
   RequestsReview,
+  sendEmail,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -566,10 +567,17 @@ export class Users {
       payload
     );
   }
-  
+
   changeStateReview(payload: RequestsReview) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.CHANGE_STATE_REVIEW}`,
+      payload
+    );
+  }
+
+  sendEmailAll(payload: sendEmail) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.SEND_EMAIL_MASSIVE}`,
       payload
     );
   }

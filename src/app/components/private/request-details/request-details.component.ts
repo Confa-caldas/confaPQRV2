@@ -16,6 +16,7 @@ import {
   Afiliado,
   RequestAnswerTemp,
   PendingRequest,
+  sendEmail,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -29,6 +30,7 @@ import { Observable } from 'rxjs';
 import { MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
+import { Timeline } from 'primeng/timeline';
 // import { Util } from '../../../utils/utils';
 // import * as pdfMake from 'pdfmake/build/pdfmake';
 // import * as pdfFonts from 'pdfmake/build/vfs_fonts';
@@ -139,6 +141,16 @@ export class RequestDetailsComponent implements OnInit {
   items: MenuModule[] | undefined;
   pendingRequestForm: FormGroup;
   selectedFilesPending: File[] = [];
+  visibleSolicitudEnvioMasivo = false;
+  envioMasivoForm: FormGroup;
+  emailInput: string = ''; // Variable para capturar el correo ingresado
+  emailList: string[] = []; // Lista de correos agregados
+  errorMessage: string = '';
+  currentState: string = '';
+  currentIndex: number = 0;
+
+  // Arreglo de eventos para la línea de tiempo
+  events: any[] = [];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -158,6 +170,11 @@ export class RequestDetailsComponent implements OnInit {
     this.pendingRequestForm = this.fb.group({
       message: ['', [Validators.required, Validators.maxLength(6000)]],
       //file: [null, Validators.required],
+    });
+
+    this.envioMasivoForm = this.fb.group({
+      message: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
     });
   }
 
@@ -197,29 +214,18 @@ export class RequestDetailsComponent implements OnInit {
       {
         items: [
           {
-            label: 'Reabrir',
+            label: 'Reabrir solicitud',
             icon: 'pi pi-history',
-            command: () => this.accionOpcion1Reabrir(),
+            command: () => this.solicitudPendiente(),
           },
           {
             label: 'Envio de respuesta',
             icon: 'pi pi-send',
-            command: () => this.accionOpcion2EnviarCorreo(),
+            command: () => this.envioCorreoMasivo(),
           },
         ],
       },
     ];
-  }
-
-  // Métodos para las acciones
-  accionOpcion1Reabrir() {
-    console.log('Opción 1 seleccionada');
-    // Aquí puedes agregar la lógica de la acción
-  }
-
-  accionOpcion2EnviarCorreo() {
-    console.log('Opción 2 seleccionada');
-    // Aquí puedes agregar la lógica de la acción
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
@@ -307,18 +313,33 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestsDetails>) => {
         if (response.code === 200) {
           this.requestDetails = response.data;
+
+          // Lista de estados que se deben agrupar
+          const estadosAgrupados = [
+            'Asignada',
+            'Reasignada',
+            'Asignada - En revisión',
+            'Reasignada - En revisión',
+            'Pendiente Usuario Externo',
+          ];
+
+          // Agrupar estados en "Gestión"
+          this.currentState = estadosAgrupados.includes(this.requestDetails.status_name)
+            ? 'Gestión'
+            : this.requestDetails.status_name;
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
       },
       error: (err: any) => {
-        console.log(err);
+        console.error(err);
       },
       complete: () => {
         console.log('La suscripción ha sido completada.');
       },
     });
   }
+
   getRequestApplicantAttachments(request_id: number) {
     const payload: Pagination = {
       request_id: request_id,
@@ -404,7 +425,7 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestHistoric[]>) => {
         if (response.code === 200) {
           this.requestHistoric = response.data;
-          console.log(this.requestHistoric, 'historico');
+          this.fillStatesDetails(this.requestHistoric);
           this.totalRowsHistoric = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -417,6 +438,67 @@ export class RequestDetailsComponent implements OnInit {
         console.log('La suscripción ha sido completada.');
       },
     });
+  }
+
+  fillStatesDetails(request: RequestHistoric[]): void {
+    if (request && request.length > 0) {
+      // Lista de estados que se deben agrupar
+      const estadosAgrupados = [
+        'Asignada',
+        'Reasignada',
+        'Asignada - En revisión',
+        'Reasignada - En revisión',
+        'Pendiente Usuario Externo',
+      ];
+
+      // Estados predeterminados
+      const estadosPredeterminados = ['Radicada', 'Gestión', 'Cerrada'];
+
+      // Objeto para almacenar los estados agrupados con la última fecha
+      const groupedStates = request.reduce(
+        (acc, item) => {
+          const state = item.status_name;
+
+          if (estadosAgrupados.includes(state)) {
+            // Si el estado está en la lista de agrupados, verificar la fecha más reciente
+            if (
+              !acc['Gestión'] ||
+              new Date(acc['Gestión'].updated_date) < new Date(item.updated_date)
+            ) {
+              acc['Gestión'] = { ...item, status_name: 'Gestión' }; // Cambiar nombre a 'Gestión'
+            }
+          } else {
+            // Si no está en la lista de agrupados, guardar cada estado individualmente
+            acc[`${state}-${item.updated_date}`] = item;
+          }
+          return acc;
+        },
+        {} as Record<string, RequestHistoric>
+      );
+
+      // Convertir el objeto agrupado en un arreglo de eventos
+      this.events = Object.values(groupedStates).map(item => ({
+        state: item.status_name,
+        label: item.updated_date || 'No tiene',
+        stateShow: item.status_name,
+      }));
+
+      // Asegurar que los estados predeterminados estén presentes
+      estadosPredeterminados.forEach(state => {
+        if (!this.events.some(event => event.state === state)) {
+          this.events.push({
+            state: state,
+            label: 'No tiene',
+            stateShow: state,
+          });
+        }
+      });
+
+      console.log(this.events, 'bu');
+      this.currentIndex = this.events.findIndex(event => event.stateShow === this.currentState);
+    } else {
+      console.log('No hay datos históricos disponibles.');
+    }
   }
 
   assignRequest(request_details: RequestsDetails) {
@@ -1312,6 +1394,7 @@ export class RequestDetailsComponent implements OnInit {
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+            this.ngOnInit();
           } else {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
           }
@@ -1386,5 +1469,83 @@ export class RequestDetailsComponent implements OnInit {
     // UUID + fecha
     const token = `${uuid}${formattedDate}`;
     return token;
+  }
+
+  envioCorreoMasivo() {
+    this.visibleSolicitudEnvioMasivo = true;
+  }
+
+  closeDialogenvioCorreoMasivo(): void {
+    this.visibleSolicitudEnvioMasivo = false;
+    this.emailList = []; // Limpia la lista de correos
+    this.errorMessage = '';
+    this.envioMasivoForm.reset();
+  }
+
+  // Añadir correo a la lista
+  addEmail(): void {
+    const email = this.envioMasivoForm.get('email')?.value;
+
+    // Validar si el campo de correo no está vacío y tiene un formato de correo válido
+    if (!email || !this.isValidEmail(email)) {
+      this.errorMessage = 'Debe introducir un correo válido.';
+      return; // Detiene la ejecución si el correo no es válido
+    }
+
+    // Verificar si el correo ya está en la lista
+    if (this.emailList.includes(email)) {
+      this.errorMessage = 'El correo ya está en la lista.';
+      return;
+    }
+
+    // Añadir el correo a la lista si es válido
+    this.emailList.push(email);
+    this.envioMasivoForm.get('email')?.reset(); // Limpiar el campo de correo
+    this.errorMessage = ''; // Limpiar cualquier mensaje de error
+  }
+
+  // Función para verificar si el correo tiene un formato válido
+  isValidEmail(email: string): boolean {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailPattern.test(email);
+  }
+
+  // Eliminar correo de la lista
+  removeEmail(index: number) {
+    this.emailList.splice(index, 1);
+  }
+
+  onSubmitRepuestaMasivo(): void {
+    if (!this.emailList || this.emailList.length === 0) {
+      this.errorMessage = 'Debe añadir al menos un correo antes de enviar.';
+      return;
+    }
+
+    const payload: sendEmail = {
+      request_id: this.requestDetails?.filing_number || 0,
+      email: this.emailList,
+    };
+
+    this.userService.sendEmailAll(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        this.closeDialogenvioCorreoMasivo();
+      },
+    });
+  }
+
+  isValidDate(value: string): boolean {
+    const date = new Date(value);
+    return !isNaN(date.getTime());
   }
 }

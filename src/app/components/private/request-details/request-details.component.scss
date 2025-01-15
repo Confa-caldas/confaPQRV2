@@ -478,3 +478,190 @@ label {
     }
   }
 }
+
+.email-list {
+  margin-top: 10px;
+}
+
+.horizontal-list {
+  display: flex; /* Cambia la dirección a horizontal */
+  flex-wrap: wrap; /* Permite que los elementos se ajusten si exceden el ancho */
+  list-style-type: none; /* Quita los puntos de la lista */
+  padding: 0;
+  gap: 10px; /* Espaciado entre elementos */
+}
+
+.horizontal-item {
+  display: flex; /* Alinea el contenido dentro de cada item */
+  align-items: center; /* Centra el contenido verticalmente */
+  background-color: #f1f1f1; /* Color de fondo opcional */
+  border: 1px solid #ddd; /* Borde opcional */
+  padding: 5px 10px;
+  border-radius: 5px; /* Bordes redondeados */
+}
+
+.btn-remove {
+  margin-left: 10px; /* Espaciado entre el texto y el botón */
+  background-color: #dc3545; /* Color rojo para el botón */
+  color: white;
+  border: none;
+  padding: 2px 8px;
+  border-radius: 50%; /* Hacer el botón circular */
+  cursor: pointer;
+}
+
+.btn-remove:hover {
+  background-color: #b71c1c; /* Oscurece el botón al pasar el ratón */
+}
+
+.email-input-group {
+  display: flex; /* Flexbox para alinear elementos en línea */
+  align-items: center; /* Centra el botón verticalmente */
+}
+
+.input-short {
+  flex: 1; /* Permite que el campo ocupe espacio proporcionalmente */
+  padding: 5px 10px; /* Ajusta el relleno interno */
+  border: 1px solid #ccc; /* Borde estándar */
+  border-radius: 4px 0 0 4px; /* Bordes redondeados (solo izquierda) */
+  margin-right: -1px; /* Elimina el espacio entre input y botón */
+}
+
+.btn.btn-add {
+  padding: 5px 15px; /* Tamaño del botón */
+  background-color: #007bff; /* Color azul */
+  color: white;
+  border: 1px solid #ccc; /* Igual borde que el input */
+  border-radius: 0 4px 4px 0; /* Bordes redondeados (solo derecha) */
+  cursor: pointer;
+}
+
+.btn.btn-add:hover {
+  background-color: #0056b3; /* Oscurece el botón al pasar el ratón */
+}
+
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+/* Reducir la altura del contenedor del timeline */
+.timeline-container {
+  display: flex;
+  justify-content: center;  /* Centra el contenido horizontalmente */
+  align-items: center;      /* Centra el contenido verticalmente, si es necesario */
+  width: 100%;              /* Asegura que ocupe todo el ancho disponible */
+  position: relative;
+}
+
+
+p-timeline {
+  width: 70%; /* Ocupa todo el ancho disponible en el contenedor */
+  height: 100px; /* Aumenta la altura si es necesario */
+}
+
+/* Ajustar los marcadores y el contenido del timeline */
+p-timeline .ui-timeline-event {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ajustar los puntos del timeline */
+p-timeline .ui-timeline-event-marker {
+  width: 12px !important; /* Tamaño del punto */
+  height: 12px !important;
+}
+
+/* Ajustar el contenido del evento */
+p-timeline .ui-timeline-event-content {
+  font-size: 12px !important; /* Reducir el tamaño de la fuente */
+  margin-top: 0 !important;
+}
+
+/* Estilo por defecto para las bolitas */
+.timeline-marker {
+  // width: 12px;
+  // height: 12px;
+  // background-color: #ccc; /* Color por defecto */
+  // border-radius: 50%;
+  // display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #ccc;
+  transition: background-color 0.3s;
+}
+
+/* Estilo para la bolita activa */
+.active-marker {
+  background-color: #4caf50; /* Cambia al color deseado */
+}
+
+
+.timeline-event-state {
+  font-size: 12px; /* Cambia el tamaño de fuente según tu necesidad */
+  font-weight: bold; /* Opcional: Cambia el peso de la fuente */
+  color: #333; /* Opcional: Cambia el color del texto */
+  font-family: 'ubuntu-regular';
+  text-align: left;
+}
+
+.timeline-event-label{
+  font-size: 10px; /* Cambia el tamaño de fuente según tu necesidad */
+  color: #333; /* Opcional: Cambia el color del texto */
+  font-family: 'ubuntu-regular';
+  text-align: left;
+}
+
+.timeline-event-state .ng-star-inserted{
+  width: 500px;
+}
+
+
+/* Contenedor del timeline */
+.timeline-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+/* Timeline personalizado */
+p-timeline {
+  width: 70%;
+}
+
+/* Personalización de los marcadores */
+.timeline-marker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px; /* Tamaño del punto */
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ccc; /* Color por defecto */
+  transition: background-color 0.3s;
+  font-size: 20px; /* Tamaño del ícono */
+  color: white; /* Color del ícono */
+}
+
+/* Marcador activo */
+.active-marker {
+  background-color: #01aeef; /* Color verde */
+  color: white; /* Color del ícono */
+}
+
+/* Marcador anterior */
+.previous-marker {
+  background-color: lightgreen; /* Color verde claro */
+  color: white; /* Color del ícono */
+}
+
+/* Ícono en los marcadores */
+.timeline-marker i {
+  font-size: 18px; /* Tamaño del ícono */
+}
+
+
