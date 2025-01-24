@@ -199,6 +199,18 @@
                 </li>
               </div>
             </div>
+            <br />
+            <div class="process-container-row" *ngIf="historyData.length > 0">
+              <div class="process-container-col-description">
+                <p-button
+                  icon="pi pi-plus"
+                  [styleClass]="'btn-icon-info'"
+                  (click)="solicitudHistory()"
+                  [style]="{ 'border-radius': '10px' }"
+                  title="Ver respuestas">
+                </p-button>
+              </div>
+            </div>
           </div>
         </ul>
       </p-tabPanel>
@@ -1093,4 +1105,99 @@
       </button>
     </div>
   </form>
+</p-dialog>
+
+<!-- pop up historia respuestas -->
+<p-dialog
+  header="Historia"
+  [(visible)]="visibleHistory"
+  [modal]="true"
+  [style]="{ width: '60vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Historia</span>
+    </div>
+  </ng-template>
+
+  <!-- Contenido -->
+  <div *ngFor="let item of historyData; let i = index" class="history-item">
+    <div
+      class="chat-bubble"
+      [ngClass]="{
+        'user-internal': item.usuario === 'usuario interno',
+        'user-external': item.usuario === 'usuario externo'
+      }">
+      <div class="chat-header">
+        <span> {{ item.usuario }}</span>
+      </div>
+      <div class="chat-header">
+        <span><strong>Fecha</strong> {{ item.fecha }}</span>
+      </div>
+
+      <div class="chat-header">
+        <span><strong>Mensaje</strong> </span>
+      </div>
+      <div class="chat-message">
+        {{ item.observacion }}
+      </div>
+      <br />
+      <div class="chat-header">
+        <span><strong>Archivos</strong> </span>
+      </div>
+
+      <p-table
+        *ngIf="item.processed_attachments && item.processed_attachments.length > 0"
+        [value]="item.processed_attachments"
+        [scrollable]="true"
+        scrollHeight="100px"
+        selectionMode="single"
+        [paginator]="false"
+        [rows]="2"
+        [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '52rem' }">
+        <ng-template pTemplate="header">
+          <tr style="height: 20px">
+            <th style="width: 20%">Archivo</th>
+            <th style="width: 5%">Previsualizar</th>
+            <th style="width: 5%">Descargar</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-attachment>
+          <tr>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              {{ attachment.file_name }}
+            </td>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              <p-button
+                icon="pi pi-eye"
+                [styleClass]="'btn-icon-info'"
+                (click)="getPreSignedUrlToDownload(attachment.url, attachment.file_name, false)">
+              </p-button>
+            </td>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              <p-button
+                icon="pi pi-download"
+                [styleClass]="'btn-icon-info'"
+                (click)="getPreSignedUrlToDownload(attachment.url, attachment.file_name, true)">
+              </p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <!-- Mostrar mensaje si no hay archivos -->
+      <div *ngIf="!item.processed_attachments || item.processed_attachments.length === 0">
+        <p>No hay archivos disponibles.</p>
+      </div>
+    </div>
+  </div>
+  <!-- Botones -->
+  <div class="dialog-buttons">
+    <button type="button" class="btn btn-cancel" (click)="closeDialogHistory()">Cerrar</button>
+  </div>
 </p-dialog>

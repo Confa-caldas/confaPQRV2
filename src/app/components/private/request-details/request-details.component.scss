@@ -664,4 +664,40 @@ p-timeline {
   font-size: 18px; /* Tamaño del ícono */
 }
 
+.history-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1em;
+}
+
+.chat-bubble {
+  padding: 1em;
+  margin: 0.5em 0;
+  border-radius: 15px;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header {
+  font-family: 'ubuntu-regular';
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chat-message {
+  font-size: 14px;
+}
+
+.user-internal {
+  color: #2d572c;
+}
+
+.user-external {
+  color: #2d496a;
+}
+
 

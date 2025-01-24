@@ -17,6 +17,8 @@ import {
   RequestAnswerTemp,
   PendingRequest,
   sendEmail,
+  requestHistoryRequest,
+  historyRequest,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -117,6 +119,7 @@ export class RequestDetailsComponent implements OnInit {
   visibleCorreccionIa = false;
   visibleCorreccionIaEnviar = false;
   visibleSolicitudPendiente = false;
+  visibleHistory = false;
   categoria: string = '';
   respuestaPredefinida: string = '';
   respuestaCorregida: string = '';
@@ -151,6 +154,11 @@ export class RequestDetailsComponent implements OnInit {
 
   // Arreglo de eventos para la línea de tiempo
   events: any[] = [];
+
+  historyData: Array<any> = [];
+  // historyData!: historyRequest[];
+  // history!: historyRequest;
+  // requestPendingAttachmentsList: RequestAttachmentsList[] = [];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -200,6 +208,8 @@ export class RequestDetailsComponent implements OnInit {
 
     //validar si esta cerrada
     this.getAnswerTemp(this.request_id);
+    // histico sobre reapertura de solicitudes
+    this.getHistoryRequest(this.request_id);
 
     // //Neuvo pdf
     // Util.getImageDataUrl('assets/imagenes/encabezado.png').then(
@@ -350,7 +360,6 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestAttachmentsList[]>) => {
         if (response.code === 200) {
           this.requestApplicantAttachmentsList = response.data;
-          console.log(response.data);
           this.totalRowsApplicantAttachments = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -1547,5 +1556,35 @@ export class RequestDetailsComponent implements OnInit {
   isValidDate(value: string): boolean {
     const date = new Date(value);
     return !isNaN(date.getTime());
+  }
+
+  solicitudHistory() {
+    this.visibleHistory = true;
+  }
+
+  closeDialogHistory(): void {
+    this.visibleHistory = false;
+  }
+
+  getHistoryRequest(request_id: number) {
+    const payload: requestHistoryRequest = {
+      request_id: request_id,
+    };
+    this.userService.getHistoryRequest(payload).subscribe({
+      next: (response: BodyResponse<historyRequest[]>) => {
+        if (response.code === 200) {
+          this.historyData = response.data;
+          console.log(this.historyData, 'aa');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
   }
 }
