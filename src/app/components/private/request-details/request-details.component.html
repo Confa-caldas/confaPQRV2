@@ -947,27 +947,38 @@
         required>
       </textarea>
     </div>
-
+    <br>
     <!-- Archivos adjuntos -->
     <div class="form-group">
       <label for="file">Archivos adjuntos</label>
+      
       <input
         id="file"
         type="file"
-        (change)="onFileSelect($event)"
-        class="form-control"
-        multiple
-        accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" />
+        #archive_request_pending
+        class="formProcess-buttonUp-custom-icon"
+        name="archive_request_pending"
+        (change)="onFileSelectedPending($event)"
+        accept=".jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+        maxFileSize="20971520"
+        multiple />
+      <label class="formProcess-buttonUp-label" (click)="openFileInputPending()">
+        Seleccionar
+        <i style="margin-left: 5px" class="pi pi-upload"></i>
+      </label>
+      <label class="formProcess-card-text-placeholder-invalid"
+        >{{ errorSizeFile ? errorMensajeFile : ''
+        }}{{ errorExtensionFile ? errorMensajeFile : ''
+        }}{{ errorRepeatFile ? errorMensajeFile : '' }}</label
+      >
     </div>
 
     <!-- Lista de archivos seleccionados -->
-    <div class="file-list" *ngIf="selectedFilesPending.length > 0">
-      <ul>
-        <li *ngFor="let file of selectedFilesPending; index as i">
-          {{ file.name }}
-          <button type="button" (click)="removeFile(i)" class="btn-remove">Quitar</button>
-        </li>
-      </ul>
+    <div
+      class="formProcess-labelUpload"
+      *ngFor="let fileNameP of fileNameListPending; let i = index">
+      <p class="formProcess-labelUpload-name">{{ fileNameP }}</p>
+      <i (click)="clearFileInputPending(i)" class="formProcess-labelUpload-name pi pi-times"></i>
     </div>
 
     <!-- Botones -->

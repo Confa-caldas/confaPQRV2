@@ -122,6 +122,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.REQUEST_PENDING,
+    //canActivate: [sessionGuard],
+    component: LayoutRequestComponent,
+    loadChildren: () =>
+      import('./components/private/request-pending/request-pending.module').then(
+        m => m.RequestPendingModule
+      ),
+  },
+  {
     path: RoutesApp.REPORT_DETAILS,
     canActivate: [sessionGuard],
     component: LayoutComponent,

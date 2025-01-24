@@ -40,6 +40,8 @@ import { Observable } from 'rxjs';
 export class RequestDetailsComponent implements OnInit {
   @ViewChild('archive_request') fileInput!: ElementRef;
 
+  @ViewChild('archive_request_pending') fileInputPending!: ElementRef;
+
   displayPreviewModal: boolean = false;
   viewerType: 'google' | 'office' | 'image' | 'pdf' = 'google';
 
@@ -67,7 +69,9 @@ export class RequestDetailsComponent implements OnInit {
   errorExtensionFile!: boolean;
   errorSizeFile!: boolean;
   fileNameList: string[] = [];
+  fileNameListPending: string[] = [];
   arrayAssignedAttachment: ApplicantAttachments[] = [];
+  arrayAssignedAttachmentPending: ApplicantAttachments[] = [];
   routeProcessRequest!: string;
   routeSearchRequest!: string;
   // routeTab!: string;
@@ -607,6 +611,33 @@ export class RequestDetailsComponent implements OnInit {
     });
   }
 
+  //ESCRIBE EN LA TABLA DE PENDIENTES PENDING
+  async getPreSignedUrlPending(file: ApplicantAttachments) {
+    const payload = {
+      //source_name: file['source_name'],
+      source_name: file['source_name'].replace(/(?!\.[^.]+$)\./g, '_'),
+      fileweight: file['fileweight'],
+      request_id: this.request_id,
+    };
+    this.userService.getUrlSigned(payload, 'pending').subscribe({
+      next: (response: BodyResponse<string>): void => {
+        if (response.code === 200) {
+          this.preSignedUrl = response.data;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        this.uploadToPresignedUrl(file);
+        return this.preSignedUrl;
+      },
+    });
+  }
+
   async uploadToPresignedUrl(file: ApplicantAttachments) {
     const uploadResponse = await this.http
       .put(this.preSignedUrl, file.file, {
@@ -623,6 +654,14 @@ export class RequestDetailsComponent implements OnInit {
     await Promise.all(
       this.arrayAssignedAttachment.map(async item => {
         await this.getPreSignedUrl(item);
+      })
+    );
+  }
+
+  async attachAssignedFilesPending() {
+    await Promise.all(
+      this.arrayAssignedAttachmentPending.map(async item => {
+        await this.getPreSignedUrlPending(item);
       })
     );
   }
@@ -1228,25 +1267,7 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
-  onSubmit1(): void {
-      const formData = new FormData();
-      formData.append('message', this.pendingRequestForm.get('message')?.value);
-
-      // Agregar todos los archivos al FormData
-      this.selectedFilesPending.forEach(file => formData.append('files', file));
-
-      console.log('Formulario enviado:', this.requestDetails?.status_name);
-      console.log('Mensaje:', this.pendingRequestForm.get('message')?.value);
-      //console.log('Formulario enviado:', formData);
-
-      // Aquí enviarías los datos al backend
-      // this.myService.submitRequest(formData).subscribe(response => ...);
-
-      // Cerrar el diálogo después de enviar
-      this.closeDialogPending();
-    
-  }
-
+  //PROCESO PARA DEJAR UNA SOLICUTD PENDIENTE
   onSubmit(): void {
     if (this.pendingRequestForm.valid) {
       // Captura el valor del formulario
@@ -1279,7 +1300,14 @@ export class RequestDetailsComponent implements OnInit {
       this.userService.registerPendingRequest(payload).subscribe({
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
-            this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+            if (this.getAssignedPending().length == 0) {
+              this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+              this.router.navigate([RoutesApp.PROCESS_REQUEST]);
+            } else {
+              this.attachAssignedFilesPending();
+              this.router.navigate([RoutesApp.PROCESS_REQUEST]);
+              this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+            }
           } else {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
           }
@@ -1354,5 +1382,77 @@ export class RequestDetailsComponent implements OnInit {
     // UUID + fecha
     const token = `${uuid}${formattedDate}`;
     return token;
+}
+
+openFileInputPending() {
+  this.fileInputPending.nativeElement.value = ''; // Limpiar la entrada de archivos antes de abrir el cuadro de diálogo
+  this.fileInputPending.nativeElement.click();
+}
+
+onFileSelectedPending(event: any) {
+  const filesPending: FileList = event.target.files;
+
+  for (let i = 0; i < filesPending.length; i++) {
+    if (this.fileNameListPending.includes(filesPending[i].name)) {
+      this.errorMensajeFile = `El archivo ${filesPending[i].name} ya esta adjunto`;
+      this.errorRepeatFile = true;
+      continue;
+    } else {
+      const file: File = filesPending[i];
+
+      let fileSizeFormat: string;
+      const fileName: string = file.name;
+      const fileSizeInKiloBytes = file.size / 1024;
+      if (fileSizeInKiloBytes < 1024) {
+        fileSizeFormat = fileSizeInKiloBytes.toFixed(2) + 'KB';
+      } else {
+        const fileSizeMegabytes = fileSizeInKiloBytes / 1024;
+        fileSizeFormat = fileSizeMegabytes.toFixed(2) + 'MB';
+      }
+      if (this.isValidExtension(file)) {
+        this.errorMensajeFile = `El archivo ${filesPending[i].name} tiene una extension no permitida`;
+        this.errorExtensionFile = true;
+        continue;
+      }
+
+      if (file.size > 20971520) {
+        this.errorMensajeFile = `El archivo ${filesPending[i].name} supera los 20MB`;
+        this.errorSizeFile = true;
+        continue;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const base64String: string = e.target.result.split(',')[1];
+
+        const applicantAttach: ApplicantAttachments = {
+          base64file: base64String,
+          source_name: fileName,
+          fileweight: fileSizeFormat,
+          file: filesPending[i],
+        };
+
+        this.fileNameListPending.push(fileName);
+        this.arrayAssignedAttachmentPending.push(applicantAttach);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+  setTimeout(() => {
+    this.errorRepeatFile = false;
+    this.errorExtensionFile = false;
+    this.errorSizeFile = false;
+  }, 5000);
+  
+  console.log(this.getAssignedPending());
+}
+
+getAssignedPending(): ApplicantAttachments[] {
+  return this.arrayAssignedAttachmentPending;
+}
+
+clearFileInputPending(index: number) {
+  this.fileNameListPending.splice(index, 1);
+  this.arrayAssignedAttachmentPending.splice(index, 1);
 }
 }

@@ -17,6 +17,7 @@ export enum RoutesApp {
   PROCESS_REQUEST = 'process-request',
   REPORT_DETAILS = 'report-details',
   REQUESTTYPE_MANAGER_ASSOCIATE = 'requestype-manager-associate',
+  REQUEST_PENDING = 'request-pending',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',

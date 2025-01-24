@@ -1,0 +1,142 @@
+<div *ngIf="isSpinnerVisible" class="spinner-overlay">
+    <div class="spinner"></div>
+    <p class="spinner-text">Procesando su solicitud</p>
+  </div>
+  <p-card class="container">
+    <div class="container-principal">
+      <form [formGroup]="requestForm">
+        <h4 class="card-form-banner-title">Solicitud N°: </h4>
+  
+        <p-card class="container-card">
+          <div class="rows">
+  
+            <div class="card-text">
+              <label class="card-text-placeholder">Mensaje*</label>
+              <textarea
+                rows="5"
+                cols="30"
+                id="mensage"
+                formControlName="mensage"
+                [style]="{ 'border-radius': '20px' }"
+                type="text"
+                class="custom-input"
+                placeholder="*Incluir en este espacio los datos de las personas a cargo si el tipo de solicitud aplica"
+                pInputTextarea>
+              </textarea>
+              <label class="card-form-input-placeholder-invalid">
+                {{
+                  requestForm.get('mensage')?.hasError('required') &&
+                  requestForm.get('mensage')?.touched
+                    ? ' Campo Requerido'
+                    : ''
+                }}
+                {{
+                  requestForm.get('mensage')?.hasError('maxlength') ? ' Máximo 1000 caracteres' : ''
+                }}</label
+              >
+            </div>
+  
+            <div class="card-buttonUp">
+              <label class="card-buttonUp-placeholder">Adjuntar archivo</label>
+              <div class="card-buttonUp-custom-button">
+                <input
+                  type="file"
+                  #archive_request
+                  class="card-buttonUp-custom-icon"
+                  name="archive_request"
+                  (change)="onFileSelected($event)"
+                  accept=".jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+                  maxFileSize="20971520"
+                  multiple />
+                <label class="card-buttonUp-label" (click)="openFileInput()">
+                  <i
+                    class="pi pi-file-pdf"
+                    [style]="{ 'font-size': '19px', 'margin-right': '8px' }"></i>
+                  Adjuntar archivo
+                  <i
+                    class="pi pi-upload"
+                    [style]="{ 'margin-left': '69px', 'font-size': '19px' }"></i>
+                </label>
+                <label class="card-form-input-placeholder-invalid">
+                  {{ errorSizeFile ? errorMensajeFile : ''
+                  }}{{ errorExtensionFile ? errorMensajeFile : ''
+                  }}{{ errorRepeatFile ? errorMensajeFile : '' }}</label
+                >
+              </div>
+            </div>
+            <div class="card-table">
+              <div class="card-table-header">Tabla de Adjuntos</div>
+              <div class="card-table-body" *ngFor="let fileName of fileNameList; let i = index">
+                <div class="card-table-itemName">
+                  <p class="truncate-text">{{ fileName === '' ? 'Nombre de Archivo' : fileName }}</p>
+                </div>
+                <div class="card-table-item">
+                  <span class="remover-text">Remover archivo</span>
+                  <p-button
+                    icon="pi pi-times"
+                    [style]="{
+                      'border-radius': '50%',
+                      height: '20px',
+                      width: '20px',
+                      'background-color': '#ebebeb',
+                      color: 'red',
+                      'margin-right': '20px'
+                    }"
+                    [text]="true"
+                    severity="danger"
+                    (click)="clearFileInput(i)"></p-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </p-card>
+        <div class="button-container">
+          <p-button
+            [style]="{ 'border-radius': '20px', 'background-color': '#00aeef', width: '275px' }"
+            label="Enviar formulario"
+            [disabled]="requestForm.invalid"
+            (click)="sendRequest()"
+            class="card-form-button"></p-button>
+        </div>
+      </form>
+    </div>
+  </p-card>
+  
+  <p-toast></p-toast>
+  <p-progressSpinner
+    *ngIf="loadingAttachments"
+    class="sppinerAtta p-element"
+    color="blue"></p-progressSpinner>
+  
+  <!--<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [requestCreation]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>-->
+  <app-modal-filing
+    *ngIf="visibleDialogAlert"
+    [select]="true"
+    [requestCreation]="true"
+    [visible]="visibleDialogAlert"
+    [tittle_message]="tittle_message"
+    [message]="message"
+    [informative]="informative"
+    [severity]="severity"
+    (setRta)="closeDialogAlert($event)"></app-modal-filing>
+  
+  <div class="modal" *ngIf="showModal" id="adjuntarArchivoModal">
+    <div class="modal-content">
+      <h2>{{ modalTitle }}</h2>
+      <p>{{ modalMessage }}</p>
+  
+      <div class="modal-footer">
+        <button class="btn btn-accept" (click)="onAccept()">Aceptar</button>
+        <button class="btn btn-cancel" (click)="onCancel()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  
