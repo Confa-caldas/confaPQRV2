@@ -169,9 +169,8 @@
                 <button
                   class="custom-button"
                   *ngIf="
-                    requestListByAssigned.status_name !== 'Asignada - En revisión' &&
-                    requestListByAssigned.status_name !== 'Reasignada - En revisión' &&
-                    requestListByAssigned.status_name !== 'Cerrada'
+                    requestListByAssigned.status_name === 'Asignada' ||
+                    requestListByAssigned.status_name === 'Reasignada'
                   "
                   (click)="assignStateReviewRequest(requestListByAssigned)">
                   En revisión

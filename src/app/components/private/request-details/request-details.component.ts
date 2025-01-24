@@ -16,6 +16,9 @@ import {
   Afiliado,
   RequestAnswerTemp,
   PendingRequest,
+  sendEmail,
+  requestHistoryRequest,
+  historyRequest,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -26,6 +29,10 @@ import { PaginatorState } from 'primeng/paginator';
 import { v4 as uuidv4 } from 'uuid';
 //Esto es nuevo
 import { Observable } from 'rxjs';
+import { MenuModule } from 'primeng/menu';
+import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { Timeline } from 'primeng/timeline';
 // import { Util } from '../../../utils/utils';
 // import * as pdfMake from 'pdfmake/build/pdfmake';
 // import * as pdfFonts from 'pdfmake/build/vfs_fonts';
@@ -116,6 +123,7 @@ export class RequestDetailsComponent implements OnInit {
   visibleCorreccionIa = false;
   visibleCorreccionIaEnviar = false;
   visibleSolicitudPendiente = false;
+  visibleHistory = false;
   categoria: string = '';
   respuestaPredefinida: string = '';
   respuestaCorregida: string = '';
@@ -136,8 +144,25 @@ export class RequestDetailsComponent implements OnInit {
   respuestaTemp: string = '';
   existEraserAsnwer: boolean = false;
 
+  //utilitarios
+  items: MenuModule[] | undefined;
   pendingRequestForm: FormGroup;
   selectedFilesPending: File[] = [];
+  visibleSolicitudEnvioMasivo = false;
+  envioMasivoForm: FormGroup;
+  emailInput: string = ''; // Variable para capturar el correo ingresado
+  emailList: string[] = []; // Lista de correos agregados
+  errorMessage: string = '';
+  currentState: string = '';
+  currentIndex: number = 0;
+
+  // Arreglo de eventos para la línea de tiempo
+  events: any[] = [];
+
+  historyData: Array<any> = [];
+  // historyData!: historyRequest[];
+  // history!: historyRequest;
+  // requestPendingAttachmentsList: RequestAttachmentsList[] = [];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -146,7 +171,7 @@ export class RequestDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private messageService: MessageService,
     private http: HttpClient,
-    private fb: FormBuilder,
+    private fb: FormBuilder
   ) {
     // (window as any).pdfMake.vfs = pdfFonts.pdfMake.vfs;
     this.requestProcess = this.formBuilder.group({
@@ -157,6 +182,11 @@ export class RequestDetailsComponent implements OnInit {
     this.pendingRequestForm = this.fb.group({
       message: ['', [Validators.required, Validators.maxLength(6000)]],
       //file: [null, Validators.required],
+    });
+
+    this.envioMasivoForm = this.fb.group({
+      message: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
     });
   }
 
@@ -182,6 +212,8 @@ export class RequestDetailsComponent implements OnInit {
 
     //validar si esta cerrada
     this.getAnswerTemp(this.request_id);
+    // histico sobre reapertura de solicitudes
+    this.getHistoryRequest(this.request_id);
 
     // //Neuvo pdf
     // Util.getImageDataUrl('assets/imagenes/encabezado.png').then(
@@ -191,6 +223,23 @@ export class RequestDetailsComponent implements OnInit {
     // Util.getImageDataUrl('assets/imagenes/footer.png').then(
     //   imagenConfaFooter => (this.imgPdf1 = imagenConfaFooter)
     // );
+
+    this.items = [
+      {
+        items: [
+          {
+            label: 'Reabrir solicitud',
+            icon: 'pi pi-history',
+            command: () => this.solicitudPendiente(),
+          },
+          {
+            label: 'Envio de respuesta',
+            icon: 'pi pi-send',
+            command: () => this.envioCorreoMasivo(),
+          },
+        ],
+      },
+    ];
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
@@ -278,18 +327,33 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestsDetails>) => {
         if (response.code === 200) {
           this.requestDetails = response.data;
+
+          // Lista de estados que se deben agrupar
+          const estadosAgrupados = [
+            'Asignada',
+            'Reasignada',
+            'Asignada - En revisión',
+            'Reasignada - En revisión',
+            'Pendiente Usuario Externo',
+          ];
+
+          // Agrupar estados en "Gestión"
+          this.currentState = estadosAgrupados.includes(this.requestDetails.status_name)
+            ? 'Gestión'
+            : this.requestDetails.status_name;
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
       },
       error: (err: any) => {
-        console.log(err);
+        console.error(err);
       },
       complete: () => {
         console.log('La suscripción ha sido completada.');
       },
     });
   }
+
   getRequestApplicantAttachments(request_id: number) {
     const payload: Pagination = {
       request_id: request_id,
@@ -300,7 +364,6 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestAttachmentsList[]>) => {
         if (response.code === 200) {
           this.requestApplicantAttachmentsList = response.data;
-          console.log(response.data);
           this.totalRowsApplicantAttachments = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -375,7 +438,7 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestHistoric[]>) => {
         if (response.code === 200) {
           this.requestHistoric = response.data;
-          console.log(this.requestHistoric, 'historico');
+          this.fillStatesDetails(this.requestHistoric);
           this.totalRowsHistoric = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -388,6 +451,67 @@ export class RequestDetailsComponent implements OnInit {
         console.log('La suscripción ha sido completada.');
       },
     });
+  }
+
+  fillStatesDetails(request: RequestHistoric[]): void {
+    if (request && request.length > 0) {
+      // Lista de estados que se deben agrupar
+      const estadosAgrupados = [
+        'Asignada',
+        'Reasignada',
+        'Asignada - En revisión',
+        'Reasignada - En revisión',
+        'Pendiente Usuario Externo',
+      ];
+
+      // Estados predeterminados
+      const estadosPredeterminados = ['Radicada', 'Gestión', 'Cerrada'];
+
+      // Objeto para almacenar los estados agrupados con la última fecha
+      const groupedStates = request.reduce(
+        (acc, item) => {
+          const state = item.status_name;
+
+          if (estadosAgrupados.includes(state)) {
+            // Si el estado está en la lista de agrupados, verificar la fecha más reciente
+            if (
+              !acc['Gestión'] ||
+              new Date(acc['Gestión'].updated_date) < new Date(item.updated_date)
+            ) {
+              acc['Gestión'] = { ...item, status_name: 'Gestión' }; // Cambiar nombre a 'Gestión'
+            }
+          } else {
+            // Si no está en la lista de agrupados, guardar cada estado individualmente
+            acc[`${state}-${item.updated_date}`] = item;
+          }
+          return acc;
+        },
+        {} as Record<string, RequestHistoric>
+      );
+
+      // Convertir el objeto agrupado en un arreglo de eventos
+      this.events = Object.values(groupedStates).map(item => ({
+        state: item.status_name,
+        label: item.updated_date || 'No tiene',
+        stateShow: item.status_name,
+      }));
+
+      // Asegurar que los estados predeterminados estén presentes
+      estadosPredeterminados.forEach(state => {
+        if (!this.events.some(event => event.state === state)) {
+          this.events.push({
+            state: state,
+            label: 'No tiene',
+            stateShow: state,
+          });
+        }
+      });
+
+      console.log(this.events, 'bu');
+      this.currentIndex = this.events.findIndex(event => event.stateShow === this.currentState);
+    } else {
+      console.log('No hay datos históricos disponibles.');
+    }
   }
 
   assignRequest(request_details: RequestsDetails) {
@@ -1268,6 +1392,24 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   //PROCESO PARA DEJAR UNA SOLICUTD PENDIENTE
+  onSubmit1(): void {
+    const formData = new FormData();
+    formData.append('message', this.pendingRequestForm.get('message')?.value);
+
+    // Agregar todos los archivos al FormData
+    this.selectedFilesPending.forEach(file => formData.append('files', file));
+
+    console.log('Formulario enviado:', this.requestDetails?.status_name);
+    console.log('Mensaje:', this.pendingRequestForm.get('message')?.value);
+    //console.log('Formulario enviado:', formData);
+
+    // Aquí enviarías los datos al backend
+    // this.myService.submitRequest(formData).subscribe(response => ...);
+
+    // Cerrar el diálogo después de enviar
+    this.closeDialogPending();
+  }
+
   onSubmit(): void {
     if (this.pendingRequestForm.valid) {
       // Captura el valor del formulario
@@ -1278,14 +1420,14 @@ export class RequestDetailsComponent implements OnInit {
       formData.append('message', formValue.message);
 
       // Agrega los archivos seleccionados al FormData
-      this.selectedFilesPending.forEach((file) => {
+      this.selectedFilesPending.forEach(file => {
         formData.append('files', file);
       });
 
       // Llama al servicio para enviar los datos
       const token = this.generateToken();
 
-      console.log(token)
+      console.log(token);
 
       const payload: PendingRequest = {
         request_id: this.requestDetails?.filing_number || 0,
@@ -1296,16 +1438,18 @@ export class RequestDetailsComponent implements OnInit {
       };
 
       console.log(payload);
-      
+
       this.userService.registerPendingRequest(payload).subscribe({
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
             if (this.getAssignedPending().length == 0) {
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
               this.router.navigate([RoutesApp.PROCESS_REQUEST]);
+              this.ngOnInit();
             } else {
               this.attachAssignedFilesPending();
               this.router.navigate([RoutesApp.PROCESS_REQUEST]);
+              this.ngOnInit();
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
             }
           } else {
@@ -1317,7 +1461,7 @@ export class RequestDetailsComponent implements OnInit {
         },
         complete: () => {
           console.log('La suscripción ha sido completada.');
-          console.log("Solicitud en estado pendiente"); 
+          console.log('Solicitud en estado pendiente');
           this.closeDialogPending();
         },
       });
@@ -1336,7 +1480,7 @@ export class RequestDetailsComponent implements OnInit {
     this.selectedFilesPending.splice(index, 1);
   }
 
-/*
+  /*
   closeDialogPendiente(value: boolean) {
     const token = this.generateToken();
 
@@ -1378,7 +1522,7 @@ export class RequestDetailsComponent implements OnInit {
     const seconds = String(now.getSeconds()).padStart(2, '0');
 
     const formattedDate = `${year}${month}${day}T${hours}${minutes}${seconds}`;
-    
+
     // UUID + fecha
     const token = `${uuid}${formattedDate}`;
     return token;
@@ -1455,4 +1599,113 @@ clearFileInputPending(index: number) {
   this.fileNameListPending.splice(index, 1);
   this.arrayAssignedAttachmentPending.splice(index, 1);
 }
+
+
+  envioCorreoMasivo() {
+    this.visibleSolicitudEnvioMasivo = true;
+  }
+
+  closeDialogenvioCorreoMasivo(): void {
+    this.visibleSolicitudEnvioMasivo = false;
+    this.emailList = []; // Limpia la lista de correos
+    this.errorMessage = '';
+    this.envioMasivoForm.reset();
+  }
+
+  // Añadir correo a la lista
+  addEmail(): void {
+    const email = this.envioMasivoForm.get('email')?.value;
+
+    // Validar si el campo de correo no está vacío y tiene un formato de correo válido
+    if (!email || !this.isValidEmail(email)) {
+      this.errorMessage = 'Debe introducir un correo válido.';
+      return; // Detiene la ejecución si el correo no es válido
+    }
+
+    // Verificar si el correo ya está en la lista
+    if (this.emailList.includes(email)) {
+      this.errorMessage = 'El correo ya está en la lista.';
+      return;
+    }
+
+    // Añadir el correo a la lista si es válido
+    this.emailList.push(email);
+    this.envioMasivoForm.get('email')?.reset(); // Limpiar el campo de correo
+    this.errorMessage = ''; // Limpiar cualquier mensaje de error
+  }
+
+  // Función para verificar si el correo tiene un formato válido
+  isValidEmail(email: string): boolean {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailPattern.test(email);
+  }
+
+  // Eliminar correo de la lista
+  removeEmail(index: number) {
+    this.emailList.splice(index, 1);
+  }
+
+  onSubmitRepuestaMasivo(): void {
+    if (!this.emailList || this.emailList.length === 0) {
+      this.errorMessage = 'Debe añadir al menos un correo antes de enviar.';
+      return;
+    }
+
+    const payload: sendEmail = {
+      request_id: this.requestDetails?.filing_number || 0,
+      email: this.emailList,
+    };
+
+    this.userService.sendEmailAll(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        this.closeDialogenvioCorreoMasivo();
+      },
+    });
+  }
+
+  isValidDate(value: string): boolean {
+    const date = new Date(value);
+    return !isNaN(date.getTime());
+  }
+
+  solicitudHistory() {
+    this.visibleHistory = true;
+  }
+
+  closeDialogHistory(): void {
+    this.visibleHistory = false;
+  }
+
+  getHistoryRequest(request_id: number) {
+    const payload: requestHistoryRequest = {
+      request_id: request_id,
+    };
+    this.userService.getHistoryRequest(payload).subscribe({
+      next: (response: BodyResponse<historyRequest[]>) => {
+        if (response.code === 200) {
+          this.historyData = response.data;
+          console.log(this.historyData, 'aa');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
 }

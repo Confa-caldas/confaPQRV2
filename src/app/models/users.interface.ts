@@ -556,3 +556,20 @@ export interface RequestsReview {
   user_name_completed: string;
   mensaje_revision: string;
 }
+
+export interface sendEmail {
+  request_id: number;
+  email: string[];
+}
+
+export interface requestHistoryRequest {
+  request_id: number;
+}
+
+export interface historyRequest {
+  request_id: number;
+  user: string;
+  fecha: Date;
+  commnet: string;
+  applicant_attachments: RequestAttachmentsList[];
+}

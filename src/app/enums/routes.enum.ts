@@ -89,4 +89,6 @@ export enum EndPointRoute {
   PROCESS_REQUEST_LOG = 'request/process_log',
   CREATE_PENDING_REQUEST = 'request/create_pending',
   CHANGE_STATE_REVIEW = 'request/review_answer',
+  SEND_EMAIL_MASSIVE = 'send_email/massive_send_email',
+  GET_HISTORY_REQUEST = 'request/history',
 }

@@ -51,7 +51,48 @@
         </div>
       </div>
     </ul>
+
+    <div class="timeline-container">
+      <p-timeline [value]="events" layout="horizontal" align="bottom">
+        <ng-template pTemplate="content" let-event let-i="index">
+          <div class="timeline-event-state">
+            {{ event.state }}
+          </div>
+          <div class="timeline-event-label">
+            <span *ngIf="isValidDate(event.label); else noDate">
+              {{ event.label | date: 'shortDate' }}
+            </span>
+            <ng-template #noDate>{{ event.label }}</ng-template>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="marker" let-event let-i="index">
+          <span
+            class="timeline-marker"
+            [ngClass]="{
+              'active-marker': currentState === event.stateShow,
+              'previous-marker': i <= currentIndex
+            }">
+            <i
+              class="pi"
+              [ngClass]="{
+                'pi-check': event.state === 'Cerrada',
+                'pi-cog': event.state === 'Gestión',
+                'pi-ticket': event.state === 'Radicada'
+              }"></i>
+          </span>
+        </ng-template>
+      </p-timeline>
+    </div>
   </p-card>
+
+  <p-toast />
+  <br />
+  <div
+    *ngIf="requestDetails.status_name === 'Cerrada'"
+    style="text-align: right; margin-right: 10px">
+    <p-menu #menu [model]="items" [popup]="true"></p-menu>
+    <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
+  </div>
 
   <div class="container-button" *ngIf="!showProcessTab()">
     <p-button
@@ -150,12 +191,24 @@
                 </li>
               </div>
             </div>
-            <div class="process-container-row" *ngIf="requestDetails.status_name === 'Cerrada'">
+            <div class="process-container-row" *ngIf="requestDetails.request_answer !== ''">
               <div class="process-container-col-description">
                 <label class="process-container-label"> Respuesta solicitud </label>
                 <li class="process-container-text" [ngStyle]="{ 'white-space': 'pre-line' }">
                   {{ requestDetails.request_answer }}
                 </li>
+              </div>
+            </div>
+            <br />
+            <div class="process-container-row" *ngIf="historyData.length > 0">
+              <div class="process-container-col-description">
+                <p-button
+                  icon="pi pi-plus"
+                  [styleClass]="'btn-icon-info'"
+                  (click)="solicitudHistory()"
+                  [style]="{ 'border-radius': '10px' }"
+                  title="Ver respuestas">
+                </p-button>
               </div>
             </div>
           </div>
@@ -344,15 +397,14 @@
                 class="formProcess-card-text-placeholder"
                 [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
                 [ngClass]="{ 'text-respuesta': existEraserAsnwer }">
-                
                 <p-button
-                label="Solicitud pendiente"
-                severity="warning"
-                icon="pi pi-stopwatch"
-                [style]="{ 'border-radius': '10px' }"
-                (click)="solicitudPendiente()"/>
+                  label="Solicitud pendiente"
+                  severity="warning"
+                  icon="pi pi-stopwatch"
+                  [style]="{ 'border-radius': '10px' }"
+                  (click)="solicitudPendiente()" />
               </div>
-              <br>
+              <br />
               <div
                 *ngIf="requestDetails.status_name !== 'Cerrado'"
                 class="formProcess-card-text-placeholder"
@@ -504,7 +556,7 @@
                     (click)="showModalRadicada()"></p-button>
                   <p-button
                     *ngIf="
-                      (requestHistoric.status_name === 'Reasignada') &&
+                      requestHistoric.status_name === 'Reasignada' &&
                       requestHistoric.answer_request !== null
                     "
                     icon="pi pi-eye"
@@ -925,7 +977,6 @@
   [responsive]="true"
   [styleClass]="'custom-dialog'"
   [closable]="false">
-
   <!-- Encabezado personalizado -->
   <ng-template pTemplate="header">
     <div class="dialog-header">
@@ -983,19 +1034,181 @@
 
     <!-- Botones -->
     <div class="dialog-buttons">
-      <button
-        type="submit"
-        class="btn btn-yes"
-        >
-        Enviar
-      </button>
-      <button
-        type="button"
-        class="btn btn-cancel"
-        (click)="closeDialogPending()">
+      <button type="submit" class="btn btn-yes">Enviar</button>
+      <button type="button" class="btn btn-cancel" (click)="closeDialogPending()">Cancelar</button>
+    </div>
+  </form>
+</p-dialog>
+
+<!-- masivo envio de respuesta -->
+<p-dialog
+  header="Envio de respuesta masivo"
+  [(visible)]="visibleSolicitudEnvioMasivo"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Envio respuesta masivo</span>
+    </div>
+  </ng-template>
+
+  <!-- Formulario -->
+
+  <form [formGroup]="envioMasivoForm" (ngSubmit)="onSubmitRepuestaMasivo()">
+    <!-- Mensaje de error -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Agregar correo -->
+    <div class="form-group">
+      <label> Número de Radicado </label>
+      <li>{{ requestDetails?.request_id }}</li>
+      <br />
+      <label for="email">Correo Electrónico</label>
+      <div class="email-input-group">
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-control input-short"
+          placeholder="Introduce un correo"
+          required />
+        <button type="button" class="btn btn-add" (click)="addEmail()">+</button>
+      </div>
+    </div>
+
+    <!-- Lista de correos -->
+    <div *ngIf="emailList.length > 0" class="email-list">
+      <ul class="horizontal-list">
+        <li *ngFor="let email of emailList; let i = index" class="horizontal-item">
+          {{ email }}
+          <button type="button" class="btn btn-remove" (click)="removeEmail(i)">X</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Mensaje -->
+    <br />
+    <div class="form-group">
+      <label for="message">Mensaje cierre solicitud</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        rows="4"
+        class="form-control"
+        placeholder="{{ requestDetails?.request_answer }}"
+        readonly
+        required>
+      </textarea>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-yes">Enviar</button>
+      <button type="button" class="btn btn-cancel" (click)="closeDialogenvioCorreoMasivo()">
         Cancelar
       </button>
     </div>
   </form>
 </p-dialog>
 
+<!-- pop up historia respuestas -->
+<p-dialog
+  header="Historia"
+  [(visible)]="visibleHistory"
+  [modal]="true"
+  [style]="{ width: '60vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Historia</span>
+    </div>
+  </ng-template>
+
+  <!-- Contenido -->
+  <div *ngFor="let item of historyData; let i = index" class="history-item">
+    <div
+      class="chat-bubble"
+      [ngClass]="{
+        'user-internal': item.usuario === 'usuario interno',
+        'user-external': item.usuario === 'usuario externo'
+      }">
+      <div class="chat-header">
+        <span> {{ item.usuario }}</span>
+      </div>
+      <div class="chat-header">
+        <span><strong>Fecha</strong> {{ item.fecha }}</span>
+      </div>
+
+      <div class="chat-header">
+        <span><strong>Mensaje</strong> </span>
+      </div>
+      <div class="chat-message">
+        {{ item.observacion }}
+      </div>
+      <br />
+      <div class="chat-header">
+        <span><strong>Archivos</strong> </span>
+      </div>
+
+      <p-table
+        *ngIf="item.processed_attachments && item.processed_attachments.length > 0"
+        [value]="item.processed_attachments"
+        [scrollable]="true"
+        scrollHeight="100px"
+        selectionMode="single"
+        [paginator]="false"
+        [rows]="2"
+        [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '52rem' }">
+        <ng-template pTemplate="header">
+          <tr style="height: 20px">
+            <th style="width: 20%">Archivo</th>
+            <th style="width: 5%">Previsualizar</th>
+            <th style="width: 5%">Descargar</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-attachment>
+          <tr>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              {{ attachment.file_name }}
+            </td>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              <p-button
+                icon="pi pi-eye"
+                [styleClass]="'btn-icon-info'"
+                (click)="getPreSignedUrlToDownload(attachment.url, attachment.file_name, false)">
+              </p-button>
+            </td>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              <p-button
+                icon="pi pi-download"
+                [styleClass]="'btn-icon-info'"
+                (click)="getPreSignedUrlToDownload(attachment.url, attachment.file_name, true)">
+              </p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <!-- Mostrar mensaje si no hay archivos -->
+      <div *ngIf="!item.processed_attachments || item.processed_attachments.length === 0">
+        <p>No hay archivos disponibles.</p>
+      </div>
+    </div>
+  </div>
+  <!-- Botones -->
+  <div class="dialog-buttons">
+    <button type="button" class="btn btn-cancel" (click)="closeDialogHistory()">Cerrar</button>
+  </div>
+</p-dialog>

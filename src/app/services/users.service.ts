@@ -47,6 +47,9 @@ import {
   ProcessRequest,
   PendingRequest,
   RequestsReview,
+  sendEmail,
+  requestHistoryRequest,
+  historyRequest,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -566,10 +569,24 @@ export class Users {
       payload
     );
   }
-  
+
   changeStateReview(payload: RequestsReview) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.CHANGE_STATE_REVIEW}`,
+      payload
+    );
+  }
+
+  sendEmailAll(payload: sendEmail) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.SEND_EMAIL_MASSIVE}`,
+      payload
+    );
+  }
+
+  getHistoryRequest(payload: requestHistoryRequest) {
+    return this.http.post<BodyResponse<historyRequest[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GET_HISTORY_REQUEST}`,
       payload
     );
   }
