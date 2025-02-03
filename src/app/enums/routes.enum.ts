@@ -91,4 +91,6 @@ export enum EndPointRoute {
   CHANGE_STATE_REVIEW = 'request/review_answer',
   SEND_EMAIL_MASSIVE = 'send_email/massive_send_email',
   GET_HISTORY_REQUEST = 'request/history',
+  GET_PENDING_REQUEST = 'request/get_pending',
+  ANSWER_REQUEST_PENDING = 'request/answer_pending',
 }

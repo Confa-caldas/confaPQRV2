@@ -50,6 +50,8 @@ import {
   sendEmail,
   requestHistoryRequest,
   historyRequest,
+  Token,
+  RequestFormListPending,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -587,6 +589,22 @@ export class Users {
   getHistoryRequest(payload: requestHistoryRequest) {
     return this.http.post<BodyResponse<historyRequest[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.GET_HISTORY_REQUEST}`,
+      payload
+    );
+  }
+
+  getRequestPendingByToken(payload: Token) {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post<BodyResponse<PendingRequest>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GET_PENDING_REQUEST}`,
+      payload,
+      { headers: headers }
+    );
+  }
+
+  answerRequestPending(payload: RequestFormListPending) {
+    return this.http.post<BodyResponse<number>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ANSWER_REQUEST_PENDING}`,
       payload
     );
   }

@@ -404,19 +404,19 @@
                   [style]="{ 'border-radius': '10px' }"
                   (click)="solicitudPendiente()" />
               </div>
-              <br />
+
               <div
                 *ngIf="requestDetails.status_name !== 'Cerrado'"
                 class="formProcess-card-text-placeholder"
                 [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
                 [ngClass]="{ 'text-respuesta': existEraserAsnwer }">
-                Guardar borrador
                 <p-button
                   icon="pi pi-save"
-                  [styleClass]="'btn-icon-info'"
+                  severity="warning"
                   (click)="correccionSugeridaIa(requestDetails)"
-                  [style]="{ 'border-radius': '10px' }"
-                  title="Guardar en borrador">
+                  [style]="{ 'border-radius': '10px', 'background-color': '#329dd1'}"
+                  [disabled]="requestProcess.invalid"
+                  label="Guardar en borrador">
                 </p-button>
               </div>
 
@@ -968,6 +968,7 @@
   </div>
 </p-dialog>
 
+<!--
 <p-dialog
   header="Solicitud pendiente"
   [(visible)]="visibleSolicitudPendiente"
@@ -977,16 +978,16 @@
   [responsive]="true"
   [styleClass]="'custom-dialog'"
   [closable]="false">
-  <!-- Encabezado personalizado -->
+
   <ng-template pTemplate="header">
     <div class="dialog-header">
       <span id="dialog-title">Solicitud pendiente</span>
     </div>
   </ng-template>
 
-  <!-- Formulario -->
+
   <form [formGroup]="pendingRequestForm" (ngSubmit)="onSubmit()">
-    <!-- Mensaje -->
+
     <div class="form-group">
       <label for="message">Mensaje</label>
       <textarea
@@ -999,7 +1000,7 @@
       </textarea>
     </div>
     <br>
-    <!-- Archivos adjuntos -->
+
     <div class="form-group">
       <label for="file">Archivos adjuntos</label>
       
@@ -1024,7 +1025,7 @@
       >
     </div>
 
-    <!-- Lista de archivos seleccionados -->
+
     <div
       class="formProcess-labelUpload"
       *ngFor="let fileNameP of fileNameListPending; let i = index">
@@ -1032,13 +1033,86 @@
       <i (click)="clearFileInputPending(i)" class="formProcess-labelUpload-name pi pi-times"></i>
     </div>
 
-    <!-- Botones -->
+
     <div class="dialog-buttons">
       <button type="submit" class="btn btn-yes">Enviar</button>
       <button type="button" class="btn btn-cancel" (click)="closeDialogPending()">Cancelar</button>
     </div>
   </form>
+</p-dialog> -->
+
+<p-dialog
+  [(visible)]="visibleSolicitudPendiente"
+  [modal]="true"
+  [showHeader]="false"
+  [style]="{ width: '50vw', 'border-radius': '12px', 'max-width': '600px' }"
+  [contentStyle]="{ padding: '2em' }"
+  [closable]="false"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false">
+
+  <!-- Encabezado personalizado -->
+  <div class="custom-dialog-header">
+    <i class="pi pi-clock custom-icon"></i>
+    <h2>Solicitud Pendiente</h2>
+  </div>
+
+  <!-- Formulario -->
+  <form [formGroup]="pendingRequestForm" (ngSubmit)="onSubmit()">
+    <!-- Mensaje -->
+    <div class="form-group">
+      <label for="message">Mensaje</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        rows="4"
+        class="form-control"
+        placeholder="Escribe tu mensaje aquí"
+        required>
+      </textarea>
+    </div>
+
+    <!-- Archivos adjuntos -->
+    <div class="form-group">
+      <label for="file">Archivos adjuntos</label>
+      <div class="custom-file-upload">
+        <input
+          id="file"
+          type="file"
+          #archive_request_pending
+          name="archive_request_pending"
+          (change)="onFileSelectedPending($event)"
+          accept=".jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+          maxFileSize="20971520"
+          multiple />
+        <label class="upload-label" (click)="openFileInputPending()">
+          Seleccionar Archivo <i class="pi pi-upload"></i>
+        </label>
+      </div>
+
+      <!-- Mensajes de error -->
+      <p class="error-message" *ngIf="errorSizeFile || errorExtensionFile || errorRepeatFile">
+        {{ errorSizeFile ? errorMensajeFile : '' }}
+        {{ errorExtensionFile ? errorMensajeFile : '' }}
+        {{ errorRepeatFile ? errorMensajeFile : '' }}
+      </p>
+    </div>
+
+    <!-- Lista de archivos seleccionados -->
+    <div class="file-list" *ngFor="let fileNameP of fileNameListPending; let i = index">
+      <p class="file-name">{{ fileNameP }}</p>
+      <i (click)="clearFileInputPending(i)" class="pi pi-times remove-file"></i>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-primary" [disabled]="pendingRequestForm.invalid">Enviar</button>
+      <button type="button" class="btn btn-secondary" (click)="closeDialogPending()">Cancelar</button>
+    </div>
+  </form>
 </p-dialog>
+
 
 <!-- masivo envio de respuesta -->
 <p-dialog
@@ -1144,12 +1218,8 @@
         'user-external': item.usuario === 'usuario externo'
       }">
       <div class="chat-header">
-        <span> {{ item.usuario }}</span>
+        <span> {{ item.usuario }} {{ item.fecha }}</span>
       </div>
-      <div class="chat-header">
-        <span><strong>Fecha</strong> {{ item.fecha }}</span>
-      </div>
-
       <div class="chat-header">
         <span><strong>Mensaje</strong> </span>
       </div>

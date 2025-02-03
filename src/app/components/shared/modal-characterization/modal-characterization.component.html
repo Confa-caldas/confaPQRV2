@@ -11,25 +11,6 @@
           <div class="login-form-header__item login-form-header__item_6"></div>
         </div>
 
-        <!-- NUEVO -->
-        <div class="row my-4 px-5">
-          <div class="col-12 title" style="margin-top: 50px">Estado de la solicitud</div>
-        </div>
-          <div class="container-row">
-            <div class="container-col">
-              <label class="label-select"> Estado final de la solicitud </label>
-              <p-dropdown
-                [style]="{ width: '300px', height: '30px', 'align-items': 'center' }"
-                [(ngModel)]="seleccionada"
-                [options]="opciones"
-                optionLabel="nombre"
-                optionValue="id"
-                placeholder="Seleccione"
-                (onChange)="onDropdownChange($event)"></p-dropdown>
-            </div>
-          </div>
-        <!-- NUEVO FIN -->
-        <div *ngIf="seleccionada === 0"> 
         <div class="row my-4 px-5">
           <div class="col-12 title" style="margin-top: 50px">Caracterizar solicitud</div>
         </div>
@@ -199,9 +180,7 @@
             </div>
           </div>
         </form>
-      </div>
 
-        <div *ngIf="seleccionada === 0">
           <div class="row my-4 px-5" style="margin: 10px auto; margin-top: 50px">
             <div class="col-12 d-flex justify-content-evenly">
               <p-button
@@ -211,29 +190,6 @@
                 (click)="closeDialog(false)"></p-button>
             </div>
           </div>
-        </div>
-
-        <div class="row my-4 px-5" *ngIf="seleccionada === 1">
-          <!--
-          <textarea
-                rows="5"
-                cols="30"
-                formControlName="mensage"
-                [style]="{ 'border-radius': '5px' }"
-                type="text"
-                class="custom-input"
-                pInputTextarea>{{ answerRequest }}
-              </textarea>
-              -->
-          <div class="row my-4 px-5" style="margin: 10px auto; margin-top: 50px">
-            <div class="col-12 d-flex justify-content-evenly" >
-              <p-button
-                label="Solicitud pendiente"
-                severity="danger"
-                ></p-button>
-            </div>
-          </div>
-        </div>
         
         <div>
           <div class="row my-4 px-5">

@@ -5,8 +5,9 @@
   <p-card class="container">
     <div class="container-principal">
       <form [formGroup]="requestForm">
-        <h4 class="card-form-banner-title">Solicitud N°: </h4>
-  
+        <div *ngIf="pendingRequest">
+          <h4 class="card-form-banner-title">Solicitud N°: {{ pendingRequest.request_id }}</h4>
+        </div>
         <p-card class="container-card">
           <div class="rows">
   
@@ -139,4 +140,35 @@
       </div>
     </div>
   </div>
-  
+
+
+<p-dialog
+  header="⚠️ URL Inválida"
+  [(visible)]="mostrarPopup"
+  [modal]="true"
+  [showHeader]="false"
+  [style]="{ width: '400px', 'border-radius': '12px' }"
+  [closable]="false"
+  [dismissableMask]="true"
+  [contentStyle]="{ 'text-align': 'center', 'padding': '20px' }"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="dialog-content">
+    <i class="pi pi-exclamation-triangle warning-icon"></i>
+    <p class="dialog-message">
+      La URL a la que intentas acceder ya no es válida o ha expirado.
+    </p>
+  </div>
+
+  <p-footer>
+    <button 
+      pButton 
+      type="button" 
+      label="Aceptar" 
+      class="p-button-rounded p-button-danger p-button-lg"
+      (click)="cerrarPopup()">
+    </button>
+  </p-footer>
+
+</p-dialog>

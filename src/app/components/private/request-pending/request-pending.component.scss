@@ -567,3 +567,31 @@
   font-size: 25px; /* Ajusta el tamaño del texto según necesites */
   text-align: center; /* Centra el texto */
 }
+
+::ng-deep .p-dialog {
+  border-radius: 12px !important;
+}
+
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.warning-icon {
+  font-size: 3rem;
+  color: #f59e0b; // Amarillo de advertencia
+  animation: shake 0.3s ease-in-out infinite alternate;
+}
+
+.dialog-message {
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+@keyframes shake {
+  0% { transform: rotate(-5deg); }
+  100% { transform: rotate(5deg); }
+}

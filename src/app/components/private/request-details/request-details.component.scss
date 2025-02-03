@@ -700,4 +700,169 @@ p-timeline {
   color: #2d496a;
 }
 
+::ng-deep .p-dialog {
+  border-radius: 12px !important;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* 🔹 Estilos para encabezado personalizado */
+.custom-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.custom-dialog-header h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.custom-icon {
+  font-size: 2rem;
+  color: #f59e0b; /* Amarillo de advertencia */
+}
+
+/* 🔹 Estilos para inputs y formularios */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* 🔹 Estilos de subida de archivos */
+.custom-file-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-label {
+  background-color: #01aeef;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.upload-label:hover {
+  background-color: #01aeef;
+}
+
+.error-message {
+  color: #d9534f;
+  font-size: 0.9rem;
+}
+
+.file-list {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-top: 5px;
+}
+
+.file-name {
+  font-size: 0.9rem;
+}
+
+.remove-file {
+  color: #d9534f;
+  cursor: pointer;
+}
+
+.remove-file:hover {
+  color: #b52b27;
+}
+
+/* 🔹 Botones alineados correctamente */
+.dialog-buttons {
+  display: grid;
+  justify-content: center; /* Centra los botones */
+  align-items: center; /* Asegura alineación vertical */
+  gap: 10px; /* Espacio entre botones */
+  margin-top: 1.5rem;
+}
+
+/* 🔹 Estilos generales de botones */
+.dialog-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+/* 🔹 Botón "Enviar" */
+.btn-yes {
+  background-color: #a4c000 !important;
+  color: white !important;
+}
+
+.btn-yes:hover {
+  background-color: #8ba200 !important; /* Oscurecido manualmente */
+}
+
+/* 🔹 Botón "Cancelar" */
+.btn-cancel {
+  background-color: #ccc !important;
+  color: #333 !important;
+}
+
+.btn-cancel:hover {
+  background-color: #b3b3b3 !important; /* Oscurecido manualmente */
+}
+
+/* 🔹 Estilos generales para botones */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background-color: #a4c000;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #bbdb01;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+/* 🔹 Oculta el input real de archivos */
+.custom-file-upload input[type="file"] {
+  display: none;
+}
 

@@ -573,3 +573,16 @@ export interface historyRequest {
   commnet: string;
   applicant_attachments: RequestAttachmentsList[];
 }
+
+export interface Token {
+  token: string;
+}
+
+export interface RequestFormListPending {
+  request_id: number;
+  request_status: number;
+  request_description: string;
+  applicant_attachments?: ApplicantAttachments[] | null;
+  assigned_attachments?: ApplicantAttachments[] | null;
+  count_attacments: number;
+}

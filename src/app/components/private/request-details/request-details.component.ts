@@ -1410,6 +1410,8 @@ export class RequestDetailsComponent implements OnInit {
     this.closeDialogPending();
   }
 
+
+  //REALIZA PROCESO DE PONER SOLICITUD EN PENDIENTE
   onSubmit(): void {
     if (this.pendingRequestForm.valid) {
       // Captura el valor del formulario
