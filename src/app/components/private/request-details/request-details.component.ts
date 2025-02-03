@@ -399,6 +399,8 @@ export class RequestDetailsComponent implements OnInit {
       return true;
     } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'jpg') {
       return true;
+    } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'jpeg') {
+      return true;
     } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'png') {
       return true;
     } else {
@@ -588,7 +590,7 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   isValidExtension(file: File): boolean {
-    const extensionesValidas = ['.jpg', '.png', '.pdf', '.doc', '.xlsx', '.docx', '.xls'];
+    const extensionesValidas = ['.jpeg', '.jpg', '.png', '.pdf', '.doc', '.xlsx', '.docx', '.xls'];
     const fileExtension = file?.name?.split('.').pop()?.toLowerCase();
     return !extensionesValidas.includes('.' + fileExtension);
   }

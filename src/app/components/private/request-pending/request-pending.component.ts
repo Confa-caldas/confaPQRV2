@@ -285,7 +285,7 @@ export class RequestPendingComponent implements OnInit {
   }
 
   isValidExtension(file: File): boolean {
-    const extensionesValidas = ['.jpg', '.png', '.pdf', '.doc', '.xlsx', '.docx', '.xls'];
+    const extensionesValidas = ['.jpeg', '.jpg', '.png', '.pdf', '.doc', '.xlsx', '.docx', '.xls'];
     const fileExtension = file?.name?.split('.').pop()?.toLowerCase();
     return !extensionesValidas.includes('.' + fileExtension);
   }
