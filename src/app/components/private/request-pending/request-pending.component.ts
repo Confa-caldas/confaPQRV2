@@ -673,6 +673,7 @@ export class RequestPendingComponent implements OnInit {
 
   sendRequest() {
     const payload: RequestFormListPending = {
+      token_url: this.token,
       request_id: this.pendingRequest.request_id,
       request_status: 2,
       request_description: this.requestForm.controls['mensage'].value,

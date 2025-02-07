@@ -579,6 +579,7 @@ export interface Token {
 }
 
 export interface RequestFormListPending {
+  token_url: string | null;
   request_id: number;
   request_status: number;
   request_description: string;
