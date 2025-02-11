@@ -1484,6 +1484,7 @@ export class RequestDetailsComponent implements OnInit {
           console.log('La suscripción ha sido completada.');
           console.log('Solicitud en estado pendiente');
           this.closeDialogPending();
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
         },
       });
     } else {
