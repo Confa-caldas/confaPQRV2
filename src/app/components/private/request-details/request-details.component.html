@@ -414,7 +414,7 @@
                   icon="pi pi-save"
                   severity="warning"
                   (click)="correccionSugeridaIa(requestDetails)"
-                  [style]="{ 'border-radius': '10px', 'background-color': '#329dd1'}"
+                  [style]="{ 'border-radius': '10px', 'background-color': '#329dd1' }"
                   [disabled]="requestProcess.invalid"
                   label="Guardar en borrador">
                 </p-button>
@@ -442,6 +442,7 @@
                 placeholder="Escribir mensaje"
                 pInputTextarea>
               </textarea>
+
               <label class="formProcess-card-text-placeholder-invalid">
                 {{
                   requestProcess.get('mensage')?.hasError('required') &&
@@ -456,6 +457,7 @@
                 }}</label
               >
             </div>
+
             <!-- <div>
               <p-button
                 *ngIf="requestProcess.get('mensage')?.value"
@@ -887,7 +889,7 @@
     </div>
 
     <!-- Botones -->
-    <div class="dialog-buttons">
+    <!-- <div class="dialog-buttons">
       <button type="button" class="btn btn-yes" (click)="borradorRespuesta(requestDetails!)">
         Sí
       </button>
@@ -897,7 +899,7 @@
         (click)="borradorRespuestaNoCorregida(requestDetails!)">
         No
       </button>
-    </div>
+    </div> -->
   </div>
 </p-dialog>
 
@@ -1051,7 +1053,6 @@
   [dismissableMask]="true"
   [draggable]="false"
   [resizable]="false">
-
   <!-- Encabezado personalizado -->
   <div class="custom-dialog-header">
     <i class="pi pi-clock custom-icon"></i>
@@ -1107,12 +1108,15 @@
 
     <!-- Botones -->
     <div class="dialog-buttons">
-      <button type="submit" class="btn btn-primary" [disabled]="pendingRequestForm.invalid">Enviar</button>
-      <button type="button" class="btn btn-secondary" (click)="closeDialogPending()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="pendingRequestForm.invalid">
+        Enviar
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="closeDialogPending()">
+        Cancelar
+      </button>
     </div>
   </form>
 </p-dialog>
-
 
 <!-- masivo envio de respuesta -->
 <p-dialog

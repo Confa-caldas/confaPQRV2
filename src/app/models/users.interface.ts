@@ -64,6 +64,7 @@ export interface RequestsDetails {
   updated_date?: string;
   user_name_completed?: string;
   mensaje_reasignacion: string;
+  messages_closed?: string;
 }
 export interface RequestAttachmentsList {
   url: string;

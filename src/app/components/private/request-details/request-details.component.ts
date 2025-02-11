@@ -33,6 +33,7 @@ import { MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { Timeline } from 'primeng/timeline';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 // import { Util } from '../../../utils/utils';
 // import * as pdfMake from 'pdfmake/build/pdfmake';
 // import * as pdfFonts from 'pdfmake/build/vfs_fonts';
@@ -160,9 +161,7 @@ export class RequestDetailsComponent implements OnInit {
   events: any[] = [];
 
   historyData: Array<any> = [];
-  // historyData!: historyRequest[];
-  // history!: historyRequest;
-  // requestPendingAttachmentsList: RequestAttachmentsList[] = [];
+  isInitialized = false;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -240,6 +239,20 @@ export class RequestDetailsComponent implements OnInit {
         ],
       },
     ];
+
+    // // guardado automatico de respuesta cada 5 seg
+    // this.requestProcess
+    //   .get('mensage')
+    //   ?.valueChanges.pipe(
+    //     debounceTime(8000),
+    //     distinctUntilChanged() // Evita ejecutar si el valor es el mismo
+    //   )
+    //   .subscribe(() => {
+    //     if (this.isInitialized) {
+    //       this.borradorRespuesta(this.request_id);
+    //     }
+    //     this.isInitialized = true;
+    //   });
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
@@ -327,7 +340,7 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestsDetails>) => {
         if (response.code === 200) {
           this.requestDetails = response.data;
-
+          console.log(this.requestDetails, 'd');
           // Lista de estados que se deben agrupar
           const estadosAgrupados = [
             'Asignada',
@@ -440,6 +453,7 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestHistoric[]>) => {
         if (response.code === 200) {
           this.requestHistoric = response.data;
+
           this.fillStatesDetails(this.requestHistoric);
           this.totalRowsHistoric = Number(response.message);
         } else {
@@ -998,8 +1012,9 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   showModal() {
-    this.dialogHeader = 'Respuesta de la solicitud';
-    this.dialogContent = this.requestDetails?.request_answer || '';
+    this.dialogHeader = 'Respuesta de la cerrada';
+    // this.dialogContent = this.requestDetails?.request_answer || '';
+    this.dialogContent = this.requestDetails?.messages_closed || '';
     this.isDialogVisible = true;
   }
 
@@ -1153,16 +1168,12 @@ export class RequestDetailsComponent implements OnInit {
           this.respuestaSolicitud = respuestaForm;
           this.errores = respuesta.errores_encontrados;
 
-          console.log(this.respuestaCorregida);
-          console.log(this.palabrasError);
-          console.log(this.errores);
-
           // Mostrar el modal si hay errores
           if (this.errores) {
             this.visibleCorreccionIa = true;
             this.informative = true;
           } else {
-            this.borradorRespuesta(requestDetails);
+            this.borradorRespuesta(requestDetails.request_id);
           }
         } catch (error) {
           console.error('Error al procesar la respuesta del servicio:', error);
@@ -1296,19 +1307,26 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
-  borradorRespuesta(requestDetails: RequestsDetails) {
+  // requestDetails: RequestsDetails
+  borradorRespuesta(request_id: number) {
     //const respuestaBorrador = this.requestProcess.get('mensage')?.value;
-    this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
+    // this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
     const respuestaBorrador = this.requestProcess.get('mensage')?.value;
+
     const payload: RequestAnswerTemp = {
-      request_id: requestDetails.request_id,
+      // request_id: requestDetails.request_id,
+      request_id: request_id,
       mensaje_temp: respuestaBorrador || '',
     };
 
+    console.log('llego');
     this.userService.createAnswerTemp(payload).subscribe({
       next: (response: BodyResponse<string>): void => {
         if (response.code === 200) {
           this.respuestaTemp = response.data;
+
+          //Evita el bucle: al actualizar el formulario, usamos emitEvent: false
+          this.requestProcess.get('mensage')?.setValue(respuestaBorrador, { emitEvent: false });
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -1318,9 +1336,9 @@ export class RequestDetailsComponent implements OnInit {
       },
       complete: () => {
         this.existEraserAsnwer = true;
-        console.log('La suscripción ha sido completada.');
-        this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
-        return this.respuestaTemp;
+        // console.log('La suscripción ha sido completada.');
+        // this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        // return this.respuestaTemp;
       },
     });
     this.visibleCorreccionIa = false;
@@ -1411,7 +1429,6 @@ export class RequestDetailsComponent implements OnInit {
     // Cerrar el diálogo después de enviar
     this.closeDialogPending();
   }
-
 
   //REALIZA PROCESO DE PONER SOLICITUD EN PENDIENTE
   onSubmit(): void {
@@ -1530,80 +1547,79 @@ export class RequestDetailsComponent implements OnInit {
     // UUID + fecha
     const token = `${uuid}${formattedDate}`;
     return token;
-}
-
-openFileInputPending() {
-  this.fileInputPending.nativeElement.value = ''; // Limpiar la entrada de archivos antes de abrir el cuadro de diálogo
-  this.fileInputPending.nativeElement.click();
-}
-
-onFileSelectedPending(event: any) {
-  const filesPending: FileList = event.target.files;
-
-  for (let i = 0; i < filesPending.length; i++) {
-    if (this.fileNameListPending.includes(filesPending[i].name)) {
-      this.errorMensajeFile = `El archivo ${filesPending[i].name} ya esta adjunto`;
-      this.errorRepeatFile = true;
-      continue;
-    } else {
-      const file: File = filesPending[i];
-
-      let fileSizeFormat: string;
-      const fileName: string = file.name;
-      const fileSizeInKiloBytes = file.size / 1024;
-      if (fileSizeInKiloBytes < 1024) {
-        fileSizeFormat = fileSizeInKiloBytes.toFixed(2) + 'KB';
-      } else {
-        const fileSizeMegabytes = fileSizeInKiloBytes / 1024;
-        fileSizeFormat = fileSizeMegabytes.toFixed(2) + 'MB';
-      }
-      if (this.isValidExtension(file)) {
-        this.errorMensajeFile = `El archivo ${filesPending[i].name} tiene una extension no permitida`;
-        this.errorExtensionFile = true;
-        continue;
-      }
-
-      if (file.size > 20971520) {
-        this.errorMensajeFile = `El archivo ${filesPending[i].name} supera los 20MB`;
-        this.errorSizeFile = true;
-        continue;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        const base64String: string = e.target.result.split(',')[1];
-
-        const applicantAttach: ApplicantAttachments = {
-          base64file: base64String,
-          source_name: fileName,
-          fileweight: fileSizeFormat,
-          file: filesPending[i],
-        };
-
-        this.fileNameListPending.push(fileName);
-        this.arrayAssignedAttachmentPending.push(applicantAttach);
-      };
-      reader.readAsDataURL(file);
-    }
   }
-  setTimeout(() => {
-    this.errorRepeatFile = false;
-    this.errorExtensionFile = false;
-    this.errorSizeFile = false;
-  }, 5000);
-  
-  console.log(this.getAssignedPending());
-}
 
-getAssignedPending(): ApplicantAttachments[] {
-  return this.arrayAssignedAttachmentPending;
-}
+  openFileInputPending() {
+    this.fileInputPending.nativeElement.value = ''; // Limpiar la entrada de archivos antes de abrir el cuadro de diálogo
+    this.fileInputPending.nativeElement.click();
+  }
 
-clearFileInputPending(index: number) {
-  this.fileNameListPending.splice(index, 1);
-  this.arrayAssignedAttachmentPending.splice(index, 1);
-}
+  onFileSelectedPending(event: any) {
+    const filesPending: FileList = event.target.files;
 
+    for (let i = 0; i < filesPending.length; i++) {
+      if (this.fileNameListPending.includes(filesPending[i].name)) {
+        this.errorMensajeFile = `El archivo ${filesPending[i].name} ya esta adjunto`;
+        this.errorRepeatFile = true;
+        continue;
+      } else {
+        const file: File = filesPending[i];
+
+        let fileSizeFormat: string;
+        const fileName: string = file.name;
+        const fileSizeInKiloBytes = file.size / 1024;
+        if (fileSizeInKiloBytes < 1024) {
+          fileSizeFormat = fileSizeInKiloBytes.toFixed(2) + 'KB';
+        } else {
+          const fileSizeMegabytes = fileSizeInKiloBytes / 1024;
+          fileSizeFormat = fileSizeMegabytes.toFixed(2) + 'MB';
+        }
+        if (this.isValidExtension(file)) {
+          this.errorMensajeFile = `El archivo ${filesPending[i].name} tiene una extension no permitida`;
+          this.errorExtensionFile = true;
+          continue;
+        }
+
+        if (file.size > 20971520) {
+          this.errorMensajeFile = `El archivo ${filesPending[i].name} supera los 20MB`;
+          this.errorSizeFile = true;
+          continue;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          const base64String: string = e.target.result.split(',')[1];
+
+          const applicantAttach: ApplicantAttachments = {
+            base64file: base64String,
+            source_name: fileName,
+            fileweight: fileSizeFormat,
+            file: filesPending[i],
+          };
+
+          this.fileNameListPending.push(fileName);
+          this.arrayAssignedAttachmentPending.push(applicantAttach);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    setTimeout(() => {
+      this.errorRepeatFile = false;
+      this.errorExtensionFile = false;
+      this.errorSizeFile = false;
+    }, 5000);
+
+    console.log(this.getAssignedPending());
+  }
+
+  getAssignedPending(): ApplicantAttachments[] {
+    return this.arrayAssignedAttachmentPending;
+  }
+
+  clearFileInputPending(index: number) {
+    this.fileNameListPending.splice(index, 1);
+    this.arrayAssignedAttachmentPending.splice(index, 1);
+  }
 
   envioCorreoMasivo() {
     this.visibleSolicitudEnvioMasivo = true;
@@ -1699,7 +1715,6 @@ clearFileInputPending(index: number) {
       next: (response: BodyResponse<historyRequest[]>) => {
         if (response.code === 200) {
           this.historyData = response.data;
-          console.log(this.historyData, 'aa');
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
