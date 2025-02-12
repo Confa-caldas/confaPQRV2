@@ -65,6 +65,7 @@ export interface RequestsDetails {
   user_name_completed?: string;
   mensaje_reasignacion: string;
   messages_closed?: string;
+  send_email_massive?: string;
 }
 export interface RequestAttachmentsList {
   url: string;

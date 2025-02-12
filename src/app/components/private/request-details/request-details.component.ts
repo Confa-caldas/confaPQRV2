@@ -340,7 +340,6 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestsDetails>) => {
         if (response.code === 200) {
           this.requestDetails = response.data;
-          console.log(this.requestDetails, 'd');
           // Lista de estados que se deben agrupar
           const estadosAgrupados = [
             'Asignada',

@@ -181,6 +181,11 @@
                 <label class="process-container-label"> Responsable de solicitud </label>
                 <li class="process-container-text">{{ requestDetails.user_name_completed }}</li>
               </div>
+              <div *ngIf="requestDetails.send_email_massive !== null" class="process-container-col">
+                <label class="process-container-label"> Respuesta a otros correos </label>
+                <li class="process-container-text">{{ requestDetails.send_email_massive }}</li>
+              </div>
+
               <div class="process-container-col"></div>
             </div>
             <div class="process-container-row">
