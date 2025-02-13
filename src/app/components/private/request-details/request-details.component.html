@@ -894,8 +894,11 @@
     </div>
 
     <!-- Botones -->
-    <!-- <div class="dialog-buttons">
-      <button type="button" class="btn btn-yes" (click)="borradorRespuesta(requestDetails!)">
+    <div class="dialog-buttons">
+      <button
+        type="button"
+        class="btn btn-yes"
+        (click)="borradorRespuesta(requestDetails?.request_id)">
         Sí
       </button>
       <button
@@ -904,7 +907,7 @@
         (click)="borradorRespuestaNoCorregida(requestDetails!)">
         No
       </button>
-    </div> -->
+    </div>
   </div>
 </p-dialog>
 

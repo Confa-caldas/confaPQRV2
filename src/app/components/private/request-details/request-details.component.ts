@@ -1076,8 +1076,6 @@ export class RequestDetailsComponent implements OnInit {
   } */
 
   respuestaSugeridaIa(requestDescription: string) {
-    console.log(this.requestDetails?.request_description);
-
     this.userService.respuestaIaWs(this.requestDetails?.request_description).subscribe(response => {
       if (response.statusCode === 200) {
         // El cuerpo de la respuesta está en response.body y es un string JSON
@@ -1147,7 +1145,6 @@ export class RequestDetailsComponent implements OnInit {
 
   correccionSugeridaIa(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
-    console.log(respuestaForm);
 
     this.userService.correccionIaWs(respuestaForm).subscribe(response => {
       if (response.statusCode === 200) {
@@ -1186,7 +1183,6 @@ export class RequestDetailsComponent implements OnInit {
   //NUEVA PARA ENVIAR
   correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
-    console.log(respuestaForm);
 
     this.userService.correccionIaWs(respuestaForm).subscribe(response => {
       if (response.statusCode === 200) {
@@ -1205,10 +1201,6 @@ export class RequestDetailsComponent implements OnInit {
           this.palabrasError = respuesta.palabras_con_errores;
           this.respuestaSolicitud = respuestaForm;
           this.errores = respuesta.errores_encontrados;
-
-          console.log(this.respuestaCorregida);
-          console.log(this.palabrasError);
-          console.log(this.errores);
 
           // Mostrar el modal si hay errores
           if (this.errores) {
@@ -1307,18 +1299,16 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   // requestDetails: RequestsDetails
-  borradorRespuesta(request_id: number) {
+  borradorRespuesta(request_id: number = 0) {
     //const respuestaBorrador = this.requestProcess.get('mensage')?.value;
     // this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
     const respuestaBorrador = this.requestProcess.get('mensage')?.value;
 
     const payload: RequestAnswerTemp = {
-      // request_id: requestDetails.request_id,
       request_id: request_id,
       mensaje_temp: respuestaBorrador || '',
     };
 
-    console.log('llego');
     this.userService.createAnswerTemp(payload).subscribe({
       next: (response: BodyResponse<string>): void => {
         if (response.code === 200) {
