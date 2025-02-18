@@ -1,11 +1,17 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Users } from '../../../services/users.service';
-import { ApplicantTypeList, RequestTypeList } from '../../../models/users.interface';
+import {
+  ApplicantTypeList,
+  RequestTypeList,
+  UserEnvironment,
+  ProcessRequest,
+} from '../../../models/users.interface';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Router } from '@angular/router';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-create-request',
@@ -16,7 +22,12 @@ export class CreateRequestComponent {
   optionsRequest: FormGroup;
   applicantList!: ApplicantTypeList[];
   requestList!: RequestTypeList[];
+  userEnvironment!: UserEnvironment[];
   visibleDialogDataT = false;
+
+  transactionId: string = '';
+  ip: string = '';
+  userEnvironmentData: any;
 
   constructor(
     private router: Router,
@@ -28,7 +39,6 @@ export class CreateRequestComponent {
       applicant_id: ['', Validators.required],
       request_id: ['', Validators.required],
       authorize: [null, Validators.requiredTrue],
-      
     });
 
     localStorage.removeItem('visitedFirstPage');
@@ -97,7 +107,31 @@ export class CreateRequestComponent {
     });
   }
 
-  sendOptions() {
+  async getUserIp(): Promise<string> {
+    try {
+      // Servicio para obtener la IP
+      const data = await this.userService.getIpAddress().toPromise();
+      const ip = data.ip || 'No disponible';
+      return ip; // Retornamos el objeto con los datos del entorno
+    } catch (err) {
+      console.error('Error obteniendo la IP', err);
+      throw err; // Rechazamos la promesa en caso de error
+    }
+  }
+
+  async sendOptions() {
+    let ip: string;
+
+    try {
+      ip = await this.getUserIp(); // Intentamos obtener el entorno del usuario
+    } catch (err) {
+      console.error('Error obteniendo el entorno del usuario:', err);
+      // Si ocurre un error, usamos valores por defecto
+      ip = 'No disponible';
+    }
+
+    this.transactionId = uuidv4(); // Genera un identificador único
+
     localStorage.setItem('visitedFirstPage', 'true');
     localStorage.setItem(
       'applicant-type',
@@ -107,19 +141,43 @@ export class CreateRequestComponent {
       'request-type',
       JSON.stringify(this.optionsRequest.controls['request_id'].value)
     );
+    localStorage.setItem('id-transaction', this.transactionId);
 
     if (
       this.optionsRequest.controls['applicant_id'].value.applicant_type_id === 1 &&
       this.optionsRequest.controls['request_id'].value.request_type_id === 21
     ) {
-      console.log('bienn');
       window.open(
         'https://docs.google.com/forms/d/e/1FAIpQLSc11ps8y0lrKKZEa83wtJC2VrtoSe7p1IMXfeM2bzDSxFagdg/viewform',
         '_blank'
-      ); // Abre un enlace en una nueva pestaña
-      // window.location.href =
-      //   'https://docs.google.com/forms/d/e/1FAIpQLSc11ps8y0lrKKZEa83wtJC2VrtoSe7p1IMXfeM2bzDSxFagdg/viewform'; //abre en la misma
+      );
     } else {
+      const payload: ProcessRequest = {
+        operation: 'insert',
+        transaction_id: this.transactionId,
+        status: 'Iniciado',
+        navigator: navigator.userAgent || 'No disponible',
+        leng_nav: navigator.language || 'No disponible',
+        ip: ip,
+        resolution: `${window.screen.width}x${window.screen.height}` || 'No disponible',
+        platform: navigator.platform || 'No disponible',
+      };
+
+      console.log(payload);
+
+      this.userService.registerProcessRequest(payload).subscribe({
+        next: (response: BodyResponse<string>) => {
+          if (response.code === 200) {
+            console.log('Registro exitoso en log de proceso de solicitud');
+          } else {
+            console.log('Error registrando en log de proceso de solicitud');
+          }
+        },
+        error: err => {
+          console.error('Error consumiendo el servicio de registro request:', err);
+        },
+      });
+
       this.router.navigate([RoutesApp.REQUEST_FORM]);
     }
   }

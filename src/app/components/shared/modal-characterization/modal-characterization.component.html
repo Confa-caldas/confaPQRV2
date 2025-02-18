@@ -106,6 +106,7 @@
               >
             </div>
           </div>
+
           <div class="container-row" *ngIf="categoryBoolean && modalBoolean">
             <div class="container-col">
               <label class="label-select"> Categoría</label>
@@ -179,7 +180,7 @@
             </div>
           </div>
         </form>
-        <div>
+
           <div class="row my-4 px-5" style="margin: 10px auto; margin-top: 50px">
             <div class="col-12 d-flex justify-content-evenly">
               <p-button
@@ -189,7 +190,15 @@
                 (click)="closeDialog(false)"></p-button>
             </div>
           </div>
+        
+        <div>
+          <div class="row my-4 px-5">
+            <div class="col-12 d-flex justify-content-evenly">
+              <p-button label="Cancelar" severity="secondary" (click)="closeDialogCharacte(false)"></p-button>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
   </ng-template>

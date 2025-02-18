@@ -263,6 +263,36 @@
   line-height: 30px;
 }
 
+.btn-icon-text {
+  background-color: $color-dark-orange;
+  //width: 30px;
+  height: 30px;
+  border-radius: 0.3em;
+  cursor: pointer;
+  transition:
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+  /* Añade transición para ambos efectos */
+  margin-left: 5px;
+  margin-right: 5px;
+
+  &:hover {
+    background-color: $color-golden-rod;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  }
+
+  &:active {
+    background-color: darken($color-dark-orange, 10%);
+    /* Cambia el color al hacer clic */
+    box-shadow: none;
+    /* Elimina la sombra al hacer clic */
+  }
+
+  color: white;
+  text-align: center;
+  line-height: 30px;
+}
+
 .btn-icon-info {
   background-color: $color-dodger-blue;
   width: 30px;

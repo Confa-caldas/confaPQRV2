@@ -51,7 +51,48 @@
         </div>
       </div>
     </ul>
+
+    <div class="timeline-container">
+      <p-timeline [value]="events" layout="horizontal" align="bottom">
+        <ng-template pTemplate="content" let-event let-i="index">
+          <div class="timeline-event-state">
+            {{ event.state }}
+          </div>
+          <div class="timeline-event-label">
+            <span *ngIf="isValidDate(event.label); else noDate">
+              {{ event.label | date: 'shortDate' }}
+            </span>
+            <ng-template #noDate>{{ event.label }}</ng-template>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="marker" let-event let-i="index">
+          <span
+            class="timeline-marker"
+            [ngClass]="{
+              'active-marker': currentState === event.stateShow,
+              'previous-marker': i <= currentIndex
+            }">
+            <i
+              class="pi"
+              [ngClass]="{
+                'pi-check': event.state === 'Cerrada',
+                'pi-cog': event.state === 'Gestión',
+                'pi-ticket': event.state === 'Radicada'
+              }"></i>
+          </span>
+        </ng-template>
+      </p-timeline>
+    </div>
   </p-card>
+
+  <p-toast />
+  <br />
+  <div
+    *ngIf="requestDetails.status_name === 'Cerrada'"
+    style="text-align: right; margin-right: 10px">
+    <p-menu #menu [model]="items" [popup]="true"></p-menu>
+    <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
+  </div>
 
   <div class="container-button" *ngIf="!showProcessTab()">
     <p-button
@@ -140,6 +181,11 @@
                 <label class="process-container-label"> Responsable de solicitud </label>
                 <li class="process-container-text">{{ requestDetails.user_name_completed }}</li>
               </div>
+              <div *ngIf="requestDetails.send_email_massive !== null" class="process-container-col">
+                <label class="process-container-label"> Respuesta a otros correos </label>
+                <li class="process-container-text">{{ requestDetails.send_email_massive }}</li>
+              </div>
+
               <div class="process-container-col"></div>
             </div>
             <div class="process-container-row">
@@ -150,12 +196,24 @@
                 </li>
               </div>
             </div>
-            <div class="process-container-row" *ngIf="requestDetails.status_name === 'Cerrada'">
+            <div class="process-container-row" *ngIf="requestDetails.request_answer !== ''">
               <div class="process-container-col-description">
                 <label class="process-container-label"> Respuesta solicitud </label>
                 <li class="process-container-text" [ngStyle]="{ 'white-space': 'pre-line' }">
                   {{ requestDetails.request_answer }}
                 </li>
+              </div>
+            </div>
+            <br />
+            <div class="process-container-row" *ngIf="historyData.length > 0">
+              <div class="process-container-col-description">
+                <p-button
+                  icon="pi pi-plus"
+                  [styleClass]="'btn-icon-info'"
+                  (click)="solicitudHistory()"
+                  [style]="{ 'border-radius': '10px' }"
+                  title="Ver respuestas">
+                </p-button>
               </div>
             </div>
           </div>
@@ -330,30 +388,42 @@
               <label class="formProcess-card-text-placeholder"
                 >Respuesta Solicitud
                 <p style="color: red">*</p>
-                <!-- <div>
+                <div>
                   <p-button
                     icon="pi pi-bolt"
                     [styleClass]="'btn-icon-warning'"
                     (click)="respuestaSugeridaIa(requestDetails.request_description)"
                     [style]="{ 'border-radius': '10px' }">
                   </p-button>
-                </div> -->
-              </label>
-                <div
-                  *ngIf="requestDetails.status_name !== 'Cerrado'"
-                  class="formProcess-card-text-placeholder"
-                  [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
-                  [ngClass]="{ 'text-respuesta': existEraserAsnwer }"
-                  >Guardar borrador
-                  <p-button
-                    icon="pi pi-save"
-                    [styleClass]="'btn-icon-info'"
-                    (click)="borradorRespuesta(requestDetails)"
-                    [style]="{ 'border-radius': '10px' }"
-                    title="Guardar en borrador">
-                  </p-button>
                 </div>
-              
+              </label>
+              <div
+                *ngIf="requestDetails.status_name !== 'Cerrado'"
+                class="formProcess-card-text-placeholder"
+                [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
+                [ngClass]="{ 'text-respuesta': existEraserAsnwer }">
+                <p-button
+                  label="Solicitud pendiente"
+                  severity="warning"
+                  icon="pi pi-stopwatch"
+                  [style]="{ 'border-radius': '10px' }"
+                  (click)="solicitudPendiente()" />
+              </div>
+
+              <div
+                *ngIf="requestDetails.status_name !== 'Cerrado'"
+                class="formProcess-card-text-placeholder"
+                [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
+                [ngClass]="{ 'text-respuesta': existEraserAsnwer }">
+                <p-button
+                  icon="pi pi-save"
+                  severity="warning"
+                  (click)="correccionSugeridaIa(requestDetails)"
+                  [style]="{ 'border-radius': '10px', 'background-color': '#329dd1' }"
+                  [disabled]="requestProcess.invalid"
+                  label="Guardar en borrador">
+                </p-button>
+              </div>
 
               <!-- <label class="formProcess-card-text-placeholder"
                 >Generar reporte afiliacion
@@ -377,6 +447,7 @@
                 placeholder="Escribir mensaje"
                 pInputTextarea>
               </textarea>
+
               <label class="formProcess-card-text-placeholder-invalid">
                 {{
                   requestProcess.get('mensage')?.hasError('required') &&
@@ -391,6 +462,16 @@
                 }}</label
               >
             </div>
+
+            <!-- <div>
+              <p-button
+                *ngIf="requestProcess.get('mensage')?.value"
+                label="Ortografía"
+                icon="pi pi-check-square"
+                [styleClass]="'btn-icon-text'"
+                (click)="correccionSugeridaIa(requestDetails)">
+              </p-button>
+            </div> -->
           </form>
           <div class="formProcess-buttonUp">
             <label class="formProcess-card-text-placeholder">Adjuntos</label>
@@ -401,7 +482,7 @@
                 class="formProcess-buttonUp-custom-icon"
                 name="archive_request"
                 (change)="onFileSelected($event)"
-                accept=".jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+                accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
                 maxFileSize="20971520"
                 multiple />
               <label class="formProcess-buttonUp-label" (click)="openFileInput()">
@@ -425,7 +506,7 @@
             <p-button
               label="Enviar respuesta"
               [disabled]="requestProcess.invalid"
-              (click)="characterizeRequest(requestDetails)"
+              (click)="correccionSugeridaIaEnviar(requestDetails)"
               [style]="{ 'border-radius': '10px' }"></p-button>
           </div>
         </div>
@@ -488,6 +569,20 @@
                     icon="pi pi-eye"
                     [styleClass]="'btn-icon-info'"
                     (click)="showModalReasignada(requestHistoric.user_name_completed)"></p-button>
+                  <p-button
+                    *ngIf="
+                      (requestHistoric.status_name === 'Asignada - En revisión' ||
+                        requestHistoric.status_name === 'Reasignada - En revisión') &&
+                      requestHistoric.answer_request !== null
+                    "
+                    icon="pi pi-eye"
+                    [styleClass]="'btn-icon-info'"
+                    (click)="
+                      showModalReview(
+                        requestHistoric.user_name_completed,
+                        requestHistoric.status_name
+                      )
+                    "></p-button>
                 </td>
               </tr>
             </ng-template>
@@ -689,13 +784,29 @@
   [contentStyle]="{ padding: '1em' }"
   [responsive]="true"
   [styleClass]="'custom-dialog'">
+  <ng-template pTemplate="header">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <img
+        src="../../../../assets/images/ia_.gif"
+        alt="GIF animado"
+        style="width: 40px; height: 40px; border-radius: 50%" />
+      <span>Respuesta sugerida por IA</span>
+    </div>
+  </ng-template>
+
   <div class="dialog-content">
+    <span class="disclaimer">
+      El asistente de IA puede cometer errores. Comprueba siempre la información importante.
+    </span>
+    <br />
     <p><strong>Categoría:</strong> {{ categoria }}</p>
     <p>
       <strong>Respuesta sugerida:</strong> <br />
-      Hola, buen día! <br /><br />
-      {{ respuestaPredefinida }} <br /><br />
+      <textarea id="respuesta-corregida" class="custom-textarea" readonly>
+      Hola, buen día!
+      {{ respuestaPredefinida }}
       Cordialmente, {{ requestDetails?.user_name_completed }}
+      </textarea>
     </p>
     <div class="confirmation-text">
       <p>¿Desea usar esta respuesta para la solicitud?</p>
@@ -704,5 +815,482 @@
       <button type="button" class="btn btn-yes" (click)="confirmarRespuesta()">Sí</button>
       <button type="button" class="btn btn-no" (click)="cancelar()">No</button>
     </div>
+  </div>
+</p-dialog>
+
+<!--
+<p-dialog
+  header="Corrección de ortografía sugerida por IA"
+  [(visible)]="visibleCorreccionIa"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'">
+  <div class="dialog-content">
+    <p><strong>Respuesta original:</strong> {{ respuestaSolicitud }}</p>
+    <p><strong>Respuesta corregida por IA:</strong> {{ respuestaCorregida }} </p>
+    <p><strong>Palabras corregida por IA:</strong> {{ palabrasError }} </p>
+    <div class="confirmation-text">
+      <p>¿Desea usar esta respuesta para la solicitud?</p>
+    </div>
+    <div class="dialog-buttons">
+      <button type="button" class="btn btn-yes" (click)="confirmarCorreccion()">Sí</button>
+      <button type="button" class="btn btn-no" (click)="cancelarCorreccion()">No</button>
+    </div>
+  </div>
+</p-dialog> -->
+
+<p-dialog
+  header="Corrección de ortografía sugerida por IA"
+  [(visible)]="visibleCorreccionIa"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'">
+  <ng-template pTemplate="header">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <img
+        src="../../../../assets/images/ia_.gif"
+        alt="GIF animado"
+        style="width: 40px; height: 40px; border-radius: 50%" />
+      <span>Corrección de ortografía sugerida por IA</span>
+    </div>
+  </ng-template>
+
+  <div class="dialog-content">
+    <span class="disclaimer">
+      El asistente de IA puede cometer errores. Comprueba siempre la información importante.
+    </span>
+    <br />
+    <!-- Respuesta original -->
+    <div class="form-group">
+      <label for="respuesta-original">Respuesta original:</label>
+      <textarea id="respuesta-original" class="custom-textarea" readonly>{{
+        respuestaSolicitud
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Respuesta corregida -->
+    <div class="form-group">
+      <label for="respuesta-corregida">Respuesta corregida por IA:</label>
+      <textarea id="respuesta-corregida" class="custom-textarea" readonly>{{
+        respuestaCorregida
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Palabras corregidas -->
+    <div class="form-group">
+      <label for="palabras-error">Palabras corregidas por IA:</label>
+      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{
+        palabrasError
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Pregunta de confirmación -->
+    <div class="confirmation-text">
+      <p>¿Desea usar esta respuesta para la solicitud?</p>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button
+        type="button"
+        class="btn btn-yes"
+        (click)="borradorRespuesta(requestDetails?.request_id)">
+        Sí
+      </button>
+      <button
+        type="button"
+        class="btn btn-no"
+        (click)="borradorRespuestaNoCorregida(requestDetails!)">
+        No
+      </button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Corrección de ortografía sugerida por IA"
+  [(visible)]="visibleCorreccionIaEnviar"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'">
+  <ng-template pTemplate="header">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <img
+        src="../../../../assets/images/ia_.gif"
+        alt="GIF animado"
+        style="width: 40px; height: 40px; border-radius: 50%" />
+      <span>Corrección de ortografía sugerida por IA</span>
+    </div>
+  </ng-template>
+
+  <div class="dialog-content">
+    <span class="disclaimer">
+      El asistente de IA puede cometer errores. Comprueba siempre la información importante.
+    </span>
+    <br />
+    <!-- Respuesta original -->
+    <div class="form-group">
+      <label for="respuesta-original">Respuesta original:</label>
+      <textarea id="respuesta-original" class="custom-textarea" readonly>{{
+        respuestaSolicitud
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Respuesta corregida -->
+    <div class="form-group">
+      <label for="respuesta-corregida">Respuesta corregida por IA:</label>
+      <textarea id="respuesta-corregida" class="custom-textarea" readonly>{{
+        respuestaCorregida
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Palabras corregidas -->
+    <div class="form-group">
+      <label for="palabras-error">Palabras corregidas por IA:</label>
+      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{
+        palabrasError
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Pregunta de confirmación -->
+    <div class="confirmation-text">
+      <p>¿Desea usar esta respuesta para la solicitud?</p>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="button" class="btn btn-yes" (click)="characterizeRequest(requestDetails!)">
+        Sí
+      </button>
+      <button
+        type="button"
+        class="btn btn-no"
+        (click)="characterizeRequestNoCorreccion(requestDetails!)">
+        No
+      </button>
+    </div>
+  </div>
+</p-dialog>
+
+<!--
+<p-dialog
+  header="Solicitud pendiente"
+  [(visible)]="visibleSolicitudPendiente"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Solicitud pendiente</span>
+    </div>
+  </ng-template>
+
+
+  <form [formGroup]="pendingRequestForm" (ngSubmit)="onSubmit()">
+
+    <div class="form-group">
+      <label for="message">Mensaje</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        rows="4"
+        class="form-control"
+        placeholder="Escribe tu mensaje aquí"
+        required>
+      </textarea>
+    </div>
+    <br>
+
+    <div class="form-group">
+      <label for="file">Archivos adjuntos</label>
+      
+      <input
+        id="file"
+        type="file"
+        #archive_request_pending
+        class="formProcess-buttonUp-custom-icon"
+        name="archive_request_pending"
+        (change)="onFileSelectedPending($event)"
+        accept=".jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+        maxFileSize="20971520"
+        multiple />
+      <label class="formProcess-buttonUp-label" (click)="openFileInputPending()">
+        Seleccionar
+        <i style="margin-left: 5px" class="pi pi-upload"></i>
+      </label>
+      <label class="formProcess-card-text-placeholder-invalid"
+        >{{ errorSizeFile ? errorMensajeFile : ''
+        }}{{ errorExtensionFile ? errorMensajeFile : ''
+        }}{{ errorRepeatFile ? errorMensajeFile : '' }}</label
+      >
+    </div>
+
+
+    <div
+      class="formProcess-labelUpload"
+      *ngFor="let fileNameP of fileNameListPending; let i = index">
+      <p class="formProcess-labelUpload-name">{{ fileNameP }}</p>
+      <i (click)="clearFileInputPending(i)" class="formProcess-labelUpload-name pi pi-times"></i>
+    </div>
+
+
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-yes">Enviar</button>
+      <button type="button" class="btn btn-cancel" (click)="closeDialogPending()">Cancelar</button>
+    </div>
+  </form>
+</p-dialog> -->
+
+<p-dialog
+  [(visible)]="visibleSolicitudPendiente"
+  [modal]="true"
+  [showHeader]="false"
+  [style]="{ width: '50vw', 'border-radius': '12px', 'max-width': '600px' }"
+  [contentStyle]="{ padding: '2em' }"
+  [closable]="false"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false">
+  <!-- Encabezado personalizado -->
+  <div class="custom-dialog-header">
+    <i class="pi pi-clock custom-icon"></i>
+    <h2>Solicitud Pendiente</h2>
+  </div>
+
+  <!-- Formulario -->
+  <form [formGroup]="pendingRequestForm" (ngSubmit)="onSubmit()">
+    <!-- Mensaje -->
+    <div class="form-group">
+      <label for="message">Mensaje</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        rows="4"
+        class="form-control"
+        placeholder="Escribe tu mensaje aquí"
+        required>
+      </textarea>
+    </div>
+
+    <!-- Archivos adjuntos -->
+    <div class="form-group">
+      <label for="file">Archivos adjuntos</label>
+      <div class="custom-file-upload">
+        <input
+          id="file"
+          type="file"
+          #archive_request_pending
+          name="archive_request_pending"
+          (change)="onFileSelectedPending($event)"
+          accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+          maxFileSize="20971520"
+          multiple />
+        <label class="upload-label" (click)="openFileInputPending()">
+          Seleccionar Archivo <i class="pi pi-upload"></i>
+        </label>
+      </div>
+
+      <!-- Mensajes de error -->
+      <p class="error-message" *ngIf="errorSizeFile || errorExtensionFile || errorRepeatFile">
+        {{ errorSizeFile ? errorMensajeFile : '' }}
+        {{ errorExtensionFile ? errorMensajeFile : '' }}
+        {{ errorRepeatFile ? errorMensajeFile : '' }}
+      </p>
+    </div>
+
+    <!-- Lista de archivos seleccionados -->
+    <div class="file-list" *ngFor="let fileNameP of fileNameListPending; let i = index">
+      <p class="file-name">{{ fileNameP }}</p>
+      <i (click)="clearFileInputPending(i)" class="pi pi-times remove-file"></i>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-primary" [disabled]="pendingRequestForm.invalid">
+        Enviar
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="closeDialogPending()">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</p-dialog>
+
+<!-- masivo envio de respuesta -->
+<p-dialog
+  header="Envio de respuesta masivo"
+  [(visible)]="visibleSolicitudEnvioMasivo"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Envio respuesta masivo</span>
+    </div>
+  </ng-template>
+
+  <!-- Formulario -->
+
+  <form [formGroup]="envioMasivoForm" (ngSubmit)="onSubmitRepuestaMasivo()">
+    <!-- Mensaje de error -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Agregar correo -->
+    <div class="form-group">
+      <label> Número de Radicado </label>
+      <li>{{ requestDetails?.request_id }}</li>
+      <br />
+      <label for="email">Correo Electrónico</label>
+      <div class="email-input-group">
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-control input-short"
+          placeholder="Introduce un correo"
+          required />
+        <button type="button" class="btn btn-add" (click)="addEmail()">+</button>
+      </div>
+    </div>
+
+    <!-- Lista de correos -->
+    <div *ngIf="emailList.length > 0" class="email-list">
+      <ul class="horizontal-list">
+        <li *ngFor="let email of emailList; let i = index" class="horizontal-item">
+          {{ email }}
+          <button type="button" class="btn btn-remove" (click)="removeEmail(i)">X</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Mensaje -->
+    <br />
+    <div class="form-group">
+      <label for="message">Mensaje cierre solicitud</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        rows="4"
+        class="form-control"
+        placeholder="{{ requestDetails?.request_answer }}"
+        readonly
+        required>
+      </textarea>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-yes">Enviar</button>
+      <button type="button" class="btn btn-cancel" (click)="closeDialogenvioCorreoMasivo()">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</p-dialog>
+
+<!-- pop up historia respuestas -->
+<p-dialog
+  header="Historia"
+  [(visible)]="visibleHistory"
+  [modal]="true"
+  [style]="{ width: '60vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Historia</span>
+    </div>
+  </ng-template>
+
+  <!-- Contenido -->
+  <div *ngFor="let item of historyData; let i = index" class="history-item">
+    <div
+      class="chat-bubble"
+      [ngClass]="{
+        'user-internal': item.usuario === 'usuario interno',
+        'user-external': item.usuario === 'usuario externo'
+      }">
+      <div class="chat-header">
+        <span> {{ item.usuario }} {{ item.fecha }}</span>
+      </div>
+      <div class="chat-header">
+        <span><strong>Mensaje</strong> </span>
+      </div>
+      <div class="chat-message">
+        {{ item.observacion }}
+      </div>
+      <br />
+      <div class="chat-header">
+        <span><strong>Archivos</strong> </span>
+      </div>
+
+      <p-table
+        *ngIf="item.processed_attachments && item.processed_attachments.length > 0"
+        [value]="item.processed_attachments"
+        [scrollable]="true"
+        scrollHeight="100px"
+        selectionMode="single"
+        [paginator]="false"
+        [rows]="2"
+        [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '52rem' }">
+        <ng-template pTemplate="header">
+          <tr style="height: 20px">
+            <th style="width: 20%">Archivo</th>
+            <th style="width: 5%">Previsualizar</th>
+            <th style="width: 5%">Descargar</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-attachment>
+          <tr>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              {{ attachment.file_name }}
+            </td>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              <p-button
+                icon="pi pi-eye"
+                [styleClass]="'btn-icon-info'"
+                (click)="getPreSignedUrlToDownload(attachment.url, attachment.file_name, false)">
+              </p-button>
+            </td>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              <p-button
+                icon="pi pi-download"
+                [styleClass]="'btn-icon-info'"
+                (click)="getPreSignedUrlToDownload(attachment.url, attachment.file_name, true)">
+              </p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <!-- Mostrar mensaje si no hay archivos -->
+      <div *ngIf="!item.processed_attachments || item.processed_attachments.length === 0">
+        <p>No hay archivos disponibles.</p>
+      </div>
+    </div>
+  </div>
+  <!-- Botones -->
+  <div class="dialog-buttons">
+    <button type="button" class="btn btn-cancel" (click)="closeDialogHistory()">Cerrar</button>
   </div>
 </p-dialog>

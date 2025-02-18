@@ -8,10 +8,13 @@ import {
   RequestFormList,
   RequestTypeList,
   ErrorAttachLog,
-  ProcessRequest
+  ProcessRequest,
+  PendingRequest,
+  Token,
+  RequestFormListPending,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute} from '@angular/router';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -20,11 +23,11 @@ import { throwError, retry } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-request-form',
-  templateUrl: './request-form.component.html',
-  styleUrl: './request-form.component.scss',
+  selector: 'app-request-pending',
+  templateUrl: './request-pending.component.html',
+  styleUrl: './request-pending.component.scss'
 })
-export class RequestFormComponent implements OnInit {
+export class RequestPendingComponent implements OnInit {
   @ViewChild('archive_request') fileInput!: ElementRef;
 
   requestForm: FormGroup;
@@ -78,13 +81,32 @@ export class RequestFormComponent implements OnInit {
 
   useIaAttach: boolean = false;
 
+  //MANEJO DE TOKEN URL
+  token: string | null = null;
+  requestData: any = null;
+  pendingRequest!: PendingRequest;
+  mostrarPopup: boolean = false;
+
   ngOnInit(): void {
-    let applicant = localStorage.getItem('applicant-type');
-    let request = localStorage.getItem('request-type');
-    const visitedFirstPage = localStorage.getItem('visitedFirstPage');
+    this.token = this.route.snapshot.queryParamMap.get('token');
+    
+    console.log("TOKEN OBTENIDO", this.token);
 
-    console.log(visitedFirstPage);
+    if (this.token) {
+      this.validateToken(this.token);
+    } else {
+      this.mostrarPopup = true;
+      console.error('Token no encontrado en la URL');
+      //this.router.navigate(['/']);
+    }
 
+    //let applicant = localStorage.getItem('applicant-type');
+    //let request = localStorage.getItem('request-type');
+    //const visitedFirstPage = localStorage.getItem('visitedFirstPage');
+
+    //console.log(visitedFirstPage);
+
+    /*
     if (!visitedFirstPage) {
       this.router.navigate([RoutesApp.CREATE_REQUEST]);
     } else {
@@ -98,7 +120,7 @@ export class RequestFormComponent implements OnInit {
       }
       this.getApplicantList();
       this.requestForm.get('number_id')?.disable();
-    }
+    } */
   }
 
   constructor(
@@ -106,7 +128,10 @@ export class RequestFormComponent implements OnInit {
     private userService: Users,
     private messageService: MessageService,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+
+    private route: ActivatedRoute,
+    //private pendingRequestService: PendingRequestService
   ) {
     this.value = {
       catalog_item_id: 1,
@@ -115,22 +140,8 @@ export class RequestFormComponent implements OnInit {
     };
     this.requestForm = this.formBuilder.group(
       {
-        document_type: ['', Validators.required],
-        number_id: ['', Validators.required],
-        name: ['', [Validators.required, Validators.pattern('^[^@#$%&]+$')]],
-
-        cellphone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-        email: [
-          '',
-          [
-            Validators.required,
-            Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'),
-          ],
-        ],
-        validator_email: ['', [Validators.required]],
         mensage: ['', [Validators.required, Validators.maxLength(1000)]],
       },
-      { validator: this.emailMatcher }
     );
 
     this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
@@ -146,6 +157,41 @@ export class RequestFormComponent implements OnInit {
         this.errorMensaje = 'Ingrese solo números y máximo 11 digitos';
       }
     });
+  }
+
+  validateToken(token: string){
+    const payload: Token = {
+          token: token,
+        };
+
+    console.log("PAYLOAD: ", payload);
+    this.userService.getRequestPendingByToken(payload).subscribe({
+      next: (response): void => {
+        console.log(response);
+        if (response.code === 200) {
+          this.pendingRequest = response.data;
+          console.log("DATOS PENDING", this.pendingRequest);
+        } else {
+          this.mostrarPopup = true; // Mostrar pop-up si el token no es válido
+          //this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+          console.error('Token inválido o expirado');
+          //this.router.navigate(['/']);
+        }
+      },
+      error: (err: any) => {
+        this.mostrarPopup = true; // Mostrar pop-up si hay un error
+        console.error('Error al validar token:', err);
+        this.router.navigate(['/']);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  cerrarPopup(): void {
+    this.mostrarPopup = false; // Cerrar el pop-up
+    this.router.navigate(['/']); // Redirigir al usuario
   }
 
   convertToLowercase(controlName: string): void {
@@ -261,32 +307,8 @@ export class RequestFormComponent implements OnInit {
       },
     });
   }
-  // async setParameter(inputValue: RequestFormList) {
-  //   const mensaje = inputValue.request_description;
-  //   inputValue.count_attacments = this.getAplicant().length;
 
-  //   // Si es necesario adjuntar archivo y no hay aplicantes
-  //   if (this.getAplicant().length == 0) {
-  //     const adjuntarArchivo = await this.validarMensaje(mensaje);
-
-  //     if (adjuntarArchivo) {
-  //       const continuar = await this.showAdjuntarArchivoModal(); // Espera la acción del usuario en el modal
-  //       console.log(continuar);
-  //       if (!continuar) {
-  //         // Si el usuario canceló, no continuar con la creación de la solicitud
-  //         return;
-  //       } else {
-  //         this.continuarCreacionSolicitud(inputValue);
-  //       }
-  //     } else {
-  //       this.continuarCreacionSolicitud(inputValue);
-  //     }
-  //   } else {
-  //     // Continúa con la creación de la solicitud
-  //     this.continuarCreacionSolicitud(inputValue);
-  //   }
-  // }
-  async setParameter(inputValue: RequestFormList) {
+  async setParameter(inputValue: RequestFormListPending) {
     inputValue.count_attacments = this.getAplicant().length;
 
     // Si no hay adjuntos
@@ -310,8 +332,9 @@ export class RequestFormComponent implements OnInit {
     this.continuarCreacionSolicitud(inputValue);
   }
 
-  continuarCreacionSolicitud(inputValue: RequestFormList) {
-    this.userService.createRequest(inputValue).subscribe({
+  continuarCreacionSolicitud(inputValue: RequestFormListPending) {
+    //this.userService.createRequest(inputValue).subscribe({
+    this.userService.answerRequestPending(inputValue).subscribe({              
       next: (response: BodyResponse<number>) => {
         if (response.code === 200) {
           //this.requestForm.reset();
@@ -321,6 +344,7 @@ export class RequestFormComponent implements OnInit {
               this.showAlertModal(response.data);
             }, 1000);
           } else {
+            console.log("ENTRO PARA SUBIR ARCHIVOS");
             this.attachApplicantFiles(response.data);
           }
 
@@ -408,61 +432,8 @@ export class RequestFormComponent implements OnInit {
     this.resolveModal(); // Resuelve la promesa, pero no continúa el proceso
   }
 
-  // setParameter(inputValue: RequestFormList) {
-  //   this.userService.createRequest(inputValue).subscribe({
-  //     next: (response: BodyResponse<number>) => {
-  //       if (response.code === 200) {
-  //         this.requestForm.reset();
-  //         this.fileNameList.clear();
-  //         if (this.getAplicant().length == 0) {
-  //           setTimeout(() => {
-  //             this.showAlertModal(response.data);
-  //           }, 1000);
-  //         } else {
-  //           this.attachApplicantFiles(response.data);
-  //         }
-  //       } else {
-  //         setTimeout(() => {
-  //           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-  //         }, 1000);
-  //       }
-  //     },
-  //     error: (err: any) => {
-  //       console.log(err);
-  //     },
-  //     complete: () => {
-  //       console.log('La suscripción ha sido completada post.');
-  //     },
-  //   });
-  // }
-  /*
-  async getPreSignedUrl(file: ApplicantAttachments, request_id: number) {
-    const payload = {
-      source_name: file['source_name'],
-      fileweight: file['fileweight'],
-      request_id: request_id,
-    };
-    this.userService.getUrlSigned(payload, 'applicant').subscribe({
-      next: (response: BodyResponse<string>): void => {
-        if (response.code === 200) {
-          this.preSignedUrl = response.data;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-        this.uploadToPresignedUrl(file);
-        return this.preSignedUrl;
-      },
-    });
-  }
-  */
-
   async getPreSignedUrl(file: ApplicantAttachments, request_id: number): Promise<string | void> {
+    console.log("ESCRIBIR EN BD ARCHIVOS");
     this.isSpinnerVisible = true;
     const payload = {
       // Ajuste para eliminar lo puntos o caracteres especiales en los nombres de los adjuntos
@@ -472,7 +443,8 @@ export class RequestFormComponent implements OnInit {
     };
 
     return new Promise((resolve, reject) => {
-      this.userService.getUrlSigned(payload, 'applicant').subscribe({
+      console.log("CARGANDO A S3");
+      this.userService.getUrlSigned(payload, 'pending_ext').subscribe({
         next: (response: BodyResponse<string>): void => {
           if (response.code === 200) {
             this.preSignedUrl = response.data;
@@ -619,7 +591,8 @@ export class RequestFormComponent implements OnInit {
         const ruta_archivo_ws = environment.ruta_archivos_ws;
 
         const estructura = {
-          idSolicitud: `${request_id}`,
+          //idSolicitud: `${request_id}`,
+          idSolicitud: this.pendingRequest.request_id,
           archivos: this.arrayApplicantAttachment.map(file => ({
             base64file: file.base64file,
             source_name: file.source_name,
@@ -673,8 +646,9 @@ export class RequestFormComponent implements OnInit {
     }
   }
 
+  /*
   sendRequest() {
-    const payload: RequestFormList = {
+    const payload: RequestFormListPending = {
       request_status: 1,
       applicant_type: this.applicantType.applicant_type_id,
       request_type: this.requestType.request_type_id,
@@ -695,12 +669,27 @@ export class RequestFormComponent implements OnInit {
     };
 
     this.setParameter(payload);
+  } */
+
+  sendRequest() {
+    const payload: RequestFormListPending = {
+      token_url: this.token,
+      request_id: this.pendingRequest.request_id,
+      request_status: 2,
+      request_description: this.requestForm.controls['mensage'].value,
+      applicant_attachments: null,
+      assigned_attachments: null,
+      count_attacments: 0,
+    };
+
+    this.setParameter(payload);
   }
+
   closeDialogAlert(value: boolean) {
     this.visibleDialogAlert = false;
     this.enableAction = value;
     this.router.navigate([RoutesApp.CREATE_REQUEST]);
-    localStorage.removeItem('visitedFirstPage');
+    //localStorage.removeItem('visitedFirstPage');
   }
   showAlertModal(filing_number: number) {
     this.visibleDialogAlert = true;
@@ -761,4 +750,6 @@ export class RequestFormComponent implements OnInit {
         return '*Descripción detallada de la solicitud incluyendo los datos de las personas a cargo';
     }
   } */
+
 }
+

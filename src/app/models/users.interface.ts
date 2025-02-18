@@ -64,6 +64,8 @@ export interface RequestsDetails {
   updated_date?: string;
   user_name_completed?: string;
   mensaje_reasignacion: string;
+  messages_closed?: string;
+  send_email_massive?: string;
 }
 export interface RequestAttachmentsList {
   url: string;
@@ -469,4 +471,121 @@ export interface ErrorAttachLog {
 export interface RequestAnswerTemp {
   request_id: number;
   mensaje_temp: string;
+}
+
+export interface AssociationRequestUserList {
+  request_type_id: number;
+  request_type_name: string;
+  user_id: string;
+  user_name_completed: string;
+  is_active: number | boolean;
+}
+
+export interface AssociateRequestUser {
+  request_type_id: number;
+  user_id: string;
+}
+
+export interface RequestAnswerTemp {
+  request_id: number;
+  mensaje_temp: string;
+}
+
+export interface AssociationRequestUserList {
+  request_type_id: number;
+  request_type_name: string;
+  user_id: string;
+  user_name_completed: string;
+  is_active: number | boolean;
+}
+
+export interface AssociateRequestUser {
+  request_type_id: number;
+  user_id: string;
+}
+
+export interface ProcessRequest {
+  operation: string;
+  transaction_id: string;
+  status: string;
+  navigator?: string;
+  leng_nav?: string;
+  ip?: string;
+  resolution?: string;
+  platform?: string;
+  request_id?: number;
+  validation_attachemens?: boolean;
+}
+
+export interface UserEnvironment {
+  userAgent: string;
+  platform: string;
+  browserLanguage: string;
+  screenResolution: string;
+  ipUser: string;
+}
+
+export interface PendingRequest {
+  request_id: number;
+  token: string;
+  pending: boolean;
+  message: string;
+  previus_state?: string;
+}
+export interface RequestsReview {
+  request_id: number;
+  filing_number: number;
+  filing_date: string;
+  filing_date_date?: Date;
+  filing_time: string;
+  request_status: number;
+  applicant_type: number;
+  request_type: number;
+  doc_type: number;
+  doc_id: string;
+  applicant_name: string;
+  applicant_email: string;
+  applicant_cellphone: string;
+  request_description: string;
+  request_days: number;
+  assigned_user: string;
+  request_answer: string;
+  data_treatment: boolean;
+  applicant_attachments: string[];
+  assigned_attachments: string[];
+  form_id: number;
+  status_name: string;
+  user_name_completed: string;
+  mensaje_revision: string;
+}
+
+export interface sendEmail {
+  request_id: number;
+  email: string[];
+}
+
+export interface requestHistoryRequest {
+  request_id: number;
+}
+
+export interface historyRequest {
+  request_id: number;
+  user: string;
+  fecha: Date;
+  commnet: string;
+  applicant_attachments: RequestAttachmentsList[];
+}
+
+export interface Token {
+  token: string;
+}
+
+export interface RequestFormListPending {
+  token_url: string | null;
+  request_id: number;
+  request_status: number;
+  request_description: string;
+  applicant_attachments?: ApplicantAttachments[] | null;
+  assigned_attachments?: ApplicantAttachments[] | null;
+  count_attacments: number;
 }

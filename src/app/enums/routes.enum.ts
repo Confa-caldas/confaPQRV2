@@ -16,6 +16,8 @@ export enum RoutesApp {
   NOTIFICATIONS = 'configure-notifications',
   PROCESS_REQUEST = 'process-request',
   REPORT_DETAILS = 'report-details',
+  REQUESTTYPE_MANAGER_ASSOCIATE = 'requestype-manager-associate',
+  REQUEST_PENDING = 'request-pending',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
@@ -81,4 +83,14 @@ export enum EndPointRoute {
   ATTACHMENTS_ERROR_LOG = 'error/log_attachment',
   CREATE_ANSWER_TEM = 'answer_temp/create',
   GET_ANSWER_TEMP_REQUEST = 'answer_temp/filter_request',
+  GET_ASSOCIATE_REQUEST_USER = 'request_user/association',
+  ASSOCIATE_REQUEST_USER = 'request_user/created',
+  INACTIVE_ASSOCIATE_REQUEST_USER = 'request_user/in-activate',
+  PROCESS_REQUEST_LOG = 'request/process_log',
+  CREATE_PENDING_REQUEST = 'request/create_pending',
+  CHANGE_STATE_REVIEW = 'request/review_answer',
+  SEND_EMAIL_MASSIVE = 'send_email/massive_send_email',
+  GET_HISTORY_REQUEST = 'request/history',
+  GET_PENDING_REQUEST = 'request/get_pending',
+  ANSWER_REQUEST_PENDING = 'request/answer_pending',
 }

@@ -3,6 +3,8 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { BodyResponse, ZionResponse } from '../models/shared/body-response.inteface';
 import { EndPointRoute } from '../enums/routes.enum';
+import { map, catchError } from 'rxjs/operators';
+import { of, Observable } from 'rxjs';
 import {
   ApplicantTypeList,
   AssignUserRequest,
@@ -40,8 +42,17 @@ import {
   RequestReportStatusByAssignedUser,
   ErrorAttachLog,
   RequestAnswerTemp,
+  AssociationRequestUserList,
+  AssociateRequestUser,
+  ProcessRequest,
+  PendingRequest,
+  RequestsReview,
+  sendEmail,
+  requestHistoryRequest,
+  historyRequest,
+  Token,
+  RequestFormListPending,
 } from '../models/users.interface';
-import { Observable } from 'rxjs';
 import { MD5 } from 'crypto-js';
 @Injectable({
   providedIn: 'root',
@@ -51,6 +62,8 @@ export class Users {
   private apiKey = 'AIabZtSVgS2nIVD03HQxY1cM6qLmRS8B3zHlw3qo'; // La API key que te dieron
   private apiUrlAdjuntos = 'https://api-utilitarios.confa.co/IA/analizartextov2';
   private apiUrlIngresoConfa = 'https://app.confa.co:8687/ingresoConfaWSSGC/rest/confa/metodo26';
+  private apiUrlCorreccionIA =
+    'https://zj761286ik.execute-api.us-east-1.amazonaws.com/PD/IA/analizarTextoOrtogRedac';
 
   constructor(private http: HttpClient) {}
 
@@ -400,19 +413,42 @@ export class Users {
     return this.http.post(this.apiUrl, payload, { headers }); // Envía la petición con headers
   }
 
+  correccionIaWs(respuestaSolicitud?: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json', // Asegura que se envíe como JSON
+      'x-api-key': this.apiKey, // Incluye la API key en los headers
+    });
+    const payload = {
+      mensaje: respuestaSolicitud,
+    };
+    return this.http.post(this.apiUrlCorreccionIA, payload, { headers }); // Envía la petición con headers
+  }
+
   respuestaIaAdjuntos(mensaje?: string): Observable<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'x-api-key': this.apiKey,
     });
-    // Serializa el mensaje como un objeto JSON en una cadena
     const payload = {
       body: JSON.stringify({
         userMessage: mensaje,
       }),
     };
     console.log(payload);
-    return this.http.post(this.apiUrlAdjuntos, payload, { headers }); // Envía la petición con headers
+    return this.http
+      .post(this.apiUrlAdjuntos, payload, { headers }) // Envía la petición con headers
+      .pipe(
+        catchError(error => {
+          console.error('Error en la solicitud:', error);
+
+          // Retorna un observable con un mensaje de error personalizado
+          return of({
+            statusCode: '500',
+            status: 'error',
+            message: 'No es posible procesar la solicitud en este momento. Inténtelo más tarde.',
+          });
+        })
+      );
   }
 
   getRequestReportDetail(): Observable<BodyResponse<RequestReportDetail[]>> {
@@ -490,6 +526,85 @@ export class Users {
   registerErrorAttach(payload: ErrorAttachLog) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.ATTACHMENTS_ERROR_LOG}`,
+      payload
+    );
+  }
+
+  getRequestsUserAssociation(payload: Pagination) {
+    return this.http.post<BodyResponse<AssociationRequestUserList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GET_ASSOCIATE_REQUEST_USER}`,
+      payload
+    );
+  }
+  createAssociationRequestUser(payload: AssociateRequestUser) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ASSOCIATE_REQUEST_USER}`,
+      payload
+    );
+  }
+  inactivateAssociationRequestUser(payload: AssociationRequestUserList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVE_ASSOCIATE_REQUEST_USER}`,
+      payload
+    );
+  }
+  registerProcessRequest(payload: ProcessRequest) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PROCESS_REQUEST_LOG}`,
+      payload
+    );
+  }
+  getIpAddress(): Observable<any> {
+    return this.http.get('https://api.ipify.org/?format=json');
+  }
+
+  checkServiceAvailability(): Observable<boolean> {
+    return this.http.head(this.apiUrlCorreccionIA, { observe: 'response' }).pipe(
+      map(() => true), // Si la respuesta es exitosa, el servicio está disponible
+      catchError(() => of(false)) // Si hay un error, marcamos como no disponible
+    );
+  }
+
+  registerPendingRequest(payload: PendingRequest) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_PENDING_REQUEST}`,
+      payload
+    );
+  }
+
+  changeStateReview(payload: RequestsReview) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CHANGE_STATE_REVIEW}`,
+      payload
+    );
+  }
+
+  sendEmailAll(payload: sendEmail) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.SEND_EMAIL_MASSIVE}`,
+      payload
+    );
+  }
+
+  getHistoryRequest(payload: requestHistoryRequest) {
+    return this.http.post<BodyResponse<historyRequest[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GET_HISTORY_REQUEST}`,
+      payload
+    );
+  }
+
+  getRequestPendingByToken(payload: Token) {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post<BodyResponse<PendingRequest>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GET_PENDING_REQUEST}`,
+      payload,
+      { headers: headers }
+    );
+  }
+
+  answerRequestPending(payload: RequestFormListPending) {
+    return this.http.post<BodyResponse<number>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ANSWER_REQUEST_PENDING}`,
       payload
     );
   }

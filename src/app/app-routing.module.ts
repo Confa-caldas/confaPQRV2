@@ -122,6 +122,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.REQUEST_PENDING,
+    //canActivate: [sessionGuard],
+    component: LayoutRequestComponent,
+    loadChildren: () =>
+      import('./components/private/request-pending/request-pending.module').then(
+        m => m.RequestPendingModule
+      ),
+  },
+  {
     path: RoutesApp.REPORT_DETAILS,
     canActivate: [sessionGuard],
     component: LayoutComponent,
@@ -129,6 +138,15 @@ const routes: Routes = [
       import('./components/private/report-details/report-details.module').then(
         m => m.ReportDetailsModule
       ),
+  },
+  {
+    path: RoutesApp.REQUESTTYPE_MANAGER_ASSOCIATE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import(
+        './components/private/requestype-manager-associate/requestype-manager-associate.module'
+      ).then(m => m.RequestypeManagerAssociateModule),
   },
   {
     path: RoutesApp.MAIN_PAGE,

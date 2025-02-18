@@ -15,6 +15,10 @@ import {
   MiPerfilConfa,
   Afiliado,
   RequestAnswerTemp,
+  PendingRequest,
+  sendEmail,
+  requestHistoryRequest,
+  historyRequest,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -22,8 +26,14 @@ import { RoutesApp } from '../../../enums/routes.enum';
 import { SessionStorageItems } from '../../../enums/session-storage-items.enum';
 import { HttpClient } from '@angular/common/http';
 import { PaginatorState } from 'primeng/paginator';
+import { v4 as uuidv4 } from 'uuid';
 //Esto es nuevo
 import { Observable } from 'rxjs';
+import { MenuModule } from 'primeng/menu';
+import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { Timeline } from 'primeng/timeline';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 // import { Util } from '../../../utils/utils';
 // import * as pdfMake from 'pdfmake/build/pdfmake';
 // import * as pdfFonts from 'pdfmake/build/vfs_fonts';
@@ -37,6 +47,8 @@ import { Observable } from 'rxjs';
 })
 export class RequestDetailsComponent implements OnInit {
   @ViewChild('archive_request') fileInput!: ElementRef;
+
+  @ViewChild('archive_request_pending') fileInputPending!: ElementRef;
 
   displayPreviewModal: boolean = false;
   viewerType: 'google' | 'office' | 'image' | 'pdf' = 'google';
@@ -65,7 +77,9 @@ export class RequestDetailsComponent implements OnInit {
   errorExtensionFile!: boolean;
   errorSizeFile!: boolean;
   fileNameList: string[] = [];
+  fileNameListPending: string[] = [];
   arrayAssignedAttachment: ApplicantAttachments[] = [];
+  arrayAssignedAttachmentPending: ApplicantAttachments[] = [];
   routeProcessRequest!: string;
   routeSearchRequest!: string;
   // routeTab!: string;
@@ -107,8 +121,16 @@ export class RequestDetailsComponent implements OnInit {
   dataLoaded: any; // Aquí está el dato previamente cargado
   responseData: any;
   visibleDialogIa = false;
+  visibleCorreccionIa = false;
+  visibleCorreccionIaEnviar = false;
+  visibleSolicitudPendiente = false;
+  visibleHistory = false;
   categoria: string = '';
   respuestaPredefinida: string = '';
+  respuestaCorregida: string = '';
+  respuestaSolicitud: string = '';
+  palabrasError: string = '';
+  errores: boolean = false;
   //Esto es nuevo
   documentValue: string = ''; // Valor del documento (cédula)
   valor: string = ''; // Otro valor que quieras pasar en la URL
@@ -123,18 +145,47 @@ export class RequestDetailsComponent implements OnInit {
   respuestaTemp: string = '';
   existEraserAsnwer: boolean = false;
 
+  //utilitarios
+  items: MenuModule[] | undefined;
+  pendingRequestForm: FormGroup;
+  selectedFilesPending: File[] = [];
+  visibleSolicitudEnvioMasivo = false;
+  envioMasivoForm: FormGroup;
+  emailInput: string = ''; // Variable para capturar el correo ingresado
+  emailList: string[] = []; // Lista de correos agregados
+  errorMessage: string = '';
+  currentState: string = '';
+  currentIndex: number = 0;
+
+  // Arreglo de eventos para la línea de tiempo
+  events: any[] = [];
+
+  historyData: Array<any> = [];
+  isInitialized = false;
+
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
     private router: Router,
     private route: ActivatedRoute,
     private messageService: MessageService,
-    private http: HttpClient
+    private http: HttpClient,
+    private fb: FormBuilder
   ) {
     // (window as any).pdfMake.vfs = pdfFonts.pdfMake.vfs;
     this.requestProcess = this.formBuilder.group({
       mensage: [null, [Validators.required, Validators.maxLength(6000)]],
       //mensage: [null, [Validators.required]],
+    });
+
+    this.pendingRequestForm = this.fb.group({
+      message: ['', [Validators.required, Validators.maxLength(6000)]],
+      //file: [null, Validators.required],
+    });
+
+    this.envioMasivoForm = this.fb.group({
+      message: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
     });
   }
 
@@ -142,7 +193,7 @@ export class RequestDetailsComponent implements OnInit {
     this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
     this.user = sessionStorage.getItem(SessionStorageItems.USER) || '';
 
-    console.log(localStorage.getItem);
+    // console.log(localStorage.getItem);
     let routeIf = localStorage.getItem('route');
     if (routeIf?.includes(RoutesApp.SEARCH_REQUEST)) {
       this.routeTab = routeIf;
@@ -160,6 +211,8 @@ export class RequestDetailsComponent implements OnInit {
 
     //validar si esta cerrada
     this.getAnswerTemp(this.request_id);
+    // histico sobre reapertura de solicitudes
+    this.getHistoryRequest(this.request_id);
 
     // //Neuvo pdf
     // Util.getImageDataUrl('assets/imagenes/encabezado.png').then(
@@ -169,6 +222,37 @@ export class RequestDetailsComponent implements OnInit {
     // Util.getImageDataUrl('assets/imagenes/footer.png').then(
     //   imagenConfaFooter => (this.imgPdf1 = imagenConfaFooter)
     // );
+
+    this.items = [
+      {
+        items: [
+          {
+            label: 'Reabrir solicitud',
+            icon: 'pi pi-history',
+            command: () => this.solicitudPendiente(),
+          },
+          {
+            label: 'Envio de respuesta',
+            icon: 'pi pi-send',
+            command: () => this.envioCorreoMasivo(),
+          },
+        ],
+      },
+    ];
+
+    // // guardado automatico de respuesta cada 5 seg
+    // this.requestProcess
+    //   .get('mensage')
+    //   ?.valueChanges.pipe(
+    //     debounceTime(8000),
+    //     distinctUntilChanged() // Evita ejecutar si el valor es el mismo
+    //   )
+    //   .subscribe(() => {
+    //     if (this.isInitialized) {
+    //       this.borradorRespuesta(this.request_id);
+    //     }
+    //     this.isInitialized = true;
+    //   });
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
@@ -256,18 +340,32 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestsDetails>) => {
         if (response.code === 200) {
           this.requestDetails = response.data;
+          // Lista de estados que se deben agrupar
+          const estadosAgrupados = [
+            'Asignada',
+            'Reasignada',
+            'Asignada - En revisión',
+            'Reasignada - En revisión',
+            'Pendiente Usuario Externo',
+          ];
+
+          // Agrupar estados en "Gestión"
+          this.currentState = estadosAgrupados.includes(this.requestDetails.status_name)
+            ? 'Gestión'
+            : this.requestDetails.status_name;
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
       },
       error: (err: any) => {
-        console.log(err);
+        console.error(err);
       },
       complete: () => {
         console.log('La suscripción ha sido completada.');
       },
     });
   }
+
   getRequestApplicantAttachments(request_id: number) {
     const payload: Pagination = {
       request_id: request_id,
@@ -278,7 +376,6 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestAttachmentsList[]>) => {
         if (response.code === 200) {
           this.requestApplicantAttachmentsList = response.data;
-          console.log(response.data);
           this.totalRowsApplicantAttachments = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -310,11 +407,13 @@ export class RequestDetailsComponent implements OnInit {
       return true; // Si la extensión es 'xls', devolver false para no mostrar el botón
     } else if (fileSize.includes('KB')) {
       return true;
-    } else if (this.extractFileSize(fileSize) < 20 && fileExt === 'pdf') {
+    } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'pdf') {
       return true;
-    } else if (this.extractFileSize(fileSize) < 20 && fileExt === 'jpg') {
+    } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'jpg') {
       return true;
-    } else if (this.extractFileSize(fileSize) < 20 && fileExt === 'png') {
+    } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'jpeg') {
+      return true;
+    } else if (this.extractFileSize(fileSize) < 30 && fileExt === 'png') {
       return true;
     } else {
       return false;
@@ -353,7 +452,8 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestHistoric[]>) => {
         if (response.code === 200) {
           this.requestHistoric = response.data;
-          console.log(this.requestHistoric);
+
+          this.fillStatesDetails(this.requestHistoric);
           this.totalRowsHistoric = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -366,6 +466,67 @@ export class RequestDetailsComponent implements OnInit {
         console.log('La suscripción ha sido completada.');
       },
     });
+  }
+
+  fillStatesDetails(request: RequestHistoric[]): void {
+    if (request && request.length > 0) {
+      // Lista de estados que se deben agrupar
+      const estadosAgrupados = [
+        'Asignada',
+        'Reasignada',
+        'Asignada - En revisión',
+        'Reasignada - En revisión',
+        'Pendiente Usuario Externo',
+      ];
+
+      // Estados predeterminados
+      const estadosPredeterminados = ['Radicada', 'Gestión', 'Cerrada'];
+
+      // Objeto para almacenar los estados agrupados con la última fecha
+      const groupedStates = request.reduce(
+        (acc, item) => {
+          const state = item.status_name;
+
+          if (estadosAgrupados.includes(state)) {
+            // Si el estado está en la lista de agrupados, verificar la fecha más reciente
+            if (
+              !acc['Gestión'] ||
+              new Date(acc['Gestión'].updated_date) < new Date(item.updated_date)
+            ) {
+              acc['Gestión'] = { ...item, status_name: 'Gestión' }; // Cambiar nombre a 'Gestión'
+            }
+          } else {
+            // Si no está en la lista de agrupados, guardar cada estado individualmente
+            acc[`${state}-${item.updated_date}`] = item;
+          }
+          return acc;
+        },
+        {} as Record<string, RequestHistoric>
+      );
+
+      // Convertir el objeto agrupado en un arreglo de eventos
+      this.events = Object.values(groupedStates).map(item => ({
+        state: item.status_name,
+        label: item.updated_date || 'No tiene',
+        stateShow: item.status_name,
+      }));
+
+      // Asegurar que los estados predeterminados estén presentes
+      estadosPredeterminados.forEach(state => {
+        if (!this.events.some(event => event.state === state)) {
+          this.events.push({
+            state: state,
+            label: 'No tiene',
+            stateShow: state,
+          });
+        }
+      });
+
+      console.log(this.events, 'bu');
+      this.currentIndex = this.events.findIndex(event => event.stateShow === this.currentState);
+    } else {
+      console.log('No hay datos históricos disponibles.');
+    }
   }
 
   assignRequest(request_details: RequestsDetails) {
@@ -442,7 +603,7 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   isValidExtension(file: File): boolean {
-    const extensionesValidas = ['.jpg', '.png', '.pdf', '.doc', '.xlsx', '.docx', '.xls'];
+    const extensionesValidas = ['.jpeg', '.jpg', '.png', '.pdf', '.doc', '.xlsx', '.docx', '.xls'];
     const fileExtension = file?.name?.split('.').pop()?.toLowerCase();
     return !extensionesValidas.includes('.' + fileExtension);
   }
@@ -515,7 +676,17 @@ export class RequestDetailsComponent implements OnInit {
     this.arrayAssignedAttachment.splice(index, 1);
   }
 
+  //ANALISIS DE ORTOGRAFÍA
+  characterizeRequestNoCorreccion(request_details: RequestsDetails) {
+    //this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
+    this.visibleCorreccionIaEnviar = false;
+    this.request_details = request_details;
+    this.visibleCharacterization = true;
+  }
+
   characterizeRequest(request_details: RequestsDetails) {
+    this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
+    this.visibleCorreccionIaEnviar = false;
     this.request_details = request_details;
     this.visibleCharacterization = true;
   }
@@ -579,6 +750,33 @@ export class RequestDetailsComponent implements OnInit {
     });
   }
 
+  //ESCRIBE EN LA TABLA DE PENDIENTES PENDING
+  async getPreSignedUrlPending(file: ApplicantAttachments) {
+    const payload = {
+      //source_name: file['source_name'],
+      source_name: file['source_name'].replace(/(?!\.[^.]+$)\./g, '_'),
+      fileweight: file['fileweight'],
+      request_id: this.request_id,
+    };
+    this.userService.getUrlSigned(payload, 'pending').subscribe({
+      next: (response: BodyResponse<string>): void => {
+        if (response.code === 200) {
+          this.preSignedUrl = response.data;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        this.uploadToPresignedUrl(file);
+        return this.preSignedUrl;
+      },
+    });
+  }
+
   async uploadToPresignedUrl(file: ApplicantAttachments) {
     const uploadResponse = await this.http
       .put(this.preSignedUrl, file.file, {
@@ -595,6 +793,14 @@ export class RequestDetailsComponent implements OnInit {
     await Promise.all(
       this.arrayAssignedAttachment.map(async item => {
         await this.getPreSignedUrl(item);
+      })
+    );
+  }
+
+  async attachAssignedFilesPending() {
+    await Promise.all(
+      this.arrayAssignedAttachmentPending.map(async item => {
+        await this.getPreSignedUrlPending(item);
       })
     );
   }
@@ -805,15 +1011,26 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   showModal() {
-    this.dialogHeader = 'Respuesta de la solicitud';
-    this.dialogContent = this.requestDetails?.request_answer || '';
+    this.dialogHeader = 'Respuesta de la cerrada';
+    // this.dialogContent = this.requestDetails?.request_answer || '';
+    this.dialogContent = this.requestDetails?.messages_closed || '';
     this.isDialogVisible = true;
   }
 
   showModalReasignada(user_name: string) {
     this.dialogHeader = 'Descripción de la reasignación';
     this.requestHistoric.forEach((request: RequestHistoric) => {
-      if (user_name === request.user_name_completed) {
+      if (user_name === request.user_name_completed && request.status_name === 'Reasignada') {
+        this.dialogContent = request.answer_request;
+      }
+    });
+    this.isDialogVisible = true;
+  }
+
+  showModalReview(user_name: string, request_name: string) {
+    this.dialogHeader = 'Descripción de la revisión';
+    this.requestHistoric.forEach((request: RequestHistoric) => {
+      if (user_name === request.user_name_completed && request.status_name === request_name) {
         this.dialogContent = request.answer_request;
       }
     });
@@ -859,8 +1076,6 @@ export class RequestDetailsComponent implements OnInit {
   } */
 
   respuestaSugeridaIa(requestDescription: string) {
-    console.log(this.requestDetails?.request_description);
-
     this.userService.respuestaIaWs(this.requestDetails?.request_description).subscribe(response => {
       if (response.statusCode === 200) {
         // El cuerpo de la respuesta está en response.body y es un string JSON
@@ -914,6 +1129,112 @@ export class RequestDetailsComponent implements OnInit {
 
   cancelar() {
     this.visibleDialogIa = false;
+  }
+
+  guardarBorrador(requestDetails: RequestsDetails) {
+    this.userService.checkServiceAvailability().subscribe(isAvailable => {
+      if (isAvailable) {
+        console.log('Servicio disponible en este momento.');
+        this.correccionSugeridaIa(requestDetails);
+      } else {
+        console.error('El servicio no está disponible en este momento.');
+        this.showSuccessMessage('error', 'Fallida', 'IA no disponible en este momento!');
+      }
+    });
+  }
+
+  correccionSugeridaIa(requestDetails: RequestsDetails) {
+    const respuestaForm = this.requestProcess.get('mensage')?.value;
+
+    this.userService.correccionIaWs(respuestaForm).subscribe(response => {
+      if (response.statusCode === 200) {
+        // El cuerpo de la respuesta está en response.body y es un string JSON
+        const responseBody = response.body;
+
+        try {
+          // Analizar el cuerpo JSON
+          const parsedBody = JSON.parse(responseBody);
+
+          // Extraer los datos
+          const respuesta = JSON.parse(parsedBody.respuesta) || 'Respuesta no disponible';
+
+          // Asignar estos valores a variables locales o a propiedades del componente
+          this.respuestaCorregida = respuesta.texto_corregido;
+          this.palabrasError = respuesta.palabras_con_errores;
+          this.respuestaSolicitud = respuestaForm;
+          this.errores = respuesta.errores_encontrados;
+
+          // Mostrar el modal si hay errores
+          if (this.errores) {
+            this.visibleCorreccionIa = true;
+            this.informative = true;
+          } else {
+            this.borradorRespuesta(requestDetails.request_id);
+          }
+        } catch (error) {
+          console.error('Error al procesar la respuesta del servicio:', error);
+        }
+      } else {
+        console.error('Error en la respuesta del servicio:', response);
+      }
+    });
+  }
+
+  //NUEVA PARA ENVIAR
+  correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
+    const respuestaForm = this.requestProcess.get('mensage')?.value;
+
+    this.userService.correccionIaWs(respuestaForm).subscribe(response => {
+      if (response.statusCode === 200) {
+        // El cuerpo de la respuesta está en response.body y es un string JSON
+        const responseBody = response.body;
+
+        try {
+          // Analizar el cuerpo JSON
+          const parsedBody = JSON.parse(responseBody);
+
+          // Extraer los datos
+          const respuesta = JSON.parse(parsedBody.respuesta) || 'Respuesta no disponible';
+
+          // Asignar estos valores a variables locales o a propiedades del componente
+          this.respuestaCorregida = respuesta.texto_corregido;
+          this.palabrasError = respuesta.palabras_con_errores;
+          this.respuestaSolicitud = respuestaForm;
+          this.errores = respuesta.errores_encontrados;
+
+          // Mostrar el modal si hay errores
+          if (this.errores) {
+            this.visibleCorreccionIaEnviar = true;
+            this.informative = true;
+          } else {
+            this.characterizeRequest(requestDetails);
+          }
+        } catch (error) {
+          console.error('Error al procesar la respuesta del servicio:', error);
+        }
+      } else {
+        console.error('Error en la respuesta del servicio:', response);
+      }
+    });
+  }
+
+  confirmarCorreccion() {
+    console.log(this.respuestaCorregida);
+    // Establece el valor del textarea en el formulario
+    this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
+
+    // Cierra el modal
+    this.visibleCorreccionIa = false;
+  }
+
+  /*
+  cancelarCorreccion() {
+    this.visibleCorreccionIa = false;
+  } */
+
+  cancelarCorreccionEnviar(requestDetails: RequestsDetails) {
+    this.visibleCorreccionIaEnviar = false;
+    this.characterizeRequest(requestDetails);
   }
 
   consultarWs(cedula: string) {
@@ -977,14 +1298,48 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
-  borradorRespuesta(requestDetails: RequestsDetails) {
+  // requestDetails: RequestsDetails
+  borradorRespuesta(request_id: number = 0) {
+    //const respuestaBorrador = this.requestProcess.get('mensage')?.value;
+    // this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
+    const respuestaBorrador = this.requestProcess.get('mensage')?.value;
+
+    const payload: RequestAnswerTemp = {
+      request_id: request_id,
+      mensaje_temp: respuestaBorrador || '',
+    };
+
+    this.userService.createAnswerTemp(payload).subscribe({
+      next: (response: BodyResponse<string>): void => {
+        if (response.code === 200) {
+          this.respuestaTemp = response.data;
+
+          //Evita el bucle: al actualizar el formulario, usamos emitEvent: false
+          this.requestProcess.get('mensage')?.setValue(respuestaBorrador, { emitEvent: false });
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        this.existEraserAsnwer = true;
+        // console.log('La suscripción ha sido completada.');
+        // this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        // return this.respuestaTemp;
+      },
+    });
+    this.visibleCorreccionIa = false;
+  }
+
+  borradorRespuestaNoCorregida(requestDetails: RequestsDetails) {
     const respuestaBorrador = this.requestProcess.get('mensage')?.value;
     const payload: RequestAnswerTemp = {
       request_id: requestDetails.request_id,
-      mensaje_temp: respuestaBorrador,
+      mensaje_temp: respuestaBorrador || '',
     };
 
-    console.log(payload, 'guardar');
     this.userService.createAnswerTemp(payload).subscribe({
       next: (response: BodyResponse<string>): void => {
         if (response.code === 200) {
@@ -999,9 +1354,11 @@ export class RequestDetailsComponent implements OnInit {
       complete: () => {
         this.existEraserAsnwer = true;
         console.log('La suscripción ha sido completada.');
+        this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
         return this.respuestaTemp;
       },
     });
+    this.visibleCorreccionIa = false;
   }
 
   getAnswerTemp(request_id: number) {
@@ -1028,6 +1385,335 @@ export class RequestDetailsComponent implements OnInit {
         console.log('La suscripción ha sido completada.');
         console.log(this.respuestaTemp);
         return this.respuestaTemp;
+      },
+    });
+  }
+
+  solicitudPendiente() {
+    this.visibleSolicitudPendiente = true;
+  }
+
+  onFileSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      Array.from(input.files).forEach(file => this.selectedFilesPending.push(file));
+    }
+  }
+
+  //PROCESO PARA DEJAR UNA SOLICUTD PENDIENTE
+  onSubmit1(): void {
+    const formData = new FormData();
+    formData.append('message', this.pendingRequestForm.get('message')?.value);
+
+    // Agregar todos los archivos al FormData
+    this.selectedFilesPending.forEach(file => formData.append('files', file));
+
+    console.log('Formulario enviado:', this.requestDetails?.status_name);
+    console.log('Mensaje:', this.pendingRequestForm.get('message')?.value);
+    //console.log('Formulario enviado:', formData);
+
+    // Aquí enviarías los datos al backend
+    // this.myService.submitRequest(formData).subscribe(response => ...);
+
+    // Cerrar el diálogo después de enviar
+    this.closeDialogPending();
+  }
+
+  //REALIZA PROCESO DE PONER SOLICITUD EN PENDIENTE
+  onSubmit(): void {
+    if (this.pendingRequestForm.valid) {
+      // Captura el valor del formulario
+      const formValue = this.pendingRequestForm.value;
+
+      // Prepara FormData para incluir archivos y datos
+      const formData = new FormData();
+      formData.append('message', formValue.message);
+
+      // Agrega los archivos seleccionados al FormData
+      this.selectedFilesPending.forEach(file => {
+        formData.append('files', file);
+      });
+
+      // Llama al servicio para enviar los datos
+      const token = this.generateToken();
+
+      console.log(token);
+
+      const payload: PendingRequest = {
+        request_id: this.requestDetails?.filing_number || 0,
+        token: token,
+        pending: true,
+        message: this.pendingRequestForm.get('message')?.value,
+        previus_state: this.requestDetails?.status_name,
+      };
+
+      console.log(payload);
+
+      this.userService.registerPendingRequest(payload).subscribe({
+        next: (response: BodyResponse<string>) => {
+          if (response.code === 200) {
+            if (this.getAssignedPending().length == 0) {
+              this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+              this.router.navigate([RoutesApp.PROCESS_REQUEST]);
+              this.ngOnInit();
+            } else {
+              this.attachAssignedFilesPending();
+              this.router.navigate([RoutesApp.PROCESS_REQUEST]);
+              this.ngOnInit();
+              this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+            }
+          } else {
+            this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+          }
+        },
+        error: (err: any) => {
+          console.log(err);
+        },
+        complete: () => {
+          console.log('La suscripción ha sido completada.');
+          console.log('Solicitud en estado pendiente');
+          this.closeDialogPending();
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        },
+      });
+    } else {
+      this.pendingRequestForm.markAllAsTouched(); // Marca los campos para mostrar errores
+    }
+  }
+
+  closeDialogPending(): void {
+    this.visibleSolicitudPendiente = false;
+    this.pendingRequestForm.reset();
+    this.selectedFile = null;
+  }
+
+  removeFile(index: number): void {
+    this.selectedFilesPending.splice(index, 1);
+  }
+
+  /*
+  closeDialogPendiente(value: boolean) {
+    const token = this.generateToken();
+
+    console.log(token)
+
+    const payload: PendingRequest = {
+      request_id: this.request_details?.request_id || 0,
+      token: token,
+      pending: true,
+    };
+    this.userService.registerPendingRequest(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        console.log("Solicitud en estado pendiente"); 
+      },
+    });   
+  } */
+
+  generateToken() {
+    const uuid = uuidv4().replace(/-/g, '');
+
+    // Crear la fecha local
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    const formattedDate = `${year}${month}${day}T${hours}${minutes}${seconds}`;
+
+    // UUID + fecha
+    const token = `${uuid}${formattedDate}`;
+    return token;
+  }
+
+  openFileInputPending() {
+    this.fileInputPending.nativeElement.value = ''; // Limpiar la entrada de archivos antes de abrir el cuadro de diálogo
+    this.fileInputPending.nativeElement.click();
+  }
+
+  onFileSelectedPending(event: any) {
+    const filesPending: FileList = event.target.files;
+
+    for (let i = 0; i < filesPending.length; i++) {
+      if (this.fileNameListPending.includes(filesPending[i].name)) {
+        this.errorMensajeFile = `El archivo ${filesPending[i].name} ya esta adjunto`;
+        this.errorRepeatFile = true;
+        continue;
+      } else {
+        const file: File = filesPending[i];
+
+        let fileSizeFormat: string;
+        const fileName: string = file.name;
+        const fileSizeInKiloBytes = file.size / 1024;
+        if (fileSizeInKiloBytes < 1024) {
+          fileSizeFormat = fileSizeInKiloBytes.toFixed(2) + 'KB';
+        } else {
+          const fileSizeMegabytes = fileSizeInKiloBytes / 1024;
+          fileSizeFormat = fileSizeMegabytes.toFixed(2) + 'MB';
+        }
+        if (this.isValidExtension(file)) {
+          this.errorMensajeFile = `El archivo ${filesPending[i].name} tiene una extension no permitida`;
+          this.errorExtensionFile = true;
+          continue;
+        }
+
+        if (file.size > 20971520) {
+          this.errorMensajeFile = `El archivo ${filesPending[i].name} supera los 20MB`;
+          this.errorSizeFile = true;
+          continue;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          const base64String: string = e.target.result.split(',')[1];
+
+          const applicantAttach: ApplicantAttachments = {
+            base64file: base64String,
+            source_name: fileName,
+            fileweight: fileSizeFormat,
+            file: filesPending[i],
+          };
+
+          this.fileNameListPending.push(fileName);
+          this.arrayAssignedAttachmentPending.push(applicantAttach);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    setTimeout(() => {
+      this.errorRepeatFile = false;
+      this.errorExtensionFile = false;
+      this.errorSizeFile = false;
+    }, 5000);
+
+    console.log(this.getAssignedPending());
+  }
+
+  getAssignedPending(): ApplicantAttachments[] {
+    return this.arrayAssignedAttachmentPending;
+  }
+
+  clearFileInputPending(index: number) {
+    this.fileNameListPending.splice(index, 1);
+    this.arrayAssignedAttachmentPending.splice(index, 1);
+  }
+
+  envioCorreoMasivo() {
+    this.visibleSolicitudEnvioMasivo = true;
+  }
+
+  closeDialogenvioCorreoMasivo(): void {
+    this.visibleSolicitudEnvioMasivo = false;
+    this.emailList = []; // Limpia la lista de correos
+    this.errorMessage = '';
+    this.envioMasivoForm.reset();
+  }
+
+  // Añadir correo a la lista
+  addEmail(): void {
+    const email = this.envioMasivoForm.get('email')?.value;
+
+    // Validar si el campo de correo no está vacío y tiene un formato de correo válido
+    if (!email || !this.isValidEmail(email)) {
+      this.errorMessage = 'Debe introducir un correo válido.';
+      return; // Detiene la ejecución si el correo no es válido
+    }
+
+    // Verificar si el correo ya está en la lista
+    if (this.emailList.includes(email)) {
+      this.errorMessage = 'El correo ya está en la lista.';
+      return;
+    }
+
+    // Añadir el correo a la lista si es válido
+    this.emailList.push(email);
+    this.envioMasivoForm.get('email')?.reset(); // Limpiar el campo de correo
+    this.errorMessage = ''; // Limpiar cualquier mensaje de error
+  }
+
+  // Función para verificar si el correo tiene un formato válido
+  isValidEmail(email: string): boolean {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailPattern.test(email);
+  }
+
+  // Eliminar correo de la lista
+  removeEmail(index: number) {
+    this.emailList.splice(index, 1);
+  }
+
+  onSubmitRepuestaMasivo(): void {
+    if (!this.emailList || this.emailList.length === 0) {
+      this.errorMessage = 'Debe añadir al menos un correo antes de enviar.';
+      return;
+    }
+
+    const payload: sendEmail = {
+      request_id: this.requestDetails?.filing_number || 0,
+      email: this.emailList,
+    };
+
+    this.userService.sendEmailAll(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        this.closeDialogenvioCorreoMasivo();
+      },
+    });
+  }
+
+  isValidDate(value: string): boolean {
+    const date = new Date(value);
+    return !isNaN(date.getTime());
+  }
+
+  solicitudHistory() {
+    this.visibleHistory = true;
+  }
+
+  closeDialogHistory(): void {
+    this.visibleHistory = false;
+  }
+
+  getHistoryRequest(request_id: number) {
+    const payload: requestHistoryRequest = {
+      request_id: request_id,
+    };
+    this.userService.getHistoryRequest(payload).subscribe({
+      next: (response: BodyResponse<historyRequest[]>) => {
+        if (response.code === 200) {
+          this.historyData = response.data;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
       },
     });
   }

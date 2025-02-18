@@ -171,6 +171,7 @@ export class SearchRequestComponent implements OnInit {
       next: (response: BodyResponse<RequestsList[]>) => {
         if (response.code === 200) {
           this.requestList = response.data;
+          console.log(this.requestList);
           this.daysOption = Array.from(new Set(this.requestList.map(item => item.request_days)));
           this.statusOptions = Array.from(new Set(this.requestList.map(item => item.status_name)));
           this.requestList = response.data.map(item => {

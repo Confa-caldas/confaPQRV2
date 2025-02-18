@@ -8,6 +8,7 @@ import {
   RequestStatusList,
   RequestTypeList,
   RequestsList,
+  RequestsReview,
   UserList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
@@ -31,12 +32,18 @@ export class ProcessRequestComponent implements OnInit {
   userList: UserList[] = [];
   ingredient!: string;
   parameter = [''];
-  request_details!: RequestsList;
+  request_details!: RequestsReview;
   selectedRequests!: RequestsList[];
   informative: boolean = false;
   filterForm: FormGroup<any> = new FormGroup<any>({});
   filterFormAssigned: FormGroup<any> = new FormGroup<any>({});
   statusList: RequestStatusList[] = [];
+  buttonmsg = '';
+  visibleDialogInput = false;
+  message = '';
+  message2 = '';
+  severity = '';
+  enableAssign: boolean = false;
 
   visibleDialogAlert = false;
   statusOptions!: string[];
@@ -379,5 +386,44 @@ export class ProcessRequestComponent implements OnInit {
     localStorage.removeItem('route');
     localStorage.setItem('route', this.router.url);
     this.router.navigate([RoutesApp.REQUEST_DETAILS, request_id]);
+  }
+
+  //Metodos para nuevos metodos en revision
+  assignStateReviewRequest(request_details: RequestsReview) {
+    console.log(request_details);
+    this.buttonmsg = 'En Revisión';
+    this.message = 'Cambiar estado a "En revisión"';
+    this.visibleDialogInput = true;
+    this.request_details = request_details;
+  }
+  closeDialogInput(value: boolean) {
+    this.visibleDialogInput = false;
+    this.enableAssign = value;
+    if (value) {
+      // accion de eliminar
+    }
+  }
+  setParameter(inputValue: { mensssajeReview: string }) {
+    if (!this.enableAssign) return;
+    this.request_details['mensaje_revision'] = inputValue.mensssajeReview;
+
+    if (inputValue) {
+      this.userService.changeStateReview(this.request_details).subscribe({
+        next: (response: BodyResponse<string>) => {
+          if (response.code === 200) {
+            this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+          } else {
+            this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+          }
+        },
+        error: (err: any) => {
+          console.log(err);
+        },
+        complete: () => {
+          this.ngOnInit();
+          console.log('La suscripción ha sido completada.');
+        },
+      });
+    }
   }
 }
