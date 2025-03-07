@@ -107,6 +107,7 @@ export class CreateRequestComponent {
     });
   }
 
+  /*
   async getUserIp(): Promise<string> {
     try {
       // Servicio para obtener la IP
@@ -117,9 +118,10 @@ export class CreateRequestComponent {
       console.error('Error obteniendo la IP', err);
       throw err; // Rechazamos la promesa en caso de error
     }
-  }
+  } */
 
   async sendOptions() {
+    /*
     let ip: string;
 
     try {
@@ -128,7 +130,7 @@ export class CreateRequestComponent {
       console.error('Error obteniendo el entorno del usuario:', err);
       // Si ocurre un error, usamos valores por defecto
       ip = 'No disponible';
-    }
+    } */
 
     this.transactionId = uuidv4(); // Genera un identificador único
 
@@ -158,7 +160,8 @@ export class CreateRequestComponent {
         status: 'Iniciado',
         navigator: navigator.userAgent || 'No disponible',
         leng_nav: navigator.language || 'No disponible',
-        ip: ip,
+        //ip: ip,
+        ip: 'No disponible',
         resolution: `${window.screen.width}x${window.screen.height}` || 'No disponible',
         platform: navigator.platform || 'No disponible',
       };
