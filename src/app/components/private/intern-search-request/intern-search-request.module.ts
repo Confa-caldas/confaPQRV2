@@ -1,13 +1,13 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SearchRequestRoutingModule } from './search-request-routing.module';
+import { InternSearchRequestRoutingModule } from './intern-search-request-routing.module';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DropdownModule } from 'primeng/dropdown';
 import { PaginatorModule } from 'primeng/paginator';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { SharedModule } from '../../shared/shared.module';
-import { SearchRequestComponent } from './search-request.component';
+import { InternSearchRequestComponent } from './intern-search-request.component';
 import { ToastModule } from 'primeng/toast';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -15,10 +15,10 @@ import { CalendarModule } from 'primeng/calendar';
 import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
-  declarations: [SearchRequestComponent],
+  declarations: [InternSearchRequestComponent],
   imports: [
     CommonModule,
-    SearchRequestRoutingModule,
+    InternSearchRequestRoutingModule,
     ButtonModule,
     TableModule,
     PaginatorModule,
@@ -31,6 +31,6 @@ import { TooltipModule } from 'primeng/tooltip';
     CalendarModule,
     TooltipModule,
   ],
-  exports: [SearchRequestComponent],
+  exports: [InternSearchRequestComponent],
 })
-export class SearchRequestModule {}
+export class InternSearchRequestModule {}

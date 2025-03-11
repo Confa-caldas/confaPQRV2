@@ -53,6 +53,9 @@ import {
   Token,
   RequestFormListPending,
   RequestFormListInternal,
+  RequestAreaList,
+  FilterRequestsIntern,
+  RequestsListIntern,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -499,7 +502,7 @@ export class Users {
   }
 
   respuestaInfoAfiliacion(cedula?: string): Observable<any> {
-    const urlSubsidios = 'https://api-utilitarios.confa.co/replica/consultarAfiliadoDoc';
+    const urlSubsidios = 'https://api-utilitarios.confa.co/replica/consultarEmpresa';
     const headers = new HttpHeaders({
       'Content-Type': 'application/json', // Asegura que se envíe como JSON
       'x-api-key': this.apiKey, // Incluye la API key en los headers
@@ -613,6 +616,33 @@ export class Users {
   createRequestInternal(payload: RequestFormListInternal) {
     return this.http.post<BodyResponse<number>>(
       `${environment.API_PUBLIC}${EndPointRoute.CREATE_REQUEST_INTERNAL}`,
+      payload
+      );
+    }
+
+  //traer usuario que creo la solicitud
+  getRequestUserList() {
+    return this.http.get<BodyResponse<UserList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_USERS_LIST}`
+    );
+  }
+  //traer las areas parametrizadas
+  getRequestAreasList() {
+    return this.http.get<BodyResponse<RequestAreaList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AREAS_LIST}`
+    );
+  }
+  // consultar por filtros solicitudes para usuario interno
+  getRequestListInternByFilter(payload: FilterRequestsIntern) {
+    return this.http.post<BodyResponse<RequestsListIntern[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_BY_FILTER_INTERN}`,
+      payload
+    );
+  }
+  // consultar por filtros solicitudes para usuario interno
+  getRequestPriority(payload: RequestAnswerTemp) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_PRIORITY}`,
       payload
     );
   }

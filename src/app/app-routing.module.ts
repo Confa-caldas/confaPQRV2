@@ -140,12 +140,11 @@ const routes: Routes = [
       ),
   },
   {
-    path: RoutesApp.REQUEST_PENDING,
-    //canActivate: [sessionGuard],
+    path: RoutesApp.FORM_COMPANY,
     component: LayoutRequestComponent,
     loadChildren: () =>
-      import('./components/private/request-pending/request-pending.module').then(
-        m => m.RequestPendingModule
+      import('./components/private/form-company/form-company.module').then(
+        m => m.FormCompanygModule
       ),
   },
   {
@@ -165,6 +164,24 @@ const routes: Routes = [
       import(
         './components/private/requestype-manager-associate/requestype-manager-associate.module'
       ).then(m => m.RequestypeManagerAssociateModule),
+  },
+  {
+    path: RoutesApp.REQUEST_PENDING,
+    //canActivate: [sessionGuard],
+    component: LayoutRequestComponent,
+    loadChildren: () =>
+      import('./components/private/request-pending/request-pending.module').then(
+        m => m.RequestPendingModule
+      ),
+  },
+  {
+    path: RoutesApp.INTERN_SEARCH_REQUEST,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/intern-search-request/intern-search-request.module').then(
+        m => m.InternSearchRequestModule
+      ),
   },
   {
     path: RoutesApp.MAIN_PAGE,

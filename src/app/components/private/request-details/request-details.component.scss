@@ -180,6 +180,13 @@ td {
       margin: 0 40px;
 
     }
+
+    &-row-generals {
+      display: flex;
+      justify-content: flex-end; /* Alinear a la derecha */
+      gap: 10px;                 /* Espacio entre botones */
+      margin: 10px 0;
+    }
   }
 }
 
@@ -865,4 +872,12 @@ p-timeline {
 .custom-file-upload input[type="file"] {
   display: none;
 }
+
+.static-text {
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+}
+
 

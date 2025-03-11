@@ -20,6 +20,8 @@ export enum RoutesApp {
   REQUEST_PENDING = 'request-pending',
   CREATE_REQUEST_INTERNAL = 'create-request-internal',
   REQUEST_FORM_INTERNAL = 'request-form-internal',
+  FORM_COMPANY = 'form-company',
+  INTERN_SEARCH_REQUEST = 'intern-search-request',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
@@ -96,4 +98,8 @@ export enum EndPointRoute {
   GET_PENDING_REQUEST = 'request/get_pending',
   ANSWER_REQUEST_PENDING = 'request/answer_pending',
   CREATE_REQUEST_INTERNAL = 'requests-intern/create_internal',
+  REQUEST_USERS_LIST = 'db/requests_users',
+  AREAS_LIST = 'db/requests_areas',
+  REQUEST_BY_FILTER_INTERN = 'requests-intern/filter_intern',
+  REQUEST_PRIORITY = 'request/priority',
 }

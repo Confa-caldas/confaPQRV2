@@ -58,6 +58,11 @@
               (click)="toggleNavBar()"
               class="pi pi-file-import icons"
               style="font-size: 1.5rem"></i>
+            <i
+              *ngIf="node.label === 'GESTION INTERNA'"
+              (click)="toggleNavBar()"
+              class="pi pi-search icons"
+              style="font-size: 1.5rem"></i>
           </ng-template>
         </p-menu>
       </div>

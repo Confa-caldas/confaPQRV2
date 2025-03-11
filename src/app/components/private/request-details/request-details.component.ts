@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
 import {
@@ -36,6 +36,7 @@ import { Timeline } from 'primeng/timeline';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 // import { Util } from '../../../utils/utils';
 // import * as pdfMake from 'pdfmake/build/pdfmake';
 // import * as pdfFonts from 'pdfmake/build/vfs_fonts';
@@ -163,9 +164,15 @@ export class RequestDetailsComponent implements OnInit {
   events: any[] = [];
 
   historyData: Array<any> = [];
-  // historyData!: historyRequest[];
-  // history!: historyRequest;
-  // requestPendingAttachmentsList: RequestAttachmentsList[] = [];
+  isInitialized = false;
+  isInitializedView = false;
+  ultimaRespuestaGuardada: string = '';
+  private cancelAutoSave = false;
+
+  //utilitarios cuando no es cerrada
+  itemsGenerals: MenuModule[] | undefined;
+  isVisibleSolicitudPrioridad = false;
+  esPrioridadForm: FormGroup;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -190,6 +197,10 @@ export class RequestDetailsComponent implements OnInit {
     this.envioMasivoForm = this.fb.group({
       message: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
+    });
+
+    this.esPrioridadForm = this.fb.group({
+      message: ['', Validators.required],
     });
   }
 
@@ -243,6 +254,52 @@ export class RequestDetailsComponent implements OnInit {
         ],
       },
     ];
+
+    this.itemsGenerals = [
+      {
+        items: [
+          {
+            label: 'Priorizar',
+            icon: 'pi pi-exclamation-triangle',
+            command: () => this.sendPriority(),
+          },
+        ],
+      },
+    ];
+
+    // // guardado automatico de respuesta cada 5 seg
+    // this.requestProcess
+    //   .get('mensage')
+    //   ?.valueChanges.pipe(debounceTime(8000), distinctUntilChanged())
+    //   .subscribe(() => {
+    //     if (this.cancelAutoSave) return; // Evita el guardado si cambia de página
+
+    //     const mensajeActual = this.requestProcess.get('mensage')?.value || '';
+    //     if (mensajeActual !== '') {
+    //       if (mensajeActual !== this.respuestaTemp) {
+    //         if (this.isInitialized && !this.isInitializedView) {
+    //           this.borradorRespuesta(this.request_id);
+    //         }
+    //       }
+    //     }
+    //     this.isInitialized = true; // Marcar como inicializado después del primer cambio
+    //   });
+
+    // this.router.events.subscribe(event => {
+    //   if (event instanceof NavigationStart) {
+    //     this.cancelAutoSave = true; // Marcar para cancelar el guardado de 8s
+
+    //     const mensajeActual = this.requestProcess.get('mensage')?.value || '';
+    //     if (mensajeActual !== '') {
+    //       if (mensajeActual !== this.respuestaTemp) {
+    //         if (this.isInitialized && !this.isInitializedView) {
+    //           this.borradorRespuesta(this.request_id);
+    //         }
+    //       }
+    //     }
+    //     this.isInitialized = true;
+    //   }
+    // });
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
@@ -330,7 +387,6 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestsDetails>) => {
         if (response.code === 200) {
           this.requestDetails = response.data;
-
           // Lista de estados que se deben agrupar
           const estadosAgrupados = [
             'Asignada',
@@ -443,6 +499,7 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestHistoric[]>) => {
         if (response.code === 200) {
           this.requestHistoric = response.data;
+
           this.fillStatesDetails(this.requestHistoric);
           this.totalRowsHistoric = Number(response.message);
         } else {
@@ -690,9 +747,13 @@ export class RequestDetailsComponent implements OnInit {
     const payloadAnswer: answerRequest = {
       request_id: this.request_id,
       request_status: 4,
-      request_answer: this.requestProcess.get('mensage')?.value,
+      request_answer:
+        this.requestProcess.get('mensage')?.value +
+        ' \n \nCordialmente, ' +
+        this.requestDetails?.user_name_completed,
       assigned_attachments: null,
     };
+
     this.userService.answerRequest(payloadAnswer).subscribe({
       next: (response: BodyResponse<string>) => {
         if (response.code === 200) {
@@ -1007,8 +1068,9 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   showModal() {
-    this.dialogHeader = 'Respuesta de la solicitud';
-    this.dialogContent = this.requestDetails?.request_answer || '';
+    this.dialogHeader = 'Respuesta de la cerrada';
+    // this.dialogContent = this.requestDetails?.request_answer || '';
+    this.dialogContent = this.requestDetails?.messages_closed || '';
     this.isDialogVisible = true;
   }
 
@@ -1071,8 +1133,6 @@ export class RequestDetailsComponent implements OnInit {
   } */
 
   respuestaSugeridaIa(requestDescription: string) {
-    console.log(this.requestDetails?.request_description);
-
     this.userService.respuestaIaWs(this.requestDetails?.request_description).subscribe(response => {
       if (response.statusCode === 200) {
         // El cuerpo de la respuesta está en response.body y es un string JSON
@@ -1087,10 +1147,11 @@ export class RequestDetailsComponent implements OnInit {
           let respuestaPredefinida = parsedBody.respuestaPredefinida || 'Respuesta no disponible';
 
           // Reemplazar los asteriscos por el nombre del usuario
-          if (this.requestDetails && this.requestDetails.user_name_completed) {
-            const userName = this.requestDetails.user_name_completed;
-            respuestaPredefinida = respuestaPredefinida.replace(/\*+ */g, userName);
-          }
+          // if (this.requestDetails && this.requestDetails.user_name_completed) {
+          //   const userName = this.requestDetails.user_name_completed;
+
+          //   respuestaPredefinida = respuestaPredefinida.replace(/\*+ */g, userName);
+          // }
 
           // Asignar estos valores a variables locales o a propiedades del componente
           this.categoria = categoria;
@@ -1111,11 +1172,9 @@ export class RequestDetailsComponent implements OnInit {
   confirmarRespuesta() {
     // Reemplaza los asteriscos en la respuesta con el nombre del usuario
     const userName = this.requestDetails?.user_name_completed || '';
-    const respuestaConNombre =
-      'Hola, buen día!\n \n' +
-      this.respuestaPredefinida +
-      ' \n \nCordialmente, ' +
-      this.requestDetails?.user_name_completed;
+    const respuestaConNombre = 'Hola, buen día!\n \n' + this.respuestaPredefinida;
+    // ' \n \nCordialmente, ' +
+    // this.requestDetails?.user_name_completed;
 
     // Establece el valor del textarea en el formulario
     this.requestProcess.get('mensage')?.setValue(respuestaConNombre);
@@ -1142,7 +1201,6 @@ export class RequestDetailsComponent implements OnInit {
 
   correccionSugeridaIa(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
-    console.log(respuestaForm);
 
     this.userService.correccionIaWs(respuestaForm).subscribe(response => {
       if (response.statusCode === 200) {
@@ -1162,16 +1220,12 @@ export class RequestDetailsComponent implements OnInit {
           this.respuestaSolicitud = respuestaForm;
           this.errores = respuesta.errores_encontrados;
 
-          console.log(this.respuestaCorregida);
-          console.log(this.palabrasError);
-          console.log(this.errores);
-
           // Mostrar el modal si hay errores
           if (this.errores) {
             this.visibleCorreccionIa = true;
             this.informative = true;
           } else {
-            this.borradorRespuesta(requestDetails);
+            this.borradorRespuesta(requestDetails.request_id);
           }
         } catch (error) {
           console.error('Error al procesar la respuesta del servicio:', error);
@@ -1186,7 +1240,6 @@ export class RequestDetailsComponent implements OnInit {
   /*
   correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
-    console.log(respuestaForm);
 
     this.userService.correccionIaWs(respuestaForm).subscribe(response => {
       if (response.statusCode === 200) {
@@ -1205,10 +1258,6 @@ export class RequestDetailsComponent implements OnInit {
           this.palabrasError = respuesta.palabras_con_errores;
           this.respuestaSolicitud = respuestaForm;
           this.errores = respuesta.errores_encontrados;
-
-          console.log(this.respuestaCorregida);
-          console.log(this.palabrasError);
-          console.log(this.errores);
 
           // Mostrar el modal si hay errores
           if (this.errores) {
@@ -1350,12 +1399,14 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
-  borradorRespuesta(requestDetails: RequestsDetails) {
+  // requestDetails: RequestsDetails
+  borradorRespuesta(request_id: number = 0) {
     //const respuestaBorrador = this.requestProcess.get('mensage')?.value;
-    this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
+    // this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
     const respuestaBorrador = this.requestProcess.get('mensage')?.value;
+
     const payload: RequestAnswerTemp = {
-      request_id: requestDetails.request_id,
+      request_id: request_id,
       mensaje_temp: respuestaBorrador || '',
     };
 
@@ -1363,6 +1414,9 @@ export class RequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<string>): void => {
         if (response.code === 200) {
           this.respuestaTemp = response.data;
+
+          //Evita el bucle: al actualizar el formulario, usamos emitEvent: false
+          this.requestProcess.get('mensage')?.setValue(respuestaBorrador, { emitEvent: false });
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -1372,9 +1426,9 @@ export class RequestDetailsComponent implements OnInit {
       },
       complete: () => {
         this.existEraserAsnwer = true;
-        console.log('La suscripción ha sido completada.');
-        this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
-        return this.respuestaTemp;
+        // console.log('La suscripción ha sido completada.');
+        // this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        // return this.respuestaTemp;
       },
     });
     this.visibleCorreccionIa = false;
@@ -1429,8 +1483,6 @@ export class RequestDetailsComponent implements OnInit {
         console.log(err);
       },
       complete: () => {
-        console.log('La suscripción ha sido completada.');
-        console.log(this.respuestaTemp);
         return this.respuestaTemp;
       },
     });
@@ -1465,7 +1517,6 @@ export class RequestDetailsComponent implements OnInit {
     // Cerrar el diálogo después de enviar
     this.closeDialogPending();
   }
-
 
   //REALIZA PROCESO DE PONER SOLICITUD EN PENDIENTE
   onSubmit(): void {
@@ -1585,80 +1636,79 @@ export class RequestDetailsComponent implements OnInit {
     // UUID + fecha
     const token = `${uuid}${formattedDate}`;
     return token;
-}
-
-openFileInputPending() {
-  this.fileInputPending.nativeElement.value = ''; // Limpiar la entrada de archivos antes de abrir el cuadro de diálogo
-  this.fileInputPending.nativeElement.click();
-}
-
-onFileSelectedPending(event: any) {
-  const filesPending: FileList = event.target.files;
-
-  for (let i = 0; i < filesPending.length; i++) {
-    if (this.fileNameListPending.includes(filesPending[i].name)) {
-      this.errorMensajeFile = `El archivo ${filesPending[i].name} ya esta adjunto`;
-      this.errorRepeatFile = true;
-      continue;
-    } else {
-      const file: File = filesPending[i];
-
-      let fileSizeFormat: string;
-      const fileName: string = file.name;
-      const fileSizeInKiloBytes = file.size / 1024;
-      if (fileSizeInKiloBytes < 1024) {
-        fileSizeFormat = fileSizeInKiloBytes.toFixed(2) + 'KB';
-      } else {
-        const fileSizeMegabytes = fileSizeInKiloBytes / 1024;
-        fileSizeFormat = fileSizeMegabytes.toFixed(2) + 'MB';
-      }
-      if (this.isValidExtension(file)) {
-        this.errorMensajeFile = `El archivo ${filesPending[i].name} tiene una extension no permitida`;
-        this.errorExtensionFile = true;
-        continue;
-      }
-
-      if (file.size > 20971520) {
-        this.errorMensajeFile = `El archivo ${filesPending[i].name} supera los 20MB`;
-        this.errorSizeFile = true;
-        continue;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        const base64String: string = e.target.result.split(',')[1];
-
-        const applicantAttach: ApplicantAttachments = {
-          base64file: base64String,
-          source_name: fileName,
-          fileweight: fileSizeFormat,
-          file: filesPending[i],
-        };
-
-        this.fileNameListPending.push(fileName);
-        this.arrayAssignedAttachmentPending.push(applicantAttach);
-      };
-      reader.readAsDataURL(file);
-    }
   }
-  setTimeout(() => {
-    this.errorRepeatFile = false;
-    this.errorExtensionFile = false;
-    this.errorSizeFile = false;
-  }, 5000);
-  
-  console.log(this.getAssignedPending());
-}
 
-getAssignedPending(): ApplicantAttachments[] {
-  return this.arrayAssignedAttachmentPending;
-}
+  openFileInputPending() {
+    this.fileInputPending.nativeElement.value = ''; // Limpiar la entrada de archivos antes de abrir el cuadro de diálogo
+    this.fileInputPending.nativeElement.click();
+  }
 
-clearFileInputPending(index: number) {
-  this.fileNameListPending.splice(index, 1);
-  this.arrayAssignedAttachmentPending.splice(index, 1);
-}
+  onFileSelectedPending(event: any) {
+    const filesPending: FileList = event.target.files;
 
+    for (let i = 0; i < filesPending.length; i++) {
+      if (this.fileNameListPending.includes(filesPending[i].name)) {
+        this.errorMensajeFile = `El archivo ${filesPending[i].name} ya esta adjunto`;
+        this.errorRepeatFile = true;
+        continue;
+      } else {
+        const file: File = filesPending[i];
+
+        let fileSizeFormat: string;
+        const fileName: string = file.name;
+        const fileSizeInKiloBytes = file.size / 1024;
+        if (fileSizeInKiloBytes < 1024) {
+          fileSizeFormat = fileSizeInKiloBytes.toFixed(2) + 'KB';
+        } else {
+          const fileSizeMegabytes = fileSizeInKiloBytes / 1024;
+          fileSizeFormat = fileSizeMegabytes.toFixed(2) + 'MB';
+        }
+        if (this.isValidExtension(file)) {
+          this.errorMensajeFile = `El archivo ${filesPending[i].name} tiene una extension no permitida`;
+          this.errorExtensionFile = true;
+          continue;
+        }
+
+        if (file.size > 20971520) {
+          this.errorMensajeFile = `El archivo ${filesPending[i].name} supera los 20MB`;
+          this.errorSizeFile = true;
+          continue;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          const base64String: string = e.target.result.split(',')[1];
+
+          const applicantAttach: ApplicantAttachments = {
+            base64file: base64String,
+            source_name: fileName,
+            fileweight: fileSizeFormat,
+            file: filesPending[i],
+          };
+
+          this.fileNameListPending.push(fileName);
+          this.arrayAssignedAttachmentPending.push(applicantAttach);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    setTimeout(() => {
+      this.errorRepeatFile = false;
+      this.errorExtensionFile = false;
+      this.errorSizeFile = false;
+    }, 5000);
+
+    console.log(this.getAssignedPending());
+  }
+
+  getAssignedPending(): ApplicantAttachments[] {
+    return this.arrayAssignedAttachmentPending;
+  }
+
+  clearFileInputPending(index: number) {
+    this.fileNameListPending.splice(index, 1);
+    this.arrayAssignedAttachmentPending.splice(index, 1);
+  }
 
   envioCorreoMasivo() {
     this.visibleSolicitudEnvioMasivo = true;
@@ -1754,7 +1804,6 @@ clearFileInputPending(index: number) {
       next: (response: BodyResponse<historyRequest[]>) => {
         if (response.code === 200) {
           this.historyData = response.data;
-          console.log(this.historyData, 'aa');
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -1764,6 +1813,59 @@ clearFileInputPending(index: number) {
       },
       complete: () => {
         console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  // Proceso para guardar automaticamente respuesta cuando cambia de pestaña
+  // onTabChange(event: any) {
+  //   const mensajeActual = this.requestProcess.get('mensage')?.value;
+  //   this.cancelAutoSave = false;
+
+  //   if (mensajeActual !== '') {
+  //     // Verifica si el mensaje cambió antes de guardar
+  //     if (mensajeActual && mensajeActual !== this.ultimaRespuestaGuardada) {
+  //       if (this.isInitialized) {
+  //         this.borradorRespuesta(this.request_id);
+  //         this.ultimaRespuestaGuardada = mensajeActual; // Actualiza el valor guardado
+  //         this.isInitializedView = true;
+  //       }
+  //     }
+  //   }
+  //   this.isInitialized = true;
+  // }
+
+  //Metodos para darle prioridad a un radicado
+  sendPriority() {
+    this.isVisibleSolicitudPrioridad = true;
+  }
+
+  closeDialogPriority(): void {
+    this.isVisibleSolicitudPrioridad = false;
+    this.esPrioridadForm.reset();
+  }
+
+  onSubmitPriority(): void {
+    const payload: RequestAnswerTemp = {
+      request_id: this.requestDetails?.filing_number || 0,
+      mensaje_temp: this.esPrioridadForm.get('message')?.value,
+    };
+
+    this.userService.getRequestPriority(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.isVisibleSolicitudPrioridad = false;
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.error('Error en la solicitud:', err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        this.closeDialogenvioCorreoMasivo();
       },
     });
   }

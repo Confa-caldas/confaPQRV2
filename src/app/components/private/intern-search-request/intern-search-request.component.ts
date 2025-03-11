@@ -4,11 +4,13 @@ import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
 import {
   ApplicantTypeList,
-  FilterRequests,
+  FilterRequestsIntern,
   RequestStatusList,
   RequestTypeList,
   RequestsList,
   UserList,
+  RequestAreaList,
+  RequestsListIntern,
   IsPriority,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
@@ -19,15 +21,18 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { PaginatorState } from 'primeng/paginator';
 
 @Component({
-  selector: 'app-search-request',
-  templateUrl: './search-request.component.html',
-  styleUrl: './search-request.component.scss',
+  selector: 'app-intern-search-request',
+  templateUrl: './intern-search-request.component.html',
+  styleUrl: './intern-search-request.component.scss',
 })
-export class SearchRequestComponent implements OnInit {
-  requestList: RequestsList[] = [];
+export class InternSearchRequestComponent implements OnInit {
+  requestList: RequestsListIntern[] = [];
   aplicantList: ApplicantTypeList[] = [];
   requestTypeList: RequestTypeList[] = [];
   userList: UserList[] = [];
+  requestUserList: UserList[] = [];
+  requestAreaList: RequestAreaList[] = [];
+
   ingredient!: string;
   visibleDialog = false;
   visibleDialogInput = false;
@@ -73,6 +78,8 @@ export class SearchRequestComponent implements OnInit {
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
       request_status_id: new FormControl(null),
+      confa_user: new FormControl(null),
+      area_name: new FormControl(null),
       is_priority: new FormControl(null),
     });
 
@@ -99,16 +106,6 @@ export class SearchRequestComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.isPriorityList = [
-      {
-        value: true,
-        name: 'Sí',
-      },
-      {
-        value: false,
-        name: 'No',
-      },
-    ];
     const filtrosGuardados = sessionStorage.getItem('filtrosBusqueda');
     const paginacionGuardada = sessionStorage.getItem('estadoPaginacion');
 
@@ -125,9 +122,9 @@ export class SearchRequestComponent implements OnInit {
           }
 
           // Asegurar que assigned_user es un array (necesario para p-multiSelect)
-          if (filtros.assigned_user && !Array.isArray(filtros.assigned_user)) {
-            filtros.assigned_user = [filtros.assigned_user]; // Convertir en array si no lo es
-          }
+          // if (filtros.assigned_user && !Array.isArray(filtros.assigned_user)) {
+          //   filtros.assigned_user = [filtros.assigned_user]; // Convertir en array si no lo es
+          // }
 
           // Filtrar valores nulos antes de asignarlos al formGroup
           const valoresValidos = Object.keys(filtros).reduce((acc, key) => {
@@ -155,14 +152,25 @@ export class SearchRequestComponent implements OnInit {
       }
     }
 
+    this.isPriorityList = [
+      {
+        value: true,
+        name: 'Sí',
+      },
+      {
+        value: false,
+        name: 'No',
+      },
+    ];
     this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
 
-    this.searhRequests();
+    this.searhRequestsIntern();
     this.getRequestStatusList();
     this.getApplicantTypeList();
     this.getRequestTypeList();
-    this.getUsersList();
-    // this.getRequestStatusList();
+    this.getRequestUserList();
+    this.getRequestAreasList();
+
     this.loading = false;
   }
 
@@ -194,7 +202,7 @@ export class SearchRequestComponent implements OnInit {
     this.page = Number(event.page) + 1 || 0;
 
     sessionStorage.getItem('filtrosBusqueda');
-    this.searhRequests();
+    this.searhRequestsIntern();
   }
   cleanForm() {
     sessionStorage.removeItem('filtrosBusqueda');
@@ -204,21 +212,21 @@ export class SearchRequestComponent implements OnInit {
     this.rows = 10;
     this.formGroup.reset();
     this.requestList = [];
-    this.searhRequests();
+    this.searhRequestsIntern();
   }
 
   initPaginador() {
     this.first = 0;
     this.page = 1;
     this.rows = 10;
-    this.searhRequests();
+    this.searhRequestsIntern();
   }
 
-  searhRequests() {
+  searhRequestsIntern() {
     const filtrosGuardados = sessionStorage.getItem('filtrosBusqueda');
     let filtros = filtrosGuardados ? JSON.parse(filtrosGuardados) : {};
 
-    const payload: FilterRequests = {
+    const payload: FilterRequestsIntern = {
       i_date:
         this.formGroup.controls['dates_range'].value?.length > 0
           ? this.convertDates(this.formGroup.controls['dates_range'].value[0])
@@ -241,11 +249,6 @@ export class SearchRequestComponent implements OnInit {
         this.formGroup.controls['doc_id'].value.length > 0
           ? this.formGroup.controls['doc_id'].value
           : filtros['doc_id'] || null,
-      applicant_name:
-        this.formGroup.controls['applicant_name'].value?.trim().length > 0
-          ? this.formGroup.controls['applicant_name'].value
-          : filtros['applicant_name'] || null,
-      request_days: this.formGroup.controls['request_days'].value || null,
       applicant_type_id:
         this.formGroup.controls['applicant_type_id'].value &&
         this.formGroup.controls['applicant_type_id'].value > 0
@@ -256,22 +259,19 @@ export class SearchRequestComponent implements OnInit {
         this.formGroup.controls['request_type_id'].value > 0
           ? this.formGroup.controls['request_type_id'].value
           : filtros['request_type_id'] || null,
-      assigned_user:
-        this.formGroup.controls['assigned_user'].value?.length > 0
-          ? this.formGroup.controls['assigned_user'].value
-          : filtros['assigned_user'] || null,
       status_id:
         this.formGroup.controls['request_status_id'].value &&
         this.formGroup.controls['request_status_id'].value.length > 0
           ? this.formGroup.controls['request_status_id'].value
           : filtros['request_status_id'] || null,
       is_priority: this.formGroup.controls['is_priority'].value || null,
+      confa_user: this.formGroup.controls['confa_user'].value || null,
+      area_name: this.formGroup.controls['area_name'].value || null,
 
       page: this.page,
       page_size: this.rows,
     };
-
-    this.getRequestListByFilter(payload);
+    this.getRequestListByFilterIntern(payload);
   }
   convertDates(dateString: string) {
     const date = new Date(dateString);
@@ -281,9 +281,10 @@ export class SearchRequestComponent implements OnInit {
     const formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
   }
-  getRequestListByFilter(payload: FilterRequests) {
-    this.userService.getRequestListByFilter(payload).subscribe({
-      next: (response: BodyResponse<RequestsList[]>) => {
+
+  getRequestListByFilterIntern(payload: FilterRequestsIntern) {
+    this.userService.getRequestListInternByFilter(payload).subscribe({
+      next: (response: BodyResponse<RequestsListIntern[]>) => {
         if (response.code === 200) {
           this.requestList = response.data;
           console.log(this.requestList);
@@ -314,6 +315,7 @@ export class SearchRequestComponent implements OnInit {
   showSuccessMessage(state: string, title: string, message: string) {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
+
   getRequestStatusList() {
     this.userService.getRequestStatusList().subscribe({
       next: (response: BodyResponse<RequestStatusList[]>) => {
@@ -331,6 +333,7 @@ export class SearchRequestComponent implements OnInit {
       },
     });
   }
+
   getApplicantTypeList() {
     this.userService.getApplicantTypesList().subscribe({
       next: (response: BodyResponse<ApplicantTypeList[]>) => {
@@ -366,11 +369,13 @@ export class SearchRequestComponent implements OnInit {
       },
     });
   }
-  getUsersList() {
-    this.userService.getUsersList().subscribe({
+
+  // Metodo para listar los usuarios que han hecho radicados
+  getRequestUserList() {
+    this.userService.getRequestUserList().subscribe({
       next: (response: BodyResponse<UserList[]>) => {
         if (response.code === 200) {
-          this.userList = response.data;
+          this.requestUserList = response.data;
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -384,19 +389,24 @@ export class SearchRequestComponent implements OnInit {
     });
   }
 
-  assignRequest(request_details: RequestsList) {
-    if (request_details.assigned_user == null || request_details.assigned_user == '') {
-      this.message = 'Asignar responsable de solicitud';
-      this.buttonmsg = 'Asignar';
-      request_details.request_status = 2;
-    } else {
-      this.message = 'Reasignar responsable de solicitud';
-      this.buttonmsg = 'Reasignar';
-      request_details.request_status = 3;
-    }
-    this.visibleDialogInput = true;
-    this.parameter = ['Colaborador'];
-    this.request_details = request_details;
+  // Metodo para listar las areas
+  getRequestAreasList() {
+    this.userService.getRequestAreasList().subscribe({
+      next: (response: BodyResponse<RequestAreaList[]>) => {
+        if (response.code === 200) {
+          this.requestAreaList = response.data;
+          console.log(this.requestUserList, 'areas');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
   }
 
   closeDialog(value: boolean) {
@@ -416,43 +426,7 @@ export class SearchRequestComponent implements OnInit {
     this.visibleDialogAlert = false;
     this.enableAssign = value;
   }
-  setParameter(inputValue: {
-    userName: string;
-    userNameCompleted: string;
-    mensajeReasignacion: string;
-  }) {
-    if (!this.enableAssign) return;
-    if (this.request_details['assigned_user'] == inputValue.userName) {
-      this.visibleDialogAlert = true;
-      this.informative = true;
-      this.message = 'Verifique el responsable a asignar';
-      this.message2 =
-        'Recuerde que, para realizar una reasignación, es necesario seleccionar un colaborador diferente';
-      this.severity = 'danger';
-      return;
-    }
-    this.request_details['assigned_user'] = inputValue.userName;
-    this.request_details['user_name_completed'] = inputValue.userNameCompleted;
-    this.request_details['mensaje_reasignacion'] = inputValue.mensajeReasignacion;
-    if (inputValue) {
-      this.userService.assignUserToRequest(this.request_details).subscribe({
-        next: (response: BodyResponse<string>) => {
-          if (response.code === 200) {
-            this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
-          } else {
-            this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-          }
-        },
-        error: (err: any) => {
-          console.log(err);
-        },
-        complete: () => {
-          this.ngOnInit();
-          console.log('La suscripción ha sido completada.');
-        },
-      });
-    }
-  }
+
   redirectDetails(request_id: number) {
     let filtros = this.formGroup.value;
 

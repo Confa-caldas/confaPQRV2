@@ -1,0 +1,423 @@
+<div *ngIf="isSpinnerVisible" class="spinner-overlay">
+  <div class="spinner"></div>
+  <p class="spinner-text">Procesando su solicitud</p>
+</div>
+<p-card class="container">
+  <div class="container-principal">
+    <form [formGroup]="requestForm">
+      <h4 class="card-form-banner-title">Formulario Actualización Empresas</h4>
+
+      <p-card class="container-card">
+        <div class="rows">
+          <div class="card-form-row">
+            <div class="card-form-input">
+              <label class="card-form-input-placeholder">Tipo de documento*</label>
+              <p-dropdown
+                id="document_type"
+                formControlName="document_type"
+                [style]="{
+                  'border-radius': '20px',
+                  height: '40px',
+                  'align-items': 'center'
+                }"
+                class="card-form-input-select"
+                placeholder="*Tipo de documento"
+                [options]="documentList"
+                optionLabel="catalog_item_name"></p-dropdown>
+              <label class="card-form-input-placeholder-invalid">
+                {{
+                  requestForm.get('document_type')?.hasError('required') &&
+                  requestForm.get('document_type')?.touched
+                    ? 'Campo Requerido'
+                    : ''
+                }}</label
+              >
+            </div>
+            <div class="card-form-input">
+              <label class="card-form-input-placeholder"> Documento empresa* </label>
+              <input
+                pInputText
+                type="text"
+                formControlName="number_id"
+                class="card-form-input-options"
+                placeholder="*Ingresa el número de documento" />
+              <label class="card-form-input-placeholder-invalid">
+                {{
+                  requestForm.get('number_id')?.hasError('pattern') &&
+                  requestForm.get('number_id')?.touched
+                    ? errorMensaje
+                    : ''
+                }}
+                {{ requestForm.get('number_id')?.disabled ? 'Seleccione tipo de documento' : ''
+                }}{{
+                  requestForm.get('number_id')?.hasError('required') &&
+                  requestForm.get('number_id')?.touched
+                    ? 'Campo Requerido'
+                    : ''
+                }}</label
+              >
+            </div>
+          </div>
+
+          <br />
+          <div class="button-container">
+            <p-button
+              [style]="{ 'border-radius': '20px', 'background-color': '#00aeef', width: '275px' }"
+              label="Consultar Empresa"
+              [disabled]="requestForm.invalid"
+              (click)="consultarEmpresa()"
+              class="card-form-button"></p-button>
+          </div>
+
+          <br />
+
+          <div class="data-section">
+            <div class="data-title">{{ sectionTitle }}</div>
+
+            <!-- Primera Vista -->
+            <div [hidden]="currentSection !== 1" class="data-content">
+              <div class="p-field-row">
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Dígito de verificación</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.digitoVerificacion"
+                      disabled />
+                  </div>
+                </div>
+                <div class="p-field"></div>
+              </div>
+
+              <div class="p-field-row">
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Razón social/Nombre</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.razonSocial"
+                      disabled />
+                  </div>
+                </div>
+
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Nombre Comercial</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.nombreComercial"
+                      disabled />
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-field-row">
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Departamento</label>
+                  <div class="card-form-input">
+                    <p-dropdown
+                      id="document_type"
+                      formControlName="document_type"
+                      [style]="{
+                        'border-radius': '20px',
+                        height: '40px',
+                        'align-items': 'center'
+                      }"
+                      class="card-form-input-select"
+                      placeholder="*Tipo de documento"
+                      [options]="documentList"
+                      optionLabel="catalog_item_name"></p-dropdown>
+                  </div>
+                </div>
+
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Municipio</label>
+                  <div class="card-form-input">
+                    <p-dropdown
+                      id="document_type"
+                      formControlName="document_type"
+                      [style]="{
+                        'border-radius': '20px',
+                        height: '40px',
+                        'align-items': 'center'
+                      }"
+                      class="card-form-input-select"
+                      placeholder="*Tipo de documento"
+                      [options]="documentList"
+                      optionLabel="catalog_item_name"></p-dropdown>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-field-row">
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Direccion</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.direccion" />
+                  </div>
+                </div>
+
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Correo Electronico</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.email" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-field-row">
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Telefono fijo</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.direccion" />
+                  </div>
+                </div>
+
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Telefono Celular</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.email" />
+                  </div>
+                </div>
+              </div>
+              <br />
+              <div class="button-row">
+                <p-button
+                  [style]="{
+                    'border-radius': '20px',
+                    'background-color': '#00aeef',
+                    width: '100px'
+                  }"
+                  label="Siguiente"
+                  (click)="irASiguiente()"></p-button>
+              </div>
+            </div>
+
+            <!-- Segunda Vista -->
+            <div [hidden]="currentSection !== 2" class="data-content">
+              <div class="p-field-row">
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Tipo Documento</label>
+                  <div class="card-form-input">
+                    <p-dropdown
+                      id="document_type"
+                      formControlName="document_type"
+                      [style]="{
+                        'border-radius': '20px',
+                        height: '40px',
+                        'align-items': 'center'
+                      }"
+                      class="card-form-input-select"
+                      placeholder="*Tipo de documento"
+                      [options]="documentList"
+                      optionLabel="catalog_item_name"></p-dropdown>
+                  </div>
+                </div>
+
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Numero de Documento</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.telefono" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-field-row">
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Primer Nombre</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.actividadEconomica" />
+                  </div>
+                </div>
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Segundo Nombre</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.actividadEconomica" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-field-row">
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Primer Apellido</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.actividadEconomica" />
+                  </div>
+                </div>
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Segundo Apellido</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.actividadEconomica" />
+                  </div>
+                </div>
+              </div>
+
+              <br />
+
+              <div class="button-row">
+                <p-button
+                  [style]="{
+                    'border-radius': '20px',
+                    'background-color': '#00aeef',
+                    width: '100px'
+                  }"
+                  label="Anterior"
+                  (click)="irAAnterior()"></p-button>
+                <p-button
+                  [style]="{
+                    'border-radius': '20px',
+                    'background-color': '#00aeef',
+                    width: '100px'
+                  }"
+                  label="Siguiente"
+                  (click)="irASiguiente()"></p-button>
+              </div>
+            </div>
+
+            <!-- Tercera Vista -->
+            <div [hidden]="currentSection !== 3" class="data-content">
+              <div class="p-field-row">
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Codigo CIIU</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.telefono" />
+                  </div>
+                </div>
+
+                <div class="p-field">
+                  <label class="card-form-input-placeholder">Descripción CIIU</label>
+                  <div class="card-form-input">
+                    <input
+                      [style]="{
+                        'border-radius': '20px'
+                      }"
+                      type="text"
+                      [value]="empresa?.actividadEconomica" />
+                  </div>
+                </div>
+              </div>
+
+              <br />
+              <div class="button-row">
+                <p-button
+                  [style]="{
+                    'border-radius': '20px',
+                    'background-color': '#00aeef',
+                    width: '100px'
+                  }"
+                  label="Anterior"
+                  (click)="irAAnterior()"></p-button>
+                <p-button
+                  [style]="{
+                    'border-radius': '20px',
+                    'background-color': '#00aeef',
+                    width: '100px'
+                  }"
+                  label="Guardar"
+                  [disabled]="requestForm.invalid"
+                  (click)="sendRequest()"></p-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </form>
+  </div>
+</p-card>
+
+<p-toast></p-toast>
+<p-progressSpinner
+  *ngIf="loadingAttachments"
+  class="sppinerAtta p-element"
+  color="blue"></p-progressSpinner>
+
+<!--<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [requestCreation]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>-->
+<app-modal-filing
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [requestCreation]="true"
+  [visible]="visibleDialogAlert"
+  [tittle_message]="tittle_message"
+  [message]="message"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-filing>
+
+<div class="modal" *ngIf="showModal" id="adjuntarArchivoModal">
+  <div class="modal-content">
+    <h2>{{ modalTitle }}</h2>
+    <p>{{ modalMessage }}</p>
+
+    <div class="modal-footer">
+      <button class="btn btn-accept" (click)="onAccept()">Aceptar</button>
+      <button class="btn btn-cancel" (click)="onCancel()">Cancelar</button>
+    </div>
+  </div>
+</div>

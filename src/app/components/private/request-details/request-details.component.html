@@ -94,18 +94,26 @@
     <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
   </div>
 
-  <div class="container-button" *ngIf="!showProcessTab()">
-    <p-button
-      *ngIf="requestDetails.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"
-      [label]="
-        requestDetails.assigned_user === null || requestDetails.assigned_user === ''
-          ? 'Asignar'
-          : 'Reasignar'
-      "
-      (click)="assignRequest(requestDetails)"
-      [style]="{ 'border-radius': '10px' }"></p-button>
+  <div class="process-container-row-generals">
+    <div class="container-button" *ngIf="!showProcessTab()">
+      <p-button
+        *ngIf="requestDetails.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"
+        [label]="
+          requestDetails.assigned_user === null || requestDetails.assigned_user === ''
+            ? 'Asignar'
+            : 'Reasignar'
+        "
+        (click)="assignRequest(requestDetails)"
+        [style]="{ 'border-radius': '10px' }"></p-button>
+    </div>
+
+    <div class="container-button">
+      <p-menu #menu [model]="itemsGenerals" [popup]="true"></p-menu>
+      <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
+    </div>
   </div>
   <div class="p-tabview">
+    <!-- (onChange)="onTabChange($event)" -->
     <p-tabView class="p-tabview-nav">
       <p-tabPanel header="Radicación" headerStyleClass="p-tabview-nav-link-1 ">
         <ul class="list-unstyled">
@@ -181,6 +189,11 @@
                 <label class="process-container-label"> Responsable de solicitud </label>
                 <li class="process-container-text">{{ requestDetails.user_name_completed }}</li>
               </div>
+              <div *ngIf="requestDetails.send_email_massive !== null" class="process-container-col">
+                <label class="process-container-label"> Respuesta a otros correos </label>
+                <li class="process-container-text">{{ requestDetails.send_email_massive }}</li>
+              </div>
+
               <div class="process-container-col"></div>
             </div>
             <div class="process-container-row">
@@ -414,7 +427,7 @@
                   icon="pi pi-save"
                   severity="warning"
                   (click)="correccionSugeridaIa(requestDetails)"
-                  [style]="{ 'border-radius': '10px', 'background-color': '#329dd1'}"
+                  [style]="{ 'border-radius': '10px', 'background-color': '#329dd1' }"
                   [disabled]="requestProcess.invalid"
                   label="Guardar en borrador">
                 </p-button>
@@ -442,6 +455,9 @@
                 placeholder="Escribir mensaje"
                 pInputTextarea>
               </textarea>
+
+              <p class="static-text">Cordialmente, {{ requestDetails.user_name_completed }}</p>
+
               <label class="formProcess-card-text-placeholder-invalid">
                 {{
                   requestProcess.get('mensage')?.hasError('required') &&
@@ -456,6 +472,7 @@
                 }}</label
               >
             </div>
+
             <!-- <div>
               <p-button
                 *ngIf="requestProcess.get('mensage')?.value"
@@ -797,8 +814,7 @@
       <strong>Respuesta sugerida:</strong> <br />
       <textarea id="respuesta-corregida" class="custom-textarea" readonly>
       Hola, buen día!
-      {{ respuestaPredefinida }}
-      Cordialmente, {{ requestDetails?.user_name_completed }}
+      {{ respuestaPredefinida }}     
       </textarea>
     </p>
     <div class="confirmation-text">
@@ -888,7 +904,10 @@
 
     <!-- Botones -->
     <div class="dialog-buttons">
-      <button type="button" class="btn btn-yes" (click)="borradorRespuesta(requestDetails!)">
+      <button
+        type="button"
+        class="btn btn-yes"
+        (click)="borradorRespuesta(requestDetails?.request_id)">
         Sí
       </button>
       <button
@@ -1051,7 +1070,6 @@
   [dismissableMask]="true"
   [draggable]="false"
   [resizable]="false">
-
   <!-- Encabezado personalizado -->
   <div class="custom-dialog-header">
     <i class="pi pi-clock custom-icon"></i>
@@ -1107,12 +1125,15 @@
 
     <!-- Botones -->
     <div class="dialog-buttons">
-      <button type="submit" class="btn btn-primary" [disabled]="pendingRequestForm.invalid">Enviar</button>
-      <button type="button" class="btn btn-secondary" (click)="closeDialogPending()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="pendingRequestForm.invalid">
+        Enviar
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="closeDialogPending()">
+        Cancelar
+      </button>
     </div>
   </form>
 </p-dialog>
-
 
 <!-- masivo envio de respuesta -->
 <p-dialog
@@ -1197,6 +1218,7 @@
   header="Historia"
   [(visible)]="visibleHistory"
   [modal]="true"
+  [ngStyle]="{ 'white-space': 'pre-line' }"
   [style]="{ width: '60vw' }"
   [contentStyle]="{ padding: '1em' }"
   [responsive]="true"
@@ -1281,4 +1303,48 @@
   <div class="dialog-buttons">
     <button type="button" class="btn btn-cancel" (click)="closeDialogHistory()">Cerrar</button>
   </div>
+</p-dialog>
+
+<!-- Dar prioridad solicitud -->
+<p-dialog
+  header="Darle prioridad al radicado"
+  [(visible)]="isVisibleSolicitudPrioridad"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Priorización del la solicitud</span>
+    </div>
+  </ng-template>
+
+  <!-- Formulario -->
+  <form [formGroup]="esPrioridadForm" (ngSubmit)="onSubmitPriority()">
+    <!-- Agregar correo -->
+    <div class="form-group"></div>
+
+    <!-- Mensaje -->
+    <br />
+    <div class="form-group">
+      <label for="message">Mensaje</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        placeholder="Mensaje de priorización"
+        rows="4"
+        class="form-control"
+        required>
+      </textarea>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-yes">Guardar</button>
+      <button type="button" class="btn btn-cancel" (click)="closeDialogPriority()">Cancelar</button>
+    </div>
+  </form>
 </p-dialog>
