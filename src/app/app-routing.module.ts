@@ -122,6 +122,24 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.CREATE_REQUEST_INTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/create-request-internal/create-request-internal.module').then(
+        m => m.CreateRequestInternalModule
+      ),
+  },
+  {
+    path: RoutesApp.REQUEST_FORM_INTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/request-form-internal/request-form-internal.module').then(
+        m => m.RequestFormInternalModule
+      ),
+  },
+  {
     path: RoutesApp.FORM_COMPANY,
     component: LayoutRequestComponent,
     loadChildren: () =>

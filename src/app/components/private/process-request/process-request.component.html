@@ -330,7 +330,9 @@
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-requestList>
-            <tr>
+            <tr pTooltip="{{ requestList.request_description }}" 
+            tooltipPosition="top" 
+            tooltipStyleClass="custom-tooltip">
               <td>{{ requestList.filing_number }}</td>
               <td>{{ requestList.filing_date_date | date }}</td>
               <td>{{ requestList.applicant_type_name }}</td>

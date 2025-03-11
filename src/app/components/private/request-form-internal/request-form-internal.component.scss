@@ -635,3 +635,38 @@
   font-size: 16px;
   color: #fff;
 }
+
+.contact-preferences {
+  display: flex;
+  //flex-direction: column;
+  gap: 10px;
+  //margin-bottom: 15px;
+
+  h3 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    //color: #007bff; // Azul para resaltar el título
+    margin-bottom: 10px;
+  }
+
+  div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    color: #444; // Un gris más oscuro para mejor contraste
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: $color-tab-blue; // Verde para destacar los checkboxes
+    }
+  }
+}

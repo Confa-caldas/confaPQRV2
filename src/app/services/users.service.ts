@@ -52,6 +52,7 @@ import {
   historyRequest,
   Token,
   RequestFormListPending,
+  RequestFormListInternal,
   RequestAreaList,
   FilterRequestsIntern,
   RequestsListIntern,
@@ -611,6 +612,14 @@ export class Users {
       payload
     );
   }
+
+  createRequestInternal(payload: RequestFormListInternal) {
+    return this.http.post<BodyResponse<number>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_REQUEST_INTERNAL}`,
+      payload
+      );
+    }
+
   //traer usuario que creo la solicitud
   getRequestUserList() {
     return this.http.get<BodyResponse<UserList[]>>(
