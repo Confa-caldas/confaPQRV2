@@ -14,11 +14,11 @@ import { MessageService } from 'primeng/api';
 import { v4 as uuidv4 } from 'uuid';
 
 @Component({
-  selector: 'app-create-request',
-  templateUrl: './create-request.component.html',
-  styleUrl: './create-request.component.scss',
+  selector: 'app-create-request-internal',
+  templateUrl: './create-request-internal.component.html',
+  styleUrl: './create-request-internal.component.scss',
 })
-export class CreateRequestComponent {
+export class CreateRequestInternalComponent {
   optionsRequest: FormGroup;
   applicantList!: ApplicantTypeList[];
   requestList!: RequestTypeList[];
@@ -118,8 +118,7 @@ export class CreateRequestComponent {
       console.error('Error obteniendo la IP', err);
       throw err; // Rechazamos la promesa en caso de error
     }
-  }
-    */
+  } */
 
   async sendOptions() {
     /*
@@ -131,8 +130,7 @@ export class CreateRequestComponent {
       console.error('Error obteniendo el entorno del usuario:', err);
       // Si ocurre un error, usamos valores por defecto
       ip = 'No disponible';
-    }
-      */
+    } */
 
     this.transactionId = uuidv4(); // Genera un identificador único
 
@@ -183,7 +181,7 @@ export class CreateRequestComponent {
         },
       });
 
-      this.router.navigate([RoutesApp.REQUEST_FORM]);
+      this.router.navigate([RoutesApp.REQUEST_FORM_INTERNAL]);
     }
   }
   closeDialogDataT(value: boolean) {

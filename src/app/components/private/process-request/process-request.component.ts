@@ -281,6 +281,7 @@ export class ProcessRequestComponent implements OnInit {
     this.getRequestListByAssignedUserByFilter(payload);
   }
   getRequestListByAssignedUserByFilter(payload: FilterRequests) {
+    console.log(payload);
     this.userService.getRequestListByAssignedUser(this.user, payload).subscribe({
       next: (response: BodyResponse<RequestsList[]>) => {
         if (response.code === 200) {

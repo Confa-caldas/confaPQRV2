@@ -52,6 +52,7 @@ import {
   historyRequest,
   Token,
   RequestFormListPending,
+  RequestFormListInternal,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -605,6 +606,13 @@ export class Users {
   answerRequestPending(payload: RequestFormListPending) {
     return this.http.post<BodyResponse<number>>(
       `${environment.API_PUBLIC}${EndPointRoute.ANSWER_REQUEST_PENDING}`,
+      payload
+    );
+  }
+
+  createRequestInternal(payload: RequestFormListInternal) {
+    return this.http.post<BodyResponse<number>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_REQUEST_INTERNAL}`,
       payload
     );
   }

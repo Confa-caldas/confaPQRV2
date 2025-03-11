@@ -13,6 +13,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { TabViewModule } from 'primeng/tabview';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CalendarModule } from 'primeng/calendar';
+import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
   declarations: [ProcessRequestComponent],
@@ -30,6 +31,7 @@ import { CalendarModule } from 'primeng/calendar';
     TabViewModule,
     ReactiveFormsModule,
     CalendarModule,
+    TooltipModule
   ],
   exports: [ProcessRequestComponent],
 })

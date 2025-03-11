@@ -1,11 +1,11 @@
 import { Component, ElementRef, OnInit, ViewChild, HostListener } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators, FormArray, FormControl } from '@angular/forms';
 import { Users } from '../../../services/users.service';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import {
   ApplicantAttachments,
   ApplicantTypeList,
-  RequestFormList,
+  RequestFormListInternal,
   RequestTypeList,
   ErrorAttachLog,
   ProcessRequest
@@ -19,13 +19,14 @@ import { HttpEventType, HttpResponse, HttpErrorResponse } from '@angular/common/
 import { throwError, retry } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { ChangeDetectorRef } from '@angular/core';
+import { CheckboxChangeEvent } from 'primeng/checkbox';
 
 @Component({
-  selector: 'app-request-form',
-  templateUrl: './request-form.component.html',
-  styleUrl: './request-form.component.scss',
+  selector: 'app-request-form-internal',
+  templateUrl: './request-form-internal.component.html',
+  styleUrl: './request-form-internal.component.scss',
 })
-export class RequestFormComponent implements OnInit {
+export class RequestFormInternalComponent implements OnInit {
   @ViewChild('archive_request') fileInput!: ElementRef;
 
   requestForm: FormGroup;
@@ -79,6 +80,8 @@ export class RequestFormComponent implements OnInit {
 
   useIaAttach: boolean = false;
 
+  opciones = ['whatsapp', 'llamada', 'correo'];
+
   ngOnInit(): void {
     let applicant = localStorage.getItem('applicant-type');
     let request = localStorage.getItem('request-type');
@@ -87,7 +90,7 @@ export class RequestFormComponent implements OnInit {
     console.log(visitedFirstPage);
 
     if (!visitedFirstPage) {
-      this.router.navigate([RoutesApp.CREATE_REQUEST]);
+      this.router.navigate([RoutesApp.CREATE_REQUEST_INTERNAL]);
     } else {
       //let applicant = localStorage.getItem('applicant-type');
       if (applicant) {
@@ -99,7 +102,7 @@ export class RequestFormComponent implements OnInit {
       }
       this.getApplicantList();
       this.requestForm.get('number_id')?.disable();
-    }
+    } 
   }
 
   constructor(
@@ -115,22 +118,37 @@ export class RequestFormComponent implements OnInit {
       catalog_item_name: 'NIT',
       regex: '^[0-9]{0,9}$',
     };
+
+    this.opciones = ['whatsapp', 'llamada', 'correo']; // Opciones dinámicas
+
+    const contactosGroup = this.formBuilder.group({}, { validators: this.validateAtLeastOneSelected });
+    this.opciones.forEach(opcion => {
+      contactosGroup.addControl(opcion, new FormControl(false)); // Inicializa en false
+    });
+
     this.requestForm = this.formBuilder.group(
       {
         document_type: ['', Validators.required],
         number_id: ['', Validators.required],
-        name: ['', [Validators.required, Validators.pattern('^[^@#$%&]+$')]],
+        name: ['', [Validators.pattern('^[^@#$%&]+$')]],
 
-        cellphone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+        cellphone: ['', [Validators.pattern('^[0-9]{10}$')]],
+        numWhatsapp: ['', [Validators.pattern('^[0-9]{10}$')]],
         email: [
           '',
           [
-            Validators.required,
+            
             Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'),
           ],
         ],
-        validator_email: ['', [Validators.required]],
+        validator_email: [''],
         mensage: ['', [Validators.required, Validators.maxLength(1000)]],
+
+        //contactos: this.formBuilder.group({}, { validators: this.validateAtLeastOneSelected }) // Contendrá los campos dinámicos
+        contactos: contactosGroup,
+        whatsapp: [''],
+        llamada: [''],
+        correo: ['']
       },
       { validator: this.emailMatcher }
     );
@@ -149,6 +167,101 @@ export class RequestFormComponent implements OnInit {
       }
     });
   }
+  
+  
+
+  //NUEVO 
+  /*
+  toggleCampo(event: Event, tipo: string) {
+    const checked = (event.target as HTMLInputElement).checked;
+    const contactos = this.requestForm.get('contactos') as FormGroup;
+
+    if (checked) {
+      // Agrega un nuevo FormControl si se marca el checkbox
+      contactos.addControl(tipo, new FormControl(''));
+    } else {
+      // Remueve el FormControl si se desmarca el checkbox
+      contactos.removeControl(tipo);
+    }
+  } */
+
+  
+    toggleCampo(event: CheckboxChangeEvent, tipo: string) {
+      const checked = event.checked;
+      const contactos = this.requestForm.get('contactos') as FormGroup;
+    
+      // Asegurar que el control existe y actualizar su valor
+      if (!contactos.get(tipo)) {
+        contactos.addControl(tipo, new FormControl(false)); // Si no existe, agrégalo
+      }
+      contactos.get(tipo)?.setValue(checked);
+    
+      console.log('Estado actual de los checkboxes:', this.requestForm.get('contactos')?.value);
+    
+      if (checked) {
+        // Agregar validaciones cuando se marca
+        if (tipo === 'whatsapp') {
+          this.requestForm.get('numWhatsapp')?.setValidators([
+            Validators.required,
+            Validators.pattern('^[0-9]{10}$'),
+          ]);
+        } else if (tipo === 'llamada') {
+          this.requestForm.get('cellphone')?.setValidators([
+            Validators.required,
+            Validators.pattern('^[0-9]{10}$'),
+          ]);
+        } else if (tipo === 'correo') {
+          this.requestForm.get('email')?.setValidators([
+            Validators.required,
+            Validators.email,
+            Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'),
+          ]);
+          this.requestForm.get('validator_email')?.setValidators([Validators.required]);
+        }
+      } else {
+        // Cuando se desmarca, limpiar el campo pero sin eliminarlo
+        if (tipo === 'whatsapp') {
+          this.requestForm.get('numWhatsapp')?.reset();
+          this.requestForm.get('numWhatsapp')?.clearValidators();
+        } else if (tipo === 'llamada') {
+          this.requestForm.get('cellphone')?.reset();
+          this.requestForm.get('cellphone')?.clearValidators();
+        } else if (tipo === 'correo') {
+          this.requestForm.get('email')?.reset();
+          this.requestForm.get('email')?.clearValidators();
+          this.requestForm.get('validator_email')?.reset();
+          this.requestForm.get('validator_email')?.clearValidators();
+        }
+      }
+    
+      // Aplicar cambios de validaciones
+      this.requestForm.get('numWhatsapp')?.updateValueAndValidity();
+      this.requestForm.get('cellphone')?.updateValueAndValidity();
+      this.requestForm.get('email')?.updateValueAndValidity();
+      this.requestForm.get('validator_email')?.updateValueAndValidity();
+    }
+    
+
+  validateAtLeastOneSelected(group: FormGroup) {
+    const values = Object.values(group.value);
+    const atLeastOneSelected = values.some(value => value === true);
+  
+    return atLeastOneSelected ? null : { atLeastOneRequired: true };
+  }
+
+  estaSeleccionado(tipo: string): boolean {
+    return this.requestForm.get(`contactos.${tipo}`)?.value === true;
+  }
+  
+
+  getControl(tipo: string): FormControl {
+    return this.requestForm.get('contactos.' + tipo) as FormControl;
+  }
+
+
+
+
+
 
   convertToLowercase(controlName: string): void {
     const control = this.requestForm.get(controlName);
@@ -288,7 +401,7 @@ export class RequestFormComponent implements OnInit {
   //     this.continuarCreacionSolicitud(inputValue);
   //   }
   // }
-  async setParameter(inputValue: RequestFormList) {
+  async setParameter(inputValue: RequestFormListInternal) {
     inputValue.count_attacments = this.getAplicant().length;
 
     // Si no hay adjuntos
@@ -312,8 +425,8 @@ export class RequestFormComponent implements OnInit {
     this.continuarCreacionSolicitud(inputValue);
   }
 
-  continuarCreacionSolicitud(inputValue: RequestFormList) {
-    this.userService.createRequest(inputValue).subscribe({
+  continuarCreacionSolicitud(inputValue: RequestFormListInternal) {
+    this.userService.createRequestInternal(inputValue).subscribe({
       next: (response: BodyResponse<number>) => {
         if (response.code === 200) {
           //this.requestForm.reset();
@@ -754,7 +867,10 @@ export class RequestFormComponent implements OnInit {
 
 
   sendRequest() {
-    const payload: RequestFormList = {
+
+    const contactos = this.requestForm.get('contactos')?.value;
+
+    const payload: RequestFormListInternal = {
       request_status: 1,
       applicant_type: this.applicantType.applicant_type_id,
       request_type: this.requestType.request_type_id,
@@ -772,14 +888,21 @@ export class RequestFormComponent implements OnInit {
       assigned_attachments: null,
       form_id: this.requestType.form_id,
       count_attacments: 0,
+      applicant_whatsapp: this.requestForm.controls['numWhatsapp'].value,
+
+      check_whatsapp:  contactos.whatsapp,
+      check_llamada: contactos.llamada,
+      check_correo: contactos.correo
     };
+
+    console.log("PAYLOAD internal: ", payload);
 
     this.setParameter(payload);
   }
   closeDialogAlert(value: boolean) {
     this.visibleDialogAlert = false;
     this.enableAction = value;
-    this.router.navigate([RoutesApp.CREATE_REQUEST]);
+    this.router.navigate([RoutesApp.CREATE_REQUEST_INTERNAL]);
     localStorage.removeItem('visitedFirstPage');
   }
   showAlertModal(filing_number: number) {

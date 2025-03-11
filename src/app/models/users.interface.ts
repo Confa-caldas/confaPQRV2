@@ -159,6 +159,31 @@ export interface RequestFormList {
   form_id?: number;
   count_attacments: number;
 }
+
+export interface RequestFormListInternal {
+  request_status: number;
+  applicant_type: number;
+  request_type: number;
+  doc_type: number;
+  doc_id: string;
+  applicant_name: string;
+  applicant_email: string;
+  applicant_cellphone: string;
+  request_description: string;
+  request_days: number;
+  assigned_user: string;
+  request_answer: string;
+  data_treatment: boolean;
+  applicant_attachments?: ApplicantAttachments[] | null;
+  assigned_attachments?: ApplicantAttachments[] | null;
+  form_id?: number;
+  count_attacments: number;
+  applicant_whatsapp: string;
+  check_whatsapp: boolean,
+  check_llamada: boolean,
+  check_correo: boolean
+}
+
 export interface answerRequest {
   request_status: number;
   request_answer: string;

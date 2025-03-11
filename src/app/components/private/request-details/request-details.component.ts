@@ -33,6 +33,9 @@ import { MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { Timeline } from 'primeng/timeline';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+
 // import { Util } from '../../../utils/utils';
 // import * as pdfMake from 'pdfmake/build/pdfmake';
 // import * as pdfFonts from 'pdfmake/build/vfs_fonts';
@@ -671,12 +674,18 @@ export class RequestDetailsComponent implements OnInit {
     this.visibleCharacterization = true;
   }
 
-  characterizeRequest(request_details: RequestsDetails) {
+  characterizeRequestIA(request_details: RequestsDetails) {
     this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
     this.visibleCorreccionIaEnviar = false;
     this.request_details = request_details;
     this.visibleCharacterization = true;
   }
+
+  characterizeRequest(request_details: RequestsDetails) {
+    this.request_details = request_details;
+    this.visibleCharacterization = true;
+  }
+
   submitAnswer() {
     const payloadAnswer: answerRequest = {
       request_id: this.request_id,
@@ -1174,6 +1183,7 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   //NUEVA PARA ENVIAR
+  /*
   correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
     console.log(respuestaForm);
@@ -1205,16 +1215,60 @@ export class RequestDetailsComponent implements OnInit {
             this.visibleCorreccionIaEnviar = true;
             this.informative = true;
           } else {
-            this.characterizeRequest(requestDetails);
+            this.characterizeRequestIA(requestDetails);
           }
         } catch (error) {
           console.error('Error al procesar la respuesta del servicio:', error);
         }
       } else {
+        //this.characterizeRequest(requestDetails);
         console.error('Error en la respuesta del servicio:', response);
       }
     });
-  }
+  } */
+
+    correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
+      const respuestaForm = this.requestProcess.get('mensage')?.value;
+      console.log(respuestaForm);
+    
+      this.userService.correccionIaWs(respuestaForm).pipe(
+        catchError(error => {
+          console.error('Error en el servicio de corrección:', error);
+          this.characterizeRequest(requestDetails); // Se ejecuta en caso de error
+          return of(null); // Retorna un observable vacío para evitar la interrupción
+        })
+      ).subscribe(response => {
+        if (response?.statusCode === 200) {
+          try {
+            const parsedBody = JSON.parse(response.body);
+            const respuesta = JSON.parse(parsedBody.respuesta) || 'Respuesta no disponible';
+    
+            this.respuestaCorregida = respuesta.texto_corregido;
+            this.palabrasError = respuesta.palabras_con_errores;
+            this.respuestaSolicitud = respuestaForm;
+            this.errores = respuesta.errores_encontrados;
+    
+            console.log(this.respuestaCorregida);
+            console.log(this.palabrasError);
+            console.log(this.errores);
+    
+            if (this.errores) {
+              this.visibleCorreccionIaEnviar = true;
+              this.informative = true;
+            } else {
+              this.characterizeRequestIA(requestDetails);
+            }
+          } catch (error) {
+            console.error('Error al procesar la respuesta del servicio:', error);
+            this.characterizeRequest(requestDetails); // Se ejecuta si hay un error en el parseo
+          }
+        } else {
+          console.error('Error en la respuesta del servicio:', response);
+          this.characterizeRequest(requestDetails); // Se ejecuta si la respuesta no es 200
+        }
+      });
+    }
+    
 
   confirmarCorreccion() {
     console.log(this.respuestaCorregida);
