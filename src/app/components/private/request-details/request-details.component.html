@@ -107,7 +107,7 @@
         [style]="{ 'border-radius': '10px' }"></p-button>
     </div>
 
-    <div class="container-button">
+    <div class="container-button" *ngIf="requestDetails.status_name !== 'Cerrada'">
       <p-menu #menu [model]="itemsGenerals" [popup]="true"></p-menu>
       <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
     </div>
