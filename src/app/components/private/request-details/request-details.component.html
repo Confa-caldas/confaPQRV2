@@ -94,18 +94,26 @@
     <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
   </div>
 
-  <div class="container-button" *ngIf="!showProcessTab()">
-    <p-button
-      *ngIf="requestDetails.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"
-      [label]="
-        requestDetails.assigned_user === null || requestDetails.assigned_user === ''
-          ? 'Asignar'
-          : 'Reasignar'
-      "
-      (click)="assignRequest(requestDetails)"
-      [style]="{ 'border-radius': '10px' }"></p-button>
+  <div class="process-container-row-generals">
+    <div class="container-button" *ngIf="!showProcessTab()">
+      <p-button
+        *ngIf="requestDetails.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"
+        [label]="
+          requestDetails.assigned_user === null || requestDetails.assigned_user === ''
+            ? 'Asignar'
+            : 'Reasignar'
+        "
+        (click)="assignRequest(requestDetails)"
+        [style]="{ 'border-radius': '10px' }"></p-button>
+    </div>
+
+    <div class="container-button">
+      <p-menu #menu [model]="itemsGenerals" [popup]="true"></p-menu>
+      <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
+    </div>
   </div>
   <div class="p-tabview">
+    <!-- (onChange)="onTabChange($event)" -->
     <p-tabView class="p-tabview-nav">
       <p-tabPanel header="Radicación" headerStyleClass="p-tabview-nav-link-1 ">
         <ul class="list-unstyled">
@@ -447,6 +455,8 @@
                 placeholder="Escribir mensaje"
                 pInputTextarea>
               </textarea>
+
+              <p class="static-text">Cordialmente, {{ requestDetails.user_name_completed }}</p>
 
               <label class="formProcess-card-text-placeholder-invalid">
                 {{
@@ -804,8 +814,7 @@
       <strong>Respuesta sugerida:</strong> <br />
       <textarea id="respuesta-corregida" class="custom-textarea" readonly>
       Hola, buen día!
-      {{ respuestaPredefinida }}
-      Cordialmente, {{ requestDetails?.user_name_completed }}
+      {{ respuestaPredefinida }}     
       </textarea>
     </p>
     <div class="confirmation-text">
@@ -1293,4 +1302,48 @@
   <div class="dialog-buttons">
     <button type="button" class="btn btn-cancel" (click)="closeDialogHistory()">Cerrar</button>
   </div>
+</p-dialog>
+
+<!-- Dar prioridad solicitud -->
+<p-dialog
+  header="Darle prioridad al radicado"
+  [(visible)]="isVisibleSolicitudPrioridad"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Priorización del la solicitud</span>
+    </div>
+  </ng-template>
+
+  <!-- Formulario -->
+  <form [formGroup]="esPrioridadForm" (ngSubmit)="onSubmitPriority()">
+    <!-- Agregar correo -->
+    <div class="form-group"></div>
+
+    <!-- Mensaje -->
+    <br />
+    <div class="form-group">
+      <label for="message">Mensaje</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        placeholder="Mensaje de priorización"
+        rows="4"
+        class="form-control"
+        required>
+      </textarea>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-yes">Guardar</button>
+      <button type="button" class="btn btn-cancel" (click)="closeDialogPriority()">Cancelar</button>
+    </div>
+  </form>
 </p-dialog>

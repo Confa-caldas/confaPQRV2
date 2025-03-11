@@ -109,7 +109,6 @@ export class LoginComponent implements OnInit {
 
   convertirLinks(links: ILink[]): TreeNode[] {
     const arrayResultante: TreeNode[] = [];
-    console.log(links, 'kinks');
     links.forEach(link => {
       if (link.perfilLinks) {
         const objetoConvertido: TreeNode = {

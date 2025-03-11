@@ -34,6 +34,7 @@ export interface RequestsList {
   status_name: string;
   user_name_completed: string;
   mensaje_reasignacion: string;
+  message_priority: string;
 }
 
 export interface RequestsDetails {
@@ -312,6 +313,7 @@ export interface FilterRequests {
   request_days?: number | null;
   applicant_type_id?: number | null;
   request_type_id?: number | null;
+  is_priority?: boolean | null;
   page?: number;
   page_size?: number;
 }
@@ -588,4 +590,75 @@ export interface RequestFormListPending {
   applicant_attachments?: ApplicantAttachments[] | null;
   assigned_attachments?: ApplicantAttachments[] | null;
   count_attacments: number;
+}
+
+export interface Empresa {
+  tipoDocumento: string;
+  documento: string;
+  digitoVerificacion: string;
+  razonSocial: string;
+  nombreComercial: string;
+  email: string;
+  direccion: string;
+  telefono: string;
+  actividadEconomica: string;
+}
+
+export interface FilterRequestsIntern {
+  i_date: string | null;
+  f_date: string | null;
+  status_id?: number | null;
+  assigned_user?: string | null;
+  is_pqr?: number | null;
+  filing_number?: number | null;
+  doc_id?: string | null;
+  applicant_name?: string | null;
+  request_days?: number | null;
+  applicant_type_id?: number | null;
+  request_type_id?: number | null;
+  confa_user?: string | null;
+  area_name?: string | null;
+  is_priority?: boolean | null;
+  page?: number;
+  page_size?: number;
+}
+
+export interface RequestAreaList {
+  area_id: number;
+  area_prefix: string;
+  area_name: string;
+}
+
+export interface RequestsListIntern {
+  request_id: number;
+  filing_number: number;
+  filing_date: string;
+  filing_date_date?: Date;
+  filing_time: string;
+  request_status: number;
+  applicant_type: number;
+  request_type: number;
+  doc_type: number;
+  doc_id: string;
+  applicant_name: string;
+  applicant_email: string;
+  applicant_cellphone: string;
+  request_description: string;
+  request_days: number;
+  assigned_user: string;
+  request_answer: string;
+  data_treatment: boolean;
+  applicant_attachments: string[];
+  assigned_attachments: string[];
+  form_id: number;
+  status_name: string;
+  user_name_completed: string;
+  mensaje_reasignacion: string;
+  isPriority: boolean;
+  message_priority: string;
+}
+
+export interface IsPriority {
+  value: boolean;
+  name: string;
 }

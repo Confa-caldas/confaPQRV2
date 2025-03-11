@@ -18,6 +18,8 @@ export enum RoutesApp {
   REPORT_DETAILS = 'report-details',
   REQUESTTYPE_MANAGER_ASSOCIATE = 'requestype-manager-associate',
   REQUEST_PENDING = 'request-pending',
+  FORM_COMPANY = 'form-company',
+  INTERN_SEARCH_REQUEST = 'intern-search-request',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
@@ -93,4 +95,8 @@ export enum EndPointRoute {
   GET_HISTORY_REQUEST = 'request/history',
   GET_PENDING_REQUEST = 'request/get_pending',
   ANSWER_REQUEST_PENDING = 'request/answer_pending',
+  REQUEST_USERS_LIST = 'db/requests_users',
+  AREAS_LIST = 'db/requests_areas',
+  REQUEST_BY_FILTER_INTERN = 'requests-intern/filter_intern',
+  REQUEST_PRIORITY = 'request/priority',
 }

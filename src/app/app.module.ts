@@ -12,6 +12,7 @@ import { NgxSpinnerModule } from 'ngx-spinner';
 import { LayoutRequestModule } from './components/private/layout-request/layout-request.module';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
   declarations: [AppComponent],
@@ -25,6 +26,7 @@ import { ToastModule } from 'primeng/toast';
     LayoutModule,
     LayoutRequestModule,
     ToastModule,
+    TooltipModule,
   ],
   providers: [
     MessageService,

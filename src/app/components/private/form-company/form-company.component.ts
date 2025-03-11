@@ -9,6 +9,7 @@ import {
   RequestTypeList,
   ErrorAttachLog,
   ProcessRequest,
+  Empresa,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { Router } from '@angular/router';
@@ -20,11 +21,11 @@ import { throwError, retry } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-request-form',
-  templateUrl: './request-form.component.html',
-  styleUrl: './request-form.component.scss',
+  selector: 'app-form-company',
+  templateUrl: './form-company.component.html',
+  styleUrl: './form-company.component.scss',
 })
-export class RequestFormComponent implements OnInit {
+export class FormCompanyComponent implements OnInit {
   @ViewChild('archive_request') fileInput!: ElementRef;
 
   requestForm: FormGroup;
@@ -78,27 +79,45 @@ export class RequestFormComponent implements OnInit {
 
   useIaAttach: boolean = false;
 
-  ngOnInit(): void {
-    let applicant = localStorage.getItem('applicant-type');
-    let request = localStorage.getItem('request-type');
-    const visitedFirstPage = localStorage.getItem('visitedFirstPage');
+  existCompany: boolean = false;
+  empresa?: Empresa;
+  sectionTitle = 'Datos Generales';
+  currentStep = 1;
+  currentSection = 1;
 
-    console.log(visitedFirstPage);
+  departamentos = [
+    { id: 1, nombre: 'Antioquia' },
+    { id: 2, nombre: 'Cundinamarca' },
+    { id: 3, nombre: 'Valle del Cauca' },
+  ];
+  municipios: any[] = [];
+  selectedDepartamento: number | null = null;
+  selectedMunicipio: number | null = null;
 
-    if (!visitedFirstPage) {
-      this.router.navigate([RoutesApp.CREATE_REQUEST]);
+  loadMunicipios() {
+    // Aquí simulas traer datos del backend
+    if (this.selectedDepartamento === 1) {
+      this.municipios = [
+        { id: 101, nombre: 'Medellín' },
+        { id: 102, nombre: 'Envigado' },
+      ];
+    } else if (this.selectedDepartamento === 2) {
+      this.municipios = [
+        { id: 201, nombre: 'Bogotá' },
+        { id: 202, nombre: 'Soacha' },
+      ];
+    } else if (this.selectedDepartamento === 3) {
+      this.municipios = [
+        { id: 301, nombre: 'Cali' },
+        { id: 302, nombre: 'Palmira' },
+      ];
     } else {
-      //let applicant = localStorage.getItem('applicant-type');
-      if (applicant) {
-        this.applicantType = JSON.parse(applicant);
-      }
-      //let request = localStorage.getItem('request-type');
-      if (request) {
-        this.requestType = JSON.parse(request);
-      }
-      this.getApplicantList();
-      this.requestForm.get('number_id')?.disable();
+      this.municipios = [];
     }
+  }
+
+  ngOnInit(): void {
+    this.getApplicantList();
   }
 
   constructor(
@@ -117,18 +136,18 @@ export class RequestFormComponent implements OnInit {
       {
         document_type: ['', Validators.required],
         number_id: ['', Validators.required],
-        name: ['', [Validators.required, Validators.pattern('^[^@#$%&]+$')]],
+        // name: ['', [Validators.required, Validators.pattern('^[^@#$%&]+$')]],
 
-        cellphone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-        email: [
-          '',
-          [
-            Validators.required,
-            Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'),
-          ],
-        ],
-        validator_email: ['', [Validators.required]],
-        mensage: ['', [Validators.required, Validators.maxLength(1000)]],
+        // cellphone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+        // email: [
+        //   '',
+        //   [
+        //     Validators.required,
+        //     Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'),
+        //   ],
+        // ],
+        // validator_email: ['', [Validators.required]],
+        // mensage: ['', [Validators.required, Validators.maxLength(1000)]],
       },
       { validator: this.emailMatcher }
     );
@@ -245,7 +264,7 @@ export class RequestFormComponent implements OnInit {
   }
 
   getApplicantList() {
-    this.userService.getFormById(this.requestType.form_id || 0).subscribe({
+    this.userService.getFormById(0).subscribe({
       next: (response: BodyResponse<any[]>): void => {
         if (response.code === 200) {
           this.documentList = response.data[0].catalog_source;
@@ -261,31 +280,7 @@ export class RequestFormComponent implements OnInit {
       },
     });
   }
-  // async setParameter(inputValue: RequestFormList) {
-  //   const mensaje = inputValue.request_description;
-  //   inputValue.count_attacments = this.getAplicant().length;
 
-  //   // Si es necesario adjuntar archivo y no hay aplicantes
-  //   if (this.getAplicant().length == 0) {
-  //     const adjuntarArchivo = await this.validarMensaje(mensaje);
-
-  //     if (adjuntarArchivo) {
-  //       const continuar = await this.showAdjuntarArchivoModal(); // Espera la acción del usuario en el modal
-  //       console.log(continuar);
-  //       if (!continuar) {
-  //         // Si el usuario canceló, no continuar con la creación de la solicitud
-  //         return;
-  //       } else {
-  //         this.continuarCreacionSolicitud(inputValue);
-  //       }
-  //     } else {
-  //       this.continuarCreacionSolicitud(inputValue);
-  //     }
-  //   } else {
-  //     // Continúa con la creación de la solicitud
-  //     this.continuarCreacionSolicitud(inputValue);
-  //   }
-  // }
   async setParameter(inputValue: RequestFormList) {
     inputValue.count_attacments = this.getAplicant().length;
 
@@ -407,60 +402,6 @@ export class RequestFormComponent implements OnInit {
     this.resolveModal(); // Resuelve la promesa, pero no continúa el proceso
   }
 
-  // setParameter(inputValue: RequestFormList) {
-  //   this.userService.createRequest(inputValue).subscribe({
-  //     next: (response: BodyResponse<number>) => {
-  //       if (response.code === 200) {
-  //         this.requestForm.reset();
-  //         this.fileNameList.clear();
-  //         if (this.getAplicant().length == 0) {
-  //           setTimeout(() => {
-  //             this.showAlertModal(response.data);
-  //           }, 1000);
-  //         } else {
-  //           this.attachApplicantFiles(response.data);
-  //         }
-  //       } else {
-  //         setTimeout(() => {
-  //           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-  //         }, 1000);
-  //       }
-  //     },
-  //     error: (err: any) => {
-  //       console.log(err);
-  //     },
-  //     complete: () => {
-  //       console.log('La suscripción ha sido completada post.');
-  //     },
-  //   });
-  // }
-  /*
-  async getPreSignedUrl(file: ApplicantAttachments, request_id: number) {
-    const payload = {
-      source_name: file['source_name'],
-      fileweight: file['fileweight'],
-      request_id: request_id,
-    };
-    this.userService.getUrlSigned(payload, 'applicant').subscribe({
-      next: (response: BodyResponse<string>): void => {
-        if (response.code === 200) {
-          this.preSignedUrl = response.data;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-        this.uploadToPresignedUrl(file);
-        return this.preSignedUrl;
-      },
-    });
-  }
-  */
-
   async getPreSignedUrl(file: ApplicantAttachments, request_id: number): Promise<string | void> {
     this.isSpinnerVisible = true;
     const payload = {
@@ -492,19 +433,6 @@ export class RequestFormComponent implements OnInit {
       });
     });
   }
-
-  /*
-  async uploadToPresignedUrl(file: ApplicantAttachments) {
-    const uploadResponse = await this.http
-      .put(this.preSignedUrl, file.file, {
-        headers: {
-          'Content-Type': 'application/png',
-        },
-        reportProgress: true,
-        observe: 'events',
-      })
-      .toPromise();
-  } */
 
   async uploadToPresignedUrl(file: ApplicantAttachments, request_id: number): Promise<void> {
     this.isSpinnerVisible = true;
@@ -693,7 +621,7 @@ export class RequestFormComponent implements OnInit {
       count_attacments: 0,
     };
 
-    this.setParameter(payload);
+    // this.setParameter(payload);
   }
   closeDialogAlert(value: boolean) {
     this.visibleDialogAlert = false;
@@ -750,14 +678,53 @@ export class RequestFormComponent implements OnInit {
     this.severity = 'danger';
   }
 
-  //Configuracion mensajes placeholder
-  /*
-  getPlaceholder(): string {
-    switch(this.applicantType.applicant_type_id) {
-      case 1:
-        return '*Descripción detallada de la solicitud';
-      default:
-        return '*Descripción detallada de la solicitud incluyendo los datos de las personas a cargo';
+  consultarEmpresa() {
+    const documentType = this.requestForm.controls['document_type'].value['catalog_item_id'];
+    const documento = this.requestForm.get('number_id')?.value;
+
+    // reemplazar por metodo que vaya por info de empreasas
+    this.userService.respuestaInfoAfiliacion(documento).subscribe(
+      response => {
+        if (response.statusCode === 200) {
+          const parsedBody = JSON.parse(response.body);
+          this.empresa = parsedBody;
+          console.log(parsedBody, 'info');
+          if (this.empresa) {
+            this.empresa.digitoVerificacion = parsedBody.data.nit;
+            this.empresa.razonSocial = parsedBody.data.razonSocial;
+            this.empresa.nombreComercial = parsedBody.data.nombreComercial;
+
+            this.empresa.email = parsedBody.data.razonSocial;
+            this.empresa.telefono = parsedBody.data.razonSocial;
+            this.empresa.actividadEconomica = parsedBody.data.razonSocial;
+            this.empresa.direccion = parsedBody.data.razonSocial;
+            this.existCompany = true;
+          }
+        }
+      },
+      (error: any) => {
+        console.error('Error al llamar al servicio:', error);
+      }
+    );
+  }
+
+  irASiguiente() {
+    if (this.currentSection === 1) {
+      this.sectionTitle = 'Datos Representante Legal';
+      this.currentSection = 2;
+    } else if (this.currentSection === 2) {
+      this.sectionTitle = 'Actividad Económica';
+      this.currentSection = 3;
     }
-  } */
+  }
+
+  irAAnterior() {
+    if (this.currentSection === 3) {
+      this.sectionTitle = 'Datos Representante Legal';
+      this.currentSection = 2;
+    } else if (this.currentSection === 2) {
+      this.sectionTitle = 'Datos Generales';
+      this.currentSection = 1;
+    }
+  }
 }

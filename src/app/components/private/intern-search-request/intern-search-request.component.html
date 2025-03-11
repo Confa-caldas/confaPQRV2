@@ -1,6 +1,6 @@
 <div class="row mb-2">
   <div class="col-10">
-    <div class="title-page">Consultar solicitudes</div>
+    <div class="title-page">Consultar solicitudes usuario interno</div>
   </div>
 </div>
 <form [formGroup]="formGroup">
@@ -35,14 +35,14 @@
             formControlName="doc_id" />
         </div>
         <div class="filters-col">
-          <input
-            pInputText
-            pKeyFilter="text"
-            class="filters-input"
-            placeholder="Nombre solicitante"
-            formControlName="applicant_name" />
+          <p-multiSelect
+            formControlName="area_name"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="requestAreaList"
+            optionLabel="area_name"
+            optionValue="area_name"
+            placeholder="Area que solicitada"></p-multiSelect>
         </div>
-
         <div class="filters-col">
           <p-dropdown
             formControlName="is_priority"
@@ -53,6 +53,7 @@
             placeholder="Es prioridad?"></p-dropdown>
         </div>
       </div>
+
       <div class="filters-row">
         <div class="filters-col">
           <p-multiSelect
@@ -65,6 +66,15 @@
         </div>
         <div class="filters-col">
           <p-multiSelect
+            formControlName="request_type_id"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="requestTypeList"
+            optionLabel="request_type_name"
+            optionValue="request_type_id"
+            placeholder="Tipo de Solicitud"></p-multiSelect>
+        </div>
+        <div class="filters-col">
+          <p-multiSelect
             formControlName="request_status_id"
             [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
             [options]="statusList"
@@ -74,22 +84,14 @@
         </div>
         <div class="filters-col">
           <p-multiSelect
-            formControlName="assigned_user"
+            formControlName="confa_user"
             [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
-            [options]="userList"
-            optionLabel="user_name_completed"
-            optionValue="user_name"
-            placeholder=" Responsable solicitud"></p-multiSelect>
+            [options]="requestUserList"
+            optionLabel="confa_user"
+            optionValue="confa_user"
+            placeholder="Usuario que lo creo"></p-multiSelect>
         </div>
-        <div class="filters-col">
-          <p-multiSelect
-            formControlName="request_type_id"
-            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
-            [options]="requestTypeList"
-            optionLabel="request_type_name"
-            optionValue="request_type_id"
-            placeholder="Tipo de Solicitud"></p-multiSelect>
-        </div>
+
         <div>
           <p-button
             icon="pi pi-trash"
@@ -156,7 +158,7 @@
         <th pSortableColumn="assigned_user" style="min-width: 15rem">
           Responsable<p-sortIcon field="assigned_user"></p-sortIcon>
         </th>
-        <th style="width: 10%"></th>
+        <!-- <th style="width: 10%"></th> -->
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-requestList>
@@ -187,18 +189,6 @@
           <div style="margin-left: 19px">{{ requestList.request_days }} día(s) hábiles</div>
         </td>
         <td>{{ requestList.user_name_completed }}</td>
-
-        <td>
-          <div *ngIf="requestList.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'">
-            <button class="custom-button" (click)="assignRequest(requestList)">
-              {{
-                requestList.assigned_user === null || requestList.assigned_user === ''
-                  ? 'Asignar'
-                  : 'Reasignar'
-              }}
-            </button>
-          </div>
-        </td>
       </tr>
     </ng-template>
   </p-table>
@@ -224,15 +214,6 @@
   [visible]="visibleDialog"
   [message]="message"
   (setRta)="closeDialog($event)"></app-modal-dinamic>
-
-<app-modal-assign-selector
-  *ngIf="visibleDialogInput"
-  [visible]="visibleDialogInput"
-  [message]="message"
-  [buttonmsg]="buttonmsg"
-  [parameter]="parameter"
-  (setRta)="closeDialogInput($event)"
-  (setRtaParameter)="setParameter($event)"></app-modal-assign-selector>
 
 <app-modal-alert
   *ngIf="visibleDialogAlert"

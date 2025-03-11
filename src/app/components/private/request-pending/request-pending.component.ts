@@ -14,7 +14,7 @@ import {
   RequestFormListPending,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
-import { Router, ActivatedRoute} from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -25,7 +25,7 @@ import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 @Component({
   selector: 'app-request-pending',
   templateUrl: './request-pending.component.html',
-  styleUrl: './request-pending.component.scss'
+  styleUrl: './request-pending.component.scss',
 })
 export class RequestPendingComponent implements OnInit {
   @ViewChild('archive_request') fileInput!: ElementRef;
@@ -89,8 +89,8 @@ export class RequestPendingComponent implements OnInit {
 
   ngOnInit(): void {
     this.token = this.route.snapshot.queryParamMap.get('token');
-    
-    console.log("TOKEN OBTENIDO", this.token);
+
+    console.log('TOKEN OBTENIDO', this.token);
 
     if (this.token) {
       this.validateToken(this.token);
@@ -130,7 +130,7 @@ export class RequestPendingComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
 
-    private route: ActivatedRoute,
+    private route: ActivatedRoute
     //private pendingRequestService: PendingRequestService
   ) {
     this.value = {
@@ -138,11 +138,9 @@ export class RequestPendingComponent implements OnInit {
       catalog_item_name: 'NIT',
       regex: '^[0-9]{0,9}$',
     };
-    this.requestForm = this.formBuilder.group(
-      {
-        mensage: ['', [Validators.required, Validators.maxLength(1000)]],
-      },
-    );
+    this.requestForm = this.formBuilder.group({
+      mensage: ['', [Validators.required, Validators.maxLength(1000)]],
+    });
 
     this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
       this.requestForm.get('number_id')?.setValidators([Validators.pattern(value.regex)]);
@@ -159,18 +157,18 @@ export class RequestPendingComponent implements OnInit {
     });
   }
 
-  validateToken(token: string){
+  validateToken(token: string) {
     const payload: Token = {
-          token: token,
-        };
+      token: token,
+    };
 
-    console.log("PAYLOAD: ", payload);
+    console.log('PAYLOAD: ', payload);
     this.userService.getRequestPendingByToken(payload).subscribe({
       next: (response): void => {
         console.log(response);
         if (response.code === 200) {
           this.pendingRequest = response.data;
-          console.log("DATOS PENDING", this.pendingRequest);
+          console.log('DATOS PENDING', this.pendingRequest);
         } else {
           this.mostrarPopup = true; // Mostrar pop-up si el token no es válido
           //this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -334,7 +332,7 @@ export class RequestPendingComponent implements OnInit {
 
   continuarCreacionSolicitud(inputValue: RequestFormListPending) {
     //this.userService.createRequest(inputValue).subscribe({
-    this.userService.answerRequestPending(inputValue).subscribe({              
+    this.userService.answerRequestPending(inputValue).subscribe({
       next: (response: BodyResponse<number>) => {
         if (response.code === 200) {
           //this.requestForm.reset();
@@ -344,13 +342,12 @@ export class RequestPendingComponent implements OnInit {
               this.showAlertModal(response.data);
             }, 1000);
           } else {
-            console.log("ENTRO PARA SUBIR ARCHIVOS");
+            console.log('ENTRO PARA SUBIR ARCHIVOS');
             this.attachApplicantFiles(response.data);
           }
 
           // Actualiza el registro cuando la operación sea exitosa
           this.actualizarLogProceso(response.data);
-
         } else {
           setTimeout(() => {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -366,7 +363,7 @@ export class RequestPendingComponent implements OnInit {
     });
   }
 
-  actualizarLogProceso (request_id: number){
+  actualizarLogProceso(request_id: number) {
     const transactionId = localStorage.getItem('id-transaction');
 
     if (!transactionId) {
@@ -377,7 +374,7 @@ export class RequestPendingComponent implements OnInit {
     const payload: ProcessRequest = {
       operation: 'update',
       transaction_id: transactionId,
-      status: "Finalizado",
+      status: 'Finalizado',
       request_id: request_id,
       validation_attachemens: this.useIaAttach,
     };
@@ -386,18 +383,18 @@ export class RequestPendingComponent implements OnInit {
 
     this.userService.registerProcessRequest(payload).subscribe({
       next: (response: BodyResponse<string>) => {
-        if (response.code === 200){
+        if (response.code === 200) {
           localStorage.removeItem('id-transaction');
           console.log('Actualizacion exitoso en log de proceso de solicitud');
           console.log('ID de transacción eliminado del LocalStorage.');
-        }else{
+        } else {
           console.log('Error actualizando en log de proceso de solicitud');
         }
       },
-      error: (err) => {
+      error: err => {
         console.error('Error consumiendo el servicio de registro request:', err);
       },
-    })
+    });
   }
 
   showAdjuntarArchivoModal(): Promise<boolean> {
@@ -433,7 +430,7 @@ export class RequestPendingComponent implements OnInit {
   }
 
   async getPreSignedUrl(file: ApplicantAttachments, request_id: number): Promise<string | void> {
-    console.log("ESCRIBIR EN BD ARCHIVOS");
+    console.log('ESCRIBIR EN BD ARCHIVOS');
     this.isSpinnerVisible = true;
     const payload = {
       // Ajuste para eliminar lo puntos o caracteres especiales en los nombres de los adjuntos
@@ -443,7 +440,7 @@ export class RequestPendingComponent implements OnInit {
     };
 
     return new Promise((resolve, reject) => {
-      console.log("CARGANDO A S3");
+      console.log('CARGANDO A S3');
       this.userService.getUrlSigned(payload, 'pending_ext').subscribe({
         next: (response: BodyResponse<string>): void => {
           if (response.code === 200) {
@@ -750,6 +747,4 @@ export class RequestPendingComponent implements OnInit {
         return '*Descripción detallada de la solicitud incluyendo los datos de las personas a cargo';
     }
   } */
-
 }
-

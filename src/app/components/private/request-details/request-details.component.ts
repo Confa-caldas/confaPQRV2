@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
 import {
@@ -162,6 +162,14 @@ export class RequestDetailsComponent implements OnInit {
 
   historyData: Array<any> = [];
   isInitialized = false;
+  isInitializedView = false;
+  ultimaRespuestaGuardada: string = '';
+  private cancelAutoSave = false;
+
+  //utilitarios cuando no es cerrada
+  itemsGenerals: MenuModule[] | undefined;
+  isVisibleSolicitudPrioridad = false;
+  esPrioridadForm: FormGroup;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -186,6 +194,10 @@ export class RequestDetailsComponent implements OnInit {
     this.envioMasivoForm = this.fb.group({
       message: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
+    });
+
+    this.esPrioridadForm = this.fb.group({
+      message: ['', Validators.required],
     });
   }
 
@@ -240,19 +252,51 @@ export class RequestDetailsComponent implements OnInit {
       },
     ];
 
+    this.itemsGenerals = [
+      {
+        items: [
+          {
+            label: 'Priorizar',
+            icon: 'pi pi-exclamation-triangle',
+            command: () => this.sendPriority(),
+          },
+        ],
+      },
+    ];
+
     // // guardado automatico de respuesta cada 5 seg
     // this.requestProcess
     //   .get('mensage')
-    //   ?.valueChanges.pipe(
-    //     debounceTime(8000),
-    //     distinctUntilChanged() // Evita ejecutar si el valor es el mismo
-    //   )
+    //   ?.valueChanges.pipe(debounceTime(8000), distinctUntilChanged())
     //   .subscribe(() => {
-    //     if (this.isInitialized) {
-    //       this.borradorRespuesta(this.request_id);
+    //     if (this.cancelAutoSave) return; // Evita el guardado si cambia de página
+
+    //     const mensajeActual = this.requestProcess.get('mensage')?.value || '';
+    //     if (mensajeActual !== '') {
+    //       if (mensajeActual !== this.respuestaTemp) {
+    //         if (this.isInitialized && !this.isInitializedView) {
+    //           this.borradorRespuesta(this.request_id);
+    //         }
+    //       }
+    //     }
+    //     this.isInitialized = true; // Marcar como inicializado después del primer cambio
+    //   });
+
+    // this.router.events.subscribe(event => {
+    //   if (event instanceof NavigationStart) {
+    //     this.cancelAutoSave = true; // Marcar para cancelar el guardado de 8s
+
+    //     const mensajeActual = this.requestProcess.get('mensage')?.value || '';
+    //     if (mensajeActual !== '') {
+    //       if (mensajeActual !== this.respuestaTemp) {
+    //         if (this.isInitialized && !this.isInitializedView) {
+    //           this.borradorRespuesta(this.request_id);
+    //         }
+    //       }
     //     }
     //     this.isInitialized = true;
-    //   });
+    //   }
+    // });
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
@@ -694,9 +738,13 @@ export class RequestDetailsComponent implements OnInit {
     const payloadAnswer: answerRequest = {
       request_id: this.request_id,
       request_status: 4,
-      request_answer: this.requestProcess.get('mensage')?.value,
+      request_answer:
+        this.requestProcess.get('mensage')?.value +
+        ' \n \nCordialmente, ' +
+        this.requestDetails?.user_name_completed,
       assigned_attachments: null,
     };
+
     this.userService.answerRequest(payloadAnswer).subscribe({
       next: (response: BodyResponse<string>) => {
         if (response.code === 200) {
@@ -1090,10 +1138,11 @@ export class RequestDetailsComponent implements OnInit {
           let respuestaPredefinida = parsedBody.respuestaPredefinida || 'Respuesta no disponible';
 
           // Reemplazar los asteriscos por el nombre del usuario
-          if (this.requestDetails && this.requestDetails.user_name_completed) {
-            const userName = this.requestDetails.user_name_completed;
-            respuestaPredefinida = respuestaPredefinida.replace(/\*+ */g, userName);
-          }
+          // if (this.requestDetails && this.requestDetails.user_name_completed) {
+          //   const userName = this.requestDetails.user_name_completed;
+
+          //   respuestaPredefinida = respuestaPredefinida.replace(/\*+ */g, userName);
+          // }
 
           // Asignar estos valores a variables locales o a propiedades del componente
           this.categoria = categoria;
@@ -1114,11 +1163,9 @@ export class RequestDetailsComponent implements OnInit {
   confirmarRespuesta() {
     // Reemplaza los asteriscos en la respuesta con el nombre del usuario
     const userName = this.requestDetails?.user_name_completed || '';
-    const respuestaConNombre =
-      'Hola, buen día!\n \n' +
-      this.respuestaPredefinida +
-      ' \n \nCordialmente, ' +
-      this.requestDetails?.user_name_completed;
+    const respuestaConNombre = 'Hola, buen día!\n \n' + this.respuestaPredefinida;
+    // ' \n \nCordialmente, ' +
+    // this.requestDetails?.user_name_completed;
 
     // Establece el valor del textarea en el formulario
     this.requestProcess.get('mensage')?.setValue(respuestaConNombre);
@@ -1382,8 +1429,6 @@ export class RequestDetailsComponent implements OnInit {
         console.log(err);
       },
       complete: () => {
-        console.log('La suscripción ha sido completada.');
-        console.log(this.respuestaTemp);
         return this.respuestaTemp;
       },
     });
@@ -1714,6 +1759,59 @@ export class RequestDetailsComponent implements OnInit {
       },
       complete: () => {
         console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  // Proceso para guardar automaticamente respuesta cuando cambia de pestaña
+  // onTabChange(event: any) {
+  //   const mensajeActual = this.requestProcess.get('mensage')?.value;
+  //   this.cancelAutoSave = false;
+
+  //   if (mensajeActual !== '') {
+  //     // Verifica si el mensaje cambió antes de guardar
+  //     if (mensajeActual && mensajeActual !== this.ultimaRespuestaGuardada) {
+  //       if (this.isInitialized) {
+  //         this.borradorRespuesta(this.request_id);
+  //         this.ultimaRespuestaGuardada = mensajeActual; // Actualiza el valor guardado
+  //         this.isInitializedView = true;
+  //       }
+  //     }
+  //   }
+  //   this.isInitialized = true;
+  // }
+
+  //Metodos para darle prioridad a un radicado
+  sendPriority() {
+    this.isVisibleSolicitudPrioridad = true;
+  }
+
+  closeDialogPriority(): void {
+    this.isVisibleSolicitudPrioridad = false;
+    this.esPrioridadForm.reset();
+  }
+
+  onSubmitPriority(): void {
+    const payload: RequestAnswerTemp = {
+      request_id: this.requestDetails?.filing_number || 0,
+      mensaje_temp: this.esPrioridadForm.get('message')?.value,
+    };
+
+    this.userService.getRequestPriority(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.isVisibleSolicitudPrioridad = false;
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.error('Error en la solicitud:', err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        this.closeDialogenvioCorreoMasivo();
       },
     });
   }

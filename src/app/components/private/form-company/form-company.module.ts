@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RequestPendingComponent } from './request-pending.component';
-import { RequestPendingRoutingModule } from './request-pending-routing.module';
+import { FormCompanyComponent } from './form-company.component';
+import { FormCompanyRoutingModule } from './form-company-routing.module';
 import { CardModule } from 'primeng/card';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
@@ -18,11 +18,11 @@ import { DialogModule } from 'primeng/dialog';
 import { ProgressBarModule } from 'primeng/progressbar';
 
 @NgModule({
-  declarations: [RequestPendingComponent],
-  exports: [RequestPendingComponent],
+  declarations: [FormCompanyComponent],
+  exports: [FormCompanyComponent],
   imports: [
     CommonModule,
-    RequestPendingRoutingModule,
+    FormCompanyRoutingModule,
     CardModule,
     DropdownModule,
     InputTextModule,
@@ -40,4 +40,4 @@ import { ProgressBarModule } from 'primeng/progressbar';
     ProgressBarModule,
   ],
 })
-export class RequestPendingModule {}
+export class FormCompanygModule {}
