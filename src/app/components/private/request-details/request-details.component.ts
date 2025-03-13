@@ -752,7 +752,8 @@ export class RequestDetailsComponent implements OnInit {
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
             this.router.navigate([RoutesApp.PROCESS_REQUEST]);
           } else {
-            this.attachAssignedFiles();
+            //this.attachAssignedFiles();
+            this.uploadAllFiles();
             this.router.navigate([RoutesApp.PROCESS_REQUEST]);
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
           }
@@ -771,6 +772,8 @@ export class RequestDetailsComponent implements OnInit {
       },
     });
   }
+
+  /*
   async getPreSignedUrl(file: ApplicantAttachments) {
     const payload = {
       //source_name: file['source_name'],
@@ -795,6 +798,43 @@ export class RequestDetailsComponent implements OnInit {
         return this.preSignedUrl;
       },
     });
+  } */
+
+  //MEJORA 2025
+  async getPreSignedUrl(file: ApplicantAttachments): Promise<string> {
+    const payload = {
+      source_name: file.source_name.replace(/(?!\.[^.]+$)\./g, '_'), // Evitar caracteres conflictivos
+      fileweight: file.fileweight,
+      content_type: file.file?.type || 'application/octet-stream',
+      request_id: this.request_id,
+    };
+
+    const MAX_RETRIES = 3;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+      try {
+        const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'assigned'));
+
+        if (response.code === 200 && response.data) {
+          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          //file.preSignedUrl = response.data;
+          //this.uploadToPresignedUrl(file);
+        } else {
+          console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
+        }
+      } catch (error) {
+        console.error(
+          `Intento ${attempts + 1}: Falló la solicitud para obtener la URL prefirmada`,
+          error
+        );
+      }
+
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2s antes de reintentar
+    }
+
+    throw new Error('No se pudo obtener la URL prefirmada después de múltiples intentos');
   }
 
   //ESCRIBE EN LA TABLA DE PENDIENTES PENDING
@@ -843,8 +883,6 @@ export class RequestDetailsComponent implements OnInit {
 
         if (response.code === 200 && response.data) {
           return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
-          //file.preSignedUrl = response.data;
-          //this.uploadToPresignedUrl(file);
         } else {
           console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
         }
@@ -940,12 +978,30 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
+  /*
   async attachAssignedFiles() {
     await Promise.all(
       this.arrayAssignedAttachment.map(async item => {
         await this.getPreSignedUrl(item);
       })
     );
+  } */
+
+  async attachAssignedFiles() {
+    await Promise.all(
+      this.arrayAssignedAttachment.map(async item => {
+        item.preSignedUrl = await this.getPreSignedUrl(item);
+      })
+    );
+  }
+
+  async uploadAllFiles() {
+    await this.attachAssignedFiles(); // Espera que se obtengan todas las URLs
+
+    // Subimos los archivos
+    for (const file of this.arrayAssignedAttachment) {
+      await this.uploadToPresignedUrl(file);
+    }
   }
 
   /*
@@ -965,7 +1021,7 @@ export class RequestDetailsComponent implements OnInit {
     );
   }
 
-  async uploadAllFiles() {
+  async uploadAllFilesPending() {
     await this.attachAssignedFilesPending(); // Espera que se obtengan todas las URLs
 
     // Subimos los archivos
@@ -1671,7 +1727,7 @@ export class RequestDetailsComponent implements OnInit {
               this.ngOnInit();
             } else {
               //this.attachAssignedFilesPending();
-              this.uploadAllFiles();
+              this.uploadAllFilesPending();
               this.router.navigate([RoutesApp.PROCESS_REQUEST]);
               this.ngOnInit();
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
