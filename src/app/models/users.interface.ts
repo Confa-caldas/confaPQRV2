@@ -198,6 +198,7 @@ export interface ApplicantAttachments {
   source_name: string;
   fileweight: string;
   file?: File;
+  preSignedUrl?: string;
 }
 export interface AssociationApplicantRequestList {
   applicant_requests_type_id: number;

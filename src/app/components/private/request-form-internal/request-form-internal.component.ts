@@ -16,7 +16,7 @@ import { RoutesApp } from '../../../enums/routes.enum';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { HttpEventType, HttpResponse, HttpErrorResponse } from '@angular/common/http';
-import { throwError, retry } from 'rxjs';
+import { throwError, retry, lastValueFrom, firstValueFrom } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { ChangeDetectorRef } from '@angular/core';
 import { CheckboxChangeEvent } from 'primeng/checkbox';
@@ -227,9 +227,9 @@ export class RequestFormInternalComponent implements OnInit {
           this.requestForm.get('cellphone')?.reset();
           this.requestForm.get('cellphone')?.clearValidators();
         } else if (tipo === 'correo') {
-          this.requestForm.get('email')?.reset();
+          //this.requestForm.get('email')?.reset();
           this.requestForm.get('email')?.clearValidators();
-          this.requestForm.get('validator_email')?.reset();
+          //this.requestForm.get('validator_email')?.reset();
           this.requestForm.get('validator_email')?.clearValidators();
         }
       }
@@ -577,6 +577,7 @@ export class RequestFormInternalComponent implements OnInit {
   }
   */
 
+  /*
   async getPreSignedUrl(file: ApplicantAttachments, request_id: number): Promise<string | void> {
     this.isSpinnerVisible = true;
     const payload = {
@@ -607,6 +608,40 @@ export class RequestFormInternalComponent implements OnInit {
         },
       });
     });
+  } */
+
+  //MEJORA 2025
+  async getPreSignedUrl(file: ApplicantAttachments, request_id: number): Promise<string> {
+    this.isSpinnerVisible = true;
+
+    const payload = {
+        source_name: file.source_name.replace(/(?!\.[^.]+$)\./g, '_'), // Evitar caracteres conflictivos
+        fileweight: file.fileweight,
+        request_id: request_id,
+        content_type: file.file?.type || 'application/octet-stream'
+    };
+
+    const MAX_RETRIES = 3;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+      try {
+          const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'applicant'));
+
+          if (response.code === 200 && response.data) {
+              return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          } else {
+              console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
+          }
+      } catch (error) {
+          console.error(`Intento ${attempts + 1}: Falló la solicitud para obtener la URL prefirmada`, error);
+      }
+
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2s antes de reintentar
+    }
+
+    throw new Error('No se pudo obtener la URL prefirmada después de múltiples intentos');
   }
 
   /*
@@ -622,6 +657,7 @@ export class RequestFormInternalComponent implements OnInit {
       .toPromise();
   } */
 
+  /*
   async uploadToPresignedUrl(file: ApplicantAttachments, request_id: number): Promise<void> {
     this.isSpinnerVisible = true;
     if (file && file.file) {
@@ -685,6 +721,73 @@ export class RequestFormInternalComponent implements OnInit {
       }
     } else {
       console.error('El archivo no es válido o está undefined.');
+    }
+  } */
+
+  //MEJORA 2025
+  async uploadToPresignedUrl(file: ApplicantAttachments, request_id: number): Promise<void> {
+    this.isSpinnerVisible = true;
+
+    if (!file || !file.file) {
+        console.error('El archivo no es válido o está undefined.');
+        return;
+    }
+
+    if (!file.preSignedUrl) {
+        console.error(`No se encontró una URL prefirmada para el archivo: ${file.source_name}`);
+        return;
+    }
+
+    try {
+        const contentType = file.file?.type || 'application/octet-stream'; // Detectar MIME type
+        console.log("CONTENT-TYPE", contentType);
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY_MS = 2000;
+
+        console.log('Subiendo archivo:', file.file.name);
+        console.log('Usando URL prefirmada:', file.preSignedUrl);
+
+        const upload$ = this.http
+            .put(file.preSignedUrl, file.file, {
+                headers: { 'Content-Type': contentType },
+                reportProgress: true,
+                observe: 'events',
+            })
+            .pipe(
+                retryWhen(errors =>
+                    errors.pipe(
+                        tap((error: HttpErrorResponse) => {
+                            const errorDetails = {
+                                status: error.status,
+                                statusText: error.statusText,
+                                message: error.message,
+                                url: error.url,
+                            };
+                            console.error(`Intento fallido (${error.status}):`, errorDetails);
+
+                            // Solo reintentar en errores temporales
+                            if (![500, 502, 503, 504, 429].includes(error.status)) {
+                                throw error; // Detener reintentos en errores definitivos
+                            }
+
+                            this.handleUploadFailure(file, request_id, errorDetails);
+                        }),
+                        delay(RETRY_DELAY_MS),
+                        take(MAX_RETRIES),
+                        catchError(err => {
+                            console.error('Error después de múltiples intentos:', err);
+                            return throwError(() => err);
+                        })
+                    )
+                )
+            );
+
+        await lastValueFrom(upload$);
+        console.log(`Archivo ${file.file.name} subido correctamente.`);
+    } catch (error) {
+        console.error('Falló la subida del archivo:', error);
+    } finally {
+        this.isSpinnerVisible = false;
     }
   }
 
@@ -770,6 +873,7 @@ export class RequestFormInternalComponent implements OnInit {
   } */
 
   //MEJORA SPINNER CON %
+  /*
   async attachApplicantFiles(request_id: number) {
     this.isSpinnerVisible = true;
     this.hasPendingChanges = true;
@@ -822,8 +926,111 @@ export class RequestFormInternalComponent implements OnInit {
             this.uploadProgress = 0; // Reiniciar el progreso
         }, 500);
     }
+} */
+
+  //MEJORA 2025 SUBIDA
+async attachApplicantFiles(request_id: number) {
+  this.isSpinnerVisible = true;
+  this.hasPendingChanges = true;
+  this.uploadProgress = 0;
+
+  try {
+      if (!this.arrayApplicantAttachment || this.arrayApplicantAttachment.length === 0) {
+          console.warn('No hay archivos para subir.');
+          return;
+      }
+
+      const ruta_archivo_ws = environment.ruta_archivos_ws;
+      const totalFiles = this.arrayApplicantAttachment.length;
+      let uploadedFiles = 0;
+
+      // Paso 1: Enviar archivos al servidor (base de datos)
+      const estructura = {
+          idSolicitud: `${request_id}`,
+          archivos: this.arrayApplicantAttachment.map(file => ({
+              base64file: file.base64file,
+              source_name: file.source_name,
+              fileweight: file.fileweight,
+          })),
+      };
+
+      try {
+        await this.envioArchivosServer(ruta_archivo_ws, estructura);
+      } catch (error) {
+        console.error("Error al enviar archivos:", error);
+        // Aquí puedes mostrar un mensaje de error en la UI
+      }
+
+      //await this.envioArchivosServer(ruta_archivo_ws, estructura);
+
+      // Paso 2: Obtener URL prefirmadas y subir archivos
+      for (const item of this.arrayApplicantAttachment) {
+          try {
+              // Obtener URL prefirmada con reintentos
+              const preSignedUrl = await this.retry(
+                  () => this.getPreSignedUrl(item, request_id),
+                  1, // Intentos
+                  2000 // Retraso entre intentos
+              );
+
+              if (!preSignedUrl) {
+                  console.error(`No se pudo obtener la URL prefirmada para: ${item.source_name}`);
+                  continue; // No seguir con la subida si no hay URL
+              }
+
+              // Asignar la URL al archivo
+              item.preSignedUrl = preSignedUrl;
+
+              // Subir el archivo con reintentos
+              await this.retry(
+                  () => this.uploadToPresignedUrl(item, request_id), //Aquí se pasa la URL
+                  3, // Intentos
+                  3000 // Retraso entre intentos
+              );
+
+              uploadedFiles++;
+              this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+              this.changeDetectorRef.detectChanges();
+
+          } catch (error) {
+              console.error(`Error al procesar el archivo ${item.source_name}:`, error);
+          }
+      }
+
+      this.uploadProgress = 100;
+      this.changeDetectorRef.detectChanges();
+
+      // Restablecer formulario y mostrar mensaje de éxito
+      this.requestForm.reset();
+      this.fileNameList.clear();
+      this.showAlertModal(request_id);
+
+  } catch (error) {
+      console.error('Error durante el proceso de carga:', error);
+      this.showAlertModalError(request_id);
+  } finally {
+      setTimeout(() => {
+          this.isSpinnerVisible = false;
+          this.hasPendingChanges = false;
+          this.uploadProgress = 0;
+      }, 500);
+  }
 }
 
+async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): Promise<T> {
+  let attempt = 0;
+  while (attempt < retries) {
+      try {
+          return await operation();
+      } catch (error) {
+          attempt++;
+          console.warn(`Intento ${attempt} fallido. Reintentando en ${delayMs}ms...`);
+          if (attempt === retries) throw error;
+          await new Promise(res => setTimeout(res, delayMs));
+      }
+  }
+  throw new Error('Todos los intentos fallaron');
+}
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any): void {
@@ -846,23 +1053,23 @@ export class RequestFormInternalComponent implements OnInit {
     }
   } */
 
-    async envioArchivosServer(ruta_archivo_ws: string, estructura: any) {
-      try {
-          const archivos = estructura.archivos;
-          const totalArchivos = archivos.length;
-  
-          for (let i = 0; i < totalArchivos; i++) {
-              const archivo = archivos[i];
-  
-              // Subir cada archivo de manera individual
-              await this.http.post(ruta_archivo_ws, { ...estructura, archivos: [archivo] }).toPromise();
-  
-              this.uploadProgress = Math.round(((i + 1) / totalArchivos) * 50);
-              this.changeDetectorRef.detectChanges(); // Forzar actualización de la UI
-          }
-      } catch (error) {
-          console.error('Error al subir archivos:', error);
-      }
+  async envioArchivosServer(ruta_archivo_ws: string, estructura: any) {
+    try {
+        const archivos = estructura.archivos;
+        const totalArchivos = archivos.length;
+
+        for (let i = 0; i < totalArchivos; i++) {
+            const archivo = archivos[i];
+
+            // Subir cada archivo de manera individual
+            await this.http.post(ruta_archivo_ws, { ...estructura, archivos: [archivo] }).toPromise();
+
+            this.uploadProgress = Math.round(((i + 1) / totalArchivos) * 50);
+            this.changeDetectorRef.detectChanges(); // Forzar actualización de la UI
+        }
+    } catch (error) {
+        console.error('Error al subir archivos:', error);
+    }
   }
 
 

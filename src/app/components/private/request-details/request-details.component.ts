@@ -28,20 +28,10 @@ import { HttpClient } from '@angular/common/http';
 import { PaginatorState } from 'primeng/paginator';
 import { v4 as uuidv4 } from 'uuid';
 //Esto es nuevo
-import { Observable } from 'rxjs';
 import { MenuModule } from 'primeng/menu';
-import { ButtonModule } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
-import { Timeline } from 'primeng/timeline';
-import { catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
-
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-// import { Util } from '../../../utils/utils';
-// import * as pdfMake from 'pdfmake/build/pdfmake';
-// import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-
-// pdfMake.vfs = pdfFonts.pdfMake.vfs;
+import { of, lastValueFrom, firstValueFrom, throwError } from 'rxjs';
+import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-request-details',
@@ -808,6 +798,7 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   //ESCRIBE EN LA TABLA DE PENDIENTES PENDING
+  /*
   async getPreSignedUrlPending(file: ApplicantAttachments) {
     const payload = {
       //source_name: file['source_name'],
@@ -832,8 +823,46 @@ export class RequestDetailsComponent implements OnInit {
         return this.preSignedUrl;
       },
     });
+  } */
+
+  //MEJORA 2025
+  async getPreSignedUrlPending(file: ApplicantAttachments): Promise<string> {
+    const payload = {
+      source_name: file.source_name.replace(/(?!\.[^.]+$)\./g, '_'), // Evitar caracteres conflictivos
+      fileweight: file.fileweight,
+      content_type: file.file?.type || 'application/octet-stream',
+      request_id: this.request_id,
+    };
+
+    const MAX_RETRIES = 3;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+      try {
+        const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'pending'));
+
+        if (response.code === 200 && response.data) {
+          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          //file.preSignedUrl = response.data;
+          //this.uploadToPresignedUrl(file);
+        } else {
+          console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
+        }
+      } catch (error) {
+        console.error(
+          `Intento ${attempts + 1}: Falló la solicitud para obtener la URL prefirmada`,
+          error
+        );
+      }
+
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2s antes de reintentar
+    }
+
+    throw new Error('No se pudo obtener la URL prefirmada después de múltiples intentos');
   }
 
+  /*
   async uploadToPresignedUrl(file: ApplicantAttachments) {
     const uploadResponse = await this.http
       .put(this.preSignedUrl, file.file, {
@@ -844,6 +873,71 @@ export class RequestDetailsComponent implements OnInit {
         observe: 'events',
       })
       .toPromise();
+  } */
+
+  //MEJORA 2025
+  async uploadToPresignedUrl(file: ApplicantAttachments): Promise<void> {
+    //this.isSpinnerVisible = true;
+
+    if (!file || !file.file) {
+      console.error('El archivo no es válido o está undefined.');
+      return;
+    }
+
+    if (!file.preSignedUrl) {
+      console.error(`No se encontró una URL prefirmada para el archivo: ${file.source_name}`);
+      return;
+    }
+
+    try {
+      const contentType = file.file?.type || 'application/octet-stream'; // Detectar MIME type
+      console.log('CONTENT-TYPE', contentType);
+      const MAX_RETRIES = 3;
+      const RETRY_DELAY_MS = 2000;
+
+      console.log('Subiendo archivo:', file.file.name);
+      console.log('Usando URL prefirmada:', file.preSignedUrl);
+
+      const upload$ = this.http
+        .put(file.preSignedUrl, file.file, {
+          headers: { 'Content-Type': contentType },
+          reportProgress: true,
+          observe: 'events',
+        })
+        .pipe(
+          retryWhen(errors =>
+            errors.pipe(
+              tap((error: HttpErrorResponse) => {
+                const errorDetails = {
+                  status: error.status,
+                  statusText: error.statusText,
+                  message: error.message,
+                  url: error.url,
+                };
+                console.error(`Intento fallido (${error.status}):`, errorDetails);
+
+                // Solo reintentar en errores temporales
+                if (![500, 502, 503, 504, 429].includes(error.status)) {
+                  throw error; // Detener reintentos en errores definitivos
+                }
+              }),
+              delay(RETRY_DELAY_MS),
+              take(MAX_RETRIES),
+              catchError(err => {
+                console.error('Error después de múltiples intentos:', err);
+                return throwError(() => err);
+              })
+            )
+          )
+        );
+
+      await lastValueFrom(upload$);
+      console.log(`Archivo ${file.file.name} subido correctamente.`);
+    } catch (error) {
+      console.error('Falló la subida del archivo:', error);
+    } finally {
+      //this.isSpinnerVisible = false;
+    }
   }
 
   async attachAssignedFiles() {
@@ -854,12 +948,30 @@ export class RequestDetailsComponent implements OnInit {
     );
   }
 
+  /*
   async attachAssignedFilesPending() {
     await Promise.all(
       this.arrayAssignedAttachmentPending.map(async item => {
         await this.getPreSignedUrlPending(item);
       })
     );
+  } */
+
+  async attachAssignedFilesPending() {
+    await Promise.all(
+      this.arrayAssignedAttachmentPending.map(async item => {
+        item.preSignedUrl = await this.getPreSignedUrlPending(item);
+      })
+    );
+  }
+
+  async uploadAllFiles() {
+    await this.attachAssignedFilesPending(); // Espera que se obtengan todas las URLs
+
+    // Subimos los archivos
+    for (const file of this.arrayAssignedAttachmentPending) {
+      await this.uploadToPresignedUrl(file);
+    }
   }
   ///////////////////////////////////////////////////////////////////////////////
 
@@ -1276,31 +1388,34 @@ export class RequestDetailsComponent implements OnInit {
     });
   } */
 
-    correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
-      const respuestaForm = this.requestProcess.get('mensage')?.value;
-      console.log(respuestaForm);
-    
-      this.userService.correccionIaWs(respuestaForm).pipe(
+  correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
+    const respuestaForm = this.requestProcess.get('mensage')?.value;
+    console.log(respuestaForm);
+
+    this.userService
+      .correccionIaWs(respuestaForm)
+      .pipe(
         catchError(error => {
           console.error('Error en el servicio de corrección:', error);
           this.characterizeRequest(requestDetails); // Se ejecuta en caso de error
           return of(null); // Retorna un observable vacío para evitar la interrupción
         })
-      ).subscribe(response => {
+      )
+      .subscribe(response => {
         if (response?.statusCode === 200) {
           try {
             const parsedBody = JSON.parse(response.body);
             const respuesta = JSON.parse(parsedBody.respuesta) || 'Respuesta no disponible';
-    
+
             this.respuestaCorregida = respuesta.texto_corregido;
             this.palabrasError = respuesta.palabras_con_errores;
             this.respuestaSolicitud = respuestaForm;
             this.errores = respuesta.errores_encontrados;
-    
+
             console.log(this.respuestaCorregida);
             console.log(this.palabrasError);
             console.log(this.errores);
-    
+
             if (this.errores) {
               this.visibleCorreccionIaEnviar = true;
               this.informative = true;
@@ -1316,8 +1431,7 @@ export class RequestDetailsComponent implements OnInit {
           this.characterizeRequest(requestDetails); // Se ejecuta si la respuesta no es 200
         }
       });
-    }
-    
+  }
 
   confirmarCorreccion() {
     console.log(this.respuestaCorregida);
@@ -1546,7 +1660,7 @@ export class RequestDetailsComponent implements OnInit {
         previus_state: this.requestDetails?.status_name,
       };
 
-      console.log(payload);
+      //console.log(payload);
 
       this.userService.registerPendingRequest(payload).subscribe({
         next: (response: BodyResponse<string>) => {
@@ -1556,7 +1670,8 @@ export class RequestDetailsComponent implements OnInit {
               this.router.navigate([RoutesApp.PROCESS_REQUEST]);
               this.ngOnInit();
             } else {
-              this.attachAssignedFilesPending();
+              //this.attachAssignedFilesPending();
+              this.uploadAllFiles();
               this.router.navigate([RoutesApp.PROCESS_REQUEST]);
               this.ngOnInit();
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
