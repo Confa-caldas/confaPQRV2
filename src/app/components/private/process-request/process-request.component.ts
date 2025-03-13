@@ -79,6 +79,7 @@ export class ProcessRequestComponent implements OnInit {
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
       request_status_id: new FormControl(null),
+      is_priority: new FormControl(null),
     });
     this.filterFormAssigned = new FormGroup({
       dates_range: new FormControl(null),
@@ -212,6 +213,8 @@ export class ProcessRequestComponent implements OnInit {
       request_type_id: this.filterForm.controls['request_type_id'].value || null,
       assigned_user: this.filterForm.controls['assigned_user'].value || null,
       status_id: this.filterForm.controls['request_status_id'].value || null,
+      is_priority: this.filterForm.controls['is_priority'].value || null,
+
       page: this.page,
       page_size: this.rows,
     };

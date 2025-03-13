@@ -31,7 +31,7 @@ import { TooltipModule } from 'primeng/tooltip';
     TabViewModule,
     ReactiveFormsModule,
     CalendarModule,
-    TooltipModule
+    TooltipModule,
   ],
   exports: [ProcessRequestComponent],
 })

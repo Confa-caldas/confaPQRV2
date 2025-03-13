@@ -271,6 +271,7 @@ export class InternSearchRequestComponent implements OnInit {
       page: this.page,
       page_size: this.rows,
     };
+
     this.getRequestListByFilterIntern(payload);
   }
   convertDates(dateString: string) {
