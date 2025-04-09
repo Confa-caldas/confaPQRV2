@@ -214,11 +214,15 @@
 .button-container {
   position: relative;
   display: flex;
-  justify-content: center; /* Centrar el botón horizontalmente */
-  align-items: center; /* Centrar el botón verticalmente */
+  justify-content: center;
+  /* Centrar el botón horizontalmente */
+  align-items: center;
+  /* Centrar el botón verticalmente */
   width: 100%;
-  height: auto; /* Ajustar la altura automáticamente */
-  overflow: hidden; /* Evitar desbordamiento */
+  height: auto;
+  /* Ajustar la altura automáticamente */
+  overflow: hidden;
+  /* Evitar desbordamiento */
 }
 
 .container-principal {
@@ -258,8 +262,10 @@
 
 ::ng-deep .p-dropdown-panel {
   width: auto !important;
-  max-width: auto !important; /* Ajusta este valor según sea necesario */
-  overflow-x: hidden !important; /* Evita el desplazamiento horizontal */
+  max-width: auto !important;
+  /* Ajusta este valor según sea necesario */
+  overflow-x: hidden !important;
+  /* Evita el desplazamiento horizontal */
   max-height: 500px;
   overflow-y: auto;
   border-radius: 16px;
@@ -276,7 +282,8 @@
   }
 
   .card-form {
-    width: 40%; /* Ajusta según sea necesario */
+    width: 40%;
+    /* Ajusta según sea necesario */
   }
 
 
@@ -294,7 +301,8 @@
   }
 
   .card-form {
-    width: 10%; /* Ajusta según sea necesario */
+    width: 10%;
+    /* Ajusta según sea necesario */
   }
 
 
@@ -325,7 +333,8 @@
   }
 
   .card-form {
-    width: 80%; /* Ajusta según sea necesario */
+    width: 80%;
+    /* Ajusta según sea necesario */
   }
 
   .card-form-input,
@@ -359,15 +368,18 @@
   }
 
   .card-form {
-    width: 80%; /* Ajusta según sea necesario */
+    width: 80%;
+    /* Ajusta según sea necesario */
   }
 
   .card-form-row {
     display: flex;
     flex-direction: column;
     width: 100%;
-    justify-content: center; /* Centra horizontalmente */
-    align-items: center; /* Centra verticalmente */
+    justify-content: center;
+    /* Centra horizontalmente */
+    align-items: center;
+    /* Centra verticalmente */
     height: 100%;
   }
 
@@ -389,7 +401,7 @@
   }
 }
 
-.card-form-input-select{
+.card-form-input-select {
   max-width: 100%;
   width: 100%;
 }
@@ -402,7 +414,8 @@
   }
 
   .card-form {
-    width: 100%; /* Ajusta según sea necesario */
+    width: 100%;
+    /* Ajusta según sea necesario */
   }
 
   .card-form-row {
@@ -474,8 +487,8 @@
     width: 100% !important;
     max-width: 100% !important;
     height: 40px;
-  
-  
+
+
     &:focus {
       border: 0;
     }
@@ -487,7 +500,7 @@
 
 }
 
-.card-form-input-select{
+.card-form-input-select {
   max-width: 100%;
   width: 100%;
 }
@@ -501,7 +514,8 @@
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro */
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Fondo oscuro */
   overflow: hidden;
 }
 
@@ -539,12 +553,14 @@
   color: white;
   border: none;
 }
+
 .ui-dialog .p-progressBar {
   margin-top: 10px;
 }
 
-.ui-dialog .p-progressBar > .p-progressbar-value {
-  background-color: #4caf50; /* Cambiar color de la barra */
+.ui-dialog .p-progressBar>.p-progressbar-value {
+  background-color: #4caf50;
+  /* Cambiar color de la barra */
 }
 
 .spinner-overlay {
@@ -557,15 +573,20 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba($color-indigo, $alpha: 0.6);/* Fondo semi-transparente */
+  background-color: rgba($color-indigo, $alpha: 0.6);
+  /* Fondo semi-transparente */
   z-index: 10000;
 }
 
 .spinner-text {
-  margin-top: 30px; /* Añade un pequeño espacio debajo del spinner */
-  color: rgb(255, 255, 255); /* Cambia el color a amarillo */
-  font-size: 25px; /* Ajusta el tamaño del texto según necesites */
-  text-align: center; /* Centra el texto */
+  margin-top: 30px;
+  /* Añade un pequeño espacio debajo del spinner */
+  color: rgb(255, 255, 255);
+  /* Cambia el color a amarillo */
+  font-size: 25px;
+  /* Ajusta el tamaño del texto según necesites */
+  text-align: center;
+  /* Centra el texto */
 }
 
 .data-section {
@@ -593,7 +614,7 @@
 }
 
 .p-field {
-  margin-bottom: 15px;
+  margin: 5px;
   width: 100%;
 }
 
@@ -621,6 +642,219 @@
 
 .button-row {
   display: flex;
-  gap: 20px; /* Espacio entre botones */
+  gap: 20px;
+  /* Espacio entre botones */
   align-items: center;
+}
+
+.validation-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.validation-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+}
+
+.confirm-btn {
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  border: none;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+}
+
+:host ::ng-deep .custom-dialog {
+  .ui-dialog-titlebar {
+    background-color: #007bff !important;
+    /* Color de la barra del título */
+    color: #fff !important;
+  }
+
+  .dialog-content {
+    p {
+      font-size: 1.1rem !important;
+      color: #000000 !important;
+      margin-bottom: 1rem !important;
+    }
+
+    .confirmation-text {
+      font-size: 1rem !important;
+      font-weight: bold !important;
+      margin-bottom: 1.5rem !important;
+    }
+  }
+
+  .dialog-buttons {
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 15px !important;
+    margin-top: 20px !important;
+
+    button {
+      padding: 0.5rem 1.5rem !important;
+      font-size: 1rem !important;
+      border: none !important;
+      border-radius: 5px !important;
+      cursor: pointer !important;
+      transition: background-color 0.3s ease !important;
+
+      &.btn-yes {
+        background-color: #a0bf1b !important;
+        color: white !important;
+
+        &:hover {
+          background-color: #94af18 !important;
+        }
+      }
+
+      &.btn-no {
+        background-color: #dc3545 !important;
+        color: white !important;
+
+        &:hover {
+          background-color: #c82333 !important;
+        }
+      }
+    }
+  }
+}
+
+/* Ajustar el panel desplegable del dropdown */
+::ng-deep .p-dropdown-panel {
+  width: auto !important;
+  max-width: auto !important;
+  /* Ajusta este valor según sea necesario */
+  overflow-x: hidden !important;
+  /* Evita el desplazamiento horizontal */
+  max-height: 500px;
+  width: auto !important;
+  //overflow-y: auto;
+  border-radius: 16px;
+  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.16);
+  margin-top: 3px;
+}
+
+/* Ajustar el estilo de los elementos de la lista */
+::ng-deep .p-dropdown-item {
+  height: auto !important;
+  /* Ajusta la altura automáticamente */
+  line-height: 1.5 !important;
+  /* Aumenta la altura de línea para mayor claridad */
+}
+
+::ng-deep .container-select-options .p-dropdown-item.p-highlight {
+  font-family: $font-bold !important;
+  border-radius: 5px !important;
+}
+
+::ng-deep .p-card .p-card-body {
+  padding: 0 !important;
+}
+
+::ng-deep .p-dropdown .p-dropdown-label.p-placeholder {
+  padding-left: 20px !important;
+}
+
+// ::ng-deep .p-dropdown {
+//   //width: 100%;
+//   width: 100% !important;
+//   height: 40px !important;
+
+
+//   &:focus {
+//     border: 0;
+//   }
+// }
+
+::ng-deep p-dropdown.full-width-dropdown>.p-dropdown {
+  width: 100% !important;
+  height: 40px !important;
+
+  &:focus {
+    border: 0;
+  }
+}
+
+.dialog-header {
+  color: white !important;
+  font-weight: bold !important;
+  font-size: 18px !important;
+}
+
+::ng-deep .btn-secondary .p-button {
+  background-color: #d4dce4 !important; // Gris azulado claro
+  color: #2c3e50 !important; // Gris oscuro
+  border: none !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1.5rem !important;
+  transition: 0.3s ease all !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+::ng-deep .btn-secondary .p-button:hover {
+  background-color: #bccad6 !important; // Un poco más oscuro al hacer hover
+  color: #1a252f !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+::ng-deep .p-dialog {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+::ng-deep .p-dialog-content {
+  box-shadow: none !important;
+  background: white !important;
+  border: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+/* Hacer que el modal sea más pequeño en pantallas pequeñas */
+@media (max-width: 768px) {
+  ::ng-deep .p-dialog {
+    width: 90vw !important;
+    max-width: 90% !important;
+  }
+}
+
+/* Para pantallas grandes */
+@media (min-width: 769px) {
+  ::ng-deep .p-dialog {
+    width: 40vw !important;
+    max-width: 400px !important;
+  }
+}
+
+::ng-deep .btn-success-update.p-button {
+  background-color: #8bc34a !important;
+  color: white !important;
+  border: none !important;
+}
+
+::ng-deep .btn-success-update.p-button:hover {
+  color: white !important;
+  background-color: #bfe12c !important;
+  box-shadow: 0 0 2px #00000080 !important;
 }

@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { BodyResponse, ZionResponse } from '../models/shared/body-response.inteface';
+import { BodyResponse, ZionResponse,BodyResponseUp } from '../models/shared/body-response.inteface';
 import { EndPointRoute } from '../enums/routes.enum';
 import { map, catchError } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
@@ -56,6 +56,9 @@ import {
   RequestAreaList,
   FilterRequestsIntern,
   RequestsListIntern,
+  CompanyUpdateRequest,
+  FilterCompanyUpdate,
+  CompanyUpdateRecord
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -501,17 +504,27 @@ export class Users {
     return this.http.post(this.apiUrlIngresoConfa, payload, { headers }); // Envía la petición con headers
   }
 
-  respuestaInfoAfiliacion(cedula?: string): Observable<any> {
-    const urlSubsidios = 'https://api-utilitarios.confa.co/replica/consultarEmpresa';
+  // respuestaInfoAfiliacion(cedula?: string): Observable<any> {
+  //   const urlSubsidios = 'https://api-utilitarios.confa.co/replica/consultarEmpresa';
+  //   const headers = new HttpHeaders({
+  //     'Content-Type': 'application/json', // Asegura que se envíe como JSON
+  //     'x-api-key': this.apiKey, // Incluye la API key en los headers
+  //   });
+  //   const payload = {
+  //     ndoc: cedula,
+  //   };
+  //   return this.http.post(urlSubsidios, payload, { headers }); // Envía la petición con headers
+  // }
+
+  respuestaInfoAfiliacion(cedula: string): Observable<any> {
+    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarEmpresaNitGestorSolicitudes/${cedula}`;
     const headers = new HttpHeaders({
-      'Content-Type': 'application/json', // Asegura que se envíe como JSON
-      'x-api-key': this.apiKey, // Incluye la API key en los headers
+      'Content-Type': 'application/json',
     });
-    const payload = {
-      ndoc: cedula,
-    };
-    return this.http.post(urlSubsidios, payload, { headers }); // Envía la petición con headers
+
+    return this.http.get(url, { headers });
   }
+
 
   createAnswerTemp(payload: RequestAnswerTemp) {
     return this.http.post<BodyResponse<string>>(
@@ -646,4 +659,59 @@ export class Users {
       payload
     );
   }
+
+  // Creacion de solicitud para actualizar la informacion de una empresa
+  updateCompany(payload: CompanyUpdateRequest) {
+    return this.http.post<BodyResponse<number>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_COMPANY_FORM}`,
+      payload
+    );
+  }
+
+  insertCompanyFilesS3(payload: any): Observable<boolean> {
+    return this.http.post<BodyResponseUp<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES}`,
+      payload
+    ).pipe(
+      map(response => response.body === "1")
+    );
+  }
+
+  getUrlSignedCompany(payload: PreSignedAttach, type_docoument: string) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES}/${type_docoument}`,
+      payload
+    );
+  }
+
+  respuestaInfoEmpresa(cedula: string,tipoDoc:String): Observable<any> {
+    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarEmpresaNitGestorSolicitudes/${cedula}/${tipoDoc}`;
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
+
+    return this.http.get(url, { headers });
+  }
+
+  getCompanyUpdateListByFilter(payload: FilterCompanyUpdate) {
+    return this.http.post<BodyResponse<CompanyUpdateRecord[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.COMPANY_UPDATE_BY_FILTER}`,
+      payload
+    );
+  }
+
+  updateCompanyManagement(payload: {
+    company_update_id: number;
+    management_result: string;
+    management_observation: string;
+    updated_by: string;
+    user_mail:string;
+    user_name:string;
+  }) {
+    return this.http.post<BodyResponse<any>>(
+      `${environment.API_PUBLIC}${EndPointRoute.COMPANY_UPDATE_MANAGEMENT}`,
+      payload
+    );
+  }
+
 }

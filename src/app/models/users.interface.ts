@@ -688,3 +688,130 @@ export interface IsPriority {
   value: boolean;
   name: string;
 }
+
+export interface CompanyUpdateForm {
+  businessName: string;      // Razón Social/Nombre
+  tradeName: string;         // Nombre Comercial
+  documentType: string;      // Tipo Documento
+  documentNumber: string;    // Número Documento
+  verificationDigit: string; // Dígito de Verificación
+  department: string;        // Departamento
+  municipality: string;      // Municipio
+  address: string;           // Dirección
+  landline: string;          // Teléfono Fijo
+  mobilePhone: string;       // Teléfono Celular
+  email: string;             // Correo Electrónico
+  legalRepresentativeDocumentType: string;  // Tipo Documento Representante Legal
+  legalRepresentativeDocumentNumber: string; // Número Documento Representante Legal
+  legalRepresentativeFirstName: string;      // Primer Nombre Representante Legal
+  legalRepresentativeMiddleName?: string;    // Segundo Nombre Representante Legal (Opcional)
+  legalRepresentativeLastName: string;       // Primer Apellido Representante Legal
+  legalRepresentativeSecondLastName?: string; // Segundo Apellido Representante Legal (Opcional)
+  economicActivityCiiuCode: string;         // Código CIIU
+  economicActivityCiiuDescription: string;  // Descripción CIIU
+}
+
+export interface CompanyUpdateRequest {
+  // Información de la empresa
+  document_type: string;
+  document_number: string;
+  verification_digit: string | null;
+  business_name: string;
+  trade_name: string;
+  department: string;
+  municipality: string;
+  address: string;
+  landline: string | null;
+  mobile_phone: string;
+  alternate_mobile_phone?: string | null;
+  email: string;
+  alternate_email?: string | null;
+
+  // Información del representante legal
+  legal_representative_document_type: string;
+  legal_representative_document_number: string;
+  legal_representative_first_name: string;
+  legal_representative_middle_name?: string | null;
+  legal_representative_last_name: string;
+  legal_representative_second_last_name?: string | null;
+
+  // Información de la actividad económica
+  economic_activity_ciiu_code: string;
+  economic_activity_ciiu_description: string;
+
+  // Archivos adjuntos
+  legal_representative_document_path: string | null;
+  economic_activity_rut_path: string | null;
+
+  // Metadatos de actualización
+  created_by: string;
+  updated_general_info: boolean;
+  updated_legal_representative: boolean;
+  updated_economic_activity: boolean;
+}
+
+export interface ApplicantAttachmentsCompany {
+  base64file: string;
+  source_name: string;
+  fileweight: string;
+  file?: File;
+  preSignedUrl?: string;
+  type: string;
+}
+
+export interface FilterCompanyUpdate {
+  filing_number?: number | null;
+  i_date?: string | null;
+  f_date?: string | null;
+  doc_id?: string | null;
+  applicant_name?: string | null;
+  report_type?: number | null; //
+  page?: number;
+  page_size?: number;
+}
+
+export interface CompanyUpdateRecord {
+  company_update_id: number;
+  business_name: string;
+  trade_name: string;
+  document_type: string;
+  document_number: string;
+  verification_digit: string;
+  department: string;
+  municipality: string;
+  address: string;
+  landline: string;
+  mobile_phone: string;
+  alternate_mobile_phone: string;
+  email: string;
+  alternate_email: string;
+  legal_representative_document_type: string;
+  legal_representative_document_number: string;
+  legal_representative_first_name: string;
+  legal_representative_middle_name: string;
+  legal_representative_last_name: string;
+  legal_representative_second_last_name: string;
+  economic_activity_ciiu_code: string;
+  economic_activity_ciiu_description: string;
+  updated_general_info: boolean;
+  updated_legal_representative: boolean;
+  updated_economic_activity: boolean;
+  legal_representative_document_path: string;
+  economic_activity_rut_path: string;
+  created_by: string;
+  created_at: string;  // o Date si lo parseas
+  updated_by: string;
+  updated_at: string;  // o Date si lo parseas
+  total_count: number;
+
+  // 👇 Estas son las nuevas propiedades opcionales
+  created_at_date?: Date;
+  updated_at_date?: Date;
+
+  documentLinks?: { url: string; fileName: string }[];
+
+  management_result?: string | null;
+  management_observation?: string | null;
+  alreadyManaged?: boolean;
+}
+

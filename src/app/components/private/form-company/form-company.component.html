@@ -2,6 +2,7 @@
   <div class="spinner"></div>
   <p class="spinner-text">Procesando su solicitud</p>
 </div>
+
 <p-card class="container">
   <div class="container-principal">
     <form [formGroup]="requestForm">
@@ -9,372 +10,548 @@
 
       <p-card class="container-card">
         <div class="rows">
+          <!-- Identificación de la empresa -->
           <div class="card-form-row">
             <div class="card-form-input">
               <label class="card-form-input-placeholder">Tipo de documento*</label>
               <p-dropdown
-                id="document_type"
-                formControlName="document_type"
-                [style]="{
-                  'border-radius': '20px',
-                  height: '40px',
-                  'align-items': 'center'
-                }"
+                formControlName="documentType"
                 class="card-form-input-select"
                 placeholder="*Tipo de documento"
                 [options]="documentList"
-                optionLabel="catalog_item_name"></p-dropdown>
-              <label class="card-form-input-placeholder-invalid">
-                {{
-                  requestForm.get('document_type')?.hasError('required') &&
-                  requestForm.get('document_type')?.touched
-                    ? 'Campo Requerido'
-                    : ''
-                }}</label
-              >
+                optionLabel="catalog_item_name">
+              </p-dropdown>
             </div>
+
             <div class="card-form-input">
-              <label class="card-form-input-placeholder"> Documento empresa* </label>
+              <label class="card-form-input-placeholder">Documento empresa*</label>
               <input
                 pInputText
                 type="text"
-                formControlName="number_id"
+                formControlName="documentNumber"
                 class="card-form-input-options"
-                placeholder="*Ingresa el número de documento" />
-              <label class="card-form-input-placeholder-invalid">
+                placeholder="*Ingresa el número de documento"
+                (keydown.enter)="onEnterConsultarEmpresa()" />
+              <small
+                class="error-message"
+                *ngIf="
+                  requestForm.get('documentNumber')?.invalid &&
+                  requestForm.get('documentNumber')?.touched
+                ">
                 {{
-                  requestForm.get('number_id')?.hasError('pattern') &&
-                  requestForm.get('number_id')?.touched
-                    ? errorMensaje
-                    : ''
+                  requestForm.get('documentNumber')?.errors?.['required']
+                    ? 'Este campo es obligatorio.'
+                    : requestForm.get('documentNumber')?.errors?.['minlength']
+                      ? 'Debe tener al menos 6 dígitos.'
+                      : requestForm.get('documentNumber')?.errors?.['pattern']
+                        ? 'Solo se permiten números.'
+                        : ''
                 }}
-                {{ requestForm.get('number_id')?.disabled ? 'Seleccione tipo de documento' : ''
-                }}{{
-                  requestForm.get('number_id')?.hasError('required') &&
-                  requestForm.get('number_id')?.touched
-                    ? 'Campo Requerido'
-                    : ''
-                }}</label
-              >
+              </small>
             </div>
           </div>
 
           <br />
+
           <div class="button-container">
             <p-button
-              [style]="{ 'border-radius': '20px', 'background-color': '#00aeef', width: '275px' }"
+              class="card-form-button"
               label="Consultar Empresa"
-              [disabled]="requestForm.invalid"
-              (click)="consultarEmpresa()"
-              class="card-form-button"></p-button>
+              [disabled]="
+                !(
+                  requestForm.get('documentType')?.value && requestForm.get('documentNumber')?.valid
+                )
+              "
+              (click)="consultarEmpresa2()">
+            </p-button>
           </div>
-
           <br />
+          <div *ngIf="existCompany">
+            <div class="data-section">
+              <div class="data-title">{{ sectionTitle }}</div>
 
-          <div class="data-section">
-            <div class="data-title">{{ sectionTitle }}</div>
-
-            <!-- Primera Vista -->
-            <div [hidden]="currentSection !== 1" class="data-content">
-              <div class="p-field-row">
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Dígito de verificación</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.digitoVerificacion"
-                      disabled />
-                  </div>
-                </div>
-                <div class="p-field"></div>
-              </div>
-
-              <div class="p-field-row">
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Razón social/Nombre</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.razonSocial"
-                      disabled />
+              <!-- Primera Sección: Datos Generales -->
+              <div [hidden]="currentSection !== 1" class="data-content">
+                <div class="card-form-row">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Dígito de verificación</label>
+                    <input type="text" formControlName="verificationDigit" />
                   </div>
                 </div>
 
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Nombre Comercial</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.nombreComercial"
-                      disabled />
+                <div class="card-form-row">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Razón Social/Nombre</label>
+                    <input type="text" formControlName="businessName" />
+                  </div>
+
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Nombre Comercial</label>
+                    <input type="text" formControlName="tradeName" />
                   </div>
                 </div>
-              </div>
 
-              <div class="p-field-row">
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Departamento</label>
-                  <div class="card-form-input">
+                <div class="card-form-row">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Departamento</label>
                     <p-dropdown
-                      id="document_type"
-                      formControlName="document_type"
-                      [style]="{
-                        'border-radius': '20px',
-                        height: '40px',
-                        'align-items': 'center'
-                      }"
-                      class="card-form-input-select"
-                      placeholder="*Tipo de documento"
-                      [options]="documentList"
-                      optionLabel="catalog_item_name"></p-dropdown>
+                      [style]="{ 'border-radius': '20px' }"
+                      class="container-select-options full-width-dropdown"
+                      formControlName="department"
+                      [options]="departmentsList"
+                      optionLabel="name"
+                      placeholder="Seleccione un departamento">
+                    </p-dropdown>
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('department')?.invalid &&
+                        requestForm.get('department')?.touched
+                      ">
+                      Seleccione un departamento.
+                    </small>
                   </div>
-                </div>
 
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Municipio</label>
-                  <div class="card-form-input">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Municipio</label>
                     <p-dropdown
-                      id="document_type"
-                      formControlName="document_type"
-                      [style]="{
-                        'border-radius': '20px',
-                        height: '40px',
-                        'align-items': 'center'
-                      }"
-                      class="card-form-input-select"
-                      placeholder="*Tipo de documento"
-                      [options]="documentList"
-                      optionLabel="catalog_item_name"></p-dropdown>
+                      [style]="{ 'border-radius': '20px' }"
+                      class="container-select-options full-width-dropdown"
+                      formControlName="municipality"
+                      [options]="municipalitiesList"
+                      optionLabel="name"
+                      placeholder="Seleccione un municipio"
+                      [disabled]="!municipalitiesList?.length">
+                    </p-dropdown>
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('municipality')?.invalid &&
+                        requestForm.get('municipality')?.touched
+                      ">
+                      Seleccione un municipio.
+                    </small>
+                  </div>
+                </div>
+
+                <div class="card-form-row">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Dirección</label>
+                    <input type="text" formControlName="address" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('address')?.invalid && requestForm.get('address')?.touched
+                      ">
+                      La dirección es obligatoria.
+                    </small>
+                  </div>
+
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Correo Electrónico</label>
+                    <input type="email" formControlName="email" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('email')?.invalid && requestForm.get('email')?.touched
+                      ">
+                      Ingrese un correo electrónico válido.
+                    </small>
+                  </div>
+                </div>
+                <div class="card-form-row" *ngIf="!isCorrectData">
+                  <div class="p-field"></div>
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Confirmar Correo Electrónico</label>
+                    <input
+                      type="email"
+                      formControlName="confirmEmail"
+                      (copy)="false"
+                      (paste)="false"
+                      (contextmenu)="false"
+                      (keydown.control.c)="$event.preventDefault()"
+                      (keydown.control.v)="$event.preventDefault()"
+                      (keydown.meta.c)="$event.preventDefault()"
+                      (keydown.meta.v)="$event.preventDefault()"
+                    />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('confirmEmail')?.invalid &&
+                        requestForm.get('confirmEmail')?.touched
+                      ">
+                      {{
+                        requestForm.get('confirmEmail')?.errors?.['required']
+                          ? 'Este campo es obligatorio.'
+                          : requestForm.get('confirmEmail')?.errors?.['emailMismatch']
+                          ? 'El correo no coincide.'
+                          : 'Ingrese un correo electrónico válido.'
+                      }}
+                    </small>
+                  </div>
+                </div>
+
+                <div class="card-form-row">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Teléfono Fijo</label>
+                    <input type="text" formControlName="landline" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('landline')?.invalid && requestForm.get('landline')?.touched
+                      ">
+                      Debe contener exactamente 7 dígitos numéricos.
+                    </small>
+                  </div>
+
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Teléfono Celular</label>
+                    <input type="text" formControlName="mobilePhone" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('mobilePhone')?.invalid &&
+                        requestForm.get('mobilePhone')?.touched
+                      ">
+                      Debe contener exactamente 10 dígitos numéricos.
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Campos alternos (solo si se elige "No") -->
+                <div class="card-form-row" *ngIf="!isCorrectData">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Teléfono Celular Alterno</label>
+                    <input type="text" formControlName="alternateMobilePhone" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('alternateMobilePhone')?.invalid &&
+                        requestForm.get('alternateMobilePhone')?.touched
+                      ">
+                      El número debe contener exactamente 10 dígitos numéricos.
+                    </small>
+                  </div>
+
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Correo Electrónico Alterno</label>
+                    <input type="email" formControlName="alternateEmail" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('alternateEmail')?.invalid &&
+                        requestForm.get('alternateEmail')?.touched
+                      ">
+                      Ingrese un correo electrónico válido.
+                    </small>
+                  </div>
+                </div>
+
+                <br />
+                <div class="validation-buttons" *ngIf="!isCorrectData">
+                  <p-button
+                    label="Siguiente"
+                    (click)="irASiguiente()"
+                    class="confirm-btn"></p-button>
+                </div>
+                <div class="validation-section" *ngIf="isCorrectData">
+                  <label class="card-form-input-placeholder">
+                    <b>¿Los Datos Generales registrados en nuestro sistema son correctos?</b>
+                  </label>
+
+                  <div class="validation-buttons">
+                    <p-button label="Sí" (click)="confirmData(true)" class="confirm-btn yes">
+                    </p-button>
+
+                    <p-button label="No" (click)="confirmData(false)" class="confirm-btn yes">
+                    </p-button>
                   </div>
                 </div>
               </div>
 
-              <div class="p-field-row">
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Direccion</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.direccion" />
-                  </div>
-                </div>
-
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Correo Electronico</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.email" />
-                  </div>
-                </div>
-              </div>
-
-              <div class="p-field-row">
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Telefono fijo</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.direccion" />
-                  </div>
-                </div>
-
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Telefono Celular</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.email" />
-                  </div>
-                </div>
-              </div>
-              <br />
-              <div class="button-row">
-                <p-button
-                  [style]="{
-                    'border-radius': '20px',
-                    'background-color': '#00aeef',
-                    width: '100px'
-                  }"
-                  label="Siguiente"
-                  (click)="irASiguiente()"></p-button>
-              </div>
-            </div>
-
-            <!-- Segunda Vista -->
-            <div [hidden]="currentSection !== 2" class="data-content">
-              <div class="p-field-row">
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Tipo Documento</label>
-                  <div class="card-form-input">
+              <!-- Segunda Sección: Representante Legal -->
+              <div [hidden]="currentSection !== 2" class="data-content">
+                <div class="card-form-row">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Tipo Documento Representante</label>
                     <p-dropdown
-                      id="document_type"
-                      formControlName="document_type"
-                      [style]="{
-                        'border-radius': '20px',
-                        height: '40px',
-                        'align-items': 'center'
-                      }"
-                      class="card-form-input-select"
-                      placeholder="*Tipo de documento"
-                      [options]="documentList"
-                      optionLabel="catalog_item_name"></p-dropdown>
+                      class="card-form-input-select full-width-dropdown"
+                      formControlName="legalRepresentativeDocumentType"
+                      optionLabel="name"
+                      placeholder="Seleccione un tipo de documento"
+                      [options]="documentHomologationList">
+                    </p-dropdown>
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('legalRepresentativeDocumentType')?.invalid &&
+                        requestForm.get('legalRepresentativeDocumentType')?.touched
+                      ">
+                      Seleccione un tipo de documento.
+                    </small>
+                  </div>
+
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Número de Documento</label>
+                    <input type="text" formControlName="legalRepresentativeDocumentNumber" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('legalRepresentativeDocumentNumber')?.invalid &&
+                        requestForm.get('legalRepresentativeDocumentNumber')?.touched
+                      ">
+                      Solo se permiten números.
+                    </small>
                   </div>
                 </div>
 
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Numero de Documento</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.telefono" />
+                <div class="card-form-row">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Primer Nombre</label>
+                    <input type="text" formControlName="legalRepresentativeFirstName" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('legalRepresentativeFirstName')?.invalid &&
+                        requestForm.get('legalRepresentativeFirstName')?.touched
+                      ">
+                      Este campo es obligatorio.
+                    </small>
                   </div>
+
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Segundo Nombre</label>
+                    <input type="text" formControlName="legalRepresentativeMiddleName" />
+                  </div>
+                </div>
+
+                <div class="card-form-row">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Primer Apellido</label>
+                    <input type="text" formControlName="legalRepresentativeLastName" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('legalRepresentativeLastName')?.invalid &&
+                        requestForm.get('legalRepresentativeLastName')?.touched
+                      ">
+                      Este campo es obligatorio.
+                    </small>
+                  </div>
+
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Segundo Apellido</label>
+                    <input type="text" formControlName="legalRepresentativeSecondLastName" />
+                  </div>
+                </div>
+
+                <div class="card-buttonUp" *ngIf="!isCorrectLegalRepresentativeData">
+                  <label class="card-buttonUp-placeholder">Adjuntar archivo</label>
+                  <div class="card-buttonUp-custom-button">
+                    <input
+                      type="file"
+                      #archive_request
+                      class="card-buttonUp-custom-icon"
+                      name="archive_request"
+                      (change)="onFileSelected($event)"
+                      accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+                      maxFileSize="20971520" />
+                    <label class="card-buttonUp-label" (click)="openFileInput()">
+                      <i
+                        class="pi pi-file-pdf"
+                        [style]="{ 'font-size': '19px', 'margin-right': '8px' }"></i>
+                      Adjuntar archivo
+                      <i
+                        class="pi pi-upload"
+                        [style]="{ 'margin-left': '69px', 'font-size': '19px' }"></i>
+                    </label>
+                    <label class="card-form-input-placeholder-invalid">
+                      {{ errorSizeFile ? errorMensajeFile : ''
+                      }}{{ errorExtensionFile ? errorMensajeFile : ''
+                      }}{{ errorRepeatFile ? errorMensajeFile : '' }}</label
+                    >
+                    <small class="error-message" *ngIf="showFileError">
+                      ⚠️ Debe adjuntar la cédula del representante legal.
+                    </small>
+                  </div>
+                </div>
+                <div class="card-table" *ngIf="!isCorrectLegalRepresentativeData">
+                  <div class="card-table-header">Tabla de Adjuntos</div>
+                  <div class="card-table-body" *ngFor="let fileName of fileNameList; let i = index">
+                    <div class="card-table-itemName">
+                      <p class="truncate-text">
+                        {{ fileName === '' ? 'Nombre de Archivo' : fileName }}
+                      </p>
+                    </div>
+                    <div class="card-table-item">
+                      <span class="remover-text">Remover archivo</span>
+                      <p-button
+                        icon="pi pi-times"
+                        [style]="{
+                          'border-radius': '50%',
+                          height: '20px',
+                          width: '20px',
+                          'background-color': '#ebebeb',
+                          color: 'red',
+                          'margin-right': '20px'
+                        }"
+                        [text]="true"
+                        severity="danger"
+                        (click)="clearFileInput(i)"></p-button>
+                    </div>
+                  </div>
+                </div>
+
+                <br />
+                <!-- Pregunta de validación -->
+                <div class="validation-section" *ngIf="isCorrectLegalRepresentativeData">
+                  <label class="card-form-input-placeholder">
+                    <b
+                      >¿Los datos del Representante Legal registrados en nuestro sistema son
+                      correctos?</b
+                    >
+                  </label>
+
+                  <div class="validation-buttons">
+                    <p-button label="Anterior" (click)="irAAnterior()"></p-button>
+                    <p-button
+                      label="Sí"
+                      (click)="confirmLegalRepresentativeData(true)"
+                      class="confirm-btn yes"></p-button>
+                    <p-button
+                      label="No"
+                      (click)="confirmLegalRepresentativeData(false)"
+                      class="confirm-btn no"></p-button>
+                  </div>
+                </div>
+                <div class="validation-buttons" *ngIf="!isCorrectLegalRepresentativeData">
+                  <p-button label="Anterior" (click)="irAAnterior()"></p-button>
+                  <p-button label="Siguiente" (click)="irASiguiente()"></p-button>
                 </div>
               </div>
 
-              <div class="p-field-row">
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Primer Nombre</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.actividadEconomica" />
+              <!-- Tercera Sección: Actividad Económica -->
+              <!-- Campos editables si los datos NO son correctos -->
+              <div [hidden]="currentSection !== 3" class="data-content">
+                <div class="card-form-row">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Código CIIU</label>
+                    <input type="text" formControlName="economicActivityCiiuCode" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('economicActivityCiiuCode')?.invalid &&
+                        requestForm.get('economicActivityCiiuCode')?.touched
+                      ">
+                      ⚠️ Debe ingresar el código CIIU.
+                    </small>
                   </div>
-                </div>
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Segundo Nombre</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.actividadEconomica" />
-                  </div>
-                </div>
-              </div>
 
-              <div class="p-field-row">
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Primer Apellido</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Descripción CIIU</label>
+                    <textarea
                       type="text"
-                      [value]="empresa?.actividadEconomica" />
-                  </div>
-                </div>
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Segundo Apellido</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.actividadEconomica" />
-                  </div>
-                </div>
-              </div>
-
-              <br />
-
-              <div class="button-row">
-                <p-button
-                  [style]="{
-                    'border-radius': '20px',
-                    'background-color': '#00aeef',
-                    width: '100px'
-                  }"
-                  label="Anterior"
-                  (click)="irAAnterior()"></p-button>
-                <p-button
-                  [style]="{
-                    'border-radius': '20px',
-                    'background-color': '#00aeef',
-                    width: '100px'
-                  }"
-                  label="Siguiente"
-                  (click)="irASiguiente()"></p-button>
-              </div>
-            </div>
-
-            <!-- Tercera Vista -->
-            <div [hidden]="currentSection !== 3" class="data-content">
-              <div class="p-field-row">
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Codigo CIIU</label>
-                  <div class="card-form-input">
-                    <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.telefono" />
+                      formControlName="economicActivityCiiuDescription"
+                      rows="3"></textarea>
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('economicActivityCiiuDescription')?.invalid &&
+                        requestForm.get('economicActivityCiiuDescription')?.touched
+                      ">
+                      ⚠️ Debe ingresar la descripción CIIU.
+                    </small>
                   </div>
                 </div>
 
-                <div class="p-field">
-                  <label class="card-form-input-placeholder">Descripción CIIU</label>
-                  <div class="card-form-input">
+                <!-- Adjuntar fotocopia del RUT -->
+                <div class="card-buttonUp" *ngIf="!isCorrectEconomicActivityData">
+                  <label class="card-buttonUp-placeholder">Adjuntar RUT</label>
+                  <div class="card-buttonUp-custom-button">
                     <input
-                      [style]="{
-                        'border-radius': '20px'
-                      }"
-                      type="text"
-                      [value]="empresa?.actividadEconomica" />
+                      type="file"
+                      #archive_request_economic
+                      class="card-buttonUp-custom-icon"
+                      name="archive_request_economic"
+                      (change)="onEconomicFileSelected($event)"
+                      accept=".jpeg,.jpg,.png,.pdf"
+                      maxFileSize="20971520" />
+                    <label class="card-buttonUp-label" (click)="openFileInputEconomic()">
+                      <i
+                        class="pi pi-file-pdf"
+                        [style]="{ 'font-size': '19px', 'margin-right': '8px' }"></i>
+                      Adjuntar archivo
+                      <i
+                        class="pi pi-upload"
+                        [style]="{ 'margin-left': '69px', 'font-size': '19px' }"></i>
+                    </label>
+                    <label class="card-form-input-placeholder-invalid">
+                      {{ errorSizeFile ? errorMensajeFile : ''
+                      }}{{ errorExtensionFile ? errorMensajeFile : ''
+                      }}{{ errorRepeatFile ? errorMensajeFile : '' }}</label
+                    >
+                  </div>
+                  <small class="error-message" *ngIf="showEconomicFileError">
+                    ⚠️ Debe adjuntar el RUT con fecha de generación inferior a 30 días.
+                  </small>
+                </div>
+
+                <!-- Tabla de archivos adjuntos -->
+                <div class="card-table" *ngIf="!isCorrectEconomicActivityData">
+                  <div class="card-table-header">Tabla de Adjuntos</div>
+                  <div
+                    class="card-table-body"
+                    *ngFor="let fileName of economicFileNameList; let i = index">
+                    <div class="card-table-itemName">
+                      <p class="truncate-text">
+                        {{ fileName === '' ? 'Nombre de Archivo' : fileName }}
+                      </p>
+                    </div>
+                    <div class="card-table-item">
+                      <span class="remover-text">Remover archivo</span>
+                      <p-button
+                        icon="pi pi-times"
+                        [style]="{
+                          'border-radius': '50%',
+                          height: '20px',
+                          width: '20px',
+                          'background-color': '#ebebeb',
+                          color: 'red',
+                          'margin-right': '20px'
+                        }"
+                        [text]="true"
+                        severity="danger"
+                        (click)="clearFileInputEconomi(i)"></p-button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <br />
-              <div class="button-row">
-                <p-button
-                  [style]="{
-                    'border-radius': '20px',
-                    'background-color': '#00aeef',
-                    width: '100px'
-                  }"
-                  label="Anterior"
-                  (click)="irAAnterior()"></p-button>
-                <p-button
-                  [style]="{
-                    'border-radius': '20px',
-                    'background-color': '#00aeef',
-                    width: '100px'
-                  }"
-                  label="Guardar"
-                  [disabled]="requestForm.invalid"
-                  (click)="sendRequest()"></p-button>
+                <div class="validation-section" *ngIf="isCorrectEconomicActivityData">
+                  <label class="card-form-input-placeholder">
+                    <b
+                      >¿Los datos de la Actividad Económica registrados en nuestro sistema son
+                      correctos?</b
+                    >
+                  </label>
+
+                  <div class="validation-buttons">
+                    <p-button label="Anterior" (click)="irAAnterior()"></p-button>
+                    <p-button
+                      label="Guardar Formulario"
+                      (click)="saveForm()"
+                      class="confirm-btn yes"></p-button>
+                    <p-button
+                      label="No"
+                      (click)="confirmEconomicActivityData(false)"
+                      class="confirm-btn no"></p-button>
+                  </div>
+                </div>
+
+                <!-- Botón para actualizar si el usuario modificó datos -->
+                <div class="validation-buttons" *ngIf="!isCorrectEconomicActivityData">
+                  <p-button label="Anterior" (click)="irAAnterior()"></p-button>
+                  <p-button label="Actualizar Datos" (click)="irASiguiente()"></p-button>
+                </div>
               </div>
             </div>
           </div>
@@ -385,20 +562,55 @@
 </p-card>
 
 <p-toast></p-toast>
-<p-progressSpinner
-  *ngIf="loadingAttachments"
-  class="sppinerAtta p-element"
-  color="blue"></p-progressSpinner>
 
-<!--<app-modal-alert
-  *ngIf="visibleDialogAlert"
-  [select]="true"
-  [requestCreation]="true"
-  [visible]="visibleDialogAlert"
-  [message]="message"
-  [informative]="informative"
-  [severity]="severity"
-  (setRta)="closeDialogAlert($event)"></app-modal-alert>-->
+<p-dialog
+  [(visible)]="showConfirmationModal"
+  [style]="{ width: '90%', maxWidth: '400px', height: 'auto' }"
+  [modal]="true"
+  [closable]="false"
+  [showHeader]="false"
+  [baseZIndex]="10000"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+
+      <div class="row">
+        <div class="login-form-logo d-flex justify-content-center my-4">
+          <img src="../../../assets/images/logo-login.png" class="login-form-logo__img" />
+        </div>
+      </div>
+
+      <div class="row my-4 px-4">
+        <div class="col-12 text-center">
+          <p class="confirmation-text">
+            <strong>¿Está seguro de actualizar la información de la empresa?</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="row my-4 px-4">
+        <div class="col-12 d-flex justify-content-evenly">
+          <p-button
+            label="Sí, actualizar"
+            class="btn-success-update"
+            (click)="confirmUpdate(true)"></p-button>
+          <p-button label="Cancelar" severity="danger" (click)="confirmUpdate(false)"></p-button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
 <app-modal-filing
   *ngIf="visibleDialogAlert"
   [select]="true"
@@ -421,3 +633,146 @@
     </div>
   </div>
 </div>
+
+<p-dialog
+  [(visible)]="mostrarEmpresaNoEncontrada"
+  [style]="{ width: '30vw' }"
+  [modal]="true"
+  [closable]="false"
+  [showHeader]="false">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <!-- Encabezado decorativo -->
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+
+      <!-- Logo -->
+      <div class="row">
+        <div class="login-form-logo d-flex justify-content-center my-4">
+          <img src="../../../assets/images/logo-login.png" class="login-form-logo__img" />
+        </div>
+      </div>
+
+      <!-- Contenido del mensaje -->
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">
+          <i
+            class="pi pi-exclamation-triangle warning-icon"
+            style="font-size: 2rem; color: #f44336; margin-bottom: 12px"></i>
+          <p class="dialog-message">La empresa no se encuentra registrada.</p>
+        </div>
+      </div>
+
+      <!-- Botón -->
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">
+          <p-button
+            label="Aceptar"
+            severity="danger"
+            (click)="cerrarEmpresaNoEncontrada()"></p-button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="showNoChangesModal"
+  [style]="{ width: '30vw' }"
+  [modal]="true"
+  [closable]="false"
+  [showHeader]="false">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <!-- Encabezado decorativo -->
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+
+      <!-- Logo -->
+      <div class="row">
+        <div class="login-form-logo d-flex justify-content-center my-4">
+          <img src="../../../assets/images/logo-login.png" class="login-form-logo__img" />
+        </div>
+      </div>
+
+      <!-- Contenido del mensaje -->
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">
+          <i
+            class="pi pi-exclamation-triangle warning-icon"
+            style="font-size: 2rem; color: #f44336; margin-bottom: 12px"></i>
+          <p class="dialog-message">No estás editando ningún campo.</p>
+        </div>
+      </div>
+
+      <!-- Botón -->
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">
+          <p-button label="Aceptar" severity="danger" (click)="closeNoChangesModal()"></p-button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-dialog
+  [(visible)]="showSuccessModal"
+  [style]="{ width: '30vw' }"
+  [modal]="true"
+  [closable]="false"
+  [showHeader]="false">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <!-- Encabezado decorativo -->
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+
+      <!-- Logo -->
+      <div class="row">
+        <div class="login-form-logo d-flex justify-content-center my-4">
+          <img src="../../../assets/images/logo-login.png" class="login-form-logo__img" />
+        </div>
+      </div>
+
+      <!-- Mensaje de éxito -->
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">
+          <i
+            class="pi pi-check-circle"
+            style="font-size: 2rem; color: #4caf50; margin-bottom: 12px"></i>
+          <p class="dialog-message">
+            La solicitud de actualización de información fue enviada correctamente y será procesada
+            por nuestro equipo.
+          </p>
+        </div>
+      </div>
+
+      <!-- Botón de redirección -->
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">
+          <p-button
+            label="Aceptar"
+            class="btn-success-update"
+            (click)="closeSuccessModal()"></p-button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

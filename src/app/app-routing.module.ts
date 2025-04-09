@@ -68,6 +68,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.SEARCH_UPDATE_COMPANY,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-update-company/search-update-company.module').then(
+        m => m.SearchUpdateCompanyModule
+      ),
+  },
+  {
     path: RoutesApp.REQUEST_REPORT,
     canActivate: [sessionGuard],
     component: LayoutComponent,
