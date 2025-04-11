@@ -135,17 +135,7 @@
                 </div>
 
                 <div class="card-form-row">
-                  <div class="p-field">
-                    <label class="card-form-input-placeholder">Dirección</label>
-                    <input type="text" formControlName="address" />
-                    <small
-                      class="error-message"
-                      *ngIf="
-                        requestForm.get('address')?.invalid && requestForm.get('address')?.touched
-                      ">
-                      La dirección es obligatoria.
-                    </small>
-                  </div>
+
 
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Correo Electrónico</label>
@@ -158,10 +148,18 @@
                       Ingrese un correo electrónico válido.
                     </small>
                   </div>
-                </div>
-                <div class="card-form-row" *ngIf="!isCorrectData">
-                  <div class="p-field"></div>
-                  <div class="p-field">
+                  <div class="p-field" *ngIf="isCorrectData">
+                    <label class="card-form-input-placeholder">Dirección</label>
+                    <input type="text" formControlName="address" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('address')?.invalid && requestForm.get('address')?.touched
+                      ">
+                      La dirección es obligatoria.
+                    </small>
+                  </div>
+                  <div class="p-field" *ngIf="!isCorrectData">
                     <label class="card-form-input-placeholder">Confirmar Correo Electrónico</label>
                     <input
                       type="email"
@@ -190,11 +188,25 @@
                     </small>
                   </div>
                 </div>
+                <div class="card-form-row" *ngIf="!isCorrectData">
+                  <div class="p-field">
+                    <label class="card-form-input-placeholder">Dirección</label>
+                    <input type="text" formControlName="address" />
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('address')?.invalid && requestForm.get('address')?.touched
+                      ">
+                      La dirección es obligatoria.
+                    </small>
+                  </div>
+                  <div class="p-field"></div>
+                </div>
 
                 <div class="card-form-row">
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Teléfono Fijo</label>
-                    <input type="text" formControlName="landline" />
+                    <input type="text" formControlName="landline" (input)="sanitizeInput($event, 'numeric')"/>
                     <small
                       class="error-message"
                       *ngIf="
@@ -205,8 +217,8 @@
                   </div>
 
                   <div class="p-field">
-                    <label class="card-form-input-placeholder">Teléfono Celular</label>
-                    <input type="text" formControlName="mobilePhone" />
+                    <label class="card-form-input-placeholder" >Teléfono Celular</label>
+                    <input type="text" formControlName="mobilePhone" (input)="sanitizeInput($event, 'numeric')" />
                     <small
                       class="error-message"
                       *ngIf="
@@ -222,7 +234,7 @@
                 <div class="card-form-row" *ngIf="!isCorrectData">
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Teléfono Celular Alterno</label>
-                    <input type="text" formControlName="alternateMobilePhone" />
+                    <input type="text" formControlName="alternateMobilePhone" (input)="sanitizeInput($event, 'numeric')" />
                     <small
                       class="error-message"
                       *ngIf="
@@ -293,7 +305,7 @@
 
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Número de Documento</label>
-                    <input type="text" formControlName="legalRepresentativeDocumentNumber" />
+                    <input type="text" formControlName="legalRepresentativeDocumentNumber" (input)="sanitizeInput($event, 'numeric')"/>
                     <small
                       class="error-message"
                       *ngIf="
@@ -308,7 +320,7 @@
                 <div class="card-form-row">
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Primer Nombre</label>
-                    <input type="text" formControlName="legalRepresentativeFirstName" />
+                    <input type="text" formControlName="legalRepresentativeFirstName" (input)="sanitizeInput($event, 'alpha')"/>
                     <small
                       class="error-message"
                       *ngIf="
@@ -321,14 +333,14 @@
 
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Segundo Nombre</label>
-                    <input type="text" formControlName="legalRepresentativeMiddleName" />
+                    <input type="text" formControlName="legalRepresentativeMiddleName" (input)="sanitizeInput($event, 'alpha')"/>
                   </div>
                 </div>
 
                 <div class="card-form-row">
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Primer Apellido</label>
-                    <input type="text" formControlName="legalRepresentativeLastName" />
+                    <input type="text" formControlName="legalRepresentativeLastName" (input)="sanitizeInput($event, 'alpha')"/>
                     <small
                       class="error-message"
                       *ngIf="
@@ -341,7 +353,7 @@
 
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Segundo Apellido</label>
-                    <input type="text" formControlName="legalRepresentativeSecondLastName" />
+                    <input type="text" formControlName="legalRepresentativeSecondLastName" (input)="sanitizeInput($event, 'alpha')"/>
                   </div>
                 </div>
 

@@ -42,7 +42,14 @@ export class FormCompanyComponent implements OnInit {
 
   requestForm!: FormGroup;
 
-  documentList!: [];
+  documentList: {
+    catalog_item_id: number;
+    catalog_item_name: string;
+    catalog_item_label: string;
+    catalog_id: number;
+    is_active: number;
+    regex: string;
+  }[] = [];
   document!: string;
   applicantType!: ApplicantTypeList;
   requestType!: RequestTypeList;
@@ -1510,21 +1517,74 @@ export class FormCompanyComponent implements OnInit {
   }
 
   getApplicantList() {
-    this.userService.getFormById(0).subscribe({
-      next: (response: BodyResponse<any[]>): void => {
-        if (response.code === 200) {
-          this.documentList = response.data[0].catalog_source;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
+    this.documentList = [
+      {
+        catalog_item_id: 6,
+        catalog_item_name: 'NIT',
+        catalog_item_label: 'NIT',
+        catalog_id: 0,
+        is_active: 1,
+        regex: '^[0-9]+$'
       },
-      error: (err: any) => {
-        console.log(err);
+      {
+        catalog_item_id: 3,
+        catalog_item_name: 'CEDULA CIUDADANIA',
+        catalog_item_label: 'CEDULA CIUDADANIA',
+        catalog_id: 0,
+        is_active: 1,
+        regex: '^[0-9]+$'
       },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
+      {
+        catalog_item_id: 4,
+        catalog_item_name: 'CEDULA EXTRANJERIA',
+        catalog_item_label: 'CEDULA EXTRANJERIA',
+        catalog_id: 0,
+        is_active: 1,
+        regex: '^[0-9]+$'
       },
-    });
+      {
+        catalog_item_id: 2,
+        catalog_item_name: 'TARJETA IDENTIDAD',
+        catalog_item_label: 'TARJETA IDENTIDAD',
+        catalog_id: 0,
+        is_active: 1,
+        regex: '.*'
+      },
+      {
+        catalog_item_id: 1,
+        catalog_item_name: 'PERM PROT TEMPORAL',
+        catalog_item_label: 'PERM PROT TEMPORAL',
+        catalog_id: 0,
+        is_active: 1,
+        regex: '.*'
+      },
+      {
+        catalog_item_id: 5,
+        catalog_item_name: 'PERM ESP PERMANENCIA',
+        catalog_item_label: 'PERM ESP PERMANENCIA',
+        catalog_id: 0,
+        is_active: 1,
+        regex: '.*'
+      }
+    ];
+
+
+    // this.userService.getFormById(0).subscribe({
+    //   next: (response: BodyResponse<any[]>): void => {
+    //     if (response.code === 200) {
+    //       this.documentList = response.data[0].catalog_source;
+    //       console.log('Lista de documentos:', this.documentList);
+    //     } else {
+    //       this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+    //     }
+    //   },
+    //   error: (err: any) => {
+    //     console.log(err);
+    //   },
+    //   complete: () => {
+    //     console.log('La suscripción ha sido completada.');
+    //   },
+    // });
   }
 
   continueCompanyUpdate(inputValue: CompanyUpdateRequest) {
@@ -2456,4 +2516,27 @@ export class FormCompanyComponent implements OnInit {
     this.showSuccessModal = false;
     this.router.navigate([RoutesApp.CREATE_REQUEST]);
   }
+
+  sanitizeInput(event: Event, type: 'numeric' | 'alpha'): void {
+    const input = event.target as HTMLInputElement;
+    let sanitizedValue = input.value;
+
+    if (type === 'numeric') {
+      sanitizedValue = sanitizedValue.replace(/\D/g, '');
+    } else if (type === 'alpha') {
+      sanitizedValue = sanitizedValue.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    }
+
+    input.value = sanitizedValue;
+
+    const controlName = input.getAttribute('formControlName');
+    if (controlName) {
+      const control = this.requestForm.get(controlName);
+      control?.setValue(sanitizedValue, { emitEvent: true });
+      control?.markAsTouched();
+      control?.updateValueAndValidity();
+    }
+  }
+
+
 }
