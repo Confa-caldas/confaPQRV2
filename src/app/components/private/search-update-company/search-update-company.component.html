@@ -1,0 +1,362 @@
+<div *ngIf="isSpinnerVisible" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Consultar información Actualización empresa</div>
+  </div>
+</div>
+<form [formGroup]="formGroup">
+  <div class="position-relative">
+    <div class="card flex justify-content-center absolute-center">
+      <div class="filters-row">
+        <!-- <div class="filters-col">
+          <input
+            pInputText
+            class="filters-input"
+            pKeyFilter="int"
+            placeholder="Número de radicado"
+            formControlName="filing_number" />
+        </div> -->
+        <div class="filters-col">
+          <p-calendar
+            formControlName="dates_range"
+            selectionMode="range"
+            [readonlyInput]="true"
+            [style]="{ 'align-items': 'center', 'border-radius': '5px' }"
+            [iconDisplay]="'input'"
+            [showIcon]="true"
+            placeholder="Rango de fechas "
+            class="calendar"></p-calendar>
+        </div>
+        <div class="filters-col">
+          <input
+            pInputText
+            pKeyFilter="text"
+            class="filters-input"
+            placeholder=" Número de nit"
+            formControlName="doc_id" />
+        </div>
+        <div class="filters-col">
+          <input
+            pInputText
+            pKeyFilter="text"
+            class="filters-input"
+            placeholder="Nombre de la empresa"
+            formControlName="applicant_name" />
+        </div>
+        <div class="filters-col">
+          <p-dropdown
+            formControlName="report_type"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="updateTypeList"
+            optionLabel="name"
+            optionValue="value"
+            placeholder="Seleccione el tipo de actualización"></p-dropdown>
+        </div>
+        <div class="button-group">
+          <p-button
+            icon="pi pi-trash"
+            pTooltip="Limpiar"
+            [styleClass]="'btn-icon-info'"
+            tooltipPosition="top"
+            (click)="cleanForm()">
+          </p-button>
+
+          <p-button
+            icon="pi pi-search"
+            pTooltip="Buscar"
+            [styleClass]="'btn-icon-info'"
+            tooltipPosition="top"
+            (click)="initPaginador()">
+          </p-button>
+
+          <p-button
+            icon="pi pi-file-excel"
+            [styleClass]="'btn-export-excel'"
+            pTooltip="Exportar a Excel"
+            tooltipPosition="top"
+            (click)="exportToExcel()">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<div class="mt-auto">
+  <p-table
+    [value]="requestList"
+    dataKey="company_update_id"
+    [rows]="10"
+    [loading]="loading"
+    [totalRecords]="totalRows"
+    [scrollable]="true"
+    scrollHeight="500px"
+    selectionMode="single"
+    [(selection)]="selectedRequests"
+    stateStorage="session"
+    stateKey="company-update-table">
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="company_update_id" style="width: 5%">
+          Nmero de radicado<p-sortIcon field="company_update_id"></p-sortIcon>
+        </th>
+        <th pSortableColumn="business_name">
+          Razón Social <p-sortIcon field="business_name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="document_number">
+          NIT <p-sortIcon field="document_number"></p-sortIcon>
+        </th>
+        <th pSortableColumn="verification_digit" style="width: 5%">
+          DV <p-sortIcon field="verification_digit"></p-sortIcon>
+        </th>
+        <th>Doc. Representante</th>
+        <th>Nombre Representante</th>
+        <th style="width: 5%">Acciones</th>
+        <th style="width: 10%">Adjuntos</th>
+        <th style="width: 5%">Descargar</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>{{ row.company_update_id }}</td>
+        <td>{{ row.business_name }}</td>
+        <td>{{ row.document_number }}</td>
+        <td>{{ row.verification_digit }}</td>
+        <td>{{ row.legal_representative_document_number }}</td>
+        <td>
+          {{
+            row.legal_representative_first_name +
+              ' ' +
+              row.legal_representative_middle_name +
+              ' ' +
+              row.legal_representative_last_name +
+              ' ' +
+              row.legal_representative_second_last_name
+          }}
+        </td>
+        <td>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-eye"
+            pTooltip="Ver detalle"
+            tooltipPosition="top"
+            (click)="showDetails(row)"></button>
+        </td>
+        <td>
+          <ng-container *ngFor="let doc of row.documentLinks">
+            <p-button
+              *ngIf="handleBtn(doc.url.split('@').pop(), doc.fileName.split('.').pop())"
+              icon="pi pi-eye"
+              [styleClass]="'btn-icon-info'"
+              (click)="getPreSignedUrlToDownload(doc.url.split('@')[0], doc.fileName, false)"
+              [pTooltip]="doc.fileName"
+              tooltipPosition="top">
+            </p-button>
+          </ng-container>
+        </td>
+        <td [ngStyle]="{ 'text-align': 'center' }">
+          <p-button
+            *ngIf="row.documentLinks && row.documentLinks.length > 0"
+            icon="pi pi-download"
+            [styleClass]="'btn-icon-info'"
+            (click)="downloadAllFiles(row.documentLinks)">
+          </p-button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-paginator
+    (onPageChange)="onPageChange($event)"
+    [first]="first"
+    [rows]="rows"
+    [totalRecords]="totalRows"
+    [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+
+  <!-- MODAL DE DETALLE -->
+  <p-dialog
+    [(visible)]="modalVisible"
+    [modal]="true"
+    [style]="{ width: '60vw' }"
+    [closable]="true"
+    [dismissableMask]="true"
+    class="custom-modal">
+    <ng-container *ngIf="selectedRecord">
+      <h4
+        class="section-title"
+        style="display: flex; align-items: center; justify-content: space-between">
+        <span>Información de la Empresa</span>
+        <span *ngIf="selectedRecord.created_at" style="font-weight: normal; font-size: 0.9rem">
+          <i class="pi pi-calendar" style="margin-right: 0.3rem"></i>
+          <strong>Fecha de registro usuario:</strong>
+          <strong style="color: #000">{{ selectedRecord.created_at | date: 'yyyy-MM-dd' }}</strong>
+        </span>
+      </h4>
+
+      <div class="grid">
+        <div class="col-4"><strong>Razón social:</strong> {{ selectedRecord.business_name }}</div>
+        <div class="col-4"><strong>Nombre comercial:</strong> {{ selectedRecord.trade_name }}</div>
+        <div class="col-4">
+          <strong>NIT:</strong> {{ selectedRecord.document_number }} -
+          {{ selectedRecord.verification_digit }}
+        </div>
+        <div class="col-4">
+          <strong>Tipo de documento:</strong> {{ selectedRecord.document_type }}
+        </div>
+        <div class="col-4"><strong>Departamento:</strong> {{ selectedRecord.department }}</div>
+        <div class="col-4"><strong>Municipio:</strong> {{ selectedRecord.municipality }}</div>
+        <div class="col-4"><strong>Dirección:</strong> {{ selectedRecord.address }}</div>
+        <div class="col-4">
+          <strong>Teléfono fijo:</strong> {{ selectedRecord.landline || 'N/A' }}
+        </div>
+        <div class="col-4">
+          <strong>Teléfono celular:</strong> {{ selectedRecord.mobile_phone }}
+        </div>
+        <div class="col-4">
+          <strong>Teléfono alterno:</strong> {{ selectedRecord.alternate_mobile_phone || 'N/A' }}
+        </div>
+        <div class="col-4"><strong>Email:</strong> {{ selectedRecord.email }}</div>
+        <div class="col-4">
+          <strong>Email alterno:</strong> {{ selectedRecord.alternate_email || 'N/A' }}
+        </div>
+      </div>
+
+      <h4 class="section-title">Representante Legal</h4>
+      <div class="grid">
+        <div class="col-4">
+          <strong>Tipo de documento:</strong>
+          {{ selectedRecord.legal_representative_document_type }}
+        </div>
+        <div class="col-4">
+          <strong>Número de documento:</strong>
+          {{ selectedRecord.legal_representative_document_number }}
+        </div>
+        <div class="col-4">
+          <strong>Nombre completo:</strong>
+          {{ selectedRecord.legal_representative_first_name }}
+          {{ selectedRecord.legal_representative_middle_name || '' }}
+          {{ selectedRecord.legal_representative_last_name }}
+          {{ selectedRecord.legal_representative_second_last_name || '' }}
+        </div>
+      </div>
+
+      <h4 class="section-title">Actividad Económica</h4>
+      <div class="grid">
+        <div class="col-4">
+          <strong>Código CIIU:</strong> {{ selectedRecord.economic_activity_ciiu_code }}
+        </div>
+        <div class="col-4">
+          <strong>Descripción:</strong> {{ selectedRecord.economic_activity_ciiu_description }}
+        </div>
+      </div>
+
+      <h4 class="section-title">Actualizaciones</h4>
+      <div class="grid">
+        <div class="col-4">
+          <strong>Información General Actualizada:</strong>
+          {{ selectedRecord.updated_general_info ? 'Sí' : 'No' }}
+        </div>
+        <div class="col-4">
+          <strong>Representante Legal Actualizado:</strong>
+          {{ selectedRecord.updated_legal_representative ? 'Sí' : 'No' }}
+        </div>
+        <div class="col-4">
+          <strong>Actividad Económica Actualizada:</strong>
+          {{ selectedRecord.updated_economic_activity ? 'Sí' : 'No' }}
+        </div>
+      </div>
+      <h4 class="section-title" *ngIf="formGroup.get('report_type')?.value === 1">Gestión</h4>
+      <div class="grid" *ngIf="formGroup.get('report_type')?.value === 1">
+        <div class="col-4">
+          <p-dropdown
+            [options]="yesNoOptions"
+            [(ngModel)]="selectedRecord.management_result"
+            placeholder="¿La gestión fue exitosa?"
+            optionLabel="label"
+            optionValue="value"
+            [disabled]="selectedRecord.alreadyManaged ?? false"
+            (onChange)="onGestionChange($event)">
+          </p-dropdown>
+        </div>
+
+        <div class="col-8">
+          <textarea
+            rows="3"
+            class="form-control"
+            placeholder="Observaciones"
+            [(ngModel)]="selectedRecord.management_observation"
+            [disabled]="
+              (selectedRecord.alreadyManaged ?? false) || selectedRecord.management_result !== 'NO'
+            "
+            [ngClass]="{
+              'is-invalid':
+                showValidationError &&
+                selectedRecord.management_result === 'NO' &&
+                !selectedRecord.management_observation
+            }">
+          </textarea>
+          <div
+            *ngIf="
+              showValidationError &&
+              selectedRecord.management_result === 'NO' &&
+              !selectedRecord.management_observation
+            "
+            class="invalid-feedback">
+            La observación es obligatoria si selecciona 'No'.
+          </div>
+        </div>
+
+        <div
+          class="col-12 mt-2"
+          *ngIf="!(selectedRecord.alreadyManaged ?? false)"
+          [ngStyle]="{ display: 'flex', 'justify-content': 'center' }">
+          <p-button
+            label="Guardar gestión"
+            icon="pi pi-save"
+            (click)="saveGestion()"
+            class="p-button-success">
+          </p-button>
+        </div>
+      </div>
+    </ng-container>
+  </p-dialog>
+</div>
+<p-dialog
+  header="Previsualización del Documento"
+  [(visible)]="displayPreviewModal"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="displayPreviewModal = false">
+  <div *ngIf="viewerType === 'google'">
+    <ngx-doc-viewer
+      [url]="preSignedUrlDownload"
+      viewer="google"
+      style="width: 100%; height: 500px"></ngx-doc-viewer>
+  </div>
+
+  <div *ngIf="viewerType === 'office'">
+    <ngx-doc-viewer
+      [url]="preSignedUrlDownload"
+      viewer="office"
+      style="width: 100%; height: 500px"></ngx-doc-viewer>
+  </div>
+
+  <div *ngIf="viewerType === 'image'" class="image-container">
+    <img [src]="preSignedUrlDownload" alt="Preview" class="image-preview" />
+  </div>
+
+  <div *ngIf="viewerType === 'pdf'">
+    <ngx-doc-viewer
+      [url]="preSignedUrlDownload"
+      viewer="google"
+      style="width: 100%; height: 500px"></ngx-doc-viewer>
+  </div>
+</p-dialog>
+
+<p-toast></p-toast>

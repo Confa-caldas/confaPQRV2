@@ -28,6 +28,7 @@ export class CreateRequestComponent {
   transactionId: string = '';
   ip: string = '';
   userEnvironmentData: any;
+  showConfirmationModal: boolean = false;
 
   constructor(
     private router: Router,
@@ -151,10 +152,12 @@ export class CreateRequestComponent {
       this.optionsRequest.controls['applicant_id'].value.applicant_type_id === 1 &&
       this.optionsRequest.controls['request_id'].value.request_type_id === 21
     ) {
-      window.open(
-        'https://docs.google.com/forms/d/e/1FAIpQLSc11ps8y0lrKKZEa83wtJC2VrtoSe7p1IMXfeM2bzDSxFagdg/viewform',
-        '_blank'
-      );
+      this.showConfirmationModal = true;
+      // this.router.navigate([RoutesApp.FORM_COMPANY]);
+      // window.open(
+      //   'https://docs.google.com/forms/d/e/1FAIpQLSc11ps8y0lrKKZEa83wtJC2VrtoSe7p1IMXfeM2bzDSxFagdg/viewform',
+      //   '_blank'
+      // );
     } else {
       const payload: ProcessRequest = {
         operation: 'insert',
@@ -194,5 +197,13 @@ export class CreateRequestComponent {
   }
   setParameterDataT(dataTreatment: boolean) {
     this.optionsRequest.get('authorize')?.setValue(dataTreatment);
+  }
+
+  confirmUpdate(isConfirmed: boolean) {
+    if (isConfirmed){
+      this.router.navigate([RoutesApp.FORM_COMPANY]);
+    }else{
+      this.showConfirmationModal = false;
+    }
   }
 }
