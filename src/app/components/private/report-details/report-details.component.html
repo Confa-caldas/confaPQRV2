@@ -13,6 +13,9 @@
           #dt1
           [value]="requestReportDetailAll"
           [tableStyle]="{ 'min-width': '50rem' }"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 20]"
           styleClass="p-datatable-striped"
           [globalFilterFields]="dynamicColumns"
           (onFilter)="updateChart(dt1.filteredValue)">
@@ -47,6 +50,9 @@
           #dt1
           [value]="requestReportStatus"
           [tableStyle]="{ 'min-width': '50rem' }"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 20]"
           styleClass="p-datatable-striped"
           [globalFilterFields]="dynamicColumns"
           (onFilter)="updateChart(dt1.filteredValue)">
@@ -115,6 +121,9 @@
           #dt1
           [value]="requestReportStatusByAssignedUser"
           [tableStyle]="{ 'min-width': '50rem' }"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 20]"
           styleClass="p-datatable-striped"
           [globalFilterFields]="dynamicColumns"
           (onFilter)="updateChart(dt1.filteredValue)">

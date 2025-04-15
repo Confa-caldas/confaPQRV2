@@ -79,6 +79,18 @@
                     optionValue="request_type_id"
                     placeholder="Tipo de Solicitud"></p-multiSelect>
                 </div>
+
+                <div class="filters-col">
+                  <p-dropdown
+                    formControlName="priority_level"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                    [options]="priorityLevelList"
+                    optionLabel="name"
+                    optionValue="value"
+                    placeholder="Nivel de prioridad">
+                  </p-dropdown>
+                </div>
+
                 <div class="filters-colButtonsAssigened">
                   <p-button
                     icon="pi pi-trash"
@@ -110,6 +122,8 @@
           currentPageReportTemplate="{first} de {totalRecords}">
           <ng-template pTemplate="header">
             <tr>
+              <th style="width: 5%"></th>
+              <th style="width: 5%"></th>
               <th pSortableColumn="filing_number" style="min-width: 12rem">
                 Número de radicado<p-sortIcon field="filing_number"></p-sortIcon>
               </th>
@@ -137,12 +151,27 @@
               <th pSortableColumn="assigned_user" style="min-width: 15rem">
                 Responsable solicitud
               </th>
-              <th style="width: 5%"></th>
               <th style="min-width: 7rem"></th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-requestListByAssigned>
             <tr>
+              <td>
+                <p-button
+                  icon="pi pi-eye"
+                  [styleClass]="'btn-icon-info'"
+                  (click)="redirectDetails(requestListByAssigned.request_id)"></p-button>
+              </td>
+              <td>
+                <i
+                  *ngIf="requestListByAssigned.priority_level === 1 || requestListByAssigned.priority_level === 2"
+                  class="pi pi-exclamation-triangle custom-tooltip"
+                  [style.color]="requestListByAssigned.priority_level === 1 ? 'orange' : 'red'"
+                  style="font-size: 1.2rem"
+                  pTooltip="{{ requestListByAssigned.message_priority }}"
+                  tooltipPosition="top">
+                </i>
+              </td>
               <td>{{ requestListByAssigned.filing_number }}</td>
               <td>{{ requestListByAssigned.filing_date_date | date }}</td>
               <td>{{ requestListByAssigned.applicant_type_name }}</td>
@@ -159,12 +188,7 @@
                 </div>
               </td>
               <td>{{ requestListByAssigned.user_name_completed }}</td>
-              <td>
-                <p-button
-                  icon="pi pi-eye"
-                  [styleClass]="'btn-icon-info'"
-                  (click)="redirectDetails(requestListByAssigned.request_id)"></p-button>
-              </td>
+              
               <td>
                 <button
                   class="custom-button"

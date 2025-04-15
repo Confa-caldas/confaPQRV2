@@ -110,7 +110,32 @@
               
             </div>
 
-            <div class="card-form-row">
+            
+
+            <br>
+            <div class="card-form-row contact-preferences">
+              <h3>¿Cómo desea ser contactado?</h3>
+            </div>
+            <div class="card-form-row contact-preferences">
+              <div *ngFor="let opcion of opciones">
+                <p-checkbox 
+                  [binary]="true"
+                  [inputId]="'check-' + opcion"
+                  formControlName="{{opcion}}"
+                  (onChange)="toggleCampo($event, opcion)">
+                </p-checkbox>
+                  <label [for]="'check-' + opcion">{{ opcion | titlecase }}</label>
+
+              </div>
+            </div>
+
+            <label class="card-form-input-placeholder-invalid" *ngIf="requestForm.get('contactos')?.hasError('atLeastOneRequired')">
+                Debes seleccionar al menos una opción.
+            </label>
+            
+            <br>
+
+            <div class="card-form-row" *ngIf="estaSeleccionado('correo')">
               <div class="card-form-input">
                 <label class="card-form-input-placeholder">Correo electrónico*</label>
                 <input
@@ -158,75 +183,65 @@
               </div>
             </div>
 
-            <br>
-            <div class="card-form-row contact-preferences">
-              <h3>¿Cómo desea ser contactado?</h3>
-            </div>
-            <div class="card-form-row contact-preferences">
-              <div *ngFor="let opcion of opciones">
-                <p-checkbox 
-                  [binary]="true"
-                  [inputId]="'check-' + opcion"
-                  formControlName="{{opcion}}"
-                  (onChange)="toggleCampo($event, opcion)">
-                </p-checkbox>
-                  <label [for]="'check-' + opcion">{{ opcion | titlecase }}</label>
-
+            <div class="card-form-row" *ngIf="estaSeleccionado('sms')">
+              
+              <div class="card-form-input">
+                <label class="card-form-input-placeholder">Celular*</label>
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="cellphone"
+                  class="card-form-input-options"
+                  placeholder="*Ingresa el número de celular" />
+                <label class="card-form-input-placeholder-invalid">
+                  {{
+                    requestForm.get('cellphone')?.hasError('pattern') &&
+                    requestForm.get('cellphone')?.touched
+                      ? 'Ingrese solo números y máximo 10 dígitos'
+                      : ''
+                  }}{{
+                    requestForm.get('cellphone')?.hasError('required') &&
+                    requestForm.get('cellphone')?.touched
+                      ? 'Campo Requerido'
+                      : ''
+                  }}</label
+                >
               </div>
+
+              <!--
+              <div class="card-form-input">
+                <label class="card-form-input-placeholder">Confirme el número celular*</label>
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="validator_cellphone"
+                  class="card-form-input-options"
+                  placeholder="*Confirme el número de celular" />
+                <label class="card-form-input-placeholder-invalid">
+                  {{
+                    requestForm.get('validator_cellphone')?.hasError('pattern') &&
+                    requestForm.get('validator_cellphone')?.touched
+                      ? 'Ingrese solo números y máximo 10 dígitos'
+                      : ''
+                  }}{{
+                    requestForm.get('validator_cellphone')?.hasError('required') &&
+                    requestForm.get('validator_cellphone')?.touched
+                      ? 'Campo Requerido'
+                      : ''
+                  }}
+                  
+                  {{
+                    requestForm.hasError('cellphoneNotMatched') &&
+                    requestForm.get('validator_cellphone')?.touched
+                      ? 'Los números de celular no coinciden'
+                      : ''
+                  }}
+                  </label>
+              </div> -->
+
             </div>
 
-            <label class="card-form-input-placeholder-invalid" *ngIf="requestForm.get('contactos')?.hasError('atLeastOneRequired')">
-                Debes seleccionar al menos una opción.
-            </label>
             
-            
-            <br>
-
-            <div class="card-form-input" *ngIf="estaSeleccionado('llamada')">
-              <label class="card-form-input-placeholder">Celular*</label>
-              <input
-                type="text"
-                pInputText
-                formControlName="cellphone"
-                class="card-form-input-options"
-                placeholder="*Ingresa el número de celular" />
-              <label class="card-form-input-placeholder-invalid">
-                {{
-                  requestForm.get('cellphone')?.hasError('pattern') &&
-                  requestForm.get('cellphone')?.touched
-                    ? 'Ingrese solo números y máximo 10 dígitos'
-                    : ''
-                }}{{
-                  requestForm.get('cellphone')?.hasError('required') &&
-                  requestForm.get('cellphone')?.touched
-                    ? 'Campo Requerido'
-                    : ''
-                }}</label
-              >
-            </div>
-
-            <div class="card-form-input" *ngIf="estaSeleccionado('whatsapp')">
-              <label class="card-form-input-placeholder">Whatsapp</label>
-              <input
-                type="text"
-                pInputText
-                formControlName="numWhatsapp"
-                class="card-form-input-options"
-                placeholder="*Ingresa el número de Whatsapp" />
-              <label class="card-form-input-placeholder-invalid">
-                {{
-                  requestForm.get('numWhatsapp')?.hasError('pattern') &&
-                  requestForm.get('numWhatsapp')?.touched
-                    ? 'Ingrese solo números y máximo 10 dígitos'
-                    : ''
-                }}{{
-                  requestForm.get('numWhatsapp')?.hasError('required') &&
-                  requestForm.get('numWhatsapp')?.touched
-                    ? 'Campo Requerido'
-                    : ''
-                }}</label
-              >
-            </div>
   
             
   

@@ -58,6 +58,12 @@ export class SearchRequestComponent implements OnInit {
 
   isPriorityList: IsPriority[] = [];
 
+  priorityLevelList = [
+    { name: 'Sin prioridad', value: 0 },
+    { name: 'Prioridad baja', value: 1 },
+    { name: 'Prioridad alta', value: 2 }
+  ];
+
   constructor(
     private userService: Users,
     private router: Router,
@@ -73,7 +79,8 @@ export class SearchRequestComponent implements OnInit {
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
       request_status_id: new FormControl(null),
-      is_priority: new FormControl(null),
+      //is_priority: new FormControl(null),
+      priority_level: new FormControl(null),
     });
 
     this.formGroup.get('request_status_id')?.valueChanges.subscribe(value => {
@@ -265,7 +272,8 @@ export class SearchRequestComponent implements OnInit {
         this.formGroup.controls['request_status_id'].value.length > 0
           ? this.formGroup.controls['request_status_id'].value
           : filtros['request_status_id'] || null,
-      is_priority: this.formGroup.controls['is_priority'].value || null,
+      //is_priority: this.formGroup.controls['is_priority'].value || null,
+      priority_level: this.formGroup.controls['priority_level'].value,
 
       page: this.page,
       page_size: this.rows,

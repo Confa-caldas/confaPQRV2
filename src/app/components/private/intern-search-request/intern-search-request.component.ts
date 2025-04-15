@@ -19,6 +19,7 @@ import { formatDate } from '@angular/common';
 import { SessionStorageItems } from '../../../enums/session-storage-items.enum';
 import { FormControl, FormGroup } from '@angular/forms';
 import { PaginatorState } from 'primeng/paginator';
+import { computeStyles } from '@popperjs/core';
 
 @Component({
   selector: 'app-intern-search-request',
@@ -63,6 +64,12 @@ export class InternSearchRequestComponent implements OnInit {
 
   isPriorityList: IsPriority[] = [];
 
+  priorityLevelList = [
+    { name: 'Sin prioridad', value: 0 },
+    { name: 'Prioridad baja', value: 1 },
+    { name: 'Prioridad alta', value: 2 }
+  ];
+
   constructor(
     private userService: Users,
     private router: Router,
@@ -80,7 +87,8 @@ export class InternSearchRequestComponent implements OnInit {
       request_status_id: new FormControl(null),
       confa_user: new FormControl(null),
       area_name: new FormControl(null),
-      is_priority: new FormControl(null),
+      //is_priority: new FormControl(null),
+      priority_level: new FormControl(null),
     });
 
     this.formGroup.get('request_status_id')?.valueChanges.subscribe(value => {
@@ -264,7 +272,8 @@ export class InternSearchRequestComponent implements OnInit {
         this.formGroup.controls['request_status_id'].value.length > 0
           ? this.formGroup.controls['request_status_id'].value
           : filtros['request_status_id'] || null,
-      is_priority: this.formGroup.controls['is_priority'].value || null,
+      //is_priority: this.formGroup.controls['is_priority'].value || null,
+      priority_level: this.formGroup.controls['priority_level'].value,
       confa_user: this.formGroup.controls['confa_user'].value || null,
       area_name: this.formGroup.controls['area_name'].value || null,
 
@@ -272,6 +281,7 @@ export class InternSearchRequestComponent implements OnInit {
       page_size: this.rows,
     };
 
+    console.log("Request ---------------: ", payload);
     this.getRequestListByFilterIntern(payload);
   }
   convertDates(dateString: string) {

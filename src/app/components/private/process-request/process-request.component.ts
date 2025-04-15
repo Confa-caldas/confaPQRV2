@@ -64,6 +64,12 @@ export class ProcessRequestComponent implements OnInit {
   rowsAssigned: number = 10;
   totalRowsAssigned: number = 0;
 
+  priorityLevelList = [
+    { name: 'Sin prioridad', value: 0 },
+    { name: 'Prioridad baja', value: 1 },
+    { name: 'Prioridad alta', value: 2 }
+  ];
+
   constructor(
     private userService: Users,
     private router: Router,
@@ -79,7 +85,8 @@ export class ProcessRequestComponent implements OnInit {
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
       request_status_id: new FormControl(null),
-      is_priority: new FormControl(null),
+      //is_priority: new FormControl(null),
+      priority_level: new FormControl(null),
     });
     this.filterFormAssigned = new FormGroup({
       dates_range: new FormControl(null),
@@ -213,7 +220,8 @@ export class ProcessRequestComponent implements OnInit {
       request_type_id: this.filterForm.controls['request_type_id'].value || null,
       assigned_user: this.filterForm.controls['assigned_user'].value || null,
       status_id: this.filterForm.controls['request_status_id'].value || null,
-      is_priority: this.filterForm.controls['is_priority'].value || null,
+      //is_priority: this.filterForm.controls['is_priority'].value || null,
+      priority_level: this.filterForm.controls['priority_level'].value,
 
       page: this.page,
       page_size: this.rows,
@@ -278,6 +286,7 @@ export class ProcessRequestComponent implements OnInit {
       applicant_type_id: this.filterFormAssigned.controls['applicant_type_id'].value || null,
       request_type_id: this.filterFormAssigned.controls['request_type_id'].value || null,
       status_id: this.filterFormAssigned.controls['request_status_id'].value || null,
+      priority_level: this.filterFormAssigned.controls['priority_level'].value,
       page: this.pageAssigned,
       page_size: this.rowsAssigned,
     };

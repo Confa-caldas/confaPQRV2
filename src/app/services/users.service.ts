@@ -646,4 +646,11 @@ export class Users {
       payload
     );
   }
+
+  uploadPostSdk(payload: any) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ATTACHMENTS_FILES_SDK}`,
+      payload
+    );
+  }
 }

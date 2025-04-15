@@ -42,7 +42,7 @@
             placeholder="Nombre solicitante"
             formControlName="applicant_name" />
         </div>
-
+        <!--
         <div class="filters-col">
           <p-dropdown
             formControlName="is_priority"
@@ -51,6 +51,16 @@
             optionLabel="name"
             optionValue="value"
             placeholder="Es prioridad?"></p-dropdown>
+        </div> -->
+        <div class="filters-col">
+          <p-dropdown
+            formControlName="priority_level"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="priorityLevelList"
+            optionLabel="name"
+            optionValue="value"
+            placeholder="Nivel de prioridad">
+          </p-dropdown>
         </div>
       </div>
       <div class="filters-row">
@@ -169,11 +179,13 @@
         </td>
         <td>
           <i
-            *ngIf="requestList.is_priority"
+            *ngIf="requestList.priority_level === 1 || requestList.priority_level === 2"
             class="pi pi-exclamation-triangle custom-tooltip"
-            style="font-size: 1.2rem; color: orange"
+            [style.color]="requestList.priority_level === 1 ? 'orange' : 'red'"
+            style="font-size: 1.2rem"
             pTooltip="{{ requestList.message_priority }}"
-            tooltipPosition="top"></i>
+            tooltipPosition="top">
+          </i>
         </td>
         <td style="text-align: center">{{ requestList.filing_number }}</td>
         <td>{{ requestList.filing_date_date | date }}</td>

@@ -817,6 +817,7 @@ export class RequestFormComponent implements OnInit {
 } */
 
 //MEJORA 2025 SUBIDA
+/*
 async attachApplicantFiles(request_id: number) {
   this.isSpinnerVisible = true;
   this.hasPendingChanges = true;
@@ -903,7 +904,115 @@ async attachApplicantFiles(request_id: number) {
           this.uploadProgress = 0;
       }, 500);
   }
+} */
+
+
+async attachApplicantFiles(request_id: number) {
+  this.isSpinnerVisible = true;
+  this.hasPendingChanges = true;
+  this.uploadProgress = 0;
+
+  try {
+    if (!this.arrayApplicantAttachment || this.arrayApplicantAttachment.length === 0) {
+        console.warn('No hay archivos para subir.');
+        return;
+    }
+
+    const ruta_archivo_ws = environment.ruta_archivos_ws;
+    const totalFiles = this.arrayApplicantAttachment.length;
+    let uploadedFiles = 0;
+
+    // Paso 1: Enviar archivos al servidor (base de datos)
+    const estructura = {
+        idSolicitud: `${request_id}`,
+        archivos: this.arrayApplicantAttachment.map(file => ({
+            base64file: file.base64file,
+            source_name: file.source_name,
+            fileweight: file.fileweight,
+        })),
+    };
+
+    try {
+        await this.envioArchivosServer(ruta_archivo_ws, estructura);
+    } catch (error) {
+        console.error("Error al enviar archivos:", error);
+    }
+
+    // Paso 2: Subir archivos por ambos métodos (URL prefirmada y SDK vía Lambda)
+    for (const item of this.arrayApplicantAttachment) {
+        try {
+            // Obtener URL prefirmada
+            const preSignedUrl = await this.retry(
+                () => this.getPreSignedUrl(item, request_id),
+                1, // Intentos
+                2000 // Retraso entre intentos
+            );
+
+            if (!preSignedUrl) {
+                console.error(`No se pudo obtener la URL prefirmada para: ${item.source_name}`);
+                continue;
+            }
+
+            // Asignar la URL al archivo
+            item.preSignedUrl = preSignedUrl;
+
+            // Subir en paralelo a S3 (preSignedUrl) y al backend (Lambda con SDK)
+            await Promise.all([
+                this.retry(() => this.uploadToPresignedUrl(item, request_id), 3, 3000),
+                this.retry(() => this.uploadViaLambda(item, request_id), 3, 3000)
+            ]);
+
+            uploadedFiles++;
+            this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+            this.changeDetectorRef.detectChanges();
+
+        } catch (error) {
+            console.error(`Error al procesar el archivo ${item.source_name}:`, error);
+        }
+      }
+
+      this.uploadProgress = 100;
+      this.changeDetectorRef.detectChanges();
+
+      // Restablecer formulario y mostrar mensaje de éxito
+      this.requestForm.reset();
+      this.fileNameList.clear();
+      this.showAlertModal(request_id);
+
+  } catch (error) {
+      console.error('Error durante el proceso de carga:', error);
+      this.showAlertModalError(request_id);
+  } finally {
+      setTimeout(() => {
+          this.isSpinnerVisible = false;
+          this.hasPendingChanges = false;
+          this.uploadProgress = 0;
+      }, 500);
+  }
 }
+
+async uploadViaLambda(file: any, request_id: number) {
+  try {
+      const payload = {
+          file: file.base64file, // Archivo en Base64
+          filename: file.source_name,
+          source_name: file.source_name,
+          request_id: request_id
+      };
+
+      // Llamado a la API de la Lambda a través de userService
+      const response = await this.userService.uploadPostSdk(payload).toPromise();
+      console.log('Subida a S3 vía SDK exitosa:', response);
+
+  } catch (error) {
+      console.error('Error subiendo archivo vía Lambda:', error);
+      throw error;
+  }
+}
+
+
+
+
 
 
 async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): Promise<T> {
