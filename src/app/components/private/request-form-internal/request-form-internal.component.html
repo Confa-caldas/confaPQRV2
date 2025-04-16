@@ -192,7 +192,8 @@
                   pInputText
                   formControlName="cellphone"
                   class="card-form-input-options"
-                  placeholder="*Ingresa el número de celular" />
+                  placeholder="*Ingresa el número de celular"
+                  (keypress)="allowOnlyNumbers($event)" />
                 <label class="card-form-input-placeholder-invalid">
                   {{
                     requestForm.get('cellphone')?.hasError('pattern') &&
@@ -208,7 +209,7 @@
                 >
               </div>
 
-              <!--
+              
               <div class="card-form-input">
                 <label class="card-form-input-placeholder">Confirme el número celular*</label>
                 <input
@@ -216,28 +217,21 @@
                   pInputText
                   formControlName="validator_cellphone"
                   class="card-form-input-options"
-                  placeholder="*Confirme el número de celular" />
+                  placeholder="*Confirme el número de celular"
+                  (keypress)="allowOnlyNumbers($event)" />
                 <label class="card-form-input-placeholder-invalid">
-                  {{
-                    requestForm.get('validator_cellphone')?.hasError('pattern') &&
-                    requestForm.get('validator_cellphone')?.touched
-                      ? 'Ingrese solo números y máximo 10 dígitos'
-                      : ''
-                  }}{{
-                    requestForm.get('validator_cellphone')?.hasError('required') &&
-                    requestForm.get('validator_cellphone')?.touched
-                      ? 'Campo Requerido'
-                      : ''
-                  }}
+                  <div *ngIf="requestForm.get('validator_cellphone')?.hasError('pattern') && requestForm.get('validator_cellphone')?.touched">
+                    Ingrese solo números y máximo 10 dígitos
+                  </div>
+                  <div *ngIf="requestForm.get('validator_cellphone')?.hasError('required') && requestForm.get('validator_cellphone')?.touched">
+                    Campo Requerido
+                  </div>
+                  <div *ngIf="requestForm.hasError('cellphoneNotMatched') && requestForm.get('validator_cellphone')?.touched">
+                    Los números de celular no coinciden
+                  </div>
+                </label>
                   
-                  {{
-                    requestForm.hasError('cellphoneNotMatched') &&
-                    requestForm.get('validator_cellphone')?.touched
-                      ? 'Los números de celular no coinciden'
-                      : ''
-                  }}
-                  </label>
-              </div> -->
+              </div>
 
             </div>
 

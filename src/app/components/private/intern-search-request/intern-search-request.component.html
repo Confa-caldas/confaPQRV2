@@ -173,7 +173,9 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-requestList>
-      <tr>
+      <tr pTooltip="{{ requestList.request_description }}" 
+      tooltipPosition="top" 
+      tooltipStyleClass="custom-tooltip">
         <td>
           <p-button
             icon="pi pi-eye"
@@ -190,6 +192,7 @@
             tooltipPosition="top">
           </i>
         </td>
+        
         <td style="text-align: center">{{ requestList.filing_number }}</td>
         <td>{{ requestList.filing_date_date | date }}</td>
         <td>{{ requestList.applicant_type_name }}</td>

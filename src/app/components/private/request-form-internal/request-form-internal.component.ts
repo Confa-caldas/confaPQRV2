@@ -133,6 +133,7 @@ export class RequestFormInternalComponent implements OnInit {
         name: ['', [Validators.pattern('^[^@#$%&]+$')]],
 
         cellphone: ['', [Validators.pattern('^[0-9]{10}$')]],
+        validator_cellphone: ['', [Validators.pattern('^[0-9]{10}$')]],
         //numWhatsapp: ['', [Validators.pattern('^[0-9]{10}$')]],
         email: [
           '',
@@ -150,7 +151,7 @@ export class RequestFormInternalComponent implements OnInit {
         //llamada: [''],
         correo: ['']
       },
-      { validator: [this.emailMatcher] }
+      { validators: [this.cellphoneMatcher, this.emailMatcher], }
     );
 
     this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
@@ -1269,6 +1270,13 @@ async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): P
       '¡Solicitud enviada! <br> <h3 style="color: #ffc107 !important; font-size: 1.2rem;">Sin embargo, hubo problemas con algunos de los archivos.</h3>';
     this.message = filing_number.toString();
     this.severity = 'danger';
+  }
+
+  allowOnlyNumbers(event: KeyboardEvent): void {
+    const charCode = event.key.charCodeAt(0);
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+    }
   }
 
   //Configuracion mensajes placeholder
