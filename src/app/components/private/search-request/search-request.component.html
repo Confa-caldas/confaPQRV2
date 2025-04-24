@@ -42,6 +42,24 @@
             placeholder="Nombre solicitante"
             formControlName="applicant_name" />
         </div>
+        <div class="filters-col">
+          <p-multiSelect
+            formControlName="area_name"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="requestAreaList"
+            optionLabel="area_name"
+            optionValue="area_name"
+            placeholder="Area que solicitada"></p-multiSelect>
+        </div>
+        <div class="filters-col">
+          <p-multiSelect
+            formControlName="confa_user"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="requestUserList"
+            optionLabel="confa_user"
+            optionValue="confa_user"
+            placeholder="Usuario que lo creo"></p-multiSelect>
+        </div>
         <!--
         <div class="filters-col">
           <p-dropdown
@@ -52,16 +70,7 @@
             optionValue="value"
             placeholder="Es prioridad?"></p-dropdown>
         </div> -->
-        <div class="filters-col">
-          <p-dropdown
-            formControlName="priority_level"
-            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
-            [options]="priorityLevelList"
-            optionLabel="name"
-            optionValue="value"
-            placeholder="Nivel de prioridad">
-          </p-dropdown>
-        </div>
+        
       </div>
       <div class="filters-row">
         <div class="filters-col">
@@ -99,6 +108,16 @@
             optionLabel="request_type_name"
             optionValue="request_type_id"
             placeholder="Tipo de Solicitud"></p-multiSelect>
+        </div>
+        <div class="filters-col">
+          <p-dropdown
+            formControlName="priority_level"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="priorityLevelList"
+            optionLabel="name"
+            optionValue="value"
+            placeholder="Nivel de prioridad">
+          </p-dropdown>
         </div>
         <div>
           <p-button

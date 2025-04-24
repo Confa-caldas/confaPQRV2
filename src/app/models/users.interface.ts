@@ -67,6 +67,7 @@ export interface RequestsDetails {
   mensaje_reasignacion: string;
   messages_closed?: string;
   send_email_massive?: string;
+  priority_level: number;
 }
 export interface RequestAttachmentsList {
   url: string;
@@ -337,6 +338,8 @@ export interface FilterRequests {
   request_days?: number | null;
   applicant_type_id?: number | null;
   request_type_id?: number | null;
+  confa_user?: string | null;
+  area_name?: string | null;
   //is_priority?: boolean | null;
   priority_level?: number | null;
   page?: number;

@@ -8,6 +8,33 @@
   <p-card>
     <ul class="list-unstyled">
       <div class="container">
+        <div class="container-row"
+          *ngIf="(requestDetails?.priority_level === 1 || requestDetails?.priority_level === 2) 
+              && requestDetails?.status_name !== 'Cerrada'">
+          <div class="container-column">
+            <label class="container-label prioridad-label"
+                  [ngClass]="{
+                    'prioridad-baja': requestDetails.priority_level === 1,
+                    'prioridad-alta': requestDetails.priority_level === 2
+                  }">
+              <i class="pi"
+                [ngClass]="{
+                  'pi-exclamation-circle': requestDetails.priority_level === 1,
+                  'pi-exclamation-triangle': requestDetails.priority_level === 2
+                }"></i>
+              <span class="prioridad-text">
+                Priorización:
+                <ng-container [ngSwitch]="requestDetails.priority_level">
+                  <span *ngSwitchCase="1">Baja</span>
+                  <span *ngSwitchCase="2">Alta</span>
+                  <span *ngSwitchDefault>Sin definir</span>
+                </ng-container>
+              </span>
+            </label>
+          </div>
+        </div>
+        
+        
         <div class="container-row">
           <div class="container-column">
             <label class="container-label"> Número de Radicado </label>
@@ -107,7 +134,10 @@
         [style]="{ 'border-radius': '10px' }"></p-button>
     </div>
 
-    <div class="container-button" *ngIf="requestDetails.status_name !== 'Cerrada'">
+    <div class="container-button"
+     *ngIf="requestDetails &&
+            (requestDetails.status_name !== 'Cerrada' &&
+             requestDetails.priority_level !== 2)">
       <p-menu #menu [model]="itemsGenerals" [popup]="true"></p-menu>
       <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
     </div>
@@ -594,6 +624,11 @@
                         requestHistoric.status_name
                       )
                     "></p-button>
+                    <p-button
+                    *ngIf="requestHistoric.status_name === 'Priorizada'"
+                    icon="pi pi-eye"
+                    [styleClass]="'btn-icon-info'"
+                    (click)="showModalPriorizada()"></p-button>
                 </td>
               </tr>
             </ng-template>

@@ -10,6 +10,7 @@ import {
   RequestsList,
   UserList,
   IsPriority,
+  RequestAreaList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -28,6 +29,9 @@ export class SearchRequestComponent implements OnInit {
   aplicantList: ApplicantTypeList[] = [];
   requestTypeList: RequestTypeList[] = [];
   userList: UserList[] = [];
+  requestAreaList: RequestAreaList[] = [];
+  requestUserList: UserList[] = [];
+
   ingredient!: string;
   visibleDialog = false;
   visibleDialogInput = false;
@@ -79,6 +83,8 @@ export class SearchRequestComponent implements OnInit {
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
       request_status_id: new FormControl(null),
+      confa_user: new FormControl(null),
+      area_name: new FormControl(null),
       //is_priority: new FormControl(null),
       priority_level: new FormControl(null),
     });
@@ -169,6 +175,8 @@ export class SearchRequestComponent implements OnInit {
     this.getApplicantTypeList();
     this.getRequestTypeList();
     this.getUsersList();
+    this.getRequestUserList();
+    this.getRequestAreasList();
     // this.getRequestStatusList();
     this.loading = false;
   }
@@ -274,6 +282,8 @@ export class SearchRequestComponent implements OnInit {
           : filtros['request_status_id'] || null,
       //is_priority: this.formGroup.controls['is_priority'].value || null,
       priority_level: this.formGroup.controls['priority_level'].value,
+      confa_user: this.formGroup.controls['confa_user'].value || null,
+      area_name: this.formGroup.controls['area_name'].value || null,
 
       page: this.page,
       page_size: this.rows,
@@ -374,6 +384,47 @@ export class SearchRequestComponent implements OnInit {
       },
     });
   }
+
+  // Metodo para listar los usuarios que han hecho radicados
+  getRequestUserList() {
+    this.userService.getRequestUserList().subscribe({
+      next: (response: BodyResponse<UserList[]>) => {
+        if (response.code === 200) {
+          this.requestUserList = response.data;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  // Metodo para listar las areas
+  getRequestAreasList() {
+    this.userService.getRequestAreasList().subscribe({
+      next: (response: BodyResponse<RequestAreaList[]>) => {
+        if (response.code === 200) {
+          this.requestAreaList = response.data;
+          console.log(this.requestUserList, 'areas');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+
   getUsersList() {
     this.userService.getUsersList().subscribe({
       next: (response: BodyResponse<UserList[]>) => {

@@ -207,7 +207,7 @@ td {
 
     &-row {
       display: flex;
-      justify-content: start;
+      justify-content: center;
       margin-bottom: 20px;
     }
 
@@ -880,4 +880,27 @@ p-timeline {
   border: 1px solid #ccc;
 }
 
+.prioridad-label {
+  display: flex;
+  justify-content: center;  // Centra horizontalmente
+  align-items: center;      // Centra verticalmente
+  font-size: 1.3rem;        // Letra más grande
+  gap: 0.5rem;              // Espacio entre el ícono y el texto
+  text-align: center;       // Asegura que el texto esté centrado
+}
 
+.prioridad-text {
+  font-weight: bold;
+}
+
+.prioridad-baja {
+  color: #ffc107; // Amarillo advertencia
+}
+
+.prioridad-alta {
+  color: #dc3545; // Rojo peligro
+}
+
+.pi {
+  font-size: 1.3rem; // Hace que el tamaño del ícono sea igual al del texto
+}

@@ -1235,6 +1235,12 @@ export class RequestDetailsComponent implements OnInit {
     this.isDialogVisible = true;
   }
 
+  showModalPriorizada() {
+    this.dialogHeader = 'Descripción de la solicitud';
+    this.dialogContent = this.requestDetails?.request_description || '';
+    this.isDialogVisible = true;
+  }
+
   showModal() {
     this.dialogHeader = 'Respuesta de la cerrada';
     // this.dialogContent = this.requestDetails?.request_answer || '';
