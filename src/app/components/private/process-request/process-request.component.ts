@@ -304,7 +304,7 @@ export class ProcessRequestComponent implements OnInit {
       page: this.pageAssigned,
       page_size: this.rowsAssigned,
     };
-    console.log("PAaaaaayy: ", payload);
+
     this.getRequestListByAssignedUserByFilter(payload);
   }
   getRequestListByAssignedUserByFilter(payload: FilterRequests) {
@@ -491,6 +491,16 @@ export class ProcessRequestComponent implements OnInit {
           console.log('La suscripción ha sido completada.');
         },
       });
+    }
+  }
+
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Evita que se envíe el formulario
+      this.initPaginadorAssigned();
+    }
+    if (event.key === 'Escape') {
+      this.cleanForm();
     }
   }
 }

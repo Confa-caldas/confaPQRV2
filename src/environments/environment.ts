@@ -12,6 +12,6 @@ export const environment = {
   // production: true,
   // context: 'production',
   version: packageJson.version,
-  minutesInactive: 15,
+  minutesInactive: 25,
   ruta_archivos_ws: RUTAS_ARCHIVOS,
 };

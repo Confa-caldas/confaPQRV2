@@ -15,7 +15,7 @@
         <div class="login-form-logo">
           <img src="../../../assets/images/logo-login.png" class="login-form-logo__img" />
         </div>
-        <form [formGroup]="userForm">
+        <form [formGroup]="userForm" (keyup.enter)="login()">
           <div class="login-form-input">
             <div class="login-form-input__label">
               <div class="flex flex-column gap-2">

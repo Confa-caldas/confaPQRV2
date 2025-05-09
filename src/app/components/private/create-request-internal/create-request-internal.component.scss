@@ -621,3 +621,36 @@
   }
 
 }
+
+.container-checkbox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.container-checkbox_a {
+  //margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.container-radios {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.radio-option {
+  align-items: center;
+  gap: 0.5rem;
+}
+
+::ng-deep .p-radiobutton-box.p-highlight {
+  border-color: #01aeef !important;   // borde azul cuando está seleccionado
+  background: #01aeef!important;     // fondo azul cuando está seleccionado
+  color: white;
+}
+
+::ng-deep .p-radiobutton-box:hover {
+  border-color: #01aeef !important;   // borde azul al hacer hover
+}

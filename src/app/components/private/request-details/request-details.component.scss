@@ -904,3 +904,27 @@ p-timeline {
 .pi {
   font-size: 1.3rem; // Hace que el tamaño del ícono sea igual al del texto
 }
+
+.my-custom-button {
+  background-color: #007bff; /* azul bonito */
+  border: none;
+  font-size: 12px;
+  padding: 0.4rem 0.8rem;
+  height: 32px;
+}
+
+:host ::ng-deep .custom-zip-button {
+  background: transparent !important; /* Fondo del p-button */
+  border: none !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .custom-zip-button .p-button {
+  background-color: #007bff; /* Azul más limpio */
+  border: none;
+  font-size: 12px;
+  padding: 0.4rem 0.8rem;
+  height: 32px;
+  margin-bottom: 5px;
+}
+

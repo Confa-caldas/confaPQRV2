@@ -9,6 +9,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { SharedModule } from '../../shared/shared.module';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 @NgModule({
   declarations: [CreateRequestInternalComponent],
@@ -24,6 +25,7 @@ import { SharedModule } from '../../shared/shared.module';
     DropdownModule,
     ToastModule,
     SharedModule,
+    RadioButtonModule,
   ],
 })
 export class CreateRequestInternalModule {}

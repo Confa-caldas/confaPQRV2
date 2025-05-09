@@ -29,6 +29,8 @@ export class CreateRequestInternalComponent {
   ip: string = '';
   userEnvironmentData: any;
 
+  authorizeValue: boolean | null = null;
+
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
@@ -38,7 +40,8 @@ export class CreateRequestInternalComponent {
     this.optionsRequest = this.formBuilder.group({
       applicant_id: ['', Validators.required],
       request_id: ['', Validators.required],
-      authorize: [null, Validators.requiredTrue],
+      //authorize: [null, Validators.requiredTrue],
+      authorize: [null, Validators.required]
     });
 
     localStorage.removeItem('visitedFirstPage');
@@ -46,7 +49,7 @@ export class CreateRequestInternalComponent {
   }
   changeRequest() {
     this.optionsRequest.get('request_id')?.setValue('');
-    this.optionsRequest.get('authorize')?.setValue(false);
+    this.optionsRequest.get('authorize')?.setValue(null);
   }
 
   applicantId1(): boolean {
@@ -134,7 +137,10 @@ export class CreateRequestInternalComponent {
 
     this.transactionId = uuidv4(); // Genera un identificador único
 
-    localStorage.setItem('visitedFirstPage', 'true');
+    localStorage.setItem(
+      'visitedFirstPage',
+      JSON.stringify(true)
+    );
     localStorage.setItem(
       'applicant-type',
       JSON.stringify(this.optionsRequest.controls['applicant_id'].value)
@@ -144,6 +150,10 @@ export class CreateRequestInternalComponent {
       JSON.stringify(this.optionsRequest.controls['request_id'].value)
     );
     localStorage.setItem('id-transaction', this.transactionId);
+    localStorage.setItem(
+      'authorize_data',
+      JSON.stringify(this.optionsRequest.controls['authorize'].value)
+    );
 
     if (
       this.optionsRequest.controls['applicant_id'].value.applicant_type_id === 1 &&
@@ -191,6 +201,6 @@ export class CreateRequestInternalComponent {
     this.visibleDialogDataT = true;
   }
   setParameterDataT(dataTreatment: boolean) {
-    this.optionsRequest.get('authorize')?.setValue(dataTreatment);
+    this.optionsRequest.get('authorize')?.setValue(null);
   }
 }

@@ -262,6 +262,14 @@
         <div class="p-tab-view">
           <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
             <p-tabPanel header="Adjunto de solicitante" headerStyleClass="p-tabview-nav-link-sub">
+              <p-button 
+  *ngIf="requestApplicantAttachmentsList && requestApplicantAttachmentsList.length > 0"
+  label="Descargar .zip"
+  icon="pi pi-download"
+  (click)="downloadAttachmentsAsZip()"
+  class="p-button-sm p-button-primary custom-zip-button">
+</p-button>
+
               <p-table
                 [value]="requestApplicantAttachmentsList"
                 [scrollable]="true"
@@ -286,7 +294,11 @@
                 <ng-template pTemplate="body" let-requestApplicantAttachmentsList>
                   <tr>
                     <td [ngStyle]="{ 'text-align': 'center' }">
+                      <span 
+                      style="color: #0d6efd; text-decoration: underline; cursor: pointer;"
+                      (click)="getPreSignedUrlToDownload(requestApplicantAttachmentsList.url, requestApplicantAttachmentsList.file_name, false)">
                       {{ requestApplicantAttachmentsList.file_name }}
+                    </span>
                     </td>
                     <td [ngStyle]="{ 'text-align': 'center' }">
                       {{ requestApplicantAttachmentsList.file_date }}

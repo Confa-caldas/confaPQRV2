@@ -78,13 +78,17 @@ export class RequestFormComponent implements OnInit {
   hasPendingChanges: boolean = false;
 
   useIaAttach: boolean = false;
+  authorize_data: boolean = false;
 
   ngOnInit(): void {
     let applicant = localStorage.getItem('applicant-type');
     let request = localStorage.getItem('request-type');
     const visitedFirstPage = localStorage.getItem('visitedFirstPage');
+    const authorize_data_raw = localStorage.getItem('authorize_data');
+    this.authorize_data = authorize_data_raw ? JSON.parse(authorize_data_raw) : null;
 
-    console.log(visitedFirstPage);
+
+    //console.log(visitedFirstPage);
 
     if (!visitedFirstPage) {
       this.router.navigate([RoutesApp.CREATE_REQUEST]);
@@ -135,8 +139,15 @@ export class RequestFormComponent implements OnInit {
       { validator: this.emailMatcher }
     );
 
+    /*
     this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
-      this.requestForm.get('number_id')?.setValidators([Validators.pattern(value.regex)]);
+      //this.requestForm.get('number_id')?.setValidators([Validators.pattern(value.regex)]);
+      this.requestForm.get('number_id')?.setValidators([
+        Validators.required,
+        Validators.minLength(8),
+        Validators.pattern(value.regex),
+      ]);
+      this.requestForm.get('number_id')?.updateValueAndValidity();
       this.requestForm.get('number_id')?.enable();
       if (value.catalog_item_id == 0) {
         this.errorMensaje = 'Ingrese solo números ';
@@ -147,7 +158,38 @@ export class RequestFormComponent implements OnInit {
       } else if (value.catalog_item_id == 1) {
         this.errorMensaje = 'Ingrese solo números y máximo 11 digitos';
       }
+    }); */
+    this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
+      const numberIdControl = this.requestForm.get('number_id');
+    
+      if (!value) return;
+    
+      const validators = [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.pattern(value.regex || '^[0-9]+$') // fallback si no hay regex
+      ];
+    
+      // Aplicar máximos según tipo
+      if (value.catalog_item_id === 1) {
+        validators.push(Validators.maxLength(11));
+        this.errorMensaje = 'Ingrese solo números y máximo 11 dígitos';
+      } else if (value.catalog_item_id === 15) {
+        validators.push(Validators.maxLength(12));
+        this.errorMensaje = 'Ingrese solo números y máximo 12 dígitos';
+      } else if (value.catalog_item_id === 0) {
+        this.errorMensaje = 'Ingrese solo números';
+      } else if (value.catalog_item_id === 16) {
+        this.errorMensaje = 'Formato inválido';
+      } else {
+        this.errorMensaje = '';
+      }
+    
+      numberIdControl?.setValidators(validators);
+      numberIdControl?.updateValueAndValidity();
+      numberIdControl?.enable();
     });
+    
   }
 
   convertToLowercase(controlName: string): void {
@@ -1088,7 +1130,8 @@ async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): P
       request_days: this.requestType.request_days || 15,
       assigned_user: '',
       request_answer: '',
-      data_treatment: true,
+      //data_treatment: true,
+      data_treatment: this.authorize_data,
       applicant_attachments: null,
       assigned_attachments: null,
       form_id: this.requestType.form_id,

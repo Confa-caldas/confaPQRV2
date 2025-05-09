@@ -7,12 +7,14 @@
   <div class="p-tabview">
     <p-tabView class="p-tabview-nav-process">
       <p-tabPanel header="Mis solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
-        <form [formGroup]="filterFormAssigned">
+        <form [formGroup]="filterFormAssigned" (keydown.enter)="initPaginadorAssigned()"
+        (keydown.escape)="cleanFormAssigned()">
           <div class="position-relative">
-            <div class="card flex justify-content-center absolute-center">
+            <div class="card form-container">
+              
+              <!-- Primera Fila -->
               <div class="filters-row">
-                <div class="filters-colAssigened">
-                  <label class="filters-label"> </label>
+                <div class="filters-col">
                   <input
                     pInputText
                     class="filters-input"
@@ -20,27 +22,29 @@
                     placeholder="Número de radicado"
                     formControlName="filing_number" />
                 </div>
-                <div class="filters-colAssigened">
+        
+                <div class="filters-col">
                   <p-calendar
                     formControlName="dates_range"
                     selectionMode="range"
                     [readonlyInput]="true"
-                    [style]="{ 'align-items': 'center', 'border-radius': '5px' }"
                     [iconDisplay]="'input'"
                     [showIcon]="true"
-                    placeholder="Rango de fechas "
-                    class="calendar"></p-calendar>
+                    placeholder="Rango de fechas"
+                    class="calendar">
+                  </p-calendar>
                 </div>
-                <div class="filters-colAssigened">
-                  <label class="filters-label"> </label>
+        
+                <div class="filters-col">
                   <input
                     pInputText
                     pKeyFilter="text"
                     class="filters-input"
-                    placeholder=" Número de documento"
+                    placeholder="Número de documento"
                     formControlName="doc_id" />
                 </div>
-                <div class="filters-colAssigened">
+        
+                <div class="filters-col">
                   <input
                     pInputText
                     pKeyFilter="text"
@@ -48,80 +52,90 @@
                     placeholder="Nombre solicitante"
                     formControlName="applicant_name" />
                 </div>
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="area_name"
-                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     [options]="requestAreaList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     optionLabel="area_name"
                     optionValue="area_name"
-                    placeholder="Area que solicitada"></p-multiSelect>
+                    placeholder="Área que solicita">
+                  </p-multiSelect>
                 </div>
-                
               </div>
+        
+              <!-- Segunda Fila -->
               <div class="filters-row">
-                <div class="filters-colAssigened">
+                <div class="filters-col">
                   <p-multiSelect
                     formControlName="applicant_type_id"
-                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     [options]="aplicantList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     optionLabel="applicant_type_name"
                     optionValue="applicant_type_id"
-                    placeholder="Tipo de solicitante"></p-multiSelect>
+                    placeholder="Tipo de solicitante">
+                  </p-multiSelect>
                 </div>
-
-                <div class="filters-colAssigened">
+        
+                <div class="filters-col">
                   <p-multiSelect
                     formControlName="request_status_id"
-                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     [options]="statusList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     optionLabel="status_name"
                     optionValue="request_status_id"
-                    placeholder="Tipo de estado"></p-multiSelect>
+                    placeholder="Tipo de estado">
+                  </p-multiSelect>
                 </div>
-
-                <div class="filters-colAssigened">
+        
+                <div class="filters-col">
                   <p-multiSelect
                     formControlName="request_type_id"
-                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     [options]="requestTypeList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     optionLabel="request_type_name"
                     optionValue="request_type_id"
-                    placeholder="Tipo de Solicitud"></p-multiSelect>
+                    placeholder="Tipo de solicitud">
+                  </p-multiSelect>
                 </div>
-
+        
                 <div class="filters-col">
                   <p-dropdown
                     formControlName="priority_level"
-                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     [options]="priorityLevelList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     optionLabel="name"
                     optionValue="value"
                     placeholder="Nivel de prioridad">
                   </p-dropdown>
                 </div>
-
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="confa_user"
-                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     [options]="requestUserList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     optionLabel="confa_user"
                     optionValue="confa_user"
-                    placeholder="Usuario que lo creo"></p-multiSelect>
+                    placeholder="Usuario que creó">
+                  </p-multiSelect>
                 </div>
-
-                <div class="filters-colButtonsAssigened">
+        
+                <div class="filters-col-buttons">
                   <p-button
                     icon="pi pi-trash"
                     [styleClass]="'btn-icon-info'"
-                    (click)="cleanFormAssigned()"></p-button>
+                    (click)="cleanFormAssigned()">
+                  </p-button>
                   <p-button
                     icon="pi pi-search"
                     [styleClass]="'btn-icon-info'"
-                    (click)="initPaginadorAssigned()"></p-button>
+                    (click)="initPaginadorAssigned()">
+                  </p-button>
                 </div>
               </div>
+        
             </div>
           </div>
         </form>
@@ -231,12 +245,14 @@
           [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
       </p-tabPanel>
       <p-tabPanel header="Solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
-        <form [formGroup]="filterForm">
+        <form [formGroup]="filterForm" (keydown.enter)="initPaginador()"
+        (keydown.escape)="cleanForm()">
           <div class="position-relative">
             <div class="card flex justify-content-center absolute-center">
+              
+              <!-- Primera fila -->
               <div class="filters-row">
                 <div class="filters-col">
-                  <label class="filters-label"> </label>
                   <input
                     pInputText
                     class="filters-input"
@@ -244,6 +260,7 @@
                     placeholder="Número de radicado"
                     formControlName="filing_number" />
                 </div>
+        
                 <div class="filters-col">
                   <p-calendar
                     formControlName="dates_range"
@@ -252,18 +269,20 @@
                     [style]="{ 'align-items': 'center', 'border-radius': '5px' }"
                     [iconDisplay]="'input'"
                     [showIcon]="true"
-                    placeholder="Rango de fechas "
-                    class="calendar"></p-calendar>
+                    placeholder="Rango de fechas"
+                    class="calendar">
+                  </p-calendar>
                 </div>
+        
                 <div class="filters-col">
-                  <label class="filters-label"> </label>
                   <input
                     pInputText
                     pKeyFilter="text"
                     class="filters-input"
-                    placeholder=" Número de documento"
+                    placeholder="Número de documento"
                     formControlName="doc_id" />
                 </div>
+        
                 <div class="filters-col">
                   <input
                     pInputText
@@ -272,6 +291,7 @@
                     placeholder="Nombre solicitante"
                     formControlName="applicant_name" />
                 </div>
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="confa_user"
@@ -279,8 +299,10 @@
                     [options]="requestUserList"
                     optionLabel="confa_user"
                     optionValue="confa_user"
-                    placeholder="Usuario que lo creo"></p-multiSelect>
+                    placeholder="Usuario que lo creó">
+                  </p-multiSelect>
                 </div>
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="area_name"
@@ -288,9 +310,12 @@
                     [options]="requestAreaList"
                     optionLabel="area_name"
                     optionValue="area_name"
-                    placeholder="Area que solicitada"></p-multiSelect>
+                    placeholder="Área solicitada">
+                  </p-multiSelect>
                 </div>
               </div>
+        
+              <!-- Segunda fila -->
               <div class="filters-row">
                 <div class="filters-col">
                   <p-multiSelect
@@ -299,8 +324,10 @@
                     [options]="aplicantList"
                     optionLabel="applicant_type_name"
                     optionValue="applicant_type_id"
-                    placeholder="Tipo de solicitante"></p-multiSelect>
+                    placeholder="Tipo de solicitante">
+                  </p-multiSelect>
                 </div>
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="request_status_id"
@@ -308,8 +335,10 @@
                     [options]="statusList"
                     optionLabel="status_name"
                     optionValue="request_status_id"
-                    placeholder="Tipo de estado"></p-multiSelect>
+                    placeholder="Estado de solicitud">
+                  </p-multiSelect>
                 </div>
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="assigned_user"
@@ -317,8 +346,10 @@
                     [options]="userList"
                     optionLabel="user_name_completed"
                     optionValue="user_name"
-                    placeholder=" Responsable solicitud"></p-multiSelect>
+                    placeholder="Responsable solicitud">
+                  </p-multiSelect>
                 </div>
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="request_type_id"
@@ -326,9 +357,10 @@
                     [options]="requestTypeList"
                     optionLabel="request_type_name"
                     optionValue="request_type_id"
-                    placeholder="Tipo de Solicitud"></p-multiSelect>
+                    placeholder="Tipo de solicitud">
+                  </p-multiSelect>
                 </div>
-
+        
                 <div class="filters-col">
                   <p-dropdown
                     formControlName="priority_level"
@@ -339,23 +371,26 @@
                     placeholder="Nivel de prioridad">
                   </p-dropdown>
                 </div>
-
-                
-
+        
                 <div class="filters-colButtons">
                   <p-button
                     icon="pi pi-trash"
                     [styleClass]="'btn-icon-info'"
-                    (click)="cleanForm()"></p-button>
+                    (click)="cleanForm()">
+                  </p-button>
+        
                   <p-button
                     icon="pi pi-search"
                     [styleClass]="'btn-icon-info'"
-                    (click)="initPaginador()"></p-button>
+                    (click)="initPaginador()">
+                  </p-button>
                 </div>
               </div>
+        
             </div>
           </div>
         </form>
+        
         <p-table
           [value]="requestList"
           [scrollable]="true"
