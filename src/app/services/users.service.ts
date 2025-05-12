@@ -660,6 +660,12 @@ export class Users {
     );
   }
 
+  uploadPostSdk(payload: any) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ATTACHMENTS_FILES_SDK}`,
+      payload
+    );
+  }
   // Creacion de solicitud para actualizar la informacion de una empresa
   updateCompany(payload: CompanyUpdateRequest) {
     return this.http.post<BodyResponse<number>>(

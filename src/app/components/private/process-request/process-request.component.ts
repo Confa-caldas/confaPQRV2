@@ -10,6 +10,7 @@ import {
   RequestsList,
   RequestsReview,
   UserList,
+  RequestAreaList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -30,6 +31,8 @@ export class ProcessRequestComponent implements OnInit {
   aplicantList: ApplicantTypeList[] = [];
   requestTypeList: RequestTypeList[] = [];
   userList: UserList[] = [];
+  requestAreaList: RequestAreaList[] = [];
+  requestUserList: UserList[] = [];
   ingredient!: string;
   parameter = [''];
   request_details!: RequestsReview;
@@ -64,6 +67,12 @@ export class ProcessRequestComponent implements OnInit {
   rowsAssigned: number = 10;
   totalRowsAssigned: number = 0;
 
+  priorityLevelList = [
+    { name: 'Sin prioridad', value: 0 },
+    { name: 'Prioridad baja', value: 1 },
+    { name: 'Prioridad alta', value: 2 }
+  ];
+
   constructor(
     private userService: Users,
     private router: Router,
@@ -79,7 +88,10 @@ export class ProcessRequestComponent implements OnInit {
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
       request_status_id: new FormControl(null),
-      is_priority: new FormControl(null),
+      confa_user: new FormControl(null),
+      area_name: new FormControl(null),
+      //is_priority: new FormControl(null),
+      priority_level: new FormControl(null),
     });
     this.filterFormAssigned = new FormGroup({
       dates_range: new FormControl(null),
@@ -91,6 +103,9 @@ export class ProcessRequestComponent implements OnInit {
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
       request_status_id: new FormControl(null),
+      confa_user: new FormControl(null),
+      area_name: new FormControl(null),
+      priority_level: new FormControl(null),
     });
     this.filterForm.get('request_status_id')?.valueChanges.subscribe(value => {
       if (value.length === 0) {
@@ -142,6 +157,8 @@ export class ProcessRequestComponent implements OnInit {
     this.getRequestTypeList();
     this.getUsersList();
     this.getRequestStatusList();
+    this.getRequestUserList();
+    this.getRequestAreasList();
   }
 
   getColor(value: number): string {
@@ -213,7 +230,10 @@ export class ProcessRequestComponent implements OnInit {
       request_type_id: this.filterForm.controls['request_type_id'].value || null,
       assigned_user: this.filterForm.controls['assigned_user'].value || null,
       status_id: this.filterForm.controls['request_status_id'].value || null,
-      is_priority: this.filterForm.controls['is_priority'].value || null,
+      //is_priority: this.filterForm.controls['is_priority'].value || null,
+      priority_level: this.filterForm.controls['priority_level'].value,
+      confa_user: this.filterForm.controls['confa_user'].value || null,
+      area_name: this.filterForm.controls['area_name'].value || null,
 
       page: this.page,
       page_size: this.rows,
@@ -278,9 +298,13 @@ export class ProcessRequestComponent implements OnInit {
       applicant_type_id: this.filterFormAssigned.controls['applicant_type_id'].value || null,
       request_type_id: this.filterFormAssigned.controls['request_type_id'].value || null,
       status_id: this.filterFormAssigned.controls['request_status_id'].value || null,
+      priority_level: this.filterFormAssigned.controls['priority_level'].value || null,
+      confa_user: this.filterFormAssigned.controls['confa_user'].value || null,
+      area_name: this.filterFormAssigned.controls['area_name'].value || null,
       page: this.pageAssigned,
       page_size: this.rowsAssigned,
     };
+
     this.getRequestListByAssignedUserByFilter(payload);
   }
   getRequestListByAssignedUserByFilter(payload: FilterRequests) {
@@ -386,6 +410,45 @@ export class ProcessRequestComponent implements OnInit {
     });
   }
 
+  // Metodo para listar los usuarios que han hecho radicados
+  getRequestUserList() {
+    this.userService.getRequestUserList().subscribe({
+      next: (response: BodyResponse<UserList[]>) => {
+        if (response.code === 200) {
+          this.requestUserList = response.data;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  // Metodo para listar las areas
+  getRequestAreasList() {
+    this.userService.getRequestAreasList().subscribe({
+      next: (response: BodyResponse<RequestAreaList[]>) => {
+        if (response.code === 200) {
+          this.requestAreaList = response.data;
+          console.log(this.requestUserList, 'areas');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
   redirectDetails(request_id: number) {
     localStorage.removeItem('route');
     localStorage.setItem('route', this.router.url);
@@ -428,6 +491,16 @@ export class ProcessRequestComponent implements OnInit {
           console.log('La suscripción ha sido completada.');
         },
       });
+    }
+  }
+
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Evita que se envíe el formulario
+      this.initPaginadorAssigned();
+    }
+    if (event.key === 'Escape') {
+      this.cleanForm();
     }
   }
 }

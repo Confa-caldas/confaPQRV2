@@ -79,13 +79,16 @@ export class RequestFormInternalComponent implements OnInit {
   hasPendingChanges: boolean = false;
 
   useIaAttach: boolean = false;
+  authorize_data: boolean = false;
 
-  opciones = ['whatsapp', 'llamada', 'correo'];
+  opciones = ['sms', 'correo'];
 
   ngOnInit(): void {
     let applicant = localStorage.getItem('applicant-type');
     let request = localStorage.getItem('request-type');
     const visitedFirstPage = localStorage.getItem('visitedFirstPage');
+    const authorize_data_raw = localStorage.getItem('authorize_data');
+    this.authorize_data = authorize_data_raw ? JSON.parse(authorize_data_raw) : null;
 
     console.log(visitedFirstPage);
 
@@ -119,7 +122,7 @@ export class RequestFormInternalComponent implements OnInit {
       regex: '^[0-9]{0,9}$',
     };
 
-    this.opciones = ['whatsapp', 'llamada', 'correo']; // Opciones dinámicas
+    this.opciones = ['sms', 'correo']; // Opciones dinámicas
 
     const contactosGroup = this.formBuilder.group({}, { validators: this.validateAtLeastOneSelected });
     this.opciones.forEach(opcion => {
@@ -133,7 +136,7 @@ export class RequestFormInternalComponent implements OnInit {
         name: ['', [Validators.pattern('^[^@#$%&]+$')]],
 
         cellphone: ['', [Validators.pattern('^[0-9]{10}$')]],
-        numWhatsapp: ['', [Validators.pattern('^[0-9]{10}$')]],
+        validator_cellphone: ['', [Validators.pattern('^[0-9]{10}$')]],
         email: [
           '',
           [
@@ -146,13 +149,14 @@ export class RequestFormInternalComponent implements OnInit {
 
         //contactos: this.formBuilder.group({}, { validators: this.validateAtLeastOneSelected }) // Contendrá los campos dinámicos
         contactos: contactosGroup,
-        whatsapp: [''],
-        llamada: [''],
+        sms: [''],
+        //llamada: [''],
         correo: ['']
       },
-      { validator: this.emailMatcher }
+      { validators: [this.cellphoneMatcher, this.emailMatcher], }
     );
 
+    /*
     this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
       this.requestForm.get('number_id')?.setValidators([Validators.pattern(value.regex)]);
       this.requestForm.get('number_id')?.enable();
@@ -165,6 +169,36 @@ export class RequestFormInternalComponent implements OnInit {
       } else if (value.catalog_item_id == 1) {
         this.errorMensaje = 'Ingrese solo números y máximo 11 digitos';
       }
+    }); */
+    this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
+      const numberIdControl = this.requestForm.get('number_id');
+    
+      if (!value) return;
+    
+      const validators = [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.pattern(value.regex || '^[0-9]+$') // fallback si no hay regex
+      ];
+    
+      // Aplicar máximos según tipo
+      if (value.catalog_item_id === 1) {
+        validators.push(Validators.maxLength(11));
+        this.errorMensaje = 'Ingrese solo números y máximo 11 dígitos';
+      } else if (value.catalog_item_id === 15) {
+        validators.push(Validators.maxLength(12));
+        this.errorMensaje = 'Ingrese solo números y máximo 12 dígitos';
+      } else if (value.catalog_item_id === 0) {
+        this.errorMensaje = 'Ingrese solo números';
+      } else if (value.catalog_item_id === 16) {
+        this.errorMensaje = 'Formato inválido';
+      } else {
+        this.errorMensaje = '';
+      }
+    
+      numberIdControl?.setValidators(validators);
+      numberIdControl?.updateValueAndValidity();
+      numberIdControl?.enable();
     });
   }
   
@@ -200,7 +234,7 @@ export class RequestFormInternalComponent implements OnInit {
     
       if (checked) {
         // Agregar validaciones cuando se marca
-        if (tipo === 'whatsapp') {
+        if (tipo === 'sms') {
           this.requestForm.get('numWhatsapp')?.setValidators([
             Validators.required,
             Validators.pattern('^[0-9]{10}$'),
@@ -220,7 +254,7 @@ export class RequestFormInternalComponent implements OnInit {
         }
       } else {
         // Cuando se desmarca, limpiar el campo pero sin eliminarlo
-        if (tipo === 'whatsapp') {
+        if (tipo === 'sms') {
           this.requestForm.get('numWhatsapp')?.reset();
           this.requestForm.get('numWhatsapp')?.clearValidators();
         } else if (tipo === 'llamada') {
@@ -277,6 +311,12 @@ export class RequestFormInternalComponent implements OnInit {
     const email = formControl.get('email')?.value;
     const emailConfirmed = formControl.get('validator_email')?.value;
     return email === emailConfirmed ? null : { notMatched: true };
+  };
+
+  cellphoneMatcher: ValidatorFn = (formGroup: AbstractControl) => {
+    const cellphone = formGroup.get('cellphone')?.value;
+    const cellphoneConfirmed = formGroup.get('validator_cellphone')?.value;
+    return cellphone === cellphoneConfirmed ? null : { cellphoneNotMatched: true };
   };
 
   openFileInput() {
@@ -929,6 +969,7 @@ export class RequestFormInternalComponent implements OnInit {
 } */
 
   //MEJORA 2025 SUBIDA
+  /*
 async attachApplicantFiles(request_id: number) {
   this.isSpinnerVisible = true;
   this.hasPendingChanges = true;
@@ -1015,7 +1056,112 @@ async attachApplicantFiles(request_id: number) {
           this.uploadProgress = 0;
       }, 500);
   }
+} */
+
+async attachApplicantFiles(request_id: number) {
+  this.isSpinnerVisible = true;
+  this.hasPendingChanges = true;
+  this.uploadProgress = 0;
+
+  try {
+    if (!this.arrayApplicantAttachment || this.arrayApplicantAttachment.length === 0) {
+        console.warn('No hay archivos para subir.');
+        return;
+    }
+
+    const ruta_archivo_ws = environment.ruta_archivos_ws;
+    const totalFiles = this.arrayApplicantAttachment.length;
+    let uploadedFiles = 0;
+
+    // Paso 1: Enviar archivos al servidor (base de datos)
+    const estructura = {
+        idSolicitud: `${request_id}`,
+        archivos: this.arrayApplicantAttachment.map(file => ({
+            base64file: file.base64file,
+            source_name: file.source_name,
+            fileweight: file.fileweight,
+        })),
+    };
+
+    try {
+        await this.envioArchivosServer(ruta_archivo_ws, estructura);
+    } catch (error) {
+        console.error("Error al enviar archivos:", error);
+    }
+
+    // Paso 2: Subir archivos por ambos métodos (URL prefirmada y SDK vía Lambda)
+    for (const item of this.arrayApplicantAttachment) {
+        try {
+            // Obtener URL prefirmada
+            const preSignedUrl = await this.retry(
+                () => this.getPreSignedUrl(item, request_id),
+                1, // Intentos
+                2000 // Retraso entre intentos
+            );
+
+            if (!preSignedUrl) {
+                console.error(`No se pudo obtener la URL prefirmada para: ${item.source_name}`);
+                continue;
+            }
+
+            // Asignar la URL al archivo
+            item.preSignedUrl = preSignedUrl;
+
+            // Subir en paralelo a S3 (preSignedUrl) y al backend (Lambda con SDK)
+            await Promise.all([
+                this.retry(() => this.uploadToPresignedUrl(item, request_id), 3, 3000),
+                this.retry(() => this.uploadViaLambda(item, request_id), 3, 3000)
+            ]);
+
+            uploadedFiles++;
+            this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+            this.changeDetectorRef.detectChanges();
+
+        } catch (error) {
+            console.error(`Error al procesar el archivo ${item.source_name}:`, error);
+        }
+      }
+
+      this.uploadProgress = 100;
+      this.changeDetectorRef.detectChanges();
+
+      // Restablecer formulario y mostrar mensaje de éxito
+      this.requestForm.reset();
+      this.fileNameList.clear();
+      this.showAlertModal(request_id);
+
+  } catch (error) {
+      console.error('Error durante el proceso de carga:', error);
+      this.showAlertModalError(request_id);
+  } finally {
+      setTimeout(() => {
+          this.isSpinnerVisible = false;
+          this.hasPendingChanges = false;
+          this.uploadProgress = 0;
+      }, 500);
+  }
 }
+
+async uploadViaLambda(file: any, request_id: number) {
+  try {
+      const payload = {
+          file: file.base64file, // Archivo en Base64
+          filename: file.source_name,
+          source_name: file.source_name,
+          request_id: request_id
+      };
+
+      // Llamado a la API de la Lambda a través de userService
+      const response = await this.userService.uploadPostSdk(payload).toPromise();
+      console.log('Subida a S3 vía SDK exitosa:', response);
+
+  } catch (error) {
+      console.error('Error subiendo archivo vía Lambda:', error);
+      throw error;
+  }
+}
+
+
 
 async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): Promise<T> {
   let attempt = 0;
@@ -1090,15 +1236,14 @@ async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): P
       request_days: this.requestType.request_days || 15,
       assigned_user: '',
       request_answer: '',
-      data_treatment: true,
+      //data_treatment: true,
+      data_treatment: this.authorize_data,
       applicant_attachments: null,
       assigned_attachments: null,
       form_id: this.requestType.form_id,
       count_attacments: 0,
-      applicant_whatsapp: this.requestForm.controls['numWhatsapp'].value,
 
-      check_whatsapp:  contactos.whatsapp,
-      check_llamada: contactos.llamada,
+      check_sms:  contactos.sms,
       check_correo: contactos.correo
     };
 
@@ -1159,6 +1304,13 @@ async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): P
       '¡Solicitud enviada! <br> <h3 style="color: #ffc107 !important; font-size: 1.2rem;">Sin embargo, hubo problemas con algunos de los archivos.</h3>';
     this.message = filing_number.toString();
     this.severity = 'danger';
+  }
+
+  allowOnlyNumbers(event: KeyboardEvent): void {
+    const charCode = event.key.charCodeAt(0);
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+    }
   }
 
   //Configuracion mensajes placeholder

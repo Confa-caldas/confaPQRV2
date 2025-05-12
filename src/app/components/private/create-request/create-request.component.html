@@ -42,7 +42,7 @@
               >Mi perfil</a
             ></b
           >
-          , podrás descargar tu certificado de afiliación, el carné digital de afiliación, cambiar
+          , podrás descargar tu certificado de afiliación, el carné digital de afiliación, el carné digital de afiliación, realizar consultas referentes a cuotas monetarias pendientes de cobro, cambiar
           contraseña o actualizar tu dirección.
         </div>
 
@@ -113,6 +113,7 @@
       </div>
     </p-card> -->
 
+    <!--
       <div class="container-checkbox" *ngIf="applicantId1()">
         <p-checkbox formControlName="authorize" [value]="true" [binary]="true"></p-checkbox>
         <p class="container-checkbox_a">
@@ -122,6 +123,39 @@
           >
         </p>
       </div>
+      -->
+      
+      <div class="container-checkbox" *ngIf="applicantId1()">
+        <p class="container-checkbox_a">
+          ¿Autoriza el
+          <a class="container-checkbox_link" (click)="openDataTreatment()" style="color: #07c1ff">
+            tratamiento de datos personales
+          </a>?
+        </p>
+      
+        <div class="container-radios">
+          <div class="radio-option">
+            <p-radioButton
+              name="authorize"
+              inputId="yesOption"
+              [value]="true"
+              formControlName="authorize"
+            ></p-radioButton>
+            <label for="yesOption">Sí</label>
+          </div>
+      
+          <div class="radio-option">
+            <p-radioButton
+              name="authorize"
+              inputId="noOption"
+              [value]="false"
+              formControlName="authorize"
+            ></p-radioButton>
+            <label for="noOption">No</label>
+          </div>
+        </div>
+      </div>
+
       <p-button
         [style]="{ 'border-radius': '20px', 'background-color': '#00aeef', width: '275px' }"
         label="Continuar"

@@ -30,6 +30,8 @@ export class CreateRequestComponent {
   userEnvironmentData: any;
   showConfirmationModal: boolean = false;
 
+  authorizeValue: boolean | null = null;
+
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
@@ -39,7 +41,8 @@ export class CreateRequestComponent {
     this.optionsRequest = this.formBuilder.group({
       applicant_id: ['', Validators.required],
       request_id: ['', Validators.required],
-      authorize: [null, Validators.requiredTrue],
+      //authorize: [null, Validators.requiredTrue],
+      authorize: [null, Validators.required]
     });
 
     localStorage.removeItem('visitedFirstPage');
@@ -47,7 +50,7 @@ export class CreateRequestComponent {
   }
   changeRequest() {
     this.optionsRequest.get('request_id')?.setValue('');
-    this.optionsRequest.get('authorize')?.setValue(false);
+    this.optionsRequest.get('authorize')?.setValue(null);
   }
 
   applicantId1(): boolean {
@@ -119,8 +122,7 @@ export class CreateRequestComponent {
       console.error('Error obteniendo la IP', err);
       throw err; // Rechazamos la promesa en caso de error
     }
-  }
-    */
+  } */
 
   async sendOptions() {
     /*
@@ -137,7 +139,10 @@ export class CreateRequestComponent {
 
     this.transactionId = uuidv4(); // Genera un identificador único
 
-    localStorage.setItem('visitedFirstPage', 'true');
+    localStorage.setItem(
+      'visitedFirstPage',
+      JSON.stringify(true)
+    );
     localStorage.setItem(
       'applicant-type',
       JSON.stringify(this.optionsRequest.controls['applicant_id'].value)
@@ -147,6 +152,10 @@ export class CreateRequestComponent {
       JSON.stringify(this.optionsRequest.controls['request_id'].value)
     );
     localStorage.setItem('id-transaction', this.transactionId);
+    localStorage.setItem(
+      'authorize_data',
+      JSON.stringify(this.optionsRequest.controls['authorize'].value)
+    );
 
     if (
       this.optionsRequest.controls['applicant_id'].value.applicant_type_id === 1 &&
@@ -196,7 +205,7 @@ export class CreateRequestComponent {
     this.visibleDialogDataT = true;
   }
   setParameterDataT(dataTreatment: boolean) {
-    this.optionsRequest.get('authorize')?.setValue(dataTreatment);
+    this.optionsRequest.get('authorize')?.setValue(null);
   }
 
   confirmUpdate(isConfirmed: boolean) {

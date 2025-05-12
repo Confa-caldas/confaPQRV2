@@ -10,6 +10,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { SharedModule } from '../../shared/shared.module';
 import { DialogModule } from 'primeng/dialog';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 
 @NgModule({
@@ -26,7 +27,8 @@ import { DialogModule } from 'primeng/dialog';
     DropdownModule,
     ToastModule,
     SharedModule,
-    DialogModule
+    DialogModule,
+    RadioButtonModule
   ],
 })
 export class CreateRequestModule {}

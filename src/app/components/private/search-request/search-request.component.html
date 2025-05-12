@@ -3,7 +3,8 @@
     <div class="title-page">Consultar solicitudes</div>
   </div>
 </div>
-<form [formGroup]="formGroup">
+<form [formGroup]="formGroup" (keydown.enter)="initPaginador()"
+(keydown.escape)="cleanForm()">
   <div class="position-relative">
     <div class="card flex justify-content-center absolute-center">
       <div class="filters-row">
@@ -42,7 +43,25 @@
             placeholder="Nombre solicitante"
             formControlName="applicant_name" />
         </div>
-
+        <div class="filters-col">
+          <p-multiSelect
+            formControlName="area_name"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="requestAreaList"
+            optionLabel="area_name"
+            optionValue="area_name"
+            placeholder="Area que solicitada"></p-multiSelect>
+        </div>
+        <div class="filters-col">
+          <p-multiSelect
+            formControlName="confa_user"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="requestUserList"
+            optionLabel="confa_user"
+            optionValue="confa_user"
+            placeholder="Usuario que lo creo"></p-multiSelect>
+        </div>
+        <!--
         <div class="filters-col">
           <p-dropdown
             formControlName="is_priority"
@@ -51,7 +70,8 @@
             optionLabel="name"
             optionValue="value"
             placeholder="Es prioridad?"></p-dropdown>
-        </div>
+        </div> -->
+        
       </div>
       <div class="filters-row">
         <div class="filters-col">
@@ -90,6 +110,16 @@
             optionValue="request_type_id"
             placeholder="Tipo de Solicitud"></p-multiSelect>
         </div>
+        <div class="filters-col">
+          <p-dropdown
+            formControlName="priority_level"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="priorityLevelList"
+            optionLabel="name"
+            optionValue="value"
+            placeholder="Nivel de prioridad">
+          </p-dropdown>
+        </div>
         <div>
           <p-button
             icon="pi pi-trash"
@@ -106,10 +136,23 @@
     </div>
   </div>
 </form>
+
+<button
+  *ngIf="selectedRequests.length > 0"
+  pButton
+  type="button"
+  label="Asignar seleccionadas"
+  icon="pi pi-users"
+  class="p-button-success"
+  (click)="assignSelectedRequests(selectedRequests)"
+  [disabled]="!selectedRequests || selectedRequests.length === 0">
+</button>
+
 <div class="mt-auto">
   <p-table
+    #dt
     [value]="requestList"
-    dataKey="id"
+    dataKey="request_id"
     [rows]="10"
     [showCurrentPageReport]="true"
     [loading]="loading"
@@ -120,13 +163,16 @@
     scrollHeight="500px"
     [virtualScroll]="false"
     [virtualScrollItemSize]="80"
-    selectionMode="single"
+
     [(selection)]="selectedRequests"
     stateStorage="session"
     stateKey="statedemo-session"
     [exportHeader]="'customExportHeader'">
     <ng-template pTemplate="header">
       <tr [style]="{ height: '50px' }">
+        <th style="width: 5%">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
         <th style="width: 5%"></th>
         <th style="width: 5%"></th>
         <th pSortableColumn="filing_number" style="min-width: 7rem">
@@ -160,7 +206,10 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-requestList>
-      <tr>
+      <tr >
+        <td>
+          <p-tableCheckbox [value]="requestList" *ngIf="requestList.status_name === 'Radicada' && PERFIL !== 'CONSULTANTE'"></p-tableCheckbox>
+        </td>
         <td>
           <p-button
             icon="pi pi-eye"
@@ -169,11 +218,13 @@
         </td>
         <td>
           <i
-            *ngIf="requestList.is_priority"
+            *ngIf="requestList.priority_level === 1 || requestList.priority_level === 2"
             class="pi pi-exclamation-triangle custom-tooltip"
-            style="font-size: 1.2rem; color: orange"
+            [style.color]="requestList.priority_level === 1 ? 'orange' : 'red'"
+            style="font-size: 1.2rem"
             pTooltip="{{ requestList.message_priority }}"
-            tooltipPosition="top"></i>
+            tooltipPosition="top">
+          </i>
         </td>
         <td style="text-align: center">{{ requestList.filing_number }}</td>
         <td>{{ requestList.filing_date_date | date }}</td>

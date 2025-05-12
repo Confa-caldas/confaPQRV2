@@ -67,6 +67,7 @@ export interface RequestsDetails {
   mensaje_reasignacion: string;
   messages_closed?: string;
   send_email_massive?: string;
+  priority_level: number;
 }
 export interface RequestAttachmentsList {
   url: string;
@@ -181,9 +182,7 @@ export interface RequestFormListInternal {
   assigned_attachments?: ApplicantAttachments[] | null;
   form_id?: number;
   count_attacments: number;
-  applicant_whatsapp: string;
-  check_whatsapp: boolean,
-  check_llamada: boolean,
+  check_sms: boolean,
   check_correo: boolean
 }
 
@@ -339,7 +338,10 @@ export interface FilterRequests {
   request_days?: number | null;
   applicant_type_id?: number | null;
   request_type_id?: number | null;
-  is_priority?: boolean | null;
+  confa_user?: string | null;
+  area_name?: string | null;
+  //is_priority?: boolean | null;
+  priority_level?: number | null;
   page?: number;
   page_size?: number;
 }
@@ -644,7 +646,8 @@ export interface FilterRequestsIntern {
   request_type_id?: number | null;
   confa_user?: string | null;
   area_name?: string | null;
-  is_priority?: boolean | null;
+  //is_priority?: boolean | null;
+  priority_level?: number | null;
   page?: number;
   page_size?: number;
 }

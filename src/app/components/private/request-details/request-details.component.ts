@@ -32,6 +32,8 @@ import { MenuModule } from 'primeng/menu';
 import { of, lastValueFrom, firstValueFrom, throwError } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-request-details',
@@ -163,6 +165,7 @@ export class RequestDetailsComponent implements OnInit {
   itemsGenerals: MenuModule[] | undefined;
   isVisibleSolicitudPrioridad = false;
   esPrioridadForm: FormGroup;
+  spinnerVisible = false;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -1235,6 +1238,12 @@ export class RequestDetailsComponent implements OnInit {
     this.isDialogVisible = true;
   }
 
+  showModalPriorizada() {
+    this.dialogHeader = 'Descripción de la solicitud';
+    this.dialogContent = this.requestDetails?.request_description || '';
+    this.isDialogVisible = true;
+  }
+
   showModal() {
     this.dialogHeader = 'Respuesta de la cerrada';
     // this.dialogContent = this.requestDetails?.request_answer || '';
@@ -2040,4 +2049,57 @@ export class RequestDetailsComponent implements OnInit {
       },
     });
   }
+
+  // Nueva función que usa Promesas (para tu flujo de descarga en ZIP)
+  async getPreSignedUrlToDownloadPromise(url: string, fileName: string, isDownload: boolean): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const payload = { url: url };
+      this.userService.getUrlSigned(payload, 'download').subscribe({
+        next: (response: BodyResponse<string>) => {
+          if (response.code === 200) {
+            resolve(response.data);  // Resolvemos con la URL prefirmada
+          } else {
+            reject('Operación fallida');
+          }
+        },
+        error: (err) => {
+          reject(err);  // Rechazamos en caso de error
+        }
+      });
+    });
+  }
+
+  async downloadAttachmentsAsZip() {
+    const zip = new JSZip();
+    const filingNumber = this.requestDetails?.filing_number || 'radicado';
+    const attachments = this.requestApplicantAttachmentsList;
+    const zipFolder = zip.folder(filingNumber.toString());
+  
+    try {
+      await Promise.all(attachments.map(async (attachment) => {
+        const presignedUrl = await this.getPreSignedUrlToDownloadPromise(attachment.url, attachment.file_name, false); // obtenemos la URL
+        const fileBlob = await this.downloadFileBlob(presignedUrl); // descargamos el blob
+        zipFolder?.file(attachment.file_name, fileBlob); // agregamos al zip
+      }));
+  
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(zipBlob);
+      downloadLink.download = `${filingNumber}_archivos.zip`;
+      downloadLink.click();
+    } catch (error) {
+      console.error('Error al descargar archivos:', error);
+    }
+  }
+  
+  async downloadFileBlob(url: string): Promise<Blob> {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Error al descargar archivo');
+    }
+    const blob = await response.blob();
+    return blob;
+  }
+  
+  
 }

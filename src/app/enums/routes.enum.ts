@@ -103,6 +103,7 @@ export enum EndPointRoute {
   AREAS_LIST = 'db/requests_areas',
   REQUEST_BY_FILTER_INTERN = 'requests-intern/filter_intern',
   REQUEST_PRIORITY = 'request/priority',
+  ATTACHMENTS_FILES_SDK = 'attachments/sdk',
   UPDATE_COMPANY_FORM = 'company/create_company_update',
   UPLOAD_COMPANY_FILES = 'company/url_signer_company',
   COMPANY_UPDATE_BY_FILTER = 'company/filter',
