@@ -30,6 +30,7 @@ import { HttpEventType, HttpResponse, HttpErrorResponse } from '@angular/common/
 import { throwError, retry, lastValueFrom, firstValueFrom } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { ChangeDetectorRef } from '@angular/core';
+import { commonEmailDomainValidator } from '../../../shared/validators/common-email-domain.validator';
 
 @Component({
   selector: 'app-form-company',
@@ -139,6 +140,7 @@ export class FormCompanyComponent implements OnInit {
     { id: 30, name: 'Valle del Cauca' },
     { id: 31, name: 'Vaupés' },
     { id: 32, name: 'Vichada' },
+    { id: 33, name:"BOGOTÁ, D.C."}
   ];
   documentHomologationList = [
     { code: 'N', name: 'NIT' },
@@ -171,6 +173,7 @@ export class FormCompanyComponent implements OnInit {
   mostrarEmpresaNoEncontrada: boolean = false;
   showNoChangesModal = false;
   showSuccessModal = false;
+  economicActivityList: { code: string, description: string }[] = [];
 
   loadMunicipalities(departmentId: number) {
     const municipios: Record<number, { id: number; name: string }[]> = {
@@ -1318,6 +1321,11 @@ export class FormCompanyComponent implements OnInit {
         { id: 99624, name: 'Santa Rosalía' },
         { id: 99773, name: 'Cumaribo' },
       ],
+
+      // 33. BOGOTÁ D.C.
+      33: [
+        { id: 1234567, name: 'BOGOTÁ, D.C.' },
+      ]
     };
 
     this.municipalitiesList = municipios[departmentId] || [];
@@ -1335,16 +1343,28 @@ export class FormCompanyComponent implements OnInit {
     this.requestForm.get('confirmEmail')?.setValidators([
       Validators.required,
       Validators.email,
+      commonEmailDomainValidator(),
       this.matchEmailValidator.bind(this),
     ]);
 
     this.getApplicantList();
+    this.loadEconomicActivities();
     this.requestForm.get('department')?.valueChanges.subscribe(selectedDepartment => {
       const departmentId = selectedDepartment?.id || selectedDepartment;
       if (departmentId) {
         this.loadMunicipalities(departmentId);
       } else {
         this.requestForm.get('municipality')?.setValue('');
+      }
+    });
+    this.requestForm.get('economicActivityCiiuCode')?.valueChanges.subscribe(code => {
+      const match = this.economicActivityList.find(item => item.code === code);
+      if (match) {
+        this.requestForm.get('economicActivityCiiuDescription')?.setValue(match.description);
+        this.requestForm.get('economicActivityCiiuDescription')?.disable();
+      } else {
+        this.requestForm.get('economicActivityCiiuDescription')?.setValue('');
+        this.requestForm.get('economicActivityCiiuDescription')?.enable();
       }
     });
   }
@@ -1383,11 +1403,11 @@ export class FormCompanyComponent implements OnInit {
         { value: '', disabled: true },
         [Validators.required, Validators.pattern(/^\d{10}$/), Validators.maxLength(10)],
       ],
-      email: [{ value: '', disabled: true }, [Validators.required, Validators.email]],
+      email: [{ value: '', disabled: true }, [Validators.required, Validators.email,commonEmailDomainValidator()]],
 
       // Información del representante legal
       legalRepresentativeDocumentType: [{ value: '', disabled: true }, Validators.required],
-      legalRepresentativeDocumentNumber: [{ value: '', disabled: true }, Validators.required],
+      legalRepresentativeDocumentNumber: [{ value: '', disabled: true }, [Validators.required,Validators.maxLength(10)]],
       legalRepresentativeFirstName: [{ value: '', disabled: true }, Validators.required],
       legalRepresentativeMiddleName: [{ value: '', disabled: true }],
       legalRepresentativeLastName: [{ value: '', disabled: true }, Validators.required],
@@ -1398,7 +1418,7 @@ export class FormCompanyComponent implements OnInit {
       economicActivityCiiuDescription: [{ value: '', disabled: true }, Validators.required],
       confirmEmail: [
         { value: '', disabled: true },
-        [Validators.required, Validators.email]
+        [Validators.required, Validators.email,commonEmailDomainValidator()]
       ]
     });
   }
@@ -1586,6 +1606,26 @@ export class FormCompanyComponent implements OnInit {
     //   },
     // });
   }
+
+  loadEconomicActivities() {
+    this.userService.getCiiuCodes().subscribe({
+      next: (response: any[]) => {
+        this.economicActivityList = response.map(item => ({
+          code: item.codigo,
+          description: item.descripcion
+        }));
+      },
+      error: (err: any) => {
+        console.error('Error al cargar actividades económicas:', err);
+        this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+
 
   continueCompanyUpdate(inputValue: CompanyUpdateRequest) {
     this.userService.updateCompany(inputValue).subscribe({
@@ -1929,7 +1969,7 @@ export class FormCompanyComponent implements OnInit {
     const documento = this.requestForm.get('number_id')?.value;
 
     // reemplazar por metodo que vaya por info de empreasas
-    this.userService.respuestaInfoEmpresa(documento, documentType).subscribe(
+    this.userService.getCompanyInformation(documento, documentType).subscribe(
       response => {
         if (response.statusCode === 200) {
           const parsedBody = JSON.parse(response.body);
@@ -1997,7 +2037,7 @@ export class FormCompanyComponent implements OnInit {
 
     // OPCIÓN ORIGINAL: CONSULTAR DESDE EL SERVICIO
     this.userService
-      .respuestaInfoEmpresa(
+      .getCompanyInformation(
         documentNumber,
         this.requestForm.controls['documentType'].value?.catalog_item_name
       )
@@ -2029,7 +2069,7 @@ export class FormCompanyComponent implements OnInit {
               department: selectedDepartment,
               municipality: selectedMunicipality || null,
               address: empresaData.direccion,
-              landline: empresaData.telefonoFijo,
+              landline: this.cleanLandline(empresaData.telefonoFijo),
               mobilePhone: empresaData.telefonoCelular,
               email: empresaData.email,
               legalRepresentativeDocumentType:
@@ -2173,7 +2213,7 @@ export class FormCompanyComponent implements OnInit {
       }
 
       if (!this.requestForm.contains('alternateEmail')) {
-        this.requestForm.addControl('alternateEmail', new FormControl('', [Validators.email]));
+        this.requestForm.addControl('alternateEmail', new FormControl('', [Validators.email,commonEmailDomainValidator()]));
       }
       this.requestForm.get('confirmEmail')?.enable();
     }
@@ -2536,6 +2576,12 @@ export class FormCompanyComponent implements OnInit {
       control?.markAsTouched();
       control?.updateValueAndValidity();
     }
+  }
+
+  cleanLandline(phone: string): string {
+    if (!phone) return '';
+    const numeric = phone.replace(/[^\d]/g, '');
+    return numeric.slice(-7);
   }
 
 

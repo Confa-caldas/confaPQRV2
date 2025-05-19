@@ -135,8 +135,6 @@
                 </div>
 
                 <div class="card-form-row">
-
-
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Correo Electrónico</label>
                     <input type="email" formControlName="email" />
@@ -164,14 +162,13 @@
                     <input
                       type="email"
                       formControlName="confirmEmail"
-                      (copy)="false"
-                      (paste)="false"
-                      (contextmenu)="false"
+                      (copy)="(false)"
+                      (paste)="(false)"
+                      (contextmenu)="(false)"
                       (keydown.control.c)="$event.preventDefault()"
                       (keydown.control.v)="$event.preventDefault()"
                       (keydown.meta.c)="$event.preventDefault()"
-                      (keydown.meta.v)="$event.preventDefault()"
-                    />
+                      (keydown.meta.v)="$event.preventDefault()" />
                     <small
                       class="error-message"
                       *ngIf="
@@ -182,8 +179,8 @@
                         requestForm.get('confirmEmail')?.errors?.['required']
                           ? 'Este campo es obligatorio.'
                           : requestForm.get('confirmEmail')?.errors?.['emailMismatch']
-                          ? 'El correo no coincide.'
-                          : 'Ingrese un correo electrónico válido.'
+                            ? 'El correo no coincide.'
+                            : 'Ingrese un correo electrónico válido.'
                       }}
                     </small>
                   </div>
@@ -206,7 +203,10 @@
                 <div class="card-form-row">
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Teléfono Fijo</label>
-                    <input type="text" formControlName="landline" (input)="sanitizeInput($event, 'numeric')"/>
+                    <input
+                      type="text"
+                      formControlName="landline"
+                      (input)="sanitizeInput($event, 'numeric')" />
                     <small
                       class="error-message"
                       *ngIf="
@@ -217,8 +217,11 @@
                   </div>
 
                   <div class="p-field">
-                    <label class="card-form-input-placeholder" >Teléfono Celular</label>
-                    <input type="text" formControlName="mobilePhone" (input)="sanitizeInput($event, 'numeric')" />
+                    <label class="card-form-input-placeholder">Teléfono Celular</label>
+                    <input
+                      type="text"
+                      formControlName="mobilePhone"
+                      (input)="sanitizeInput($event, 'numeric')" />
                     <small
                       class="error-message"
                       *ngIf="
@@ -234,7 +237,10 @@
                 <div class="card-form-row" *ngIf="!isCorrectData">
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Teléfono Celular Alterno</label>
-                    <input type="text" formControlName="alternateMobilePhone" (input)="sanitizeInput($event, 'numeric')" />
+                    <input
+                      type="text"
+                      formControlName="alternateMobilePhone"
+                      (input)="sanitizeInput($event, 'numeric')" />
                     <small
                       class="error-message"
                       *ngIf="
@@ -305,14 +311,18 @@
 
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Número de Documento</label>
-                    <input type="text" formControlName="legalRepresentativeDocumentNumber" (input)="sanitizeInput($event, 'numeric')"/>
+                    <input
+                      type="text"
+                      maxlength="10"
+                      formControlName="legalRepresentativeDocumentNumber"
+                      (input)="sanitizeInput($event, 'numeric')" />
                     <small
                       class="error-message"
                       *ngIf="
                         requestForm.get('legalRepresentativeDocumentNumber')?.invalid &&
                         requestForm.get('legalRepresentativeDocumentNumber')?.touched
                       ">
-                      Solo se permiten números.
+                      Solo se permiten números y máximo 10 caracteres.
                     </small>
                   </div>
                 </div>
@@ -320,7 +330,10 @@
                 <div class="card-form-row">
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Primer Nombre</label>
-                    <input type="text" formControlName="legalRepresentativeFirstName" (input)="sanitizeInput($event, 'alpha')"/>
+                    <input
+                      type="text"
+                      formControlName="legalRepresentativeFirstName"
+                      (input)="sanitizeInput($event, 'alpha')" />
                     <small
                       class="error-message"
                       *ngIf="
@@ -333,14 +346,20 @@
 
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Segundo Nombre</label>
-                    <input type="text" formControlName="legalRepresentativeMiddleName" (input)="sanitizeInput($event, 'alpha')"/>
+                    <input
+                      type="text"
+                      formControlName="legalRepresentativeMiddleName"
+                      (input)="sanitizeInput($event, 'alpha')" />
                   </div>
                 </div>
 
                 <div class="card-form-row">
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Primer Apellido</label>
-                    <input type="text" formControlName="legalRepresentativeLastName" (input)="sanitizeInput($event, 'alpha')"/>
+                    <input
+                      type="text"
+                      formControlName="legalRepresentativeLastName"
+                      (input)="sanitizeInput($event, 'alpha')" />
                     <small
                       class="error-message"
                       *ngIf="
@@ -353,12 +372,21 @@
 
                   <div class="p-field">
                     <label class="card-form-input-placeholder">Segundo Apellido</label>
-                    <input type="text" formControlName="legalRepresentativeSecondLastName" (input)="sanitizeInput($event, 'alpha')"/>
+                    <input
+                      type="text"
+                      formControlName="legalRepresentativeSecondLastName"
+                      (input)="sanitizeInput($event, 'alpha')" />
                   </div>
                 </div>
 
                 <div class="card-buttonUp" *ngIf="!isCorrectLegalRepresentativeData">
-                  <label class="card-buttonUp-placeholder">Adjuntar archivo</label>
+                  <label class="card-buttonUp-placeholder"
+                    >Para este cambio tener en cuenta que el nuevo representante legal relacionado
+                    debe estar registrado en el cértificado de cámara de comercio de la presente
+                    empresa, siempre y cuando tenga este registo. De no estar registrado debe
+                    adjuntar la copia de la cédula de ciudanía del representante legal a
+                    modificar.</label
+                  >
                   <div class="card-buttonUp-custom-button">
                     <input
                       type="file"
@@ -771,7 +799,9 @@
             style="font-size: 2rem; color: #4caf50; margin-bottom: 12px"></i>
           <p class="dialog-message">
             La solicitud de actualización de información fue enviada correctamente y será procesada
-            por nuestro equipo.
+            por nuestro equipo. Tener en cuenta que si incluyo el cambio en datos del Representante
+            Legal o el código CIIU o en su defecto ambos; estos serán verificados por Confa y de no
+            cumplir con los adjuntos les estaremos informando el resultado a través de este medio.
           </p>
         </div>
       </div>
