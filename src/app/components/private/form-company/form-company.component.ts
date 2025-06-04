@@ -30,6 +30,11 @@ import { HttpEventType, HttpResponse, HttpErrorResponse } from '@angular/common/
 import { throwError, retry, lastValueFrom, firstValueFrom } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { ChangeDetectorRef } from '@angular/core';
+import {
+  commonEmailDomainValidator,
+  ceDocumentValidator,
+  noConsecutiveValidator
+} from '../../../shared/validators/common-email-domain.validator';
 
 @Component({
   selector: 'app-form-company',
@@ -139,6 +144,7 @@ export class FormCompanyComponent implements OnInit {
     { id: 30, name: 'Valle del Cauca' },
     { id: 31, name: 'Vaupés' },
     { id: 32, name: 'Vichada' },
+    { id: 33, name: 'BOGOTÁ, D.C.' },
   ];
   documentHomologationList = [
     { code: 'N', name: 'NIT' },
@@ -171,6 +177,7 @@ export class FormCompanyComponent implements OnInit {
   mostrarEmpresaNoEncontrada: boolean = false;
   showNoChangesModal = false;
   showSuccessModal = false;
+  economicActivityList: { code: string; description: string }[] = [];
 
   loadMunicipalities(departmentId: number) {
     const municipios: Record<number, { id: number; name: string }[]> = {
@@ -1318,6 +1325,9 @@ export class FormCompanyComponent implements OnInit {
         { id: 99624, name: 'Santa Rosalía' },
         { id: 99773, name: 'Cumaribo' },
       ],
+
+      // 33. BOGOTÁ D.C.
+      33: [{ id: 1234567, name: 'BOGOTÁ, D.C.' }],
     };
 
     this.municipalitiesList = municipios[departmentId] || [];
@@ -1332,13 +1342,17 @@ export class FormCompanyComponent implements OnInit {
 
   ngOnInit(): void {
     this.createForm();
-    this.requestForm.get('confirmEmail')?.setValidators([
-      Validators.required,
-      Validators.email,
-      this.matchEmailValidator.bind(this),
-    ]);
+    this.requestForm
+      .get('confirmEmail')
+      ?.setValidators([
+        Validators.required,
+        Validators.email,
+        commonEmailDomainValidator(),
+        this.matchEmailValidator.bind(this),
+      ]);
 
     this.getApplicantList();
+    this.loadEconomicActivities();
     this.requestForm.get('department')?.valueChanges.subscribe(selectedDepartment => {
       const departmentId = selectedDepartment?.id || selectedDepartment;
       if (departmentId) {
@@ -1346,6 +1360,19 @@ export class FormCompanyComponent implements OnInit {
       } else {
         this.requestForm.get('municipality')?.setValue('');
       }
+    });
+    this.requestForm.get('economicActivityCiiuCode')?.valueChanges.subscribe(code => {
+      const match = this.economicActivityList.find(item => item.code === code);
+      if (match) {
+        this.requestForm.get('economicActivityCiiuDescription')?.setValue(match.description);
+        this.requestForm.get('economicActivityCiiuDescription')?.disable();
+      } else {
+        this.requestForm.get('economicActivityCiiuDescription')?.setValue('');
+        this.requestForm.get('economicActivityCiiuDescription')?.enable();
+      }
+    });
+    this.requestForm.get('legalRepresentativeDocumentType')?.valueChanges.subscribe(() => {
+      this.requestForm.get('legalRepresentativeDocumentNumber')?.updateValueAndValidity();
     });
   }
 
@@ -1368,7 +1395,10 @@ export class FormCompanyComponent implements OnInit {
     this.requestForm = this.formBuilder.group({
       // Información de la empresa
       documentType: ['', Validators.required],
-      documentNumber: ['',[Validators.required, Validators.pattern('^[0-9]*$'), Validators.minLength(5)],],
+      documentNumber: [
+        '',
+        [Validators.required, Validators.pattern('^[0-9]*$'), Validators.minLength(5)],
+      ],
       verificationDigit: [{ value: '', disabled: true }],
       businessName: [{ value: '', disabled: true }, Validators.required],
       tradeName: [{ value: '', disabled: true }],
@@ -1377,17 +1407,23 @@ export class FormCompanyComponent implements OnInit {
       address: [{ value: '', disabled: true }, Validators.required],
       landline: [
         { value: '', disabled: true },
-        [Validators.pattern(/^\d*$/), Validators.maxLength(7)],
+        [Validators.pattern(/^\d*$/), Validators.maxLength(7),noConsecutiveValidator],
       ],
       mobilePhone: [
         { value: '', disabled: true },
         [Validators.required, Validators.pattern(/^\d{10}$/), Validators.maxLength(10)],
       ],
-      email: [{ value: '', disabled: true }, [Validators.required, Validators.email]],
+      email: [
+        { value: '', disabled: true },
+        [Validators.required, Validators.email, commonEmailDomainValidator()],
+      ],
 
       // Información del representante legal
       legalRepresentativeDocumentType: [{ value: '', disabled: true }, Validators.required],
-      legalRepresentativeDocumentNumber: [{ value: '', disabled: true }, Validators.required],
+      legalRepresentativeDocumentNumber: [
+        { value: '', disabled: true },
+        [Validators.required, Validators.maxLength(10), ceDocumentValidator],
+      ],
       legalRepresentativeFirstName: [{ value: '', disabled: true }, Validators.required],
       legalRepresentativeMiddleName: [{ value: '', disabled: true }],
       legalRepresentativeLastName: [{ value: '', disabled: true }, Validators.required],
@@ -1398,8 +1434,8 @@ export class FormCompanyComponent implements OnInit {
       economicActivityCiiuDescription: [{ value: '', disabled: true }, Validators.required],
       confirmEmail: [
         { value: '', disabled: true },
-        [Validators.required, Validators.email]
-      ]
+        [Validators.required, Validators.email, commonEmailDomainValidator()],
+      ],
     });
   }
 
@@ -1524,7 +1560,7 @@ export class FormCompanyComponent implements OnInit {
         catalog_item_label: 'NIT',
         catalog_id: 0,
         is_active: 1,
-        regex: '^[0-9]+$'
+        regex: '^[0-9]+$',
       },
       {
         catalog_item_id: 3,
@@ -1532,7 +1568,7 @@ export class FormCompanyComponent implements OnInit {
         catalog_item_label: 'CEDULA CIUDADANIA',
         catalog_id: 0,
         is_active: 1,
-        regex: '^[0-9]+$'
+        regex: '^[0-9]+$',
       },
       {
         catalog_item_id: 4,
@@ -1540,7 +1576,7 @@ export class FormCompanyComponent implements OnInit {
         catalog_item_label: 'CEDULA EXTRANJERIA',
         catalog_id: 0,
         is_active: 1,
-        regex: '^[0-9]+$'
+        regex: '^[0-9]+$',
       },
       {
         catalog_item_id: 2,
@@ -1548,7 +1584,7 @@ export class FormCompanyComponent implements OnInit {
         catalog_item_label: 'TARJETA IDENTIDAD',
         catalog_id: 0,
         is_active: 1,
-        regex: '.*'
+        regex: '.*',
       },
       {
         catalog_item_id: 1,
@@ -1556,7 +1592,7 @@ export class FormCompanyComponent implements OnInit {
         catalog_item_label: 'PERM PROT TEMPORAL',
         catalog_id: 0,
         is_active: 1,
-        regex: '.*'
+        regex: '.*',
       },
       {
         catalog_item_id: 5,
@@ -1564,10 +1600,9 @@ export class FormCompanyComponent implements OnInit {
         catalog_item_label: 'PERM ESP PERMANENCIA',
         catalog_id: 0,
         is_active: 1,
-        regex: '.*'
-      }
+        regex: '.*',
+      },
     ];
-
 
     // this.userService.getFormById(0).subscribe({
     //   next: (response: BodyResponse<any[]>): void => {
@@ -1585,6 +1620,24 @@ export class FormCompanyComponent implements OnInit {
     //     console.log('La suscripción ha sido completada.');
     //   },
     // });
+  }
+
+  loadEconomicActivities() {
+    this.userService.getCiiuCodes().subscribe({
+      next: (response: any[]) => {
+        this.economicActivityList = response.map(item => ({
+          code: item.codigo,
+          description: item.descripcion,
+        }));
+      },
+      error: (err: any) => {
+        console.error('Error al cargar actividades económicas:', err);
+        this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
   }
 
   continueCompanyUpdate(inputValue: CompanyUpdateRequest) {
@@ -1929,7 +1982,7 @@ export class FormCompanyComponent implements OnInit {
     const documento = this.requestForm.get('number_id')?.value;
 
     // reemplazar por metodo que vaya por info de empreasas
-    this.userService.respuestaInfoEmpresa(documento, documentType).subscribe(
+    this.userService.getCompanyInformation(documento, documentType).subscribe(
       response => {
         if (response.statusCode === 200) {
           const parsedBody = JSON.parse(response.body);
@@ -1973,7 +2026,7 @@ export class FormCompanyComponent implements OnInit {
       'legalRepresentativeSecondLastName',
       'economicActivityCiiuCode',
       'economicActivityCiiuDescription',
-      'confirmEmail'
+      'confirmEmail',
     ];
 
     disabledFields.forEach(field => {
@@ -1997,7 +2050,7 @@ export class FormCompanyComponent implements OnInit {
 
     // OPCIÓN ORIGINAL: CONSULTAR DESDE EL SERVICIO
     this.userService
-      .respuestaInfoEmpresa(
+      .getCompanyInformation(
         documentNumber,
         this.requestForm.controls['documentType'].value?.catalog_item_name
       )
@@ -2029,7 +2082,7 @@ export class FormCompanyComponent implements OnInit {
               department: selectedDepartment,
               municipality: selectedMunicipality || null,
               address: empresaData.direccion,
-              landline: empresaData.telefonoFijo,
+              landline: this.cleanLandline(empresaData.telefonoFijo),
               mobilePhone: empresaData.telefonoCelular,
               email: empresaData.email,
               legalRepresentativeDocumentType:
@@ -2173,9 +2226,13 @@ export class FormCompanyComponent implements OnInit {
       }
 
       if (!this.requestForm.contains('alternateEmail')) {
-        this.requestForm.addControl('alternateEmail', new FormControl('', [Validators.email]));
+        this.requestForm.addControl(
+          'alternateEmail',
+          new FormControl('', [Validators.email, commonEmailDomainValidator()])
+        );
       }
       this.requestForm.get('confirmEmail')?.enable();
+      this.requestForm.get('landline')?.updateValueAndValidity();
     }
   }
 
@@ -2205,6 +2262,7 @@ export class FormCompanyComponent implements OnInit {
       this.requestForm.controls['legalRepresentativeMiddleName'].enable();
       this.requestForm.controls['legalRepresentativeLastName'].enable();
       this.requestForm.controls['legalRepresentativeSecondLastName'].enable();
+      this.requestForm.controls['legalRepresentativeDocumentNumber'].updateValueAndValidity();
     }
   }
 
@@ -2538,5 +2596,9 @@ export class FormCompanyComponent implements OnInit {
     }
   }
 
-
+  cleanLandline(phone: string): string {
+    if (!phone) return '';
+    const numeric = phone.replace(/[^\d]/g, '');
+    return numeric.slice(-7);
+  }
 }

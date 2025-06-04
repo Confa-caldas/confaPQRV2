@@ -101,6 +101,9 @@
         <th pSortableColumn="company_update_id" style="width: 5%">
           Nmero de radicado<p-sortIcon field="company_update_id"></p-sortIcon>
         </th>
+        <th pSortableColumn="created_at">
+          Fecha radicado <p-sortIcon field="created_at"></p-sortIcon>
+        </th>
         <th pSortableColumn="business_name">
           Razón Social <p-sortIcon field="business_name"></p-sortIcon>
         </th>
@@ -121,6 +124,7 @@
     <ng-template pTemplate="body" let-row>
       <tr>
         <td>{{ row.company_update_id }}</td>
+        <td>{{ row.created_at | date: 'yyyy-MM-dd' }}</td>
         <td>{{ row.business_name }}</td>
         <td>{{ row.document_number }}</td>
         <td>{{ row.verification_digit }}</td>

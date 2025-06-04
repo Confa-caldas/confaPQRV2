@@ -1,7 +1,11 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { BodyResponse, ZionResponse,BodyResponseUp } from '../models/shared/body-response.inteface';
+import {
+  BodyResponse,
+  ZionResponse,
+  BodyResponseUp,
+} from '../models/shared/body-response.inteface';
 import { EndPointRoute } from '../enums/routes.enum';
 import { map, catchError } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
@@ -58,7 +62,7 @@ import {
   RequestsListIntern,
   CompanyUpdateRequest,
   FilterCompanyUpdate,
-  CompanyUpdateRecord
+  CompanyUpdateRecord,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -525,7 +529,6 @@ export class Users {
     return this.http.get(url, { headers });
   }
 
-
   createAnswerTemp(payload: RequestAnswerTemp) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.CREATE_ANSWER_TEM}`,
@@ -630,8 +633,8 @@ export class Users {
     return this.http.post<BodyResponse<number>>(
       `${environment.API_PUBLIC}${EndPointRoute.CREATE_REQUEST_INTERNAL}`,
       payload
-      );
-    }
+    );
+  }
 
   //traer usuario que creo la solicitud
   getRequestUserList() {
@@ -675,12 +678,11 @@ export class Users {
   }
 
   insertCompanyFilesS3(payload: any): Observable<boolean> {
-    return this.http.post<BodyResponseUp<string>>(
-      `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES}`,
-      payload
-    ).pipe(
-      map(response => response.body === "1")
-    );
+    return this.http
+      .post<
+        BodyResponseUp<string>
+      >(`${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES}`, payload)
+      .pipe(map(response => response.body === '1'));
   }
 
   getUrlSignedCompany(payload: PreSignedAttach, type_docoument: string) {
@@ -690,8 +692,8 @@ export class Users {
     );
   }
 
-  respuestaInfoEmpresa(cedula: string,tipoDoc:String): Observable<any> {
-    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarEmpresaNitGestorSolicitudes/${cedula}/${tipoDoc}`;
+  getCompanyInformation(cedula: string, tipoDoc: String): Observable<any> {
+    const url = `${environment.ruta_consumo_subsidios_rest}consultarEmpresaNitGestorSolicitudes/${cedula}/${tipoDoc}`;
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
     });
@@ -706,13 +708,20 @@ export class Users {
     );
   }
 
+  getCompanyUpdateListForExport(payload: FilterCompanyUpdate) {
+    return this.http.post<BodyResponse<CompanyUpdateRecord[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.COMPANY_UPDATE_EXPORT}`,
+      payload
+    );
+  }
+
   updateCompanyManagement(payload: {
     company_update_id: number;
     management_result: string;
     management_observation: string;
     updated_by: string;
-    user_mail:string;
-    user_name:string;
+    user_mail: string;
+    user_name: string;
   }) {
     return this.http.post<BodyResponse<any>>(
       `${environment.API_PUBLIC}${EndPointRoute.COMPANY_UPDATE_MANAGEMENT}`,
@@ -720,4 +729,12 @@ export class Users {
     );
   }
 
+  getCiiuCodes(): Observable<any> {
+    const url = `${environment.ruta_consumo_subsidios_rest}consultarCodigoCiiu`;
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
+
+    return this.http.get(url, { headers });
+  }
 }
