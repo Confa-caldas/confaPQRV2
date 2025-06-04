@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
@@ -363,4 +363,34 @@ export class RequestsReportComponent implements OnInit {
       },
     });
   }
+
+  @HostListener('document:keydown.enter', ['$event'])
+onEnterKeyPressed(event: KeyboardEvent): void {
+  const isOverlayOpen =
+    document.querySelector('.p-overlay-visible') || document.querySelector('.cdk-overlay-pane');
+
+  const hasActiveFilters = Object.values(this.formGroup.value).some(
+    (value) =>
+      value !== null &&
+      value !== '' &&
+      !(Array.isArray(value) && value.length === 0)
+  );
+
+  if (!isOverlayOpen && hasActiveFilters) {
+    event.preventDefault();
+    this.initPaginador();
+  }
+}
+
+@HostListener('document:keydown.escape', ['$event'])
+onEscapeKeyPressed(event: KeyboardEvent): void {
+  const isOverlayOpen =
+    document.querySelector('.p-overlay-visible') || document.querySelector('.cdk-overlay-pane');
+
+  if (!isOverlayOpen) {
+    event.preventDefault();
+    this.cleanForm();
+  }
+}
+
 }

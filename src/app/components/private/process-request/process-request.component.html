@@ -5,10 +5,9 @@
 </div>
 <div>
   <div class="p-tabview">
-    <p-tabView class="p-tabview-nav-process">
+    <p-tabView class="p-tabview-nav-process" [(activeIndex)]="activeTabIndex">
       <p-tabPanel header="Mis solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
-        <form [formGroup]="filterFormAssigned" (keydown.enter)="initPaginadorAssigned()"
-        (keydown.escape)="cleanFormAssigned()">
+        <form [formGroup]="filterFormAssigned" id="formAssigned">
           <div class="position-relative">
             <div class="card form-container">
               
@@ -245,8 +244,7 @@
           [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
       </p-tabPanel>
       <p-tabPanel header="Solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
-        <form [formGroup]="filterForm" (keydown.enter)="initPaginador()"
-        (keydown.escape)="cleanForm()">
+        <form [formGroup]="filterForm" id="formGeneral">
           <div class="position-relative">
             <div class="card flex justify-content-center absolute-center">
               

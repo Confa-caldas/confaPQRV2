@@ -212,14 +212,30 @@ export class RequestFormComponent implements OnInit {
     this.fileInput.nativeElement.value = ''; // Limpiar la entrada de archivos antes de abrir el cuadro de diálogo
     this.fileInput.nativeElement.click();
   }
+
   onFileSelected(event: any) {
     const files: FileList = event.target.files;
     if (this.arrayApplicantAttachment.length === 0) {
       this.fileNameList.clear();
     }
 
+    let photoCounter = 1; // contador para fotos desde celular
+
     for (let i = 0; i < files.length; i++) {
-      const file: File = files[i];
+      //const file: File = files[i];
+      let file: File = files[i];
+
+      //Verifica si es imagen y viene desde movil
+      const isImage = file.type.startsWith('image/');
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      // Renombrar solo si es imagen y viene desde móvil
+      if (isImage && isMobile) {
+        const extension = file.name.split('.').pop();
+        const newName = `photo_${photoCounter}.${extension}`;
+        file = new File([file], newName, { type: file.type });
+        photoCounter++;
+      }
 
       let fileSizeFormat: string;
       const fileName: string = file.name;

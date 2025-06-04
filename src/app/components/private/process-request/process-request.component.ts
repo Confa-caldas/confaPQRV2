@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
@@ -87,7 +87,8 @@ export class ProcessRequestComponent implements OnInit {
       applicant_type_id: new FormControl(null),
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
-      request_status_id: new FormControl(null),
+      //request_status_id: new FormControl(null),
+      request_status_id: new FormControl([1]),
       confa_user: new FormControl(null),
       area_name: new FormControl(null),
       //is_priority: new FormControl(null),
@@ -503,4 +504,38 @@ export class ProcessRequestComponent implements OnInit {
       this.cleanForm();
     }
   }
+
+  activeTabIndex = 0; // 0 para "Asignadas", 1 para "Generales"
+
+@HostListener('document:keydown.enter', ['$event'])
+onEnterPressed(event: KeyboardEvent): void {
+  if (this.activeTabIndex === 0 && this.hasActiveFilters(this.filterFormAssigned)) {
+    event.preventDefault();
+    this.initPaginadorAssigned();
+  } else if (this.activeTabIndex === 1 && this.hasActiveFilters(this.filterForm)) {
+    event.preventDefault();
+    this.initPaginador();
+  }
+}
+
+@HostListener('document:keydown.escape', ['$event'])
+onEscapePressed(event: KeyboardEvent): void {
+  if (this.activeTabIndex === 0) {
+    event.preventDefault();
+    this.cleanFormAssigned();
+  } else if (this.activeTabIndex === 1) {
+    event.preventDefault();
+    this.cleanForm();
+  }
+}
+
+private hasActiveFilters(formGroup: FormGroup): boolean {
+  return Object.values(formGroup.value).some(value => {
+    if (value === null || value === '') return false;
+    if (Array.isArray(value) && value.length === 0) return false;
+    return true;
+  });
+}
+
+
 }

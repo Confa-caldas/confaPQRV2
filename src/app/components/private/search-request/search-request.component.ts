@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
@@ -90,7 +90,8 @@ export class SearchRequestComponent implements OnInit {
       applicant_type_id: new FormControl(null),
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
-      request_status_id: new FormControl(null),
+      //request_status_id: new FormControl(null),
+      request_status_id: new FormControl([1]),
       confa_user: new FormControl(null),
       area_name: new FormControl(null),
       //is_priority: new FormControl(null),
@@ -712,4 +713,38 @@ export class SearchRequestComponent implements OnInit {
     this.parameter = ['Colaborador'];
     this.visibleDialogInput = true;
   }
+
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterKeyPressed(event: KeyboardEvent): void {
+    const activeElement = document.activeElement;
+    const isOverlayOpen =
+      document.querySelector('.p-overlay-visible') || document.querySelector('.cdk-overlay-pane');
+
+    // ✅ Verifica si hay algún valor en los filtros
+    const hasActiveFilters = Object.values(this.formGroup.value).some(
+      (value) =>
+        value !== null &&
+        value !== '' &&
+        !(Array.isArray(value) && value.length === 0)
+    );
+
+    // ✅ Solo ejecuta si no hay overlays abiertos y hay al menos un filtro activo
+    if (!isOverlayOpen && hasActiveFilters) {
+      event.preventDefault(); // evitar comportamiento por defecto
+      this.initPaginador();
+    }
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKeyPressed(event: KeyboardEvent): void {
+    const isOverlayOpen =
+      document.querySelector('.p-overlay-visible') || document.querySelector('.cdk-overlay-pane');
+
+    // Solo limpiar si no hay overlays abiertos (para no interferir con selección)
+    if (!isOverlayOpen) {
+      event.preventDefault();
+      this.cleanForm();
+    }
+  }
+
 }
