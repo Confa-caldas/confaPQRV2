@@ -219,8 +219,6 @@ export class RequestFormComponent implements OnInit {
       this.fileNameList.clear();
     }
 
-    let photoCounter = 1; // contador para fotos desde celular
-
     for (let i = 0; i < files.length; i++) {
       //const file: File = files[i];
       let file: File = files[i];
@@ -232,9 +230,9 @@ export class RequestFormComponent implements OnInit {
       // Renombrar solo si es imagen y viene desde móvil
       if (isImage && isMobile) {
         const extension = file.name.split('.').pop();
-        const newName = `photo_${photoCounter}.${extension}`;
+        const timestamp = new Date().getTime(); // genera un número único basado en tiempo
+        const newName = `photo_${timestamp}.${extension}`;
         file = new File([file], newName, { type: file.type });
-        photoCounter++;
       }
 
       let fileSizeFormat: string;
