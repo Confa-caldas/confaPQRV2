@@ -606,119 +606,156 @@ export class SearchUpdateCompanyComponent implements OnInit {
   }
 
   exportToExcel(): void {
-    if (!this.requestList || this.requestList.length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Validación',
-        detail: 'No hay datos para exportar.',
-      });
-      return;
-    }
+    const filtrosGuardados = sessionStorage.getItem('filtrosBusqueda');
+    const filtros = filtrosGuardados ? JSON.parse(filtrosGuardados) : {};
+
+    const exportPayload: FilterCompanyUpdate = {
+      i_date:
+        this.formGroup.controls['dates_range'].value?.length > 0
+          ? this.convertDates(this.formGroup.controls['dates_range'].value[0])
+          : filtros['dates_range']?.length > 0
+            ? this.convertDates(filtros['dates_range'][0])
+            : null,
+
+      f_date:
+        this.formGroup.controls['dates_range'].value?.length > 0
+          ? this.convertDates(this.formGroup.controls['dates_range'].value[1])
+          : filtros['dates_range']?.length > 0
+            ? this.convertDates(filtros['dates_range'][1])
+            : null,
+
+      doc_id:
+        this.formGroup.controls['doc_id'].value?.length > 0
+          ? this.formGroup.controls['doc_id'].value
+          : filtros['doc_id'] || null,
+
+      applicant_name:
+        this.formGroup.controls['applicant_name'].value?.trim().length > 0
+          ? this.formGroup.controls['applicant_name'].value
+          : filtros['applicant_name'] || null,
+
+      report_type:
+        this.formGroup.controls['report_type'].value !== null &&
+        this.formGroup.controls['report_type'].value !== undefined
+          ? this.formGroup.controls['report_type'].value
+          : filtros['report_type'] ?? null,
+    };
 
     this.isSpinnerVisible = true;
 
-    setTimeout(() => {
-      const reportType = this.formGroup.get('report_type')?.value;
+    this.userService.getCompanyUpdateListForExport(exportPayload).subscribe({
+      next: (response: BodyResponse<CompanyUpdateRecord[]>) => {
+        if (!response?.data?.length) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Validación',
+            detail: 'No hay datos actualizados para exportar.',
+          });
+          this.isSpinnerVisible = false;
+          return;
+        }
 
-      const exportData = this.requestList.flatMap(record => {
-        const formattedDate = new Date(record.created_at).toISOString().slice(0, 10);
+        const reportType = exportPayload.report_type;
+        const exportData = response.data.flatMap(record => {
+          const formattedDate = new Date(record.created_at).toISOString().slice(0, 10);
 
-        if (reportType === 0) {
-          return [
-            {
+          if (reportType === 0) {
+            return [
+              {
+                'TIPO DOCUMENTO': record.document_type,
+                'NUMERO DOCUMENTO': record.document_number,
+                'DV': record.verification_digit,
+                'RAZON SOCIAL': record.business_name,
+                'NOMBRE COMERCIAL': record.trade_name,
+                'DEPARTAMENTO': record.department,
+                'MUNICIPIO': record.municipality,
+                'DIRECCIÓN': record.address,
+                'TELEFONO FIJO': record.landline || '',
+                'CELULAR': record.mobile_phone,
+                'CELULAR ALTERNO': record.alternate_mobile_phone || '',
+                'CORREO ELECTRONICO': record.email,
+                'CORREO ELECTRONICO ALTERNO': record.alternate_email || '',
+                'FECHA ACTUALIZACIÓN': formattedDate,
+              },
+            ];
+          }
+
+          if (reportType === 1 && record.management_result !== 'SI') {
+            return [];
+          }
+
+          const rows: any[] = [];
+
+          if (record.updated_legal_representative) {
+            rows.push({
               'TIPO DOCUMENTO': record.document_type,
               'NUMERO DOCUMENTO': record.document_number,
-              DV: record.verification_digit,
+              'DV': record.verification_digit,
               'RAZON SOCIAL': record.business_name,
               'NOMBRE COMERCIAL': record.trade_name,
-              DEPARTAMENTO: record.department,
-              MUNICIPIO: record.municipality,
-              DIRECCIÓN: record.address,
-              'TELEFONO FIJO': record.landline || '',
-              CELULAR: record.mobile_phone,
-              'CELULAR ALTERNO': record.alternate_mobile_phone || '',
-              'CORREO ELECTRONICO': record.email,
-              'CORREO ELECTRONICO ALTERNO': record.alternate_email || '',
+              'TIPO DOCUMENTO REPRESENTANTE LEGAL': record.legal_representative_document_type,
+              'NUMERO DOCUMENTO REPRESENTANTE LEGAL': record.legal_representative_document_number,
+              'PRIMER NOMBRE REPRESENTANTE LEGAL': record.legal_representative_first_name,
+              'SEGUNDO NOMBRE REPRESENTANTE LEGAL': record.legal_representative_middle_name || '',
+              'PRIMER APELLIDO REPRESENTANTE LEGAL': record.legal_representative_last_name,
+              'SEGUNDO APELLIDO REPRESENTANTE LEGAL':
+                record.legal_representative_second_last_name || '',
+              'CODIGO CIIU': '',
               'FECHA ACTUALIZACIÓN': formattedDate,
-            },
-          ];
-        }
+            });
+          }
 
-        if (reportType === 1 && record.management_result !== 'SI') {
-          return [];
-        }
+          if (record.updated_economic_activity) {
+            rows.push({
+              'TIPO DOCUMENTO': record.document_type,
+              'NUMERO DOCUMENTO': record.document_number,
+              'DV': record.verification_digit,
+              'RAZON SOCIAL': record.business_name,
+              'NOMBRE COMERCIAL': record.trade_name,
+              'TIPO DOCUMENTO REPRESENTANTE LEGAL': '',
+              'NUMERO DOCUMENTO REPRESENTANTE LEGAL': '',
+              'PRIMER NOMBRE REPRESENTANTE LEGAL': '',
+              'SEGUNDO NOMBRE REPRESENTANTE LEGAL': '',
+              'PRIMER APELLIDO REPRESENTANTE LEGAL': '',
+              'SEGUNDO APELLIDO REPRESENTANTE LEGAL': '',
+              'CODIGO CIIU': record.economic_activity_ciiu_code,
+              'FECHA ACTUALIZACIÓN': formattedDate,
+            });
+          }
 
-        const rows: any[] = [];
-
-        if (record.updated_legal_representative) {
-          rows.push({
-            'TIPO DOCUMENTO': record.document_type,
-            'NUMERO DOCUMENTO': record.document_number,
-            DV: record.verification_digit,
-            'RAZON SOCIAL': record.business_name,
-            'NOMBRE COMERCIAL': record.trade_name,
-            'TIPO DOCUMENTO REPRESENTANTE LEGAL': record.legal_representative_document_type,
-            'NUMERO DOCUMENTO REPRESENTANTE LEGAL': record.legal_representative_document_number,
-            'PRIMER NOMBRE REPRESENTANTE LEGAL': record.legal_representative_first_name,
-            'SEGUNDO NOMBRE REPRESENTANTE LEGAL': record.legal_representative_middle_name || '',
-            'PRIMER APELLIDO REPRESENTANTE LEGAL': record.legal_representative_last_name,
-            'SEGUNDO APELLIDO REPRESENTANTE LEGAL':
-              record.legal_representative_second_last_name || '',
-            'CODIGO CIIU': '',
-            'FECHA ACTUALIZACIÓN': formattedDate,
-          });
-        }
-
-        if (record.updated_economic_activity) {
-          rows.push({
-            'TIPO DOCUMENTO': record.document_type,
-            'NUMERO DOCUMENTO': record.document_number,
-            DV: record.verification_digit,
-            'RAZON SOCIAL': record.business_name,
-            'NOMBRE COMERCIAL': record.trade_name,
-            'TIPO DOCUMENTO REPRESENTANTE LEGAL': '',
-            'NUMERO DOCUMENTO REPRESENTANTE LEGAL': '',
-            'PRIMER NOMBRE REPRESENTANTE LEGAL': '',
-            'SEGUNDO NOMBRE REPRESENTANTE LEGAL': '',
-            'PRIMER APELLIDO REPRESENTANTE LEGAL': '',
-            'SEGUNDO APELLIDO REPRESENTANTE LEGAL': '',
-            'CODIGO CIIU': record.economic_activity_ciiu_code,
-            'FECHA ACTUALIZACIÓN': formattedDate,
-          });
-        }
-
-        return rows.length > 0 ? rows : [];
-      });
-
-      if (exportData.length === 0) {
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Validación',
-          detail: 'No hay datos actualizados para exportar.',
+          return rows.length > 0 ? rows : [];
         });
+
+        const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook: XLSX.WorkBook = {
+          Sheets: { Empresas: worksheet },
+          SheetNames: ['Empresas'],
+        };
+        const fileName =
+          reportType === 0
+            ? 'actualizacion_datos_generales.xlsx'
+            : 'representante_legal_actividad_economica.xlsx';
+
+        XLSX.writeFile(workbook, fileName);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Archivo exportado correctamente.',
+        });
+      },
+      error: err => {
+        console.error('Error exportando datos:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Ocurrió un error al exportar los datos.',
+        });
+      },
+      complete: () => {
         this.isSpinnerVisible = false;
-        return;
-      }
-
-      const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
-      const workbook: XLSX.WorkBook = {
-        Sheets: { Empresas: worksheet },
-        SheetNames: ['Empresas'],
-      };
-      const fileName =
-        reportType === 0
-          ? 'actualizacion_datos_generales.xlsx'
-          : 'representante_legal_actividad_economica.xlsx';
-
-      XLSX.writeFile(workbook, fileName);
-      this.isSpinnerVisible = false;
-
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Éxito',
-        detail: 'Archivo exportado correctamente.',
-      });
-    }, 1000);
+      },
+    });
   }
 
   onGestionChange(event: any): void {

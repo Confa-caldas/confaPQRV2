@@ -75,3 +75,51 @@ function levenshteinDistance(a: string, b: string): number {
 
   return matrix[a.length][b.length];
 }
+
+export function ceDocumentValidator(control: AbstractControl): ValidationErrors | null {
+  const value = control.value;
+  const root = control?.parent;
+
+  if (!root) return null;
+
+  const docType = root.get('legalRepresentativeDocumentType')?.value;
+
+  if (!value || docType?.code !== 'E') {
+    return null;
+  }
+
+  if (value.length > 7) {
+    return { maxLengthCE: true };
+  }
+
+  const isConsecutive = (val: string) => {
+    for (let i = 0; i < val.length - 1; i++) {
+      if (+val[i + 1] !== +val[i] + 1) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  if (isConsecutive(value)) {
+    return { consecutiveDigits: true };
+  }
+
+  return null;
+}
+
+export function noConsecutiveValidator(control: AbstractControl): ValidationErrors | null {
+  const value: string = control.value;
+
+  if (!value || value.length < 3) {
+    return null;
+  }
+
+  for (let i = 0; i < value.length - 1; i++) {
+    if (parseInt(value[i + 1], 10) !== parseInt(value[i], 10) + 1) {
+      return null;
+    }
+  }
+
+  return { consecutiveDigits: true };
+}

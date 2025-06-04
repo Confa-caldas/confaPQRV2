@@ -212,7 +212,15 @@
                       *ngIf="
                         requestForm.get('landline')?.invalid && requestForm.get('landline')?.touched
                       ">
-                      Debe contener exactamente 7 dígitos numéricos.
+                      {{
+                        requestForm.get('landline')?.errors?.['required']
+                          ? 'Este campo es obligatorio.'
+                          : requestForm.get('landline')?.errors?.['pattern']
+                            ? 'Debe contener exactamente 7 dígitos numéricos.'
+                            : requestForm.get('landline')?.errors?.['consecutiveDigits']
+                              ? 'El número no puede ser una secuencia consecutiva.'
+                              : ''
+                      }}
                     </small>
                   </div>
 
@@ -322,7 +330,23 @@
                         requestForm.get('legalRepresentativeDocumentNumber')?.invalid &&
                         requestForm.get('legalRepresentativeDocumentNumber')?.touched
                       ">
-                      Solo se permiten números y máximo 10 caracteres.
+                      {{
+                        requestForm.get('legalRepresentativeDocumentNumber')?.errors?.['required']
+                          ? 'Este campo es obligatorio.'
+                          : requestForm.get('legalRepresentativeDocumentNumber')?.errors?.[
+                                'pattern'
+                              ]
+                            ? 'Solo se permiten números.'
+                            : requestForm.get('legalRepresentativeDocumentNumber')?.errors?.[
+                                  'maxLengthCE'
+                                ]
+                              ? 'El documento CE no debe exceder 7 caracteres.'
+                              : requestForm.get('legalRepresentativeDocumentNumber')?.errors?.[
+                                    'consecutiveDigits'
+                                  ]
+                                ? 'El documento CE no puede ser una secuencia de números consecutivos.'
+                                : ''
+                      }}
                     </small>
                   </div>
                 </div>
@@ -506,7 +530,7 @@
 
                 <!-- Adjuntar fotocopia del RUT -->
                 <div class="card-buttonUp" *ngIf="!isCorrectEconomicActivityData">
-                  <label class="card-buttonUp-placeholder">Adjuntar RUT</label>
+                  <label class="card-buttonUp-placeholder">Rut con fecha de generación inferior a 30 días calendario y que tenga la marca de agua: Copia Certificado Documento sin Costo</label>
                   <div class="card-buttonUp-custom-button">
                     <input
                       type="file"

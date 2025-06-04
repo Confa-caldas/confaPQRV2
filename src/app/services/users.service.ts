@@ -708,6 +708,13 @@ export class Users {
     );
   }
 
+  getCompanyUpdateListForExport(payload: FilterCompanyUpdate) {
+    return this.http.post<BodyResponse<CompanyUpdateRecord[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.COMPANY_UPDATE_EXPORT}`,
+      payload
+    );
+  }
+
   updateCompanyManagement(payload: {
     company_update_id: number;
     management_result: string;

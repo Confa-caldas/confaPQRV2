@@ -107,5 +107,6 @@ export enum EndPointRoute {
   UPDATE_COMPANY_FORM = 'company/create_company_update',
   UPLOAD_COMPANY_FILES = 'company/url_signer_company',
   COMPANY_UPDATE_BY_FILTER = 'company/filter',
+  COMPANY_UPDATE_EXPORT = 'company/export',
   COMPANY_UPDATE_MANAGEMENT = 'company/followup'
 }
