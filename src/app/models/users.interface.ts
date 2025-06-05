@@ -561,6 +561,7 @@ export interface PendingRequest {
   pending: boolean;
   message: string;
   previus_state?: string;
+  user_action?: string;
 }
 export interface RequestsReview {
   request_id: number;

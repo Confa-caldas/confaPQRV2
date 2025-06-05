@@ -1723,6 +1723,7 @@ export class RequestDetailsComponent implements OnInit {
         pending: true,
         message: this.pendingRequestForm.get('message')?.value,
         previus_state: this.requestDetails?.status_name,
+        user_action: this.user
       };
 
       //console.log(payload);
