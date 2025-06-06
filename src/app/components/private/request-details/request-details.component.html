@@ -124,7 +124,7 @@
   <div class="process-container-row-generals">
     <div class="container-button" *ngIf="!showProcessTab()">
       <p-button
-        *ngIf="requestDetails.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE' &&  PERFIL !== 'USUARIO INTERNO'"
+        *ngIf="requestDetails.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"
         [label]="
           requestDetails.assigned_user === null || requestDetails.assigned_user === ''
             ? 'Asignar'

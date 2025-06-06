@@ -20,6 +20,8 @@ import { SessionStorageItems } from '../../../enums/session-storage-items.enum';
 import { FormControl, FormGroup } from '@angular/forms';
 import { PaginatorState } from 'primeng/paginator';
 import { computeStyles } from '@popperjs/core';
+import { forkJoin } from 'rxjs';
+import { Table } from 'primeng/table';
 
 @Component({
   selector: 'app-intern-search-request',
@@ -63,6 +65,8 @@ export class InternSearchRequestComponent implements OnInit {
   totalRows: number = 0;
 
   isPriorityList: IsPriority[] = [];
+  isBulkAssign: boolean = false; // Saber si es masivo o no
+   @ViewChild('dt') table!: Table;
 
   priorityLevelList = [
     { name: 'Sin prioridad', value: 0 },
@@ -468,4 +472,93 @@ export class InternSearchRequestComponent implements OnInit {
   //   localStorage.setItem('route', this.router.url);
   //   this.router.navigate([RoutesApp.REQUEST_DETAILS, request_id]);
   // }
+
+  assignRequest(request_details: RequestsList) {
+    this.isBulkAssign = false;
+
+    if (request_details.assigned_user == null || request_details.assigned_user == '') {
+      this.message = 'Asignar responsable de solicitud';
+      this.buttonmsg = 'Asignar';
+      request_details.request_status = 2;
+    } else {
+      this.message = 'Reasignar responsable de solicitud';
+      this.buttonmsg = 'Reasignar';
+      request_details.request_status = 3;
+    }
+    this.visibleDialogInput = true;
+    this.parameter = ['Colaborador'];
+    this.request_details = request_details;
+  }
+
+  setParameter(inputValue: {
+      userName: string;
+      userNameCompleted: string;
+      mensajeReasignacion: string;
+    }) {
+      if (!this.enableAssign) return;
+    
+      if (this.isBulkAssign) {
+        const requestsToAssign = this.selectedRequests.map(request => {
+          request.assigned_user = inputValue.userName;
+          request.user_name_completed = inputValue.userNameCompleted;
+          request.mensaje_reasignacion = inputValue.mensajeReasignacion;
+          request.request_status = 2;
+    
+          return this.userService.assignUserToRequest(request);
+        });
+    
+        forkJoin(requestsToAssign).subscribe({
+          next: (responses) => {
+            responses.forEach((response, index) => {
+              const filingNumber = this.selectedRequests[index]?.filing_number || 'Desconocido';
+              if (response.code === 200) {
+                this.showSuccessMessage('success', 'Éxito', `Asignado: ${filingNumber}`);
+              } else {
+                this.showSuccessMessage('error', 'Falló', `Falló asignación: ${filingNumber}`);
+              }
+            });
+          },
+          error: (err) => {
+            console.error('Error en asignación masiva:', err);
+            this.showSuccessMessage('error', 'Error', 'Error durante la asignación masiva.');
+          },
+          complete: () => {
+            this.selectedRequests = [];
+            this.table?.clear(); // Limpia visualmente la selección
+            this.visibleDialogInput = false;
+            this.ngOnInit(); // Refresca datos
+          },
+        });
+    
+      } else {
+        // Asignación individual
+        if (this.request_details.assigned_user === inputValue.userName) {
+          this.visibleDialogAlert = true;
+          this.informative = true;
+          this.message = 'Verifique el responsable a asignar';
+          this.message2 = 'Debe seleccionar un colaborador diferente';
+          this.severity = 'danger';
+          return;
+        }
+    
+        this.request_details.assigned_user = inputValue.userName;
+        this.request_details.user_name_completed = inputValue.userNameCompleted;
+        this.request_details.mensaje_reasignacion = inputValue.mensajeReasignacion;
+    
+        this.userService.assignUserToRequest(this.request_details).subscribe({
+          next: (response) => {
+            if (response.code === 200) {
+              this.showSuccessMessage('success', 'Éxito', 'Asignación exitosa');
+            } else {
+              this.showSuccessMessage('error', 'Falló', 'Asignación fallida');
+            }
+          },
+          error: (err) => console.error(err),
+          complete: () => {
+            this.visibleDialogInput = false;
+            this.ngOnInit();
+          },
+        });
+      }
+    }
 }
