@@ -304,6 +304,7 @@ export interface CharacterizationCreate {
   modality_id?: number;
   category_id?: number;
   month?: number;
+  is_subsidios: boolean;
 }
 export interface TipologiesCauses {
   category_name?: string;
