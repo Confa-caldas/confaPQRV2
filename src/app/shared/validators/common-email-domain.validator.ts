@@ -123,3 +123,13 @@ export function noConsecutiveValidator(control: AbstractControl): ValidationErro
 
   return { consecutiveDigits: true };
 }
+
+export function noRepeatedDigitsValidator(control: AbstractControl): ValidationErrors | null {
+  const value: string = control.value;
+
+  if (!value) {
+    return null;
+  }
+  const repeatedPattern = /(\d)\1{4,}/;
+  return repeatedPattern.test(value) ? { repeatedDigits: true } : null;
+}
