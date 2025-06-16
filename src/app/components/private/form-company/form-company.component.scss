@@ -858,3 +858,144 @@
   background-color: #bfe12c !important;
   box-shadow: 0 0 2px #00000080 !important;
 }
+
+/* Estilos para el modal */
+.modal {
+  display: block;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Fondo oscuro */
+  overflow: hidden;
+}
+
+.modal-content {
+  position: relative;
+  margin: 10% auto;
+  padding: 20px;
+  width: 400px;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.btn-accept {
+  background-color: green;
+  color: white;
+  border: none;
+}
+
+.btn-cancel {
+  background-color: red;
+  color: white;
+  border: none;
+}
+
+::ng-deep .btn-success-update.p-button {
+  background-color: #8bc34a !important;
+  color: white !important;
+  border: none !important;
+}
+
+::ng-deep .btn-success-update.p-button:hover {
+  color: white !important;
+  background-color: #bfe12c !important;
+  box-shadow: 0 0 2px #00000080 !important;
+}
+
+.scrollable-dialog-body {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+::ng-deep .text-justify {
+  text-align: justify;
+}
+
+::ng-deep .p-dialog.confirmation-modal {
+  z-index: 1000 !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: transparent !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+}
+
+::ng-deep .p-dialog.confirmation-modal {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100vh !important;
+  padding: 0 !important;
+}
+
+::ng-deep .p-dialog.confirmation-modal .p-dialog-content {
+  box-shadow: none !important;
+  background: white !important;
+  border: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  height: auto !important;
+}
+
+/* Estilo exclusivo para el contenido interno del modal */
+::ng-deep .p-dialog.confirmation-modal .modal-content {
+  position: relative !important;
+  margin: 10% auto !important;
+  padding: 20px !important;
+  width: 100% !important;
+  background-color: #fff !important;
+  border-radius: 5px !important;
+  box-shadow: 0 5px 10px #00000040 !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+}
+
+/* Scroll interno si el contenido es muy largo */
+::ng-deep .p-dialog.confirmation-modal .scrollable-dialog-body {
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  padding: 1rem !important;
+  text-align: justify !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  ::ng-deep .p-dialog.confirmation-modal {
+    width: 90vw !important;
+    max-width: 90% !important;
+    height: 100% !important;
+  }
+}
+
+@media (min-width: 769px) {
+  ::ng-deep .p-dialog.confirmation-modal {
+    width: 60% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+  }
+}

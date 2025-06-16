@@ -180,6 +180,7 @@ export class FormCompanyComponent implements OnInit {
   showNoChangesModal = false;
   showSuccessModal = false;
   economicActivityList: { code: string; description: string }[] = [];
+  showConfirmationPolityModal: boolean = false;
 
   loadMunicipalities(departmentId: number) {
     const municipios: Record<number, { id: number; name: string }[]> = {
@@ -2585,7 +2586,7 @@ export class FormCompanyComponent implements OnInit {
     const numero = this.requestForm.get('documentNumber')?.value;
 
     if (tipo && numero) {
-      this.consultarEmpresa2();
+      this.sendOptions();
     }
   }
 
@@ -2623,5 +2624,18 @@ export class FormCompanyComponent implements OnInit {
     if (!phone) return '';
     const numeric = phone.replace(/[^\d]/g, '');
     return numeric.slice(-7);
+  }
+
+  confirmUpdatePolity(isConfirmed: boolean) {
+    if (isConfirmed) {
+      this.consultarEmpresa2();
+      this.showConfirmationPolityModal = false;
+    } else {
+      this.showConfirmationPolityModal = false;
+    }
+  }
+
+  sendOptions() {
+    this.showConfirmationPolityModal = true;
   }
 }
