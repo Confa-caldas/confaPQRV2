@@ -19,6 +19,7 @@ import {
   sendEmail,
   requestHistoryRequest,
   historyRequest,
+  SimilarRequest,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -167,6 +168,10 @@ export class RequestDetailsComponent implements OnInit {
   esPrioridadForm: FormGroup;
   spinnerVisible = false;
 
+  similares: any[] = [];
+
+
+
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
@@ -211,8 +216,9 @@ export class RequestDetailsComponent implements OnInit {
 
     this.route.params.subscribe(params => {
       this.request_id = +params['id'];
+      this.getRequestDetails(this.request_id);
     });
-    this.getRequestDetails(this.request_id);
+    //this.getRequestDetails(this.request_id);
     this.initPaginadorHistoric();
     this.getRequestApplicantAttachments(this.request_id);
     this.getRequestAssignedAttachments(this.request_id);
@@ -375,6 +381,7 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
+  /*
   getRequestDetails(request_id: number) {
     this.userService.getRequestDetails(request_id).subscribe({
       next: (response: BodyResponse<RequestsDetails>) => {
@@ -404,7 +411,65 @@ export class RequestDetailsComponent implements OnInit {
         console.log('La suscripción ha sido completada.');
       },
     });
-  }
+  } */
+
+  
+  getRequestDetails(request_id: number) {
+  this.userService.getRequestDetails(request_id).subscribe({
+    next: (response: BodyResponse<RequestsDetails>) => {
+      if (response.code === 200) {
+        this.requestDetails = response.data;
+
+        // Lista de estados que se deben agrupar
+        const estadosAgrupados = [
+          'Asignada',
+          'Reasignada',
+          'Asignada - En revisión',
+          'Reasignada - En revisión',
+          'Pendiente Usuario Externo',
+        ];
+
+        this.currentState = estadosAgrupados.includes(this.requestDetails.status_name)
+          ? 'Gestión'
+          : this.requestDetails.status_name;
+
+        // ✅ Armar payload con campos relevantes
+        const payload: SimilarRequest = {
+          request_id: this.requestDetails.request_id,
+          applicant_type_id: this.requestDetails.applicant_type_id,
+          request_type_id: this.requestDetails.request_type_id,
+          catalog_item_name: this.requestDetails.catalog_item_name,
+          doc_id: this.requestDetails.doc_id,
+          applicant_name: this.requestDetails.applicant_name,
+          applicant_email: this.requestDetails.applicant_email,
+          applicant_cellphone: this.requestDetails.applicant_cellphone,
+          applicant_attachments: this.requestDetails.applicant_attachments
+        };
+
+        // 🔍 Llamar a búsqueda de similares
+        this.userService.getSimilarRequest(payload).subscribe({
+          next: (similares) => {
+            this.similares = similares.data;
+            console.log('Similares:', this.similares);
+          },
+          error: (error) => {
+            console.error('Error buscando similares:', error);
+          }
+        });
+
+      } else {
+        this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+      }
+    },
+    error: (err: any) => {
+      console.error(err);
+    },
+    complete: () => {
+      console.log('La suscripción ha sido completada.');
+    },
+  });
+} 
+
 
   getRequestApplicantAttachments(request_id: number) {
     const payload: Pagination = {
@@ -1517,12 +1582,13 @@ export class RequestDetailsComponent implements OnInit {
     this.characterizeRequest(requestDetails);
   }
 
+/*
   consultarWs(cedula: string) {
     this.userService.respuestaInfoAfiliacion(cedula).subscribe(
       response => {
         if (response.statusCode === 200) {
           const parsedBody = JSON.parse(response.body);
-          this.afiliado = parsedBody;
+          this.afiliado = parsedBody.data;
           if (this.afiliado) {
             this.afiliado.tipoDocumento = this.getTipoDocumentoTexto(parsedBody.data.tipodoc);
             this.afiliado.documento = cedula;
@@ -1534,13 +1600,44 @@ export class RequestDetailsComponent implements OnInit {
             this.afiliado.fechaAfiliacion = parsedBody.data.fechaafi;
             this.afiliado.fechaIngreso = parsedBody.data.fechaing;
           }
+          
         }
       },
       (error: any) => {
         console.error('Error al llamar al servicio:', error);
       }
     );
-  }
+  } */
+
+  consultarWs(cedula: string) {
+  this.userService.respuestaInfoAfiliacion(cedula).subscribe(
+    response => {
+      if (response.statusCode === 200) {
+        const parsedBody = JSON.parse(response.body);
+        console.log('Respuesta completa del WS:', parsedBody);
+
+        const data = parsedBody; // ya no accedas a parsedBody.data porque tus datos están directo ahí
+
+        console.log('Tipo documento:', data.tipodoc);
+        console.log('Documento:', data.documento);
+        console.log('Nombre:', data.nombre);
+        console.log('Fecha nacimiento:', data.fechanac);
+        console.log('Estado:', data.estado);
+        console.log('Tipo trabajador:', data.tipotr);
+        console.log('Empresa:', data.empresa?.razonSocial);
+        console.log('Fecha afiliación:', data.fechaafi);
+        console.log('Fecha ingreso:', data.fechaing);
+      } else {
+        console.warn('El servicio no respondió con status 200:', response);
+      }
+    },
+    error => {
+      console.error('Error al llamar al servicio:', error);
+    }
+  );
+}
+
+
 
   getTipoTrabajadorTexto(tipo: string): string {
     switch (tipo) {
@@ -2101,6 +2198,5 @@ export class RequestDetailsComponent implements OnInit {
     const blob = await response.blob();
     return blob;
   }
-  
   
 }

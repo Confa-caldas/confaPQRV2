@@ -23,6 +23,7 @@ export enum RoutesApp {
   FORM_COMPANY = 'form-company',
   INTERN_SEARCH_REQUEST = 'intern-search-request',
   SEARCH_UPDATE_COMPANY = 'search-update-company',
+  SEARCH_REQUEST_INTERNAL = 'search-requests-internal',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
@@ -108,5 +109,7 @@ export enum EndPointRoute {
   UPLOAD_COMPANY_FILES = 'company/url_signer_company',
   COMPANY_UPDATE_BY_FILTER = 'company/filter',
   COMPANY_UPDATE_EXPORT = 'company/export',
-  COMPANY_UPDATE_MANAGEMENT = 'company/followup'
+  COMPANY_UPDATE_MANAGEMENT = 'company/followup',
+  REQUEST_INTERNAL_BY_FILTER = 'requests-intern/filter',
+  SIMILAR_REQUEST = 'request/get_similar',
 }

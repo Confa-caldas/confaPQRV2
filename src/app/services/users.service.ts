@@ -63,6 +63,7 @@ import {
   CompanyUpdateRequest,
   FilterCompanyUpdate,
   CompanyUpdateRecord,
+  SimilarRequest
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -521,7 +522,7 @@ export class Users {
   // }
 
   respuestaInfoAfiliacion(cedula: string): Observable<any> {
-    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarEmpresaNitGestorSolicitudes/${cedula}`;
+    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarAfiliadoDoc/${cedula}/1`;
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
     });
@@ -736,5 +737,19 @@ export class Users {
     });
 
     return this.http.get(url, { headers });
+  }
+
+  getRequestInternalListByFilter(payload: FilterRequests) {
+    return this.http.post<BodyResponse<RequestsList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_INTERNAL_BY_FILTER}`,
+      payload
+    );
+  }
+
+  getSimilarRequest(payload: SimilarRequest) {
+    return this.http.post<BodyResponse<number[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.SIMILAR_REQUEST}`,
+      payload
+    );
   }
 }

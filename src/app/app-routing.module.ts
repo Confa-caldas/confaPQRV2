@@ -68,6 +68,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.SEARCH_REQUEST_INTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-request-internal/search-request-internal.module').then(
+        m => m.SearchRequestInternalModule
+      ),
+  },
+  {
     path: RoutesApp.SEARCH_UPDATE_COMPANY,
     canActivate: [sessionGuard],
     component: LayoutComponent,

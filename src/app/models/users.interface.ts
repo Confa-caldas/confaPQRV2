@@ -820,3 +820,15 @@ export interface CompanyUpdateRecord {
   alreadyManaged?: boolean;
 }
 
+export interface SimilarRequest {
+  request_id: number;
+  applicant_type_id: number;
+  request_type_id: number;
+  catalog_item_name: string;
+  doc_id: string;
+  applicant_name: string;
+  applicant_email: string;
+  applicant_cellphone: string;
+  applicant_attachments: string[];
+}
+
