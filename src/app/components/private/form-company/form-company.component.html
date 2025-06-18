@@ -62,7 +62,7 @@
                   requestForm.get('documentType')?.value && requestForm.get('documentNumber')?.valid
                 )
               "
-              (click)="consultarEmpresa2()">
+              (click)="sendOptions()">
             </p-button>
           </div>
           <br />
@@ -217,9 +217,11 @@
                           ? 'Este campo es obligatorio.'
                           : requestForm.get('landline')?.errors?.['pattern']
                             ? 'Debe contener exactamente 7 dígitos numéricos.'
-                            : requestForm.get('landline')?.errors?.['consecutiveDigits']
-                              ? 'El número no puede ser una secuencia consecutiva.'
-                              : ''
+                            : requestForm.get('landline')?.errors?.['maxlength']
+                              ? 'No puede tener más de 7 dígitos.'
+                              : requestForm.get('landline')?.errors?.['consecutiveDigits']
+                                ? 'El número no puede ser una secuencia consecutiva.'
+                                : ''
                       }}
                     </small>
                   </div>
@@ -230,11 +232,52 @@
                       type="text"
                       formControlName="mobilePhone"
                       (input)="sanitizeInput($event, 'numeric')" />
+
                     <small
                       class="error-message"
                       *ngIf="
-                        requestForm.get('mobilePhone')?.invalid &&
+                        requestForm.get('mobilePhone')?.errors?.['required'] &&
                         requestForm.get('mobilePhone')?.touched
+                      ">
+                      Este campo es obligatorio.
+                    </small>
+
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('mobilePhone')?.errors?.['minlength'] &&
+                        requestForm.get('mobilePhone')?.touched
+                      ">
+                      El número debe tener al menos 10 dígitos.
+                    </small>
+
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('mobilePhone')?.errors?.['maxlength'] &&
+                        requestForm.get('mobilePhone')?.touched
+                      ">
+                      El número no puede tener más de 10 dígitos.
+                    </small>
+
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('mobilePhone')?.errors?.['repeatedDigits'] &&
+                        requestForm.get('mobilePhone')?.touched
+                      ">
+                      No puede contener 5 o más dígitos iguales consecutivos.
+                    </small>
+
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('mobilePhone')?.errors &&
+                        requestForm.get('mobilePhone')?.touched &&
+                        !requestForm.get('mobilePhone')?.errors?.['required'] &&
+                        !requestForm.get('mobilePhone')?.errors?.['minlength'] &&
+                        !requestForm.get('mobilePhone')?.errors?.['maxlength'] &&
+                        !requestForm.get('mobilePhone')?.errors?.['repeatedDigits']
                       ">
                       Debe contener exactamente 10 dígitos numéricos.
                     </small>
@@ -249,13 +292,46 @@
                       type="text"
                       formControlName="alternateMobilePhone"
                       (input)="sanitizeInput($event, 'numeric')" />
+
+                    <!-- Campo vacío con error -->
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('alternateMobilePhone')?.errors?.['minlength'] &&
+                        requestForm.get('alternateMobilePhone')?.touched
+                      ">
+                      El número debe tener al menos 10 dígitos.
+                    </small>
+
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('alternateMobilePhone')?.errors?.['maxlength'] &&
+                        requestForm.get('alternateMobilePhone')?.touched
+                      ">
+                      El número no puede tener más de 10 dígitos.
+                    </small>
+
+                    <small
+                      class="error-message"
+                      *ngIf="
+                        requestForm.get('alternateMobilePhone')?.errors?.['repeatedDigits'] &&
+                        requestForm.get('alternateMobilePhone')?.touched
+                      ">
+                      No puede contener 5 o más dígitos iguales consecutivos.
+                    </small>
+
+                    <!-- Mensaje general de error si tiene errores pero no coincide con los específicos -->
                     <small
                       class="error-message"
                       *ngIf="
                         requestForm.get('alternateMobilePhone')?.invalid &&
-                        requestForm.get('alternateMobilePhone')?.touched
+                        requestForm.get('alternateMobilePhone')?.touched &&
+                        !requestForm.get('alternateMobilePhone')?.errors?.['minlength'] &&
+                        !requestForm.get('alternateMobilePhone')?.errors?.['maxlength'] &&
+                        !requestForm.get('alternateMobilePhone')?.errors?.['repeatedDigits']
                       ">
-                      El número debe contener exactamente 10 dígitos numéricos.
+                      Debe contener exactamente 10 dígitos numéricos.
                     </small>
                   </div>
 
@@ -530,7 +606,10 @@
 
                 <!-- Adjuntar fotocopia del RUT -->
                 <div class="card-buttonUp" *ngIf="!isCorrectEconomicActivityData">
-                  <label class="card-buttonUp-placeholder">Rut con fecha de generación inferior a 30 días calendario y que tenga la marca de agua: Copia Certificado Documento sin Costo</label>
+                  <label class="card-buttonUp-placeholder"
+                    >Rut con fecha de generación inferior a 30 días calendario y que tenga la marca
+                    de agua: Copia Certificado Documento sin Costo</label
+                  >
                   <div class="card-buttonUp-custom-button">
                     <input
                       type="file"
@@ -842,3 +921,73 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<p-dialog
+  [(visible)]="showConfirmationPolityModal"
+  [modal]="true"
+  [closable]="false"
+  [showHeader]="false"
+  [baseZIndex]="10000"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="confirmation-modal">
+    <ng-template pTemplate="headless">
+      <div class="modal-content" style="display: flex; flex-direction: column; height: 100%">
+        <!-- Encabezado gráfico -->
+        <div class="login-form-header">
+          <div class="login-form-header__item login-form-header__item_1"></div>
+          <div class="login-form-header__item login-form-header__item_2"></div>
+          <div class="login-form-header__item login-form-header__item_3"></div>
+          <div class="login-form-header__item login-form-header__item_4"></div>
+          <div class="login-form-header__item login-form-header__item_5"></div>
+          <div class="login-form-header__item login-form-header__item_6"></div>
+        </div>
+
+        <!-- Contenido con scroll -->
+        <div class="scrollable-dialog-body flex-grow-1">
+          <!-- <div class="row">
+            <div class="login-form-logo d-flex justify-content-center my-4">
+              <img src="../../../assets/images/logo-login.png" class="login-form-logo__img" />
+            </div>
+          </div> -->
+
+          <div class="row my-4 px-4">
+            <div class="col-12 text-justify">
+              <p class="confirmation-text" style="font-size: 14px; line-height: 1.6">
+                <strong>Señor Aportante:</strong><br /><br />
+                Dando cumplimiento a lo dispuesto por la UGPP en el capítulo 1, artículo 5 de la
+                Resolución 205 del 1 de marzo del 2024, por medio de la cual se modifica la
+                Resolución 1702 del 18 de diciembre de 2021, la Caja de Compensación Familiar de
+                Caldas adelantará las acciones necesarias para actualizar anualmente la información
+                de ubicación y contacto de cada uno de los aportantes obligados al pago de
+                contribuciones parafiscales.
+                <br /><br />
+                Asimismo, y por analogía a lo determinado en el Decreto 1406 de 1999, artículo 5,
+                que establece: “Los aportantes estarán igualmente obligados a reportar toda novedad
+                que se presente con relación a su identificación en el registro, tales como cambios
+                de dirección, razón social, cambio de actividad económica, apertura o cierre de
+                sucursales o centros de trabajo. Dicha información deberá suministrarse dentro de
+                los treinta (30) días siguientes a su ocurrencia”, te invitamos para que la
+                información de contacto se mantenga actualizada en nuestras bases de datos.
+                <br /><br />
+                <strong>¿Acepta actualizar la información de la empresa?</strong>
+              </p>
+            </div>
+          </div>
+          <!-- Botones -->
+          <div class="row my-4 px-4">
+            <div class="col-12 d-flex justify-content-evenly">
+              <p-button
+                label="Sí, actualizar"
+                class="btn-success-update"
+                (click)="confirmUpdatePolity(true)">
+              </p-button>
+              <p-button label="Cancelar" severity="danger" (click)="confirmUpdatePolity(false)">
+              </p-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </p-dialog>

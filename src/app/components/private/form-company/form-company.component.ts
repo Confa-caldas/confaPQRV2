@@ -6,6 +6,7 @@ import {
   ValidatorFn,
   Validators,
   FormControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { Users } from '../../../services/users.service';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
@@ -33,7 +34,8 @@ import { ChangeDetectorRef } from '@angular/core';
 import {
   commonEmailDomainValidator,
   ceDocumentValidator,
-  noConsecutiveValidator
+  noConsecutiveValidator,
+  noRepeatedDigitsValidator,
 } from '../../../shared/validators/common-email-domain.validator';
 
 @Component({
@@ -178,6 +180,7 @@ export class FormCompanyComponent implements OnInit {
   showNoChangesModal = false;
   showSuccessModal = false;
   economicActivityList: { code: string; description: string }[] = [];
+  showConfirmationPolityModal: boolean = false;
 
   loadMunicipalities(departmentId: number) {
     const municipios: Record<number, { id: number; name: string }[]> = {
@@ -1407,11 +1410,16 @@ export class FormCompanyComponent implements OnInit {
       address: [{ value: '', disabled: true }, Validators.required],
       landline: [
         { value: '', disabled: true },
-        [Validators.pattern(/^\d*$/), Validators.maxLength(7),noConsecutiveValidator],
+        [Validators.pattern(/^\d*$/), Validators.maxLength(7), noConsecutiveValidator],
       ],
       mobilePhone: [
         { value: '', disabled: true },
-        [Validators.required, Validators.pattern(/^\d{10}$/), Validators.maxLength(10)],
+        [
+          Validators.required,
+          Validators.pattern(/^\d{10}$/),
+          Validators.maxLength(10),
+          noRepeatedDigitsValidator,
+        ],
       ],
       email: [
         { value: '', disabled: true },
@@ -1439,13 +1447,17 @@ export class FormCompanyComponent implements OnInit {
     });
   }
 
-  matchEmailValidator(control: AbstractControl) {
+  matchEmailValidator(control: AbstractControl): ValidationErrors | null {
     if (!this.requestForm) return null;
-    const email = this.requestForm.get('email')?.value;
-    const confirm = control.value;
+
+    const emailControl = this.requestForm.get('email');
+    const confirmControl = control;
+
+    const email = emailControl?.value?.toLowerCase() || '';
+    const confirm = confirmControl?.value?.toLowerCase() || '';
+
     return email === confirm ? null : { emailMismatch: true };
   }
-
   convertToLowercase(controlName: string): void {
     const control = this.requestForm.get(controlName);
     if (control) {
@@ -2135,6 +2147,13 @@ export class FormCompanyComponent implements OnInit {
         fieldsToValidate.push('confirmEmail');
       }
 
+      const altMobile = this.requestForm.get('alternateMobilePhone');
+      if (altMobile?.value && altMobile.value.trim() !== '') {
+        fieldsToValidate.push('alternateMobilePhone');
+      } else {
+        altMobile?.setErrors(null);
+      }
+
       fieldsToValidate.forEach(field => {
         if (this.requestForm.controls[field]) {
           this.requestForm.controls[field].markAsTouched();
@@ -2221,7 +2240,12 @@ export class FormCompanyComponent implements OnInit {
       if (!this.requestForm.contains('alternateMobilePhone')) {
         this.requestForm.addControl(
           'alternateMobilePhone',
-          new FormControl('', [Validators.pattern(/^\d*$/), Validators.maxLength(10)])
+          new FormControl('', [
+            Validators.pattern(/^\d*$/),
+            Validators.minLength(10),
+            Validators.maxLength(10),
+            noRepeatedDigitsValidator,
+          ])
         );
       }
 
@@ -2562,7 +2586,7 @@ export class FormCompanyComponent implements OnInit {
     const numero = this.requestForm.get('documentNumber')?.value;
 
     if (tipo && numero) {
-      this.consultarEmpresa2();
+      this.sendOptions();
     }
   }
 
@@ -2600,5 +2624,18 @@ export class FormCompanyComponent implements OnInit {
     if (!phone) return '';
     const numeric = phone.replace(/[^\d]/g, '');
     return numeric.slice(-7);
+  }
+
+  confirmUpdatePolity(isConfirmed: boolean) {
+    if (isConfirmed) {
+      this.consultarEmpresa2();
+      this.showConfirmationPolityModal = false;
+    } else {
+      this.showConfirmationPolityModal = false;
+    }
+  }
+
+  sendOptions() {
+    this.showConfirmationPolityModal = true;
   }
 }
