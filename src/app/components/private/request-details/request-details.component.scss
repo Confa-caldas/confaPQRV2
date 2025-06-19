@@ -957,3 +957,19 @@ p-timeline {
   }
 }
 
+.sms-alert {
+  background-color: #e6f7ff;
+  color: #005780;
+  border: 1px solid #91d5ff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.char-counter {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 4px;
+}

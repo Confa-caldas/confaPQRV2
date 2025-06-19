@@ -810,6 +810,8 @@ export class RequestDetailsComponent implements OnInit {
         ' \n \nCordialmente, ' +
         this.requestDetails?.user_name_completed,
       assigned_attachments: null,
+      contact_cellphone: this.requestDetails?.contact_cellphone,
+      applicant_cellphone: this.requestDetails?.applicant_cellphone,
     };
 
     this.userService.answerRequest(payloadAnswer).subscribe({

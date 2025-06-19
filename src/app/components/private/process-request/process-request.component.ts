@@ -66,6 +66,8 @@ export class ProcessRequestComponent implements OnInit {
   pageAssigned: number = 1;
   rowsAssigned: number = 10;
   totalRowsAssigned: number = 0;
+  
+  PERFIL!: string;
 
   priorityLevelList = [
     { name: 'Sin prioridad', value: 0 },
@@ -151,6 +153,7 @@ export class ProcessRequestComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
     this.user = sessionStorage.getItem(SessionStorageItems.USER) || '';
     this.searhRequests();
     this.searhRequestsAssignedUser();

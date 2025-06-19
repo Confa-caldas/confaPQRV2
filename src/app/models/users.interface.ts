@@ -68,6 +68,8 @@ export interface RequestsDetails {
   messages_closed?: string;
   send_email_massive?: string;
   priority_level: number;
+  contact_cellphone: boolean;
+  contact_email: boolean;
 }
 export interface RequestAttachmentsList {
   url: string;
@@ -191,6 +193,8 @@ export interface answerRequest {
   request_answer: string;
   request_id: number;
   assigned_attachments?: ApplicantAttachments[] | null;
+  contact_cellphone?: boolean;
+  applicant_cellphone?: string;
 }
 export interface ApplicantAttachments {
   base64file: string;

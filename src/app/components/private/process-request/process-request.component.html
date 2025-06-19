@@ -243,7 +243,7 @@
           [totalRecords]="totalRowsAssigned"
           [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
       </p-tabPanel>
-      <p-tabPanel header="Solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
+      <p-tabPanel *ngIf="PERFIL !== 'USUARIO INTERNO'" header="Solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
         <form [formGroup]="filterForm" id="formGeneral">
           <div class="position-relative">
             <div class="card flex justify-content-center absolute-center">
