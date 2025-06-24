@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
@@ -19,6 +19,8 @@ import { formatDate } from '@angular/common';
 import { FormControl, FormGroup } from '@angular/forms';
 import { PaginatorState } from 'primeng/paginator';
 import { PageEvent } from '../../../models/shared/page-event.interface';
+import { forkJoin } from 'rxjs';
+import { Table } from 'primeng/table';
 
 @Component({
   selector: 'app-process-request',
@@ -68,6 +70,10 @@ export class ProcessRequestComponent implements OnInit {
   totalRowsAssigned: number = 0;
   
   PERFIL!: string;
+  isBulkAssign: boolean = false; // Saber si es masivo o no
+  request_details_process!: RequestsList;
+  visibleAssignedInput = false;
+  @ViewChild('dt') table!: Table;
 
   priorityLevelList = [
     { name: 'Sin prioridad', value: 0 },
@@ -540,5 +546,101 @@ private hasActiveFilters(formGroup: FormGroup): boolean {
   });
 }
 
+assignRequest(request_details: RequestsList) {
+    this.isBulkAssign = false;
 
+    if (request_details.assigned_user == null || request_details.assigned_user == '') {
+      this.message = 'Asignar responsable de solicitud';
+      this.buttonmsg = 'Asignar';
+      request_details.request_status = 2;
+    } else {
+      this.message = 'Reasignar responsable de solicitud';
+      this.buttonmsg = 'Reasignar';
+      request_details.request_status = 3;
+    }
+    this.visibleAssignedInput = true;
+    this.parameter = ['Colaborador'];
+    this.request_details_process = request_details;
+  }
+
+  setParameterAssigned(inputValue: {
+    userName: string;
+    userNameCompleted: string;
+    mensajeReasignacion: string;
+  }) {
+    if (!this.enableAssign) return;
+  
+    if (this.isBulkAssign) {
+      const requestsToAssign = this.selectedRequests.map(request => {
+        request.assigned_user = inputValue.userName;
+        request.user_name_completed = inputValue.userNameCompleted;
+        request.mensaje_reasignacion = inputValue.mensajeReasignacion;
+        request.request_status = 2;
+  
+        return this.userService.assignUserToRequest(request);
+      });
+  
+      forkJoin(requestsToAssign).subscribe({
+        next: (responses) => {
+          responses.forEach((response, index) => {
+            const filingNumber = this.selectedRequests[index]?.filing_number || 'Desconocido';
+            if (response.code === 200) {
+              this.showSuccessMessage('success', 'Éxito', `Asignado: ${filingNumber}`);
+            } else {
+              this.showSuccessMessage('error', 'Falló', `Falló asignación: ${filingNumber}`);
+            }
+          });
+        },
+        error: (err) => {
+          console.error('Error en asignación masiva:', err);
+          this.showSuccessMessage('error', 'Error', 'Error durante la asignación masiva.');
+        },
+        complete: () => {
+          this.selectedRequests = [];
+          this.table?.clear(); // Limpia visualmente la selección
+          this.visibleDialogInput = false;
+          this.ngOnInit(); // Refresca datos
+        },
+      });
+  
+    } else {
+      // Asignación individual
+      if (this.request_details_process.assigned_user === inputValue.userName) {
+        this.visibleDialogAlert = true;
+        this.informative = true;
+        this.message = 'Verifique el responsable a asignar';
+        this.message2 = 'Debe seleccionar un colaborador diferente';
+        this.severity = 'danger';
+        return;
+      }
+  
+      this.request_details_process.assigned_user = inputValue.userName;
+      this.request_details_process.user_name_completed = inputValue.userNameCompleted;
+      this.request_details_process.mensaje_reasignacion = inputValue.mensajeReasignacion;
+  
+      this.userService.assignUserToRequest(this.request_details_process).subscribe({
+        next: (response) => {
+          if (response.code === 200) {
+            this.showSuccessMessage('success', 'Éxito', 'Asignación exitosa');
+          } else {
+            this.showSuccessMessage('error', 'Falló', 'Asignación fallida');
+          }
+        },
+        error: (err) => console.error(err),
+        complete: () => {
+          this.visibleAssignedInput = false;
+          this.ngOnInit();
+        },
+      });
+    }
+  }
+
+  closeDialogAssignedInput(value: boolean) {
+    this.visibleAssignedInput = false;
+    this.enableAssign = value;
+    if (value) {
+      // accion de eliminar
+    }
+  }
+  
 }
