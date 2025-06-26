@@ -141,7 +141,7 @@
 
 //ESTILOS PARA EL BOTON DE NOTIFICACIONES
 .notificaciones-btn {
-  background-color: transparent !important;
+  background-color: $color-dodger-blue !important;
   border: none;
   color: white;
   font-size: 18px;
@@ -150,14 +150,14 @@
   align-items: center;
   padding: 10px;
   transition: all 0.3s ease-in-out;
-  margin-right: 10px;
+  //margin-right: 10px;
   position: relative; /* Permite que se mueva con el header */
-  top: 4px;
+  //top: 4px;
   right: auto;
 
   &:hover {
     color: #ff9800;
-    transform: scale(1.1);
+    transform: scale(1.05);
   }
 }
 

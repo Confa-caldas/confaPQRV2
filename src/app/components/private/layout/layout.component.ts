@@ -99,7 +99,10 @@ export class LayoutComponent implements OnInit {
           request_days: null,
           applicant_type_id: null,
           request_type_id: null,
-          status_id:  null,
+          status_id: [2, 3, 5, 6, 7],
+          priority_level: null,
+          confa_user: null,
+          area_name: null,
           page: 1,
           page_size: 100
         };

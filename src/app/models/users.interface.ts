@@ -334,7 +334,7 @@ export interface IsPqrCatalog {
 export interface FilterRequests {
   i_date: string | null;
   f_date: string | null;
-  status_id?: number | null;
+  status_id?: number | number[] | null;
   assigned_user?: string | null;
   is_pqr?: number | null;
   filing_number?: number | null;
@@ -345,7 +345,6 @@ export interface FilterRequests {
   request_type_id?: number | null;
   confa_user?: string | null;
   area_name?: string | null;
-  //is_priority?: boolean | null;
   priority_level?: number | null;
   page?: number;
   page_size?: number;

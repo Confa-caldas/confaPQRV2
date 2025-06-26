@@ -1,24 +1,3 @@
-<!--
-
-
-
-<div class="notificaciones-container">
-  <h3>🔔 Solicitudes Pendientes</h3>
-  <div class="scroll-container">
-      <ul *ngIf="requestListByAssigned.length > 0; else sinSolicitudes">
-          <li *ngFor="let solicitud of requestListByAssigned">
-              <a (click)="redirectDetails(solicitud.request_id)" style="cursor: pointer; text-decoration: underline;">
-                  Radicación Id: {{ solicitud.request_id }}
-              </a>
-          </li>
-      </ul>
-  </div>
-
-  <ng-template #sinSolicitudes>
-      <p>No tienes solicitudes pendientes.</p>
-  </ng-template>
-</div> -->
-
 <div class="notificaciones-container">
   <h3>🔔 Solicitudes Pendientes</h3>
   <div [ngClass]="{'scroll-container': requestListByAssigned.length > 7}">
