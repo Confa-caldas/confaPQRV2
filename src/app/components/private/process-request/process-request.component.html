@@ -138,15 +138,27 @@
             </div>
           </div>
         </form>
+
+        <button
+            *ngIf="selectedRequests.length > 0"
+            pButton
+            type="button"
+            label="Reasignar seleccionadas"
+            icon="pi pi-users"
+            class="p-button-success"
+            (click)="assignSelectedRequests(selectedRequests)"
+            [disabled]="!selectedRequests || selectedRequests.length === 0">
+          </button>
+        <div class="mt-auto">
+          
+          
         <p-table
+          #dt
           [value]="requestListByAssigned"
           [scrollable]="true"
           scrollHeight="420px"
-          selectionMode="single"
           [(selection)]="selectedRequests"
-          dataKey="id"
-          stateStorage="session"
-          stateKey="statedemo-session"
+          dataKey="request_id"
           [exportHeader]="'customExportHeader'"
           [paginator]="false"
           [rows]="20"
@@ -155,6 +167,9 @@
           currentPageReportTemplate="{first} de {totalRecords}">
           <ng-template pTemplate="header">
             <tr [style]="{ height: '50px' }">
+              <th style="width: 5%">
+                <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+              </th>
               <th style="width: 5%"></th>
               <th style="min-width: 7rem"></th>
               <th style="width: 5%"></th>
@@ -191,6 +206,9 @@
           </ng-template>
           <ng-template pTemplate="body" let-requestListByAssigned>
             <tr>
+              <td>
+                <p-tableCheckbox [value]="requestListByAssigned" *ngIf="requestListByAssigned.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"></p-tableCheckbox>
+              </td>
               <td>
                 <p-button
                   icon="pi pi-eye"
@@ -256,6 +274,7 @@
           [rows]="rowsAssigned"
           [totalRecords]="totalRowsAssigned"
           [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+          </div>
       </p-tabPanel>
       <p-tabPanel *ngIf="PERFIL !== 'USUARIO INTERNO'" header="Solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
         <form [formGroup]="filterForm" id="formGeneral">

@@ -163,10 +163,7 @@
     scrollHeight="500px"
     [virtualScroll]="false"
     [virtualScrollItemSize]="80"
-
     [(selection)]="selectedRequests"
-    stateStorage="session"
-    stateKey="statedemo-session"
     [exportHeader]="'customExportHeader'">
     <ng-template pTemplate="header">
       <tr [style]="{ height: '50px' }">

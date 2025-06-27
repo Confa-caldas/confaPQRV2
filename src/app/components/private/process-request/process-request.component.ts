@@ -38,7 +38,8 @@ export class ProcessRequestComponent implements OnInit {
   ingredient!: string;
   parameter = [''];
   request_details!: RequestsReview;
-  selectedRequests!: RequestsList[];
+  selectedRequests: RequestsList[] = [];
+  selectedRequestsAssigned: RequestsList[] = [];
   informative: boolean = false;
   filterForm: FormGroup<any> = new FormGroup<any>({});
   filterFormAssigned: FormGroup<any> = new FormGroup<any>({});
@@ -575,7 +576,7 @@ assignRequest(request_details: RequestsList) {
         request.assigned_user = inputValue.userName;
         request.user_name_completed = inputValue.userNameCompleted;
         request.mensaje_reasignacion = inputValue.mensajeReasignacion;
-        request.request_status = 2;
+        request.request_status = 3;
   
         return this.userService.assignUserToRequest(request);
       });
@@ -641,6 +642,18 @@ assignRequest(request_details: RequestsList) {
     if (value) {
       // accion de eliminar
     }
+  }
+  
+  assignSelectedRequests(requests: RequestsList[]) {
+    if (!requests || requests.length === 0) return;
+    this.isBulkAssign = true;
+
+    this.selectedRequests = requests;
+
+    this.message = 'Reasignar responsable a solicitudes seleccionadas';
+    this.buttonmsg = 'Reasignar';
+    this.visibleAssignedInput = true;
+    this.parameter = ['Colaborador'];
   }
   
 }
