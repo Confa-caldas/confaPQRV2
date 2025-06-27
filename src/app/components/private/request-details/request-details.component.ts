@@ -802,7 +802,23 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   submitAnswer() {
-    const payloadAnswer: answerRequest = {
+    let payloadAnswer: answerRequest;
+
+    if (this.requestDetails?.contact_cellphone === true){
+      payloadAnswer = {
+      request_id: this.request_id,
+      request_status: 4,
+      request_answer:
+        'Solicitud N.' + this.requestDetails.request_id + ': ' +
+        this.requestProcess.get('mensage')?.value +
+        ' \n \nCordialmente, ' +
+        this.requestDetails?.user_name_completed,
+      assigned_attachments: null,
+      contact_cellphone: this.requestDetails?.contact_cellphone,
+      applicant_cellphone: this.requestDetails?.applicant_cellphone,
+    };
+    } else {
+      payloadAnswer = {
       request_id: this.request_id,
       request_status: 4,
       request_answer:
@@ -813,6 +829,9 @@ export class RequestDetailsComponent implements OnInit {
       contact_cellphone: this.requestDetails?.contact_cellphone,
       applicant_cellphone: this.requestDetails?.applicant_cellphone,
     };
+    }
+
+    
 
     this.userService.answerRequest(payloadAnswer).subscribe({
       next: (response: BodyResponse<string>) => {
