@@ -10,5 +10,5 @@ export const environment = {
   version: packageJson.version,
   minutesInactive: 15,
   ruta_archivos_ws: RUTAS_ARCHIVOS,
-  ruta_consumo_subsidios_rest:"https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/",
+  ruta_consumo_subsidios_rest:"https://app.confa.co:8322/subsidiosWSRest/rest/wsrest/",
 };
