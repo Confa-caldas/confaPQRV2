@@ -352,3 +352,32 @@
   background-color: #01b0ef;
   border-color: #01b0ef;
 }
+
+/* Botón específico para Exportar a Excel */
+.btn-export-excel {
+  background-color: #28a745;
+  /* Verde tipo Excel */
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 0.5em;
+  cursor: pointer;
+  transition:
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+  margin-left: 5px;
+  margin-right: 5px;
+  color: white;
+
+  &:hover {
+    background-color: #218838;
+    /* Un verde más oscuro al pasar el mouse */
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    background-color: #1e7e34;
+    /* Verde más oscuro al hacer clic */
+    box-shadow: none;
+  }
+}

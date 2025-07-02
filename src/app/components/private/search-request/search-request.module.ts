@@ -12,6 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CalendarModule } from 'primeng/calendar';
+import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
   declarations: [SearchRequestComponent],
@@ -28,6 +29,7 @@ import { CalendarModule } from 'primeng/calendar';
     MultiSelectModule,
     ReactiveFormsModule,
     CalendarModule,
+    TooltipModule,
   ],
   exports: [SearchRequestComponent],
 })

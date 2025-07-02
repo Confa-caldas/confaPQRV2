@@ -179,6 +179,19 @@
               >
             </div>
           </div>
+          <div class="row my-4 px-5" style="margin-top: 50px">
+            <label class="label-select"> ¿La solicitud corresponde al área de Aportes y Subsidios? </label>
+            <div class="container-group">
+              <div class="container-group-checkbox">
+                <p-radioButton name="is_subsidios" [value]="true" formControlName="is_subsidios"></p-radioButton>
+                <label class="container-group-label" for="selectYes">Sí</label>
+              </div>
+              <div class="container-group-checkbox">
+                <p-radioButton name="is_subsidios" [value]="false" formControlName="is_subsidios"></p-radioButton>
+                <label class="container-group-label" for="selectNo">No</label>
+              </div>
+            </div>
+          </div>
         </form>
 
           <div class="row my-4 px-5" style="margin: 10px auto; margin-top: 50px">

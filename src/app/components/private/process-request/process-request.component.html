@@ -5,14 +5,15 @@
 </div>
 <div>
   <div class="p-tabview">
-    <p-tabView class="p-tabview-nav-process">
+    <p-tabView class="p-tabview-nav-process" [(activeIndex)]="activeTabIndex">
       <p-tabPanel header="Mis solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
-        <form [formGroup]="filterFormAssigned">
+        <form [formGroup]="filterFormAssigned" id="formAssigned">
           <div class="position-relative">
-            <div class="card flex justify-content-center absolute-center">
+            <div class="card form-container">
+              
+              <!-- Primera Fila -->
               <div class="filters-row">
-                <div class="filters-colAssigened">
-                  <label class="filters-label"> </label>
+                <div class="filters-col">
                   <input
                     pInputText
                     class="filters-input"
@@ -20,27 +21,29 @@
                     placeholder="Número de radicado"
                     formControlName="filing_number" />
                 </div>
-                <div class="filters-colAssigened">
+        
+                <div class="filters-col">
                   <p-calendar
                     formControlName="dates_range"
                     selectionMode="range"
                     [readonlyInput]="true"
-                    [style]="{ 'align-items': 'center', 'border-radius': '5px' }"
                     [iconDisplay]="'input'"
                     [showIcon]="true"
-                    placeholder="Rango de fechas "
-                    class="calendar"></p-calendar>
+                    placeholder="Rango de fechas"
+                    class="calendar">
+                  </p-calendar>
                 </div>
-                <div class="filters-colAssigened">
-                  <label class="filters-label"> </label>
+        
+                <div class="filters-col">
                   <input
                     pInputText
                     pKeyFilter="text"
                     class="filters-input"
-                    placeholder=" Número de documento"
+                    placeholder="Número de documento"
                     formControlName="doc_id" />
                 </div>
-                <div class="filters-colAssigened">
+        
+                <div class="filters-col">
                   <input
                     pInputText
                     pKeyFilter="text"
@@ -48,60 +51,114 @@
                     placeholder="Nombre solicitante"
                     formControlName="applicant_name" />
                 </div>
+        
+                <div class="filters-col">
+                  <p-multiSelect
+                    formControlName="area_name"
+                    [options]="requestAreaList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                    optionLabel="area_name"
+                    optionValue="area_name"
+                    placeholder="Área que solicita">
+                  </p-multiSelect>
+                </div>
               </div>
+        
+              <!-- Segunda Fila -->
               <div class="filters-row">
-                <div class="filters-colAssigened">
+                <div class="filters-col">
                   <p-multiSelect
                     formControlName="applicant_type_id"
-                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     [options]="aplicantList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     optionLabel="applicant_type_name"
                     optionValue="applicant_type_id"
-                    placeholder="Tipo de solicitante"></p-multiSelect>
+                    placeholder="Tipo de solicitante">
+                  </p-multiSelect>
                 </div>
-
-                <div class="filters-colAssigened">
+        
+                <div class="filters-col">
                   <p-multiSelect
                     formControlName="request_status_id"
-                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     [options]="statusList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     optionLabel="status_name"
                     optionValue="request_status_id"
-                    placeholder="Tipo de estado"></p-multiSelect>
+                    placeholder="Tipo de estado">
+                  </p-multiSelect>
                 </div>
-
-                <div class="filters-colAssigened">
+        
+                <div class="filters-col">
                   <p-multiSelect
                     formControlName="request_type_id"
-                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     [options]="requestTypeList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
                     optionLabel="request_type_name"
                     optionValue="request_type_id"
-                    placeholder="Tipo de Solicitud"></p-multiSelect>
+                    placeholder="Tipo de solicitud">
+                  </p-multiSelect>
                 </div>
-                <div class="filters-colButtonsAssigened">
+        
+                <div class="filters-col">
+                  <p-dropdown
+                    formControlName="priority_level"
+                    [options]="priorityLevelList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                    optionLabel="name"
+                    optionValue="value"
+                    placeholder="Nivel de prioridad">
+                  </p-dropdown>
+                </div>
+        
+                <div class="filters-col">
+                  <p-multiSelect
+                    formControlName="confa_user"
+                    [options]="requestUserList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                    optionLabel="confa_user"
+                    optionValue="confa_user"
+                    placeholder="Usuario que creó">
+                  </p-multiSelect>
+                </div>
+        
+                <div class="filters-col-buttons">
                   <p-button
                     icon="pi pi-trash"
                     [styleClass]="'btn-icon-info'"
-                    (click)="cleanFormAssigned()"></p-button>
+                    (click)="cleanFormAssigned()">
+                  </p-button>
                   <p-button
                     icon="pi pi-search"
                     [styleClass]="'btn-icon-info'"
-                    (click)="initPaginadorAssigned()"></p-button>
+                    (click)="initPaginadorAssigned()">
+                  </p-button>
                 </div>
               </div>
+        
             </div>
           </div>
         </form>
+
+        <button
+            *ngIf="selectedRequests.length > 0"
+            pButton
+            type="button"
+            label="Reasignar seleccionadas"
+            icon="pi pi-users"
+            class="p-button-success"
+            (click)="assignSelectedRequests(selectedRequests)"
+            [disabled]="!selectedRequests || selectedRequests.length === 0">
+          </button>
+        <div class="mt-auto">
+          
+          
         <p-table
+          #dt
           [value]="requestListByAssigned"
           [scrollable]="true"
           scrollHeight="420px"
-          selectionMode="single"
           [(selection)]="selectedRequests"
-          dataKey="id"
-          stateStorage="session"
-          stateKey="statedemo-session"
+          dataKey="request_id"
           [exportHeader]="'customExportHeader'"
           [paginator]="false"
           [rows]="20"
@@ -109,12 +166,18 @@
           [tableStyle]="{ 'min-width': '50rem' }"
           currentPageReportTemplate="{first} de {totalRecords}">
           <ng-template pTemplate="header">
-            <tr>
+            <tr [style]="{ height: '50px' }">
+              <th style="width: 5%">
+                <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+              </th>
+              <th style="width: 5%"></th>
+              <th style="min-width: 7rem"></th>
+              <th style="width: 5%"></th>
               <th pSortableColumn="filing_number" style="min-width: 12rem">
-                Número de radicado<p-sortIcon field="filing_number"></p-sortIcon>
+                Radicado<p-sortIcon field="filing_number"></p-sortIcon>
               </th>
               <th pSortableColumn="filing_date" style="min-width: 11rem">
-                Fecha de radicación<p-sortIcon field="filing_date"></p-sortIcon>
+                Fecha<p-sortIcon field="filing_date"></p-sortIcon>
               </th>
               <th pSortableColumn="applicant_type_name" style="min-width: 15rem">
                 Tipo de solicitante<p-sortIcon field="applicant_type_name"></p-sortIcon>
@@ -129,20 +192,50 @@
                 Tipo de solicitud<p-sortIcon field="request_type_name"></p-sortIcon>
               </th>
               <th pSortableColumn="status_name" style="min-width: 15rem">
-                Estado solicitud<p-sortIcon field="status_name"></p-sortIcon>
+                Estado<p-sortIcon field="status_name"></p-sortIcon>
               </th>
               <th pSortableColumn="request_days" style="min-width: 15rem">
                 Días solicitud<p-sortIcon field="request_days"></p-sortIcon>
               </th>
               <th pSortableColumn="assigned_user" style="min-width: 15rem">
-                Responsable solicitud
+                Responsable
               </th>
-              <th style="width: 5%"></th>
               <th style="min-width: 7rem"></th>
+              
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-requestListByAssigned>
             <tr>
+              <td>
+                <p-tableCheckbox [value]="requestListByAssigned" *ngIf="requestListByAssigned.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"></p-tableCheckbox>
+              </td>
+              <td>
+                <p-button
+                  icon="pi pi-eye"
+                  [styleClass]="'btn-icon-info'"
+                  (click)="redirectDetails(requestListByAssigned.request_id)"></p-button>
+              </td>
+              <td>
+                <div *ngIf="requestListByAssigned.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'">
+                  <button class="custom-button" (click)="assignRequest(requestListByAssigned)">
+                    {{
+                      requestListByAssigned.assigned_user === null || requestListByAssigned.assigned_user === ''
+                        ? 'Asignar'
+                        : 'Reasignar'
+                    }}
+                  </button>
+                </div>
+              </td>
+              <td>
+                <i
+                  *ngIf="requestListByAssigned.priority_level === 1 || requestListByAssigned.priority_level === 2"
+                  class="pi pi-exclamation-triangle custom-tooltip"
+                  [style.color]="requestListByAssigned.priority_level === 1 ? 'orange' : 'red'"
+                  style="font-size: 1.2rem"
+                  pTooltip="{{ requestListByAssigned.message_priority }}"
+                  tooltipPosition="top">
+                </i>
+              </td>
               <td>{{ requestListByAssigned.filing_number }}</td>
               <td>{{ requestListByAssigned.filing_date_date | date }}</td>
               <td>{{ requestListByAssigned.applicant_type_name }}</td>
@@ -159,12 +252,7 @@
                 </div>
               </td>
               <td>{{ requestListByAssigned.user_name_completed }}</td>
-              <td>
-                <p-button
-                  icon="pi pi-eye"
-                  [styleClass]="'btn-icon-info'"
-                  (click)="redirectDetails(requestListByAssigned.request_id)"></p-button>
-              </td>
+              
               <td>
                 <button
                   class="custom-button"
@@ -176,6 +264,7 @@
                   En revisión
                 </button>
               </td>
+              
             </tr>
           </ng-template>
         </p-table>
@@ -185,14 +274,16 @@
           [rows]="rowsAssigned"
           [totalRecords]="totalRowsAssigned"
           [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+          </div>
       </p-tabPanel>
-      <p-tabPanel header="Solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
-        <form [formGroup]="filterForm">
+      <p-tabPanel *ngIf="PERFIL !== 'USUARIO INTERNO'" header="Solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
+        <form [formGroup]="filterForm" id="formGeneral">
           <div class="position-relative">
             <div class="card flex justify-content-center absolute-center">
+              
+              <!-- Primera fila -->
               <div class="filters-row">
                 <div class="filters-col">
-                  <label class="filters-label"> </label>
                   <input
                     pInputText
                     class="filters-input"
@@ -200,6 +291,7 @@
                     placeholder="Número de radicado"
                     formControlName="filing_number" />
                 </div>
+        
                 <div class="filters-col">
                   <p-calendar
                     formControlName="dates_range"
@@ -208,18 +300,20 @@
                     [style]="{ 'align-items': 'center', 'border-radius': '5px' }"
                     [iconDisplay]="'input'"
                     [showIcon]="true"
-                    placeholder="Rango de fechas "
-                    class="calendar"></p-calendar>
+                    placeholder="Rango de fechas"
+                    class="calendar">
+                  </p-calendar>
                 </div>
+        
                 <div class="filters-col">
-                  <label class="filters-label"> </label>
                   <input
                     pInputText
                     pKeyFilter="text"
                     class="filters-input"
-                    placeholder=" Número de documento"
+                    placeholder="Número de documento"
                     formControlName="doc_id" />
                 </div>
+        
                 <div class="filters-col">
                   <input
                     pInputText
@@ -228,7 +322,31 @@
                     placeholder="Nombre solicitante"
                     formControlName="applicant_name" />
                 </div>
+        
+                <div class="filters-col">
+                  <p-multiSelect
+                    formControlName="confa_user"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                    [options]="requestUserList"
+                    optionLabel="confa_user"
+                    optionValue="confa_user"
+                    placeholder="Usuario que lo creó">
+                  </p-multiSelect>
+                </div>
+        
+                <div class="filters-col">
+                  <p-multiSelect
+                    formControlName="area_name"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                    [options]="requestAreaList"
+                    optionLabel="area_name"
+                    optionValue="area_name"
+                    placeholder="Área solicitada">
+                  </p-multiSelect>
+                </div>
               </div>
+        
+              <!-- Segunda fila -->
               <div class="filters-row">
                 <div class="filters-col">
                   <p-multiSelect
@@ -237,8 +355,10 @@
                     [options]="aplicantList"
                     optionLabel="applicant_type_name"
                     optionValue="applicant_type_id"
-                    placeholder="Tipo de solicitante"></p-multiSelect>
+                    placeholder="Tipo de solicitante">
+                  </p-multiSelect>
                 </div>
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="request_status_id"
@@ -246,8 +366,10 @@
                     [options]="statusList"
                     optionLabel="status_name"
                     optionValue="request_status_id"
-                    placeholder="Tipo de estado"></p-multiSelect>
+                    placeholder="Estado de solicitud">
+                  </p-multiSelect>
                 </div>
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="assigned_user"
@@ -255,8 +377,10 @@
                     [options]="userList"
                     optionLabel="user_name_completed"
                     optionValue="user_name"
-                    placeholder=" Responsable solicitud"></p-multiSelect>
+                    placeholder="Responsable solicitud">
+                  </p-multiSelect>
                 </div>
+        
                 <div class="filters-col">
                   <p-multiSelect
                     formControlName="request_type_id"
@@ -264,22 +388,40 @@
                     [options]="requestTypeList"
                     optionLabel="request_type_name"
                     optionValue="request_type_id"
-                    placeholder="Tipo de Solicitud"></p-multiSelect>
+                    placeholder="Tipo de solicitud">
+                  </p-multiSelect>
                 </div>
+        
+                <div class="filters-col">
+                  <p-dropdown
+                    formControlName="priority_level"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                    [options]="priorityLevelList"
+                    optionLabel="name"
+                    optionValue="value"
+                    placeholder="Nivel de prioridad">
+                  </p-dropdown>
+                </div>
+        
                 <div class="filters-colButtons">
                   <p-button
                     icon="pi pi-trash"
                     [styleClass]="'btn-icon-info'"
-                    (click)="cleanForm()"></p-button>
+                    (click)="cleanForm()">
+                  </p-button>
+        
                   <p-button
                     icon="pi pi-search"
                     [styleClass]="'btn-icon-info'"
-                    (click)="initPaginador()"></p-button>
+                    (click)="initPaginador()">
+                  </p-button>
                 </div>
               </div>
+        
             </div>
           </div>
         </form>
+        
         <p-table
           [value]="requestList"
           [scrollable]="true"
@@ -299,11 +441,13 @@
           currentPageReportTemplate="{first} de {totalRecords}">
           <ng-template pTemplate="header">
             <tr [style]="{ height: '50px' }">
+              <th style="width: 5%"></th>
+              <th style="width: 5%"></th>
               <th pSortableColumn="filing_number" style="min-width: 12rem">
-                Número de radicado<p-sortIcon field="filing_number"></p-sortIcon>
+                Radicado<p-sortIcon field="filing_number"></p-sortIcon>
               </th>
               <th pSortableColumn="filing_date" style="min-width: 11rem">
-                Fecha de radicación<p-sortIcon field="filing_date"></p-sortIcon>
+                Fecha<p-sortIcon field="filing_date"></p-sortIcon>
               </th>
               <th pSortableColumn="applicant_type_name" style="min-width: 15rem">
                 Tipo de solicitante<p-sortIcon field="applicant_type_name"></p-sortIcon>
@@ -318,19 +462,37 @@
                 Tipo de solicitud<p-sortIcon field="request_type_name"></p-sortIcon>
               </th>
               <th pSortableColumn="status_name" style="min-width: 15rem">
-                Estado solicitud<p-sortIcon field="status_name"></p-sortIcon>
+                Estado<p-sortIcon field="status_name"></p-sortIcon>
               </th>
               <th pSortableColumn="request_days" style="min-width: 15rem">
                 Días solicitud<p-sortIcon field="request_days"></p-sortIcon>
               </th>
               <th pSortableColumn="assigned_user" style="min-width: 15rem">
-                Responsable solicitud<p-sortIcon field="assigned_user"></p-sortIcon>
+                Responsable<p-sortIcon field="assigned_user"></p-sortIcon>
               </th>
               <th style="width: 5%"></th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-requestList>
-            <tr>
+            <tr pTooltip="{{ requestList.request_description }}" 
+            tooltipPosition="top" 
+            tooltipStyleClass="custom-tooltip">
+              <td>
+                <p-button
+                  icon="pi pi-eye"
+                  [styleClass]="'btn-icon-info'"
+                  (click)="redirectDetails(requestList.request_id)"></p-button>
+              </td>
+              <td>
+                <i
+                  *ngIf="requestList.priority_level === 1 || requestList.priority_level === 2"
+                  class="pi pi-exclamation-triangle custom-tooltip"
+                  [style.color]="requestList.priority_level === 1 ? 'orange' : 'red'"
+                  style="font-size: 1.2rem"
+                  pTooltip="{{ requestList.message_priority }}"
+                  tooltipPosition="top">
+                </i>
+              </td>
               <td>{{ requestList.filing_number }}</td>
               <td>{{ requestList.filing_date_date | date }}</td>
               <td>{{ requestList.applicant_type_name }}</td>
@@ -345,12 +507,6 @@
                 <div style="margin-left: 19px">{{ requestList.request_days }} día(s) hábiles</div>
               </td>
               <td>{{ requestList.user_name_completed }}</td>
-              <td>
-                <p-button
-                  icon="pi pi-eye"
-                  [styleClass]="'btn-icon-info'"
-                  (click)="redirectDetails(requestList.request_id)"></p-button>
-              </td>
             </tr>
           </ng-template>
         </p-table>
@@ -372,3 +528,12 @@
   (setRta)="closeDialogInput($event)"
   (setRtaParameter)="setParameter($event)"></app-modal-review-state>
 <p-toast></p-toast>
+
+<app-modal-assign-selector
+  *ngIf="visibleAssignedInput"
+  [visible]="visibleAssignedInput"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [parameter]="parameter"
+  (setRta)="closeDialogAssignedInput($event)"
+  (setRtaParameter)="setParameterAssigned($event)"></app-modal-assign-selector>

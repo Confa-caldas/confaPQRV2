@@ -37,7 +37,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
     ModalFilingModule,
     ProgressSpinnerModule,
     DialogModule,
-    ProgressBarModule
+    ProgressBarModule,
   ],
 })
 export class RequestPendingModule {}

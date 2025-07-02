@@ -68,6 +68,24 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.SEARCH_REQUEST_INTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-request-internal/search-request-internal.module').then(
+        m => m.SearchRequestInternalModule
+      ),
+  },
+  {
+    path: RoutesApp.SEARCH_UPDATE_COMPANY,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-update-company/search-update-company.module').then(
+        m => m.SearchUpdateCompanyModule
+      ),
+  },
+  {
     path: RoutesApp.REQUEST_REPORT,
     canActivate: [sessionGuard],
     component: LayoutComponent,
@@ -122,12 +140,29 @@ const routes: Routes = [
       ),
   },
   {
-    path: RoutesApp.REQUEST_PENDING,
-    //canActivate: [sessionGuard],
+    path: RoutesApp.CREATE_REQUEST_INTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/create-request-internal/create-request-internal.module').then(
+        m => m.CreateRequestInternalModule
+      ),
+  },
+  {
+    path: RoutesApp.REQUEST_FORM_INTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/request-form-internal/request-form-internal.module').then(
+        m => m.RequestFormInternalModule
+      ),
+  },
+  {
+    path: RoutesApp.FORM_COMPANY,
     component: LayoutRequestComponent,
     loadChildren: () =>
-      import('./components/private/request-pending/request-pending.module').then(
-        m => m.RequestPendingModule
+      import('./components/private/form-company/form-company.module').then(
+        m => m.FormCompanygModule
       ),
   },
   {
@@ -147,6 +182,24 @@ const routes: Routes = [
       import(
         './components/private/requestype-manager-associate/requestype-manager-associate.module'
       ).then(m => m.RequestypeManagerAssociateModule),
+  },
+  {
+    path: RoutesApp.REQUEST_PENDING,
+    //canActivate: [sessionGuard],
+    component: LayoutRequestComponent,
+    loadChildren: () =>
+      import('./components/private/request-pending/request-pending.module').then(
+        m => m.RequestPendingModule
+      ),
+  },
+  {
+    path: RoutesApp.INTERN_SEARCH_REQUEST,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/intern-search-request/intern-search-request.module').then(
+        m => m.InternSearchRequestModule
+      ),
   },
   {
     path: RoutesApp.MAIN_PAGE,

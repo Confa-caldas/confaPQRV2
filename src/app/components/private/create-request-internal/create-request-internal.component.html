@@ -1,0 +1,164 @@
+<p-card class="container">
+    <div class="container-content">
+      <form [formGroup]="optionsRequest">
+        <p-card class="container-card">
+          <br>
+          <h4 class="card-form-banner-title">¡Hola!</h4>
+  
+          <br>
+          <div [ngStyle]="{ 'text-align': 'left' }" class="container-card_text">
+            Ten presente que este espacio es de uso interno para colaborares de la <b>Gerencia de Relaciones Corporativas,
+            Vivienda, Cuentas por Cobrar, Mecanismo de Protección al Cesante (MPC), Confamilias y Créditos de Confa;</b>
+            a través de este canal podrás recibir las solicitudes de nuestros afiliados para que estas sean tramitadas
+            y gestionadas por Aportes y Subsidios.
+          </div>
+  
+          <br />
+  
+          <div [ngStyle]="{ 'text-align': 'left' }" class="container-card_text">
+            
+          </div>
+  
+          <br />
+  
+          <div [ngStyle]="{ 'text-align': 'left' }" class="container-card_text">
+            
+          </div>
+
+
+  
+          <div class="container-card-select">
+            <div class="container-select">
+              <div class="container-select-item">
+                <label class="container-select-placeholder">Tipo del solicitante*</label>
+                <p-dropdown
+                  (onChange)="getRequest()"
+                  formControlName="applicant_id"
+                  [style]="{ 'border-radius': '20px' }"
+                  class="container-select-options"
+                  [options]="applicantList"
+                  optionLabel="applicant_type_name"
+                  (onChange)="changeRequest()"
+                  placeholder="*Tipo del solicitante"></p-dropdown>
+  
+                <label class="container-select-invalid">
+                  {{
+                    optionsRequest.get('applicant_id')?.hasError('required') &&
+                    optionsRequest.get('applicant_id')?.touched
+                      ? 'Seleccione un tipo de solicitante'
+                      : ''
+                  }}</label
+                >
+              </div>
+              <div class="container-select-item">
+                <label class="container-select-placeholder">Tipo de solicitud*</label>
+                <p-dropdown
+                  formControlName="request_id"
+                  [style]="{ 'border-radius': '20px' }"
+                  class="container-select-options"
+                  [options]="requestList"
+                  emptyMessage="Seleccione un tipo de solicitante"
+                  optionLabel="request_type_name"
+                  placeholder="*Tú solicitud esta asociada con"
+                  [panelStyle]="{ 'max-height': 'none' }"></p-dropdown>
+  
+                <label class="container-select-invalid">
+                  {{
+                    optionsRequest.get('request_id')?.hasError('required') &&
+                    optionsRequest.get('request_id')?.touched
+                      ? 'Seleccione un tipo de solicitud'
+                      : ''
+                  }}</label
+                >
+              </div>
+            </div>
+          </div>
+        </p-card>
+        <!-- <p-card *ngIf="!optionsRequest.get('request_id')?.invalid" class="container-card">
+        <ng-template pTemplate="header">
+          <h3 class="container-card_header">
+            Conoce algunas de las recomendaciones antes de continuar
+          </h3>
+        </ng-template>
+        <div class="container-card_textRecomendations">
+          {{ optionsRequest.get('request_id')?.value?.request_type_description }}
+        </div>
+      </p-card> -->
+  
+      <!--
+        <div class="container-checkbox" *ngIf="applicantId1()">
+          <p-checkbox formControlName="authorize" [value]="true" [binary]="true"></p-checkbox>
+          <p class="container-checkbox_a">
+            Si, autorizo el
+            <a class="container-checkbox_link" (click)="openDataTreatment()" style="color: #07c1ff"
+              >tratamiento de datos personales</a
+            >
+          </p>
+        </div>
+        -->
+
+        <div class="container-checkbox" *ngIf="applicantId1()">
+          <p class="container-checkbox_a">
+            ¿Autoriza el
+            <a class="container-checkbox_link" (click)="openDataTreatment()" style="color: #07c1ff">
+              tratamiento de datos personales
+            </a>?
+          </p>
+        
+          <div class="container-radios">
+            <div class="radio-option">
+              <p-radioButton
+                name="authorize"
+                inputId="yesOption"
+                [value]="true"
+                formControlName="authorize"
+              ></p-radioButton>
+              <label for="yesOption">Sí</label>
+            </div>
+        
+            <div class="radio-option">
+              <p-radioButton
+                name="authorize"
+                inputId="noOption"
+                [value]="false"
+                formControlName="authorize"
+              ></p-radioButton>
+              <label for="noOption">No</label>
+            </div>
+          </div>
+        </div>
+
+        <p-button
+          [style]="{ 'border-radius': '20px', 'background-color': '#00aeef', width: '275px' }"
+          label="Continuar"
+          [disabled]="!optionsRequest.valid"
+          (onClick)="sendOptions()"
+          class="container-button"></p-button>
+      </form>
+    </div>
+    <!-- <div class="centered-box">
+      <div class="content">
+        <img
+          src="../../../../assets/images/admiracion.svg"
+          alt="Descripción de la imagen"
+          class="small-image" />
+        <p>
+          Para preguntas, quejas, reclamos, sugerencias o felicitaciones, ingresa a este enlace
+          <a
+            href="https://t.almeraim.com/form?data=eyJhcGlrZXkiOiJwcXJzZiIsImNvbm5lY3Rpb24iOiJzZ2ljb25mYSIsImVuZHBvaW50IjoiaHR0cHMlM0ElMkYlMkZzZ2kuYWxtZXJhaW0uY29tJTJGc2dpJTJGYXBpJTJGdjIlMkYiLCJjb2RlIjoicHFyc2YifQ=="
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: #07c1ff"
+            >PQRS</a
+          >
+        </p>
+      </div> 
+    </div> -->
+  </p-card>
+  <p-toast></p-toast>
+  <app-modal-data-treatment
+    *ngIf="visibleDialogDataT"
+    [visible]="visibleDialogDataT"
+    (setRta)="closeDialogDataT($event)"
+    (setRtaParameter)="setParameterDataT($event)"></app-modal-data-treatment>
+  

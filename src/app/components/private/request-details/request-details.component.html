@@ -8,6 +8,33 @@
   <p-card>
     <ul class="list-unstyled">
       <div class="container">
+        <div class="container-row"
+          *ngIf="(requestDetails?.priority_level === 1 || requestDetails?.priority_level === 2) 
+              && requestDetails?.status_name !== 'Cerrada'">
+          <div class="container-column">
+            <label class="container-label prioridad-label"
+                  [ngClass]="{
+                    'prioridad-baja': requestDetails.priority_level === 1,
+                    'prioridad-alta': requestDetails.priority_level === 2
+                  }">
+              <i class="pi"
+                [ngClass]="{
+                  'pi-exclamation-circle': requestDetails.priority_level === 1,
+                  'pi-exclamation-triangle': requestDetails.priority_level === 2
+                }"></i>
+              <span class="prioridad-text">
+                Priorización:
+                <ng-container [ngSwitch]="requestDetails.priority_level">
+                  <span *ngSwitchCase="1">Baja</span>
+                  <span *ngSwitchCase="2">Alta</span>
+                  <span *ngSwitchDefault>Sin definir</span>
+                </ng-container>
+              </span>
+            </label>
+          </div>
+        </div>
+        
+        
         <div class="container-row">
           <div class="container-column">
             <label class="container-label"> Número de Radicado </label>
@@ -83,6 +110,16 @@
         </ng-template>
       </p-timeline>
     </div>
+
+    <!-- Similares sutiles, debajo del detalle -->
+<div *ngIf="similares && similares.length > 0" class="similares-discretos">
+  <small>Solicitudes similares:</small>
+  <div class="similares-badges">
+    <span *ngFor="let id of similares"  [routerLink]="['/request-details', id]" class="badge">
+      #{{ id }}
+    </span>
+  </div>
+</div>
   </p-card>
 
   <p-toast />
@@ -94,18 +131,30 @@
     <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
   </div>
 
-  <div class="container-button" *ngIf="!showProcessTab()">
-    <p-button
-      *ngIf="requestDetails.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"
-      [label]="
-        requestDetails.assigned_user === null || requestDetails.assigned_user === ''
-          ? 'Asignar'
-          : 'Reasignar'
-      "
-      (click)="assignRequest(requestDetails)"
-      [style]="{ 'border-radius': '10px' }"></p-button>
+  <div class="process-container-row-generals">
+    <div class="container-button">
+      <p-button
+        *ngIf="requestDetails.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"
+        [label]="
+          requestDetails.assigned_user === null || requestDetails.assigned_user === ''
+            ? 'Asignar'
+            : 'Reasignar'
+        "
+        (click)="assignRequest(requestDetails)"
+        [style]="{ 'border-radius': '10px' }"></p-button>
+    </div>
+
+    <div class="container-button"
+     *ngIf="requestDetails &&
+            (requestDetails.status_name !== 'Cerrada' &&
+             requestDetails.priority_level !== 2)">
+      <p-menu #menu [model]="itemsGenerals" [popup]="true"></p-menu>
+      <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
+    </div>
   </div>
+
   <div class="p-tabview">
+    <!-- (onChange)="onTabChange($event)" -->
     <p-tabView class="p-tabview-nav">
       <p-tabPanel header="Radicación" headerStyleClass="p-tabview-nav-link-1 ">
         <ul class="list-unstyled">
@@ -223,6 +272,14 @@
         <div class="p-tab-view">
           <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
             <p-tabPanel header="Adjunto de solicitante" headerStyleClass="p-tabview-nav-link-sub">
+              <p-button 
+  *ngIf="requestApplicantAttachmentsList && requestApplicantAttachmentsList.length > 0"
+  label="Descargar .zip"
+  icon="pi pi-download"
+  (click)="downloadAttachmentsAsZip()"
+  class="p-button-sm p-button-primary custom-zip-button">
+</p-button>
+
               <p-table
                 [value]="requestApplicantAttachmentsList"
                 [scrollable]="true"
@@ -247,7 +304,11 @@
                 <ng-template pTemplate="body" let-requestApplicantAttachmentsList>
                   <tr>
                     <td [ngStyle]="{ 'text-align': 'center' }">
+                      <span 
+                      style="color: #0d6efd; text-decoration: underline; cursor: pointer;"
+                      (click)="getPreSignedUrlToDownload(requestApplicantAttachmentsList.url, requestApplicantAttachmentsList.file_name, false)">
                       {{ requestApplicantAttachmentsList.file_name }}
+                    </span>
                     </td>
                     <td [ngStyle]="{ 'text-align': 'center' }">
                       {{ requestApplicantAttachmentsList.file_date }}
@@ -437,6 +498,7 @@
                 </div>
               </label> -->
 
+              <!--
               <textarea
                 rows="5"
                 cols="30"
@@ -447,6 +509,37 @@
                 placeholder="Escribir mensaje"
                 pInputTextarea>
               </textarea>
+              -->
+
+              <div *ngIf="requestDetails.contact_cellphone" class="sms-alert">
+                <ng-container *ngIf="requestDetails.contact_email; else soloSMS">
+                  Este mensaje también será enviado por <strong>SMS</strong>. El contenido debe tener máximo 160 caracteres.
+                </ng-container>
+                <ng-template #soloSMS>
+                  Este mensaje será enviado únicamente por <strong>SMS</strong>. El contenido debe tener máximo 160 caracteres.
+                </ng-template>
+              </div>
+
+
+              <textarea
+                rows="5"
+                cols="30"
+                formControlName="mensage"
+                [attr.maxlength]="requestDetails.contact_cellphone ? 160 : null"
+                [style]="{ 'border-radius': '5px' }"
+                type="text"
+                class="custom-input"
+                placeholder="Escribir mensaje"
+                pInputTextarea>
+              </textarea>
+
+              <!-- Opcional: contador de caracteres -->
+              <div class="text-right text-xs text-muted">
+                {{ requestProcess.get('mensage')?.value?.length || 0 }}/{{ requestDetails.contact_cellphone ? 160 : '6000' }} caracteres
+              </div>
+
+
+              <p class="static-text">Cordialmente, {{ requestDetails.user_name_completed }}</p>
 
               <label class="formProcess-card-text-placeholder-invalid">
                 {{
@@ -473,7 +566,7 @@
               </p-button>
             </div> -->
           </form>
-          <div class="formProcess-buttonUp">
+          <div class="formProcess-buttonUp" *ngIf="!requestDetails.contact_cellphone">
             <label class="formProcess-card-text-placeholder">Adjuntos</label>
             <div class="formProcess-buttonUp-custom-button">
               <input
@@ -583,6 +676,11 @@
                         requestHistoric.status_name
                       )
                     "></p-button>
+                    <p-button
+                    *ngIf="requestHistoric.status_name === 'Priorizada'"
+                    icon="pi pi-eye"
+                    [styleClass]="'btn-icon-info'"
+                    (click)="showModalPriorizada()"></p-button>
                 </td>
               </tr>
             </ng-template>
@@ -596,7 +694,8 @@
         </div>
       </p-tabPanel>
       <!-- //Esto es nuevo -->
-      <!-- <p-tabPanel header="Consultas Genesys" headerStyleClass="p-tabview-nav-link-1">
+       <!--
+      <p-tabPanel header="Consultas Genesys" headerStyleClass="p-tabview-nav-link-1">
         <ul class="list-unstyled">
           <div class="container">
             <div class="container-row">
@@ -805,7 +904,6 @@
       <textarea id="respuesta-corregida" class="custom-textarea" readonly>
       Hola, buen día!
       {{ respuestaPredefinida }}
-      Cordialmente, {{ requestDetails?.user_name_completed }}
       </textarea>
     </p>
     <div class="confirmation-text">
@@ -817,29 +915,6 @@
     </div>
   </div>
 </p-dialog>
-
-<!--
-<p-dialog
-  header="Corrección de ortografía sugerida por IA"
-  [(visible)]="visibleCorreccionIa"
-  [modal]="true"
-  [style]="{ width: '80vw' }"
-  [contentStyle]="{ padding: '1em' }"
-  [responsive]="true"
-  [styleClass]="'custom-dialog'">
-  <div class="dialog-content">
-    <p><strong>Respuesta original:</strong> {{ respuestaSolicitud }}</p>
-    <p><strong>Respuesta corregida por IA:</strong> {{ respuestaCorregida }} </p>
-    <p><strong>Palabras corregida por IA:</strong> {{ palabrasError }} </p>
-    <div class="confirmation-text">
-      <p>¿Desea usar esta respuesta para la solicitud?</p>
-    </div>
-    <div class="dialog-buttons">
-      <button type="button" class="btn btn-yes" (click)="confirmarCorreccion()">Sí</button>
-      <button type="button" class="btn btn-no" (click)="cancelarCorreccion()">No</button>
-    </div>
-  </div>
-</p-dialog> -->
 
 <p-dialog
   header="Corrección de ortografía sugerida por IA"
@@ -965,7 +1040,7 @@
 
     <!-- Botones -->
     <div class="dialog-buttons">
-      <button type="button" class="btn btn-yes" (click)="characterizeRequest(requestDetails!)">
+      <button type="button" class="btn btn-yes" (click)="characterizeRequestIA(requestDetails!)">
         Sí
       </button>
       <button
@@ -977,79 +1052,6 @@
     </div>
   </div>
 </p-dialog>
-
-<!--
-<p-dialog
-  header="Solicitud pendiente"
-  [(visible)]="visibleSolicitudPendiente"
-  [modal]="true"
-  [style]="{ width: '80vw' }"
-  [contentStyle]="{ padding: '1em' }"
-  [responsive]="true"
-  [styleClass]="'custom-dialog'"
-  [closable]="false">
-
-  <ng-template pTemplate="header">
-    <div class="dialog-header">
-      <span id="dialog-title">Solicitud pendiente</span>
-    </div>
-  </ng-template>
-
-
-  <form [formGroup]="pendingRequestForm" (ngSubmit)="onSubmit()">
-
-    <div class="form-group">
-      <label for="message">Mensaje</label>
-      <textarea
-        id="message"
-        formControlName="message"
-        rows="4"
-        class="form-control"
-        placeholder="Escribe tu mensaje aquí"
-        required>
-      </textarea>
-    </div>
-    <br>
-
-    <div class="form-group">
-      <label for="file">Archivos adjuntos</label>
-      
-      <input
-        id="file"
-        type="file"
-        #archive_request_pending
-        class="formProcess-buttonUp-custom-icon"
-        name="archive_request_pending"
-        (change)="onFileSelectedPending($event)"
-        accept=".jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
-        maxFileSize="20971520"
-        multiple />
-      <label class="formProcess-buttonUp-label" (click)="openFileInputPending()">
-        Seleccionar
-        <i style="margin-left: 5px" class="pi pi-upload"></i>
-      </label>
-      <label class="formProcess-card-text-placeholder-invalid"
-        >{{ errorSizeFile ? errorMensajeFile : ''
-        }}{{ errorExtensionFile ? errorMensajeFile : ''
-        }}{{ errorRepeatFile ? errorMensajeFile : '' }}</label
-      >
-    </div>
-
-
-    <div
-      class="formProcess-labelUpload"
-      *ngFor="let fileNameP of fileNameListPending; let i = index">
-      <p class="formProcess-labelUpload-name">{{ fileNameP }}</p>
-      <i (click)="clearFileInputPending(i)" class="formProcess-labelUpload-name pi pi-times"></i>
-    </div>
-
-
-    <div class="dialog-buttons">
-      <button type="submit" class="btn btn-yes">Enviar</button>
-      <button type="button" class="btn btn-cancel" (click)="closeDialogPending()">Cancelar</button>
-    </div>
-  </form>
-</p-dialog> -->
 
 <p-dialog
   [(visible)]="visibleSolicitudPendiente"
@@ -1209,6 +1211,7 @@
   header="Historia"
   [(visible)]="visibleHistory"
   [modal]="true"
+  [ngStyle]="{ 'white-space': 'pre-line' }"
   [style]="{ width: '60vw' }"
   [contentStyle]="{ padding: '1em' }"
   [responsive]="true"
@@ -1293,4 +1296,48 @@
   <div class="dialog-buttons">
     <button type="button" class="btn btn-cancel" (click)="closeDialogHistory()">Cerrar</button>
   </div>
+</p-dialog>
+
+<!-- Dar prioridad solicitud -->
+<p-dialog
+  header="Darle prioridad al radicado"
+  [(visible)]="isVisibleSolicitudPrioridad"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Priorización del la solicitud</span>
+    </div>
+  </ng-template>
+
+  <!-- Formulario -->
+  <form [formGroup]="esPrioridadForm" (ngSubmit)="onSubmitPriority()">
+    <!-- Agregar correo -->
+    <div class="form-group"></div>
+
+    <!-- Mensaje -->
+    <br />
+    <div class="form-group">
+      <label for="message">Mensaje</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        placeholder="Mensaje de priorización"
+        rows="4"
+        class="form-control"
+        required>
+      </textarea>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-yes">Guardar</button>
+      <button type="button" class="btn btn-cancel" (click)="closeDialogPriority()">Cancelar</button>
+    </div>
+  </form>
 </p-dialog>

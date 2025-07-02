@@ -14,18 +14,20 @@ import {
   RequestFormListPending,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
-import { Router, ActivatedRoute} from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { HttpEventType, HttpResponse, HttpErrorResponse } from '@angular/common/http';
-import { throwError, retry } from 'rxjs';
+import { throwError, retry, lastValueFrom, firstValueFrom } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
+import { ChangeDetectorRef } from '@angular/core';
+import { CheckboxChangeEvent } from 'primeng/checkbox';
 
 @Component({
   selector: 'app-request-pending',
   templateUrl: './request-pending.component.html',
-  styleUrl: './request-pending.component.scss'
+  styleUrl: './request-pending.component.scss',
 })
 export class RequestPendingComponent implements OnInit {
   @ViewChild('archive_request') fileInput!: ElementRef;
@@ -89,8 +91,8 @@ export class RequestPendingComponent implements OnInit {
 
   ngOnInit(): void {
     this.token = this.route.snapshot.queryParamMap.get('token');
-    
-    console.log("TOKEN OBTENIDO", this.token);
+
+    console.log('TOKEN OBTENIDO', this.token);
 
     if (this.token) {
       this.validateToken(this.token);
@@ -129,8 +131,8 @@ export class RequestPendingComponent implements OnInit {
     private messageService: MessageService,
     private router: Router,
     private http: HttpClient,
-
-    private route: ActivatedRoute,
+    private changeDetectorRef: ChangeDetectorRef,
+    private route: ActivatedRoute
     //private pendingRequestService: PendingRequestService
   ) {
     this.value = {
@@ -138,11 +140,9 @@ export class RequestPendingComponent implements OnInit {
       catalog_item_name: 'NIT',
       regex: '^[0-9]{0,9}$',
     };
-    this.requestForm = this.formBuilder.group(
-      {
-        mensage: ['', [Validators.required, Validators.maxLength(1000)]],
-      },
-    );
+    this.requestForm = this.formBuilder.group({
+      mensage: ['', [Validators.required, Validators.maxLength(1000)]],
+    });
 
     this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
       this.requestForm.get('number_id')?.setValidators([Validators.pattern(value.regex)]);
@@ -159,18 +159,18 @@ export class RequestPendingComponent implements OnInit {
     });
   }
 
-  validateToken(token: string){
+  validateToken(token: string) {
     const payload: Token = {
-          token: token,
-        };
+      token: token,
+    };
 
-    console.log("PAYLOAD: ", payload);
+    console.log('PAYLOAD: ', payload);
     this.userService.getRequestPendingByToken(payload).subscribe({
       next: (response): void => {
         console.log(response);
         if (response.code === 200) {
           this.pendingRequest = response.data;
-          console.log("DATOS PENDING", this.pendingRequest);
+          console.log('DATOS PENDING', this.pendingRequest);
         } else {
           this.mostrarPopup = true; // Mostrar pop-up si el token no es válido
           //this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -334,7 +334,7 @@ export class RequestPendingComponent implements OnInit {
 
   continuarCreacionSolicitud(inputValue: RequestFormListPending) {
     //this.userService.createRequest(inputValue).subscribe({
-    this.userService.answerRequestPending(inputValue).subscribe({              
+    this.userService.answerRequestPending(inputValue).subscribe({
       next: (response: BodyResponse<number>) => {
         if (response.code === 200) {
           //this.requestForm.reset();
@@ -344,13 +344,12 @@ export class RequestPendingComponent implements OnInit {
               this.showAlertModal(response.data);
             }, 1000);
           } else {
-            console.log("ENTRO PARA SUBIR ARCHIVOS");
+            console.log('ENTRO PARA SUBIR ARCHIVOS');
             this.attachApplicantFiles(response.data);
           }
 
           // Actualiza el registro cuando la operación sea exitosa
           this.actualizarLogProceso(response.data);
-
         } else {
           setTimeout(() => {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -366,7 +365,7 @@ export class RequestPendingComponent implements OnInit {
     });
   }
 
-  actualizarLogProceso (request_id: number){
+  actualizarLogProceso(request_id: number) {
     const transactionId = localStorage.getItem('id-transaction');
 
     if (!transactionId) {
@@ -377,7 +376,7 @@ export class RequestPendingComponent implements OnInit {
     const payload: ProcessRequest = {
       operation: 'update',
       transaction_id: transactionId,
-      status: "Finalizado",
+      status: 'Finalizado',
       request_id: request_id,
       validation_attachemens: this.useIaAttach,
     };
@@ -386,18 +385,18 @@ export class RequestPendingComponent implements OnInit {
 
     this.userService.registerProcessRequest(payload).subscribe({
       next: (response: BodyResponse<string>) => {
-        if (response.code === 200){
+        if (response.code === 200) {
           localStorage.removeItem('id-transaction');
           console.log('Actualizacion exitoso en log de proceso de solicitud');
           console.log('ID de transacción eliminado del LocalStorage.');
-        }else{
+        } else {
           console.log('Error actualizando en log de proceso de solicitud');
         }
       },
-      error: (err) => {
+      error: err => {
         console.error('Error consumiendo el servicio de registro request:', err);
       },
-    })
+    });
   }
 
   showAdjuntarArchivoModal(): Promise<boolean> {
@@ -432,8 +431,9 @@ export class RequestPendingComponent implements OnInit {
     this.resolveModal(); // Resuelve la promesa, pero no continúa el proceso
   }
 
+  /*
   async getPreSignedUrl(file: ApplicantAttachments, request_id: number): Promise<string | void> {
-    console.log("ESCRIBIR EN BD ARCHIVOS");
+    console.log('ESCRIBIR EN BD ARCHIVOS');
     this.isSpinnerVisible = true;
     const payload = {
       // Ajuste para eliminar lo puntos o caracteres especiales en los nombres de los adjuntos
@@ -443,7 +443,7 @@ export class RequestPendingComponent implements OnInit {
     };
 
     return new Promise((resolve, reject) => {
-      console.log("CARGANDO A S3");
+      console.log('CARGANDO A S3');
       this.userService.getUrlSigned(payload, 'pending_ext').subscribe({
         next: (response: BodyResponse<string>): void => {
           if (response.code === 200) {
@@ -464,6 +464,40 @@ export class RequestPendingComponent implements OnInit {
         },
       });
     });
+  } */
+
+  //MEJORA 2025
+  async getPreSignedUrl(file: ApplicantAttachments, request_id: number): Promise<string> {
+    this.isSpinnerVisible = true;
+
+    const payload = {
+        source_name: file.source_name.replace(/(?!\.[^.]+$)\./g, '_'), // Evitar caracteres conflictivos
+        fileweight: file.fileweight,
+        request_id: request_id,
+        content_type: file.file?.type || 'application/octet-stream'
+    };
+
+    const MAX_RETRIES = 3;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+      try {
+          const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'pending_ext'));
+
+          if (response.code === 200 && response.data) {
+            return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          } else {
+              console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
+          }
+        } catch (error) {
+            console.error(`Intento ${attempts + 1}: Falló la solicitud para obtener la URL prefirmada`, error);
+      }
+
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2s antes de reintentar
+    }
+
+    throw new Error('No se pudo obtener la URL prefirmada después de múltiples intentos');
   }
 
   /*
@@ -479,6 +513,7 @@ export class RequestPendingComponent implements OnInit {
       .toPromise();
   } */
 
+  /*    
   async uploadToPresignedUrl(file: ApplicantAttachments, request_id: number): Promise<void> {
     this.isSpinnerVisible = true;
     if (file && file.file) {
@@ -543,6 +578,73 @@ export class RequestPendingComponent implements OnInit {
     } else {
       console.error('El archivo no es válido o está undefined.');
     }
+  } */
+
+  //MEJORA 2025
+  async uploadToPresignedUrl(file: ApplicantAttachments, request_id: number): Promise<void> {
+    this.isSpinnerVisible = true;
+
+    if (!file || !file.file) {
+        console.error('El archivo no es válido o está undefined.');
+        return;
+    }
+
+    if (!file.preSignedUrl) {
+        console.error(`No se encontró una URL prefirmada para el archivo: ${file.source_name}`);
+        return;
+    }
+
+    try {
+        const contentType = file.file?.type || 'application/octet-stream'; // Detectar MIME type
+        console.log("CONTENT-TYPE", contentType);
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY_MS = 2000;
+
+        console.log('Subiendo archivo:', file.file.name);
+        console.log('Usando URL prefirmada:', file.preSignedUrl);
+
+        const upload$ = this.http
+            .put(file.preSignedUrl, file.file, {
+                headers: { 'Content-Type': contentType },
+                reportProgress: true,
+                observe: 'events',
+            })
+            .pipe(
+                retryWhen(errors =>
+                    errors.pipe(
+                        tap((error: HttpErrorResponse) => {
+                            const errorDetails = {
+                                status: error.status,
+                                statusText: error.statusText,
+                                message: error.message,
+                                url: error.url,
+                            };
+                            console.error(`Intento fallido (${error.status}):`, errorDetails);
+
+                            // Solo reintentar en errores temporales
+                            if (![500, 502, 503, 504, 429].includes(error.status)) {
+                                throw error; // Detener reintentos en errores definitivos
+                            }
+
+                            this.handleUploadFailure(file, request_id, errorDetails);
+                        }),
+                        delay(RETRY_DELAY_MS),
+                        take(MAX_RETRIES),
+                        catchError(err => {
+                            console.error('Error después de múltiples intentos:', err);
+                            return throwError(() => err);
+                        })
+                    )
+                )
+            );
+
+        await lastValueFrom(upload$);
+        console.log(`Archivo ${file.file.name} subido correctamente.`);
+    } catch (error) {
+        console.error('Falló la subida del archivo:', error);
+    } finally {
+        this.isSpinnerVisible = false;
+    }
   }
 
   // ENVIO AL SERVICIO QUE VA A GUARDAR EN LA TABLA DE LOGS
@@ -581,6 +683,7 @@ export class RequestPendingComponent implements OnInit {
     });
   }
 
+  /*
   async attachApplicantFiles(request_id: number) {
     // Establecer el estado de carga antes de comenzar
     this.isSpinnerVisible = true;
@@ -624,7 +727,215 @@ export class RequestPendingComponent implements OnInit {
       this.isSpinnerVisible = false; // Oculta el spinner al final
       this.hasPendingChanges = false;
     }
+  } */
+
+  //MEJORA 2025 SUBIDA
+  /*
+async attachApplicantFiles(request_id: number) {
+  this.isSpinnerVisible = true;
+  this.hasPendingChanges = true;
+  this.uploadProgress = 0;
+
+  try {
+      if (!this.arrayApplicantAttachment || this.arrayApplicantAttachment.length === 0) {
+          console.warn('No hay archivos para subir.');
+          return;
+      }
+
+      const ruta_archivo_ws = environment.ruta_archivos_ws;
+      const totalFiles = this.arrayApplicantAttachment.length;
+      let uploadedFiles = 0;
+
+      // Paso 1: Enviar archivos al servidor (base de datos)
+      const estructura = {
+          idSolicitud: `${request_id}`,
+          archivos: this.arrayApplicantAttachment.map(file => ({
+              base64file: file.base64file,
+              source_name: file.source_name,
+              fileweight: file.fileweight,
+          })),
+      };
+
+      try {
+        await this.envioArchivosServer(ruta_archivo_ws, estructura);
+      } catch (error) {
+        console.error("Error al enviar archivos:", error);
+        // Aquí puedes mostrar un mensaje de error en la UI
+      }
+
+      //await this.envioArchivosServer(ruta_archivo_ws, estructura);
+
+      // Paso 2: Obtener URL prefirmadas y subir archivos
+      for (const item of this.arrayApplicantAttachment) {
+          try {
+              // Obtener URL prefirmada con reintentos
+              const preSignedUrl = await this.retry(
+                  () => this.getPreSignedUrl(item, request_id),
+                  1, // Intentos
+                  2000 // Retraso entre intentos
+              );
+
+              if (!preSignedUrl) {
+                  console.error(`No se pudo obtener la URL prefirmada para: ${item.source_name}`);
+                  continue; // No seguir con la subida si no hay URL
+              }
+
+              // Asignar la URL al archivo
+              item.preSignedUrl = preSignedUrl;
+
+              // Subir el archivo con reintentos
+              await this.retry(
+                  () => this.uploadToPresignedUrl(item, request_id), //Aquí se pasa la URL
+                  3, // Intentos
+                  3000 // Retraso entre intentos
+              );
+
+              uploadedFiles++;
+              this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+              this.changeDetectorRef.detectChanges();
+
+          } catch (error) {
+              console.error(`Error al procesar el archivo ${item.source_name}:`, error);
+          }
+      }
+
+      this.uploadProgress = 100;
+      this.changeDetectorRef.detectChanges();
+
+      // Restablecer formulario y mostrar mensaje de éxito
+      this.requestForm.reset();
+      this.fileNameList.clear();
+      this.showAlertModal(request_id);
+
+  } catch (error) {
+      console.error('Error durante el proceso de carga:', error);
+      this.showAlertModalError(request_id);
+  } finally {
+      setTimeout(() => {
+          this.isSpinnerVisible = false;
+          this.hasPendingChanges = false;
+          this.uploadProgress = 0;
+      }, 500);
   }
+} */
+
+async attachApplicantFiles(request_id: number) {
+  this.isSpinnerVisible = true;
+  this.hasPendingChanges = true;
+  this.uploadProgress = 0;
+
+  try {
+    if (!this.arrayApplicantAttachment || this.arrayApplicantAttachment.length === 0) {
+        console.warn('No hay archivos para subir.');
+        return;
+    }
+
+    const ruta_archivo_ws = environment.ruta_archivos_ws;
+    const totalFiles = this.arrayApplicantAttachment.length;
+    let uploadedFiles = 0;
+
+    // Paso 1: Enviar archivos al servidor (base de datos)
+    const estructura = {
+        idSolicitud: `${request_id}`,
+        archivos: this.arrayApplicantAttachment.map(file => ({
+            base64file: file.base64file,
+            source_name: file.source_name,
+            fileweight: file.fileweight,
+        })),
+    };
+
+    try {
+        await this.envioArchivosServer(ruta_archivo_ws, estructura);
+    } catch (error) {
+        console.error("Error al enviar archivos:", error);
+    }
+
+    // Paso 2: Subir archivos por ambos métodos (URL prefirmada y SDK vía Lambda)
+    for (const item of this.arrayApplicantAttachment) {
+        try {
+            // Obtener URL prefirmada
+            const preSignedUrl = await this.retry(
+                () => this.getPreSignedUrl(item, request_id),
+                1, // Intentos
+                2000 // Retraso entre intentos
+            );
+
+            if (!preSignedUrl) {
+                console.error(`No se pudo obtener la URL prefirmada para: ${item.source_name}`);
+                continue;
+            }
+
+            // Asignar la URL al archivo
+            item.preSignedUrl = preSignedUrl;
+
+            // Subir en paralelo a S3 (preSignedUrl) y al backend (Lambda con SDK)
+            await Promise.all([
+                this.retry(() => this.uploadToPresignedUrl(item, request_id), 3, 3000),
+                this.retry(() => this.uploadViaLambda(item, request_id), 3, 3000)
+            ]);
+
+            uploadedFiles++;
+            this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+            this.changeDetectorRef.detectChanges();
+
+        } catch (error) {
+            console.error(`Error al procesar el archivo ${item.source_name}:`, error);
+        }
+      }
+
+      this.uploadProgress = 100;
+      this.changeDetectorRef.detectChanges();
+
+      // Restablecer formulario y mostrar mensaje de éxito
+      this.requestForm.reset();
+      this.fileNameList.clear();
+      this.showAlertModal(request_id);
+
+  } catch (error) {
+      console.error('Error durante el proceso de carga:', error);
+      this.showAlertModalError(request_id);
+  } finally {
+      setTimeout(() => {
+          this.isSpinnerVisible = false;
+          this.hasPendingChanges = false;
+          this.uploadProgress = 0;
+      }, 500);
+  }
+}
+
+async uploadViaLambda(file: any, request_id: number) {
+  try {
+      const payload = {
+          file: file.base64file, // Archivo en Base64
+          filename: file.source_name,
+          source_name: file.source_name,
+          request_id: request_id
+      };
+
+      // Llamado a la API de la Lambda a través de userService
+      const response = await this.userService.uploadPostSdk(payload).toPromise();
+      console.log('Subida a S3 vía SDK exitosa:', response);
+
+  } catch (error) {
+      console.error('Error subiendo archivo vía Lambda:', error);
+      throw error;
+  }
+}
+
+async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): Promise<T> {
+  let attempt = 0;
+  while (attempt < retries) {
+      try {
+          return await operation();
+      } catch (error) {
+          attempt++;
+          console.warn(`Intento ${attempt} fallido. Reintentando en ${delayMs}ms...`);
+          if (attempt === retries) throw error;
+          await new Promise(res => setTimeout(res, delayMs));
+      }
+  }
+  throw new Error('Todos los intentos fallaron');
+}
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any): void {
@@ -635,6 +946,7 @@ export class RequestPendingComponent implements OnInit {
   }
 
   //ENVIO DE ARCHIVOS AL SERVIDOR DE CONFA
+  /*
   async envioArchivosServer(ruta_archivo_ws: any, estructura: any) {
     this.isSpinnerVisible = true;
     try {
@@ -643,6 +955,25 @@ export class RequestPendingComponent implements OnInit {
       //console.log('Respuesta del servicio:', respuesta);
     } catch (error) {
       console.error('Error al llamar al servicio:', error);
+    }
+  } */
+
+  async envioArchivosServer(ruta_archivo_ws: string, estructura: any) {
+    try {
+        const archivos = estructura.archivos;
+        const totalArchivos = archivos.length;
+
+        for (let i = 0; i < totalArchivos; i++) {
+            const archivo = archivos[i];
+
+            // Subir cada archivo de manera individual
+            await this.http.post(ruta_archivo_ws, { ...estructura, archivos: [archivo] }).toPromise();
+
+            this.uploadProgress = Math.round(((i + 1) / totalArchivos) * 50);
+            this.changeDetectorRef.detectChanges(); // Forzar actualización de la UI
+        }
+    } catch (error) {
+        console.error('Error al subir archivos:', error);
     }
   }
 
@@ -750,6 +1081,4 @@ export class RequestPendingComponent implements OnInit {
         return '*Descripción detallada de la solicitud incluyendo los datos de las personas a cargo';
     }
   } */
-
 }
-

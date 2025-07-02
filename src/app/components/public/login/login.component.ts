@@ -78,7 +78,14 @@ export class LoginComponent implements OnInit {
             if (menu) {
               sessionStorage.setItem(SessionStorageItems.MENU, JSON.stringify(menu));
             }
-            this.router.navigate([RoutesApp.MAIN_PAGE]);
+            // Redirigir si el perfil es "USUARIO INTERNO"
+            if (perfil === 'USUARIO INTERNO') {
+              this.router.navigate([RoutesApp.CREATE_REQUEST_INTERNAL]);
+              return;
+            }else{
+              this.router.navigate([RoutesApp.MAIN_PAGE]);
+            }
+            
           }
 
           // Redirigir al usuario con el taskId si existe
@@ -109,7 +116,6 @@ export class LoginComponent implements OnInit {
 
   convertirLinks(links: ILink[]): TreeNode[] {
     const arrayResultante: TreeNode[] = [];
-    console.log(links, 'kinks');
     links.forEach(link => {
       if (link.perfilLinks) {
         const objetoConvertido: TreeNode = {

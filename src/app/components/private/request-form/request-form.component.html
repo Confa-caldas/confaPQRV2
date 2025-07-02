@@ -1,7 +1,16 @@
 <div *ngIf="isSpinnerVisible" class="spinner-overlay">
-  <div class="spinner"></div>
-  <p class="spinner-text">Procesando su solicitud</p>
+
+  <p class="spinner-text">Procesando su solicitud, por favor espere...</p>
+
+  <div class="progress-bar-container">
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+    </div>
+    <p class="progress-text">{{ uploadProgress }}% completado</p>
+  </div>
 </div>
+
+
 <p-card class="container">
   <div class="container-principal">
     <form [formGroup]="requestForm">
@@ -51,21 +60,23 @@
                 formControlName="number_id"
                 class="card-form-input-options"
                 placeholder="*Ingresa el número de documento" />
-              <label class="card-form-input-placeholder-invalid">
-                {{
-                  requestForm.get('number_id')?.hasError('pattern') &&
-                  requestForm.get('number_id')?.touched
-                    ? errorMensaje
-                    : ''
-                }}
-                {{ requestForm.get('number_id')?.disabled ? 'Seleccione tipo de documento' : ''
-                }}{{
-                  requestForm.get('number_id')?.hasError('required') &&
-                  requestForm.get('number_id')?.touched
-                    ? 'Campo Requerido'
-                    : ''
-                }}</label
-              >
+                <label class="card-form-input-placeholder-invalid">
+                  {{
+                    requestForm.get('number_id')?.disabled
+                      ? 'Seleccione tipo de documento'
+                      : requestForm.get('number_id')?.hasError('required') &&
+                        requestForm.get('number_id')?.touched
+                      ? 'Campo requerido'
+                      : requestForm.get('number_id')?.hasError('minlength') &&
+                        requestForm.get('number_id')?.touched
+                      ? 'Debe contener al menos 8 dígitos'
+                      : requestForm.get('number_id')?.hasError('pattern') &&
+                        requestForm.get('number_id')?.touched
+                      ? errorMensaje
+                      : ''
+                  }}
+                </label>
+                
             </div>
           </div>
 

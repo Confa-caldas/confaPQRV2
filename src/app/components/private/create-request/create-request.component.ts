@@ -29,6 +29,8 @@ export class CreateRequestComponent {
   ip: string = '';
   userEnvironmentData: any;
 
+  authorizeValue: boolean | null = null;
+
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
@@ -38,7 +40,8 @@ export class CreateRequestComponent {
     this.optionsRequest = this.formBuilder.group({
       applicant_id: ['', Validators.required],
       request_id: ['', Validators.required],
-      authorize: [null, Validators.requiredTrue],
+      //authorize: [null, Validators.requiredTrue],
+      authorize: [null, Validators.required]
     });
 
     localStorage.removeItem('visitedFirstPage');
@@ -46,7 +49,7 @@ export class CreateRequestComponent {
   }
   changeRequest() {
     this.optionsRequest.get('request_id')?.setValue('');
-    this.optionsRequest.get('authorize')?.setValue(false);
+    this.optionsRequest.get('authorize')?.setValue(null);
   }
 
   applicantId1(): boolean {
@@ -130,11 +133,15 @@ export class CreateRequestComponent {
       console.error('Error obteniendo el entorno del usuario:', err);
       // Si ocurre un error, usamos valores por defecto
       ip = 'No disponible';
-    } */
+    }
+      */
 
     this.transactionId = uuidv4(); // Genera un identificador único
 
-    localStorage.setItem('visitedFirstPage', 'true');
+    localStorage.setItem(
+      'visitedFirstPage',
+      JSON.stringify(true)
+    );
     localStorage.setItem(
       'applicant-type',
       JSON.stringify(this.optionsRequest.controls['applicant_id'].value)
@@ -144,15 +151,21 @@ export class CreateRequestComponent {
       JSON.stringify(this.optionsRequest.controls['request_id'].value)
     );
     localStorage.setItem('id-transaction', this.transactionId);
+    localStorage.setItem(
+      'authorize_data',
+      JSON.stringify(this.optionsRequest.controls['authorize'].value)
+    );
 
     if (
       this.optionsRequest.controls['applicant_id'].value.applicant_type_id === 1 &&
       this.optionsRequest.controls['request_id'].value.request_type_id === 21
     ) {
-      window.open(
-        'https://docs.google.com/forms/d/e/1FAIpQLSc11ps8y0lrKKZEa83wtJC2VrtoSe7p1IMXfeM2bzDSxFagdg/viewform',
-        '_blank'
-      );
+      this.router.navigate([RoutesApp.FORM_COMPANY]);
+      // this.router.navigate([RoutesApp.FORM_COMPANY]);
+      // window.open(
+      //   'https://docs.google.com/forms/d/e/1FAIpQLSc11ps8y0lrKKZEa83wtJC2VrtoSe7p1IMXfeM2bzDSxFagdg/viewform',
+      //   '_blank'
+      // );
     } else {
       const payload: ProcessRequest = {
         operation: 'insert',
@@ -191,6 +204,6 @@ export class CreateRequestComponent {
     this.visibleDialogDataT = true;
   }
   setParameterDataT(dataTreatment: boolean) {
-    this.optionsRequest.get('authorize')?.setValue(dataTreatment);
+    this.optionsRequest.get('authorize')?.setValue(null);
   }
 }

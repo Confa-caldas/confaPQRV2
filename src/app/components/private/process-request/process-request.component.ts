@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
@@ -10,6 +10,7 @@ import {
   RequestsList,
   RequestsReview,
   UserList,
+  RequestAreaList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -18,6 +19,8 @@ import { formatDate } from '@angular/common';
 import { FormControl, FormGroup } from '@angular/forms';
 import { PaginatorState } from 'primeng/paginator';
 import { PageEvent } from '../../../models/shared/page-event.interface';
+import { forkJoin } from 'rxjs';
+import { Table } from 'primeng/table';
 
 @Component({
   selector: 'app-process-request',
@@ -30,10 +33,13 @@ export class ProcessRequestComponent implements OnInit {
   aplicantList: ApplicantTypeList[] = [];
   requestTypeList: RequestTypeList[] = [];
   userList: UserList[] = [];
+  requestAreaList: RequestAreaList[] = [];
+  requestUserList: UserList[] = [];
   ingredient!: string;
   parameter = [''];
   request_details!: RequestsReview;
-  selectedRequests!: RequestsList[];
+  selectedRequests: RequestsList[] = [];
+  selectedRequestsAssigned: RequestsList[] = [];
   informative: boolean = false;
   filterForm: FormGroup<any> = new FormGroup<any>({});
   filterFormAssigned: FormGroup<any> = new FormGroup<any>({});
@@ -63,6 +69,18 @@ export class ProcessRequestComponent implements OnInit {
   pageAssigned: number = 1;
   rowsAssigned: number = 10;
   totalRowsAssigned: number = 0;
+  
+  PERFIL!: string;
+  isBulkAssign: boolean = false; // Saber si es masivo o no
+  request_details_process!: RequestsList;
+  visibleAssignedInput = false;
+  @ViewChild('dt') table!: Table;
+
+  priorityLevelList = [
+    { name: 'Sin prioridad', value: 0 },
+    { name: 'Prioridad baja', value: 1 },
+    { name: 'Prioridad alta', value: 2 }
+  ];
 
   constructor(
     private userService: Users,
@@ -78,7 +96,12 @@ export class ProcessRequestComponent implements OnInit {
       applicant_type_id: new FormControl(null),
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
-      request_status_id: new FormControl(null),
+      //request_status_id: new FormControl(null),
+      request_status_id: new FormControl([1]),
+      confa_user: new FormControl(null),
+      area_name: new FormControl(null),
+      //is_priority: new FormControl(null),
+      priority_level: new FormControl(null),
     });
     this.filterFormAssigned = new FormGroup({
       dates_range: new FormControl(null),
@@ -90,6 +113,9 @@ export class ProcessRequestComponent implements OnInit {
       request_type_id: new FormControl(null),
       assigned_user: new FormControl(null),
       request_status_id: new FormControl(null),
+      confa_user: new FormControl(null),
+      area_name: new FormControl(null),
+      priority_level: new FormControl(null),
     });
     this.filterForm.get('request_status_id')?.valueChanges.subscribe(value => {
       if (value.length === 0) {
@@ -134,6 +160,7 @@ export class ProcessRequestComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
     this.user = sessionStorage.getItem(SessionStorageItems.USER) || '';
     this.searhRequests();
     this.searhRequestsAssignedUser();
@@ -141,6 +168,8 @@ export class ProcessRequestComponent implements OnInit {
     this.getRequestTypeList();
     this.getUsersList();
     this.getRequestStatusList();
+    this.getRequestUserList();
+    this.getRequestAreasList();
   }
 
   getColor(value: number): string {
@@ -212,6 +241,11 @@ export class ProcessRequestComponent implements OnInit {
       request_type_id: this.filterForm.controls['request_type_id'].value || null,
       assigned_user: this.filterForm.controls['assigned_user'].value || null,
       status_id: this.filterForm.controls['request_status_id'].value || null,
+      //is_priority: this.filterForm.controls['is_priority'].value || null,
+      priority_level: this.filterForm.controls['priority_level'].value,
+      confa_user: this.filterForm.controls['confa_user'].value || null,
+      area_name: this.filterForm.controls['area_name'].value || null,
+
       page: this.page,
       page_size: this.rows,
     };
@@ -275,12 +309,17 @@ export class ProcessRequestComponent implements OnInit {
       applicant_type_id: this.filterFormAssigned.controls['applicant_type_id'].value || null,
       request_type_id: this.filterFormAssigned.controls['request_type_id'].value || null,
       status_id: this.filterFormAssigned.controls['request_status_id'].value || null,
+      priority_level: this.filterFormAssigned.controls['priority_level'].value || null,
+      confa_user: this.filterFormAssigned.controls['confa_user'].value || null,
+      area_name: this.filterFormAssigned.controls['area_name'].value || null,
       page: this.pageAssigned,
       page_size: this.rowsAssigned,
     };
+
     this.getRequestListByAssignedUserByFilter(payload);
   }
   getRequestListByAssignedUserByFilter(payload: FilterRequests) {
+    console.log(payload);
     this.userService.getRequestListByAssignedUser(this.user, payload).subscribe({
       next: (response: BodyResponse<RequestsList[]>) => {
         if (response.code === 200) {
@@ -382,6 +421,45 @@ export class ProcessRequestComponent implements OnInit {
     });
   }
 
+  // Metodo para listar los usuarios que han hecho radicados
+  getRequestUserList() {
+    this.userService.getRequestUserList().subscribe({
+      next: (response: BodyResponse<UserList[]>) => {
+        if (response.code === 200) {
+          this.requestUserList = response.data;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  // Metodo para listar las areas
+  getRequestAreasList() {
+    this.userService.getRequestAreasList().subscribe({
+      next: (response: BodyResponse<RequestAreaList[]>) => {
+        if (response.code === 200) {
+          this.requestAreaList = response.data;
+          console.log(this.requestUserList, 'areas');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
   redirectDetails(request_id: number) {
     localStorage.removeItem('route');
     localStorage.setItem('route', this.router.url);
@@ -426,4 +504,156 @@ export class ProcessRequestComponent implements OnInit {
       });
     }
   }
+
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Evita que se envíe el formulario
+      this.initPaginadorAssigned();
+    }
+    if (event.key === 'Escape') {
+      this.cleanForm();
+    }
+  }
+
+  activeTabIndex = 0; // 0 para "Asignadas", 1 para "Generales"
+
+@HostListener('document:keydown.enter', ['$event'])
+onEnterPressed(event: KeyboardEvent): void {
+  if (this.activeTabIndex === 0 && this.hasActiveFilters(this.filterFormAssigned)) {
+    event.preventDefault();
+    this.initPaginadorAssigned();
+  } else if (this.activeTabIndex === 1 && this.hasActiveFilters(this.filterForm)) {
+    event.preventDefault();
+    this.initPaginador();
+  }
+}
+
+@HostListener('document:keydown.escape', ['$event'])
+onEscapePressed(event: KeyboardEvent): void {
+  if (this.activeTabIndex === 0) {
+    event.preventDefault();
+    this.cleanFormAssigned();
+  } else if (this.activeTabIndex === 1) {
+    event.preventDefault();
+    this.cleanForm();
+  }
+}
+
+private hasActiveFilters(formGroup: FormGroup): boolean {
+  return Object.values(formGroup.value).some(value => {
+    if (value === null || value === '') return false;
+    if (Array.isArray(value) && value.length === 0) return false;
+    return true;
+  });
+}
+
+assignRequest(request_details: RequestsList) {
+    this.isBulkAssign = false;
+
+    if (request_details.assigned_user == null || request_details.assigned_user == '') {
+      this.message = 'Asignar responsable de solicitud';
+      this.buttonmsg = 'Asignar';
+      request_details.request_status = 2;
+    } else {
+      this.message = 'Reasignar responsable de solicitud';
+      this.buttonmsg = 'Reasignar';
+      request_details.request_status = 3;
+    }
+    this.visibleAssignedInput = true;
+    this.parameter = ['Colaborador'];
+    this.request_details_process = request_details;
+  }
+
+  setParameterAssigned(inputValue: {
+    userName: string;
+    userNameCompleted: string;
+    mensajeReasignacion: string;
+  }) {
+    if (!this.enableAssign) return;
+  
+    if (this.isBulkAssign) {
+      const requestsToAssign = this.selectedRequests.map(request => {
+        request.assigned_user = inputValue.userName;
+        request.user_name_completed = inputValue.userNameCompleted;
+        request.mensaje_reasignacion = inputValue.mensajeReasignacion;
+        request.request_status = 3;
+  
+        return this.userService.assignUserToRequest(request);
+      });
+  
+      forkJoin(requestsToAssign).subscribe({
+        next: (responses) => {
+          responses.forEach((response, index) => {
+            const filingNumber = this.selectedRequests[index]?.filing_number || 'Desconocido';
+            if (response.code === 200) {
+              this.showSuccessMessage('success', 'Éxito', `Asignado: ${filingNumber}`);
+            } else {
+              this.showSuccessMessage('error', 'Falló', `Falló asignación: ${filingNumber}`);
+            }
+          });
+        },
+        error: (err) => {
+          console.error('Error en asignación masiva:', err);
+          this.showSuccessMessage('error', 'Error', 'Error durante la asignación masiva.');
+        },
+        complete: () => {
+          this.selectedRequests = [];
+          this.table?.clear(); // Limpia visualmente la selección
+          this.visibleDialogInput = false;
+          this.ngOnInit(); // Refresca datos
+        },
+      });
+  
+    } else {
+      // Asignación individual
+      if (this.request_details_process.assigned_user === inputValue.userName) {
+        this.visibleDialogAlert = true;
+        this.informative = true;
+        this.message = 'Verifique el responsable a asignar';
+        this.message2 = 'Debe seleccionar un colaborador diferente';
+        this.severity = 'danger';
+        return;
+      }
+  
+      this.request_details_process.assigned_user = inputValue.userName;
+      this.request_details_process.user_name_completed = inputValue.userNameCompleted;
+      this.request_details_process.mensaje_reasignacion = inputValue.mensajeReasignacion;
+  
+      this.userService.assignUserToRequest(this.request_details_process).subscribe({
+        next: (response) => {
+          if (response.code === 200) {
+            this.showSuccessMessage('success', 'Éxito', 'Asignación exitosa');
+          } else {
+            this.showSuccessMessage('error', 'Falló', 'Asignación fallida');
+          }
+        },
+        error: (err) => console.error(err),
+        complete: () => {
+          this.visibleAssignedInput = false;
+          this.ngOnInit();
+        },
+      });
+    }
+  }
+
+  closeDialogAssignedInput(value: boolean) {
+    this.visibleAssignedInput = false;
+    this.enableAssign = value;
+    if (value) {
+      // accion de eliminar
+    }
+  }
+  
+  assignSelectedRequests(requests: RequestsList[]) {
+    if (!requests || requests.length === 0) return;
+    this.isBulkAssign = true;
+
+    this.selectedRequests = requests;
+
+    this.message = 'Reasignar responsable a solicitudes seleccionadas';
+    this.buttonmsg = 'Reasignar';
+    this.visibleAssignedInput = true;
+    this.parameter = ['Colaborador'];
+  }
+  
 }

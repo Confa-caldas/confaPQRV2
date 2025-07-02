@@ -71,6 +71,7 @@ export class ModalCharacterizationComponent implements OnInit {
       category_id: new FormControl(null),
       tipology_id: new FormControl(null),
       cause_id: new FormControl(null),
+      is_subsidios: new FormControl(null, [Validators.required]),
     });
     this.disableConditionalModalityandQuality();
     this.disableConditionalCategoryandTipology();
@@ -352,6 +353,7 @@ export class ModalCharacterizationComponent implements OnInit {
       //cause_name: this.formGroup.controls['cause_id'].value || null,
       //category_id: this.formGroup.get('category_id.category_id')?.value || null,
       month: this.month,
+      is_subsidios: this.formGroup.controls['is_subsidios'].value,
     };
     this.setRtaParameter.emit(payload);
     this.visible = false;

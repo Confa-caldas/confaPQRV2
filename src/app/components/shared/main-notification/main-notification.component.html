@@ -1,0 +1,21 @@
+<div class="notificaciones-container">
+  <h3>🔔 Solicitudes Pendientes</h3>
+  <div [ngClass]="{'scroll-container': requestListByAssigned.length > 7}">
+      <ul *ngIf="requestListByAssigned.length > 0; else sinSolicitudes">
+          <li *ngFor="let solicitud of requestListByAssigned">
+              <a (click)="redirectDetails(solicitud.request_id)">
+                  <div class="notificacion-item">
+                      <div class="notificacion-texto">
+                          <strong>Radicación Id: {{ solicitud.request_id }}</strong>
+                          <p class="fecha">📅 {{ solicitud.filing_date }}</p>
+                      </div>
+                  </div>
+              </a>
+          </li>
+      </ul>
+  </div>
+
+  <ng-template #sinSolicitudes>
+      <p class="sin-solicitudes">No tienes solicitudes pendientes.</p>
+  </ng-template>
+</div>

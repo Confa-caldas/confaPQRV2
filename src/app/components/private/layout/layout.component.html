@@ -2,7 +2,19 @@
   <div class="row header">
     <div class="col-12 d-flex align-items-center">
       <img src="../../../assets/images/logo-blanco.svg" class="header-img" />
+      <nav class="menu ms-auto">
+        <button class="notificaciones-btn" (click)="toggleNotificaciones()">
+          🔔
+          <span class="notificaciones-badge">{{ totalRowsAssigned }}</span>
+        </button>
+
+        <app-main-notification 
+          *ngIf="mostrarNotificaciones" 
+          [requestListByAssigned]="requestListByAssigned">
+        </app-main-notification>
+      </nav>
     </div>
+    
   </div>
   <div class="row h-100">
     <!--Menu  no expandido -->
@@ -45,6 +57,11 @@
               *ngIf="node.label === 'TRAMITAR SOLICITUD'"
               (click)="toggleNavBar()"
               class="pi pi-file-import icons"
+              style="font-size: 1.5rem"></i>
+            <i
+              *ngIf="node.label === 'GESTION INTERNA'"
+              (click)="toggleNavBar()"
+              class="pi pi-search icons"
               style="font-size: 1.5rem"></i>
           </ng-template>
         </p-menu>

@@ -1,7 +1,11 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { BodyResponse, ZionResponse } from '../models/shared/body-response.inteface';
+import {
+  BodyResponse,
+  ZionResponse,
+  BodyResponseUp,
+} from '../models/shared/body-response.inteface';
 import { EndPointRoute } from '../enums/routes.enum';
 import { map, catchError } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
@@ -52,6 +56,14 @@ import {
   historyRequest,
   Token,
   RequestFormListPending,
+  RequestFormListInternal,
+  RequestAreaList,
+  FilterRequestsIntern,
+  RequestsListIntern,
+  CompanyUpdateRequest,
+  FilterCompanyUpdate,
+  CompanyUpdateRecord,
+  SimilarRequest
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -497,16 +509,25 @@ export class Users {
     return this.http.post(this.apiUrlIngresoConfa, payload, { headers }); // Envía la petición con headers
   }
 
-  respuestaInfoAfiliacion(cedula?: string): Observable<any> {
-    const urlSubsidios = 'https://api-utilitarios.confa.co/replica/consultarAfiliadoDoc';
+  // respuestaInfoAfiliacion(cedula?: string): Observable<any> {
+  //   const urlSubsidios = 'https://api-utilitarios.confa.co/replica/consultarEmpresa';
+  //   const headers = new HttpHeaders({
+  //     'Content-Type': 'application/json', // Asegura que se envíe como JSON
+  //     'x-api-key': this.apiKey, // Incluye la API key en los headers
+  //   });
+  //   const payload = {
+  //     ndoc: cedula,
+  //   };
+  //   return this.http.post(urlSubsidios, payload, { headers }); // Envía la petición con headers
+  // }
+
+  respuestaInfoAfiliacion(cedula: string): Observable<any> {
+    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarAfiliadoDoc/${cedula}/1`;
     const headers = new HttpHeaders({
-      'Content-Type': 'application/json', // Asegura que se envíe como JSON
-      'x-api-key': this.apiKey, // Incluye la API key en los headers
+      'Content-Type': 'application/json',
     });
-    const payload = {
-      ndoc: cedula,
-    };
-    return this.http.post(urlSubsidios, payload, { headers }); // Envía la petición con headers
+
+    return this.http.get(url, { headers });
   }
 
   createAnswerTemp(payload: RequestAnswerTemp) {
@@ -605,6 +626,129 @@ export class Users {
   answerRequestPending(payload: RequestFormListPending) {
     return this.http.post<BodyResponse<number>>(
       `${environment.API_PUBLIC}${EndPointRoute.ANSWER_REQUEST_PENDING}`,
+      payload
+    );
+  }
+
+  createRequestInternal(payload: RequestFormListInternal) {
+    return this.http.post<BodyResponse<number>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_REQUEST_INTERNAL}`,
+      payload
+    );
+  }
+
+  //traer usuario que creo la solicitud
+  getRequestUserList() {
+    return this.http.get<BodyResponse<UserList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_USERS_LIST}`
+    );
+  }
+  //traer las areas parametrizadas
+  getRequestAreasList() {
+    return this.http.get<BodyResponse<RequestAreaList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AREAS_LIST}`
+    );
+  }
+  // consultar por filtros solicitudes para usuario interno
+  getRequestListInternByFilter(payload: FilterRequestsIntern) {
+    return this.http.post<BodyResponse<RequestsListIntern[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_BY_FILTER_INTERN}`,
+      payload
+    );
+  }
+  // consultar por filtros solicitudes para usuario interno
+  getRequestPriority(payload: RequestAnswerTemp) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_PRIORITY}`,
+      payload
+    );
+  }
+
+  uploadPostSdk(payload: any) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ATTACHMENTS_FILES_SDK}`,
+      payload
+    );
+  }
+  // Creacion de solicitud para actualizar la informacion de una empresa
+  updateCompany(payload: CompanyUpdateRequest) {
+    return this.http.post<BodyResponse<number>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_COMPANY_FORM}`,
+      payload
+    );
+  }
+
+  insertCompanyFilesS3(payload: any): Observable<boolean> {
+    return this.http
+      .post<
+        BodyResponseUp<string>
+      >(`${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES}`, payload)
+      .pipe(map(response => response.body === '1'));
+  }
+
+  getUrlSignedCompany(payload: PreSignedAttach, type_docoument: string) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES}/${type_docoument}`,
+      payload
+    );
+  }
+
+  getCompanyInformation(cedula: string, tipoDoc: String): Observable<any> {
+    const url = `${environment.ruta_consumo_subsidios_rest}consultarEmpresaNitGestorSolicitudes/${cedula}/${tipoDoc}`;
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
+
+    return this.http.get(url, { headers });
+  }
+
+  getCompanyUpdateListByFilter(payload: FilterCompanyUpdate) {
+    return this.http.post<BodyResponse<CompanyUpdateRecord[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.COMPANY_UPDATE_BY_FILTER}`,
+      payload
+    );
+  }
+
+  getCompanyUpdateListForExport(payload: FilterCompanyUpdate) {
+    return this.http.post<BodyResponse<CompanyUpdateRecord[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.COMPANY_UPDATE_EXPORT}`,
+      payload
+    );
+  }
+
+  updateCompanyManagement(payload: {
+    company_update_id: number;
+    management_result: string;
+    management_observation: string;
+    updated_by: string;
+    user_mail: string;
+    user_name: string;
+  }) {
+    return this.http.post<BodyResponse<any>>(
+      `${environment.API_PUBLIC}${EndPointRoute.COMPANY_UPDATE_MANAGEMENT}`,
+      payload
+    );
+  }
+
+  getCiiuCodes(): Observable<any> {
+    const url = `${environment.ruta_consumo_subsidios_rest}consultarCodigoCiiu`;
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
+
+    return this.http.get(url, { headers });
+  }
+
+  getRequestInternalListByFilter(payload: FilterRequests) {
+    return this.http.post<BodyResponse<RequestsList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_INTERNAL_BY_FILTER}`,
+      payload
+    );
+  }
+
+  getSimilarRequest(payload: SimilarRequest) {
+    return this.http.post<BodyResponse<number[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.SIMILAR_REQUEST}`,
       payload
     );
   }

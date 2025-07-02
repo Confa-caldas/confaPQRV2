@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
 import {
@@ -19,6 +19,7 @@ import {
   sendEmail,
   requestHistoryRequest,
   historyRequest,
+  SimilarRequest,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -28,17 +29,12 @@ import { HttpClient } from '@angular/common/http';
 import { PaginatorState } from 'primeng/paginator';
 import { v4 as uuidv4 } from 'uuid';
 //Esto es nuevo
-import { Observable } from 'rxjs';
 import { MenuModule } from 'primeng/menu';
-import { ButtonModule } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
-import { Timeline } from 'primeng/timeline';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-// import { Util } from '../../../utils/utils';
-// import * as pdfMake from 'pdfmake/build/pdfmake';
-// import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-
-// pdfMake.vfs = pdfFonts.pdfMake.vfs;
+import { of, lastValueFrom, firstValueFrom, throwError } from 'rxjs';
+import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-request-details',
@@ -162,6 +158,19 @@ export class RequestDetailsComponent implements OnInit {
 
   historyData: Array<any> = [];
   isInitialized = false;
+  isInitializedView = false;
+  ultimaRespuestaGuardada: string = '';
+  private cancelAutoSave = false;
+
+  //utilitarios cuando no es cerrada
+  itemsGenerals: MenuModule[] | undefined;
+  isVisibleSolicitudPrioridad = false;
+  esPrioridadForm: FormGroup;
+  spinnerVisible = false;
+
+  similares: any[] = [];
+
+
 
   constructor(
     private formBuilder: FormBuilder,
@@ -187,6 +196,10 @@ export class RequestDetailsComponent implements OnInit {
       message: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
     });
+
+    this.esPrioridadForm = this.fb.group({
+      message: ['', Validators.required],
+    });
   }
 
   ngOnInit() {
@@ -203,8 +216,9 @@ export class RequestDetailsComponent implements OnInit {
 
     this.route.params.subscribe(params => {
       this.request_id = +params['id'];
+      this.getRequestDetails(this.request_id);
     });
-    this.getRequestDetails(this.request_id);
+    //this.getRequestDetails(this.request_id);
     this.initPaginadorHistoric();
     this.getRequestApplicantAttachments(this.request_id);
     this.getRequestAssignedAttachments(this.request_id);
@@ -240,19 +254,51 @@ export class RequestDetailsComponent implements OnInit {
       },
     ];
 
+    this.itemsGenerals = [
+      {
+        items: [
+          {
+            label: 'Priorizar',
+            icon: 'pi pi-exclamation-triangle',
+            command: () => this.sendPriority(),
+          },
+        ],
+      },
+    ];
+
     // // guardado automatico de respuesta cada 5 seg
     // this.requestProcess
     //   .get('mensage')
-    //   ?.valueChanges.pipe(
-    //     debounceTime(8000),
-    //     distinctUntilChanged() // Evita ejecutar si el valor es el mismo
-    //   )
+    //   ?.valueChanges.pipe(debounceTime(8000), distinctUntilChanged())
     //   .subscribe(() => {
-    //     if (this.isInitialized) {
-    //       this.borradorRespuesta(this.request_id);
+    //     if (this.cancelAutoSave) return; // Evita el guardado si cambia de página
+
+    //     const mensajeActual = this.requestProcess.get('mensage')?.value || '';
+    //     if (mensajeActual !== '') {
+    //       if (mensajeActual !== this.respuestaTemp) {
+    //         if (this.isInitialized && !this.isInitializedView) {
+    //           this.borradorRespuesta(this.request_id);
+    //         }
+    //       }
+    //     }
+    //     this.isInitialized = true; // Marcar como inicializado después del primer cambio
+    //   });
+
+    // this.router.events.subscribe(event => {
+    //   if (event instanceof NavigationStart) {
+    //     this.cancelAutoSave = true; // Marcar para cancelar el guardado de 8s
+
+    //     const mensajeActual = this.requestProcess.get('mensage')?.value || '';
+    //     if (mensajeActual !== '') {
+    //       if (mensajeActual !== this.respuestaTemp) {
+    //         if (this.isInitialized && !this.isInitializedView) {
+    //           this.borradorRespuesta(this.request_id);
+    //         }
+    //       }
     //     }
     //     this.isInitialized = true;
-    //   });
+    //   }
+    // });
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
@@ -335,6 +381,7 @@ export class RequestDetailsComponent implements OnInit {
     }
   }
 
+  /*
   getRequestDetails(request_id: number) {
     this.userService.getRequestDetails(request_id).subscribe({
       next: (response: BodyResponse<RequestsDetails>) => {
@@ -364,7 +411,65 @@ export class RequestDetailsComponent implements OnInit {
         console.log('La suscripción ha sido completada.');
       },
     });
-  }
+  } */
+
+  
+  getRequestDetails(request_id: number) {
+  this.userService.getRequestDetails(request_id).subscribe({
+    next: (response: BodyResponse<RequestsDetails>) => {
+      if (response.code === 200) {
+        this.requestDetails = response.data;
+
+        // Lista de estados que se deben agrupar
+        const estadosAgrupados = [
+          'Asignada',
+          'Reasignada',
+          'Asignada - En revisión',
+          'Reasignada - En revisión',
+          'Pendiente Usuario Externo',
+        ];
+
+        this.currentState = estadosAgrupados.includes(this.requestDetails.status_name)
+          ? 'Gestión'
+          : this.requestDetails.status_name;
+
+        // ✅ Armar payload con campos relevantes
+        const payload: SimilarRequest = {
+          request_id: this.requestDetails.request_id,
+          applicant_type_id: this.requestDetails.applicant_type_id,
+          request_type_id: this.requestDetails.request_type_id,
+          catalog_item_name: this.requestDetails.catalog_item_name,
+          doc_id: this.requestDetails.doc_id,
+          applicant_name: this.requestDetails.applicant_name,
+          applicant_email: this.requestDetails.applicant_email,
+          applicant_cellphone: this.requestDetails.applicant_cellphone,
+          applicant_attachments: this.requestDetails.applicant_attachments
+        };
+
+        // 🔍 Llamar a búsqueda de similares
+        this.userService.getSimilarRequest(payload).subscribe({
+          next: (similares) => {
+            this.similares = similares.data;
+            console.log('Similares:', this.similares);
+          },
+          error: (error) => {
+            console.error('Error buscando similares:', error);
+          }
+        });
+
+      } else {
+        this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+      }
+    },
+    error: (err: any) => {
+      console.error(err);
+    },
+    complete: () => {
+      console.log('La suscripción ha sido completada.');
+    },
+  });
+} 
+
 
   getRequestApplicantAttachments(request_id: number) {
     const payload: Pagination = {
@@ -684,19 +789,50 @@ export class RequestDetailsComponent implements OnInit {
     this.visibleCharacterization = true;
   }
 
-  characterizeRequest(request_details: RequestsDetails) {
+  characterizeRequestIA(request_details: RequestsDetails) {
     this.requestProcess.get('mensage')?.setValue(this.respuestaCorregida);
     this.visibleCorreccionIaEnviar = false;
     this.request_details = request_details;
     this.visibleCharacterization = true;
   }
+
+  characterizeRequest(request_details: RequestsDetails) {
+    this.request_details = request_details;
+    this.visibleCharacterization = true;
+  }
+
   submitAnswer() {
-    const payloadAnswer: answerRequest = {
+    let payloadAnswer: answerRequest;
+
+    if (this.requestDetails?.contact_cellphone === true){
+      payloadAnswer = {
       request_id: this.request_id,
       request_status: 4,
-      request_answer: this.requestProcess.get('mensage')?.value,
+      request_answer:
+        'Solicitud N.' + this.requestDetails.request_id + ': ' +
+        this.requestProcess.get('mensage')?.value +
+        ' \n \nCordialmente, ' +
+        this.requestDetails?.user_name_completed,
       assigned_attachments: null,
+      contact_cellphone: this.requestDetails?.contact_cellphone,
+      applicant_cellphone: this.requestDetails?.applicant_cellphone,
     };
+    } else {
+      payloadAnswer = {
+      request_id: this.request_id,
+      request_status: 4,
+      request_answer:
+        this.requestProcess.get('mensage')?.value +
+        ' \n \nCordialmente, ' +
+        this.requestDetails?.user_name_completed,
+      assigned_attachments: null,
+      contact_cellphone: this.requestDetails?.contact_cellphone,
+      applicant_cellphone: this.requestDetails?.applicant_cellphone,
+    };
+    }
+
+    
+
     this.userService.answerRequest(payloadAnswer).subscribe({
       next: (response: BodyResponse<string>) => {
         if (response.code === 200) {
@@ -705,7 +841,8 @@ export class RequestDetailsComponent implements OnInit {
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
             this.router.navigate([RoutesApp.PROCESS_REQUEST]);
           } else {
-            this.attachAssignedFiles();
+            //this.attachAssignedFiles();
+            this.uploadAllFiles();
             this.router.navigate([RoutesApp.PROCESS_REQUEST]);
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
           }
@@ -724,6 +861,8 @@ export class RequestDetailsComponent implements OnInit {
       },
     });
   }
+
+  /*
   async getPreSignedUrl(file: ApplicantAttachments) {
     const payload = {
       //source_name: file['source_name'],
@@ -748,9 +887,47 @@ export class RequestDetailsComponent implements OnInit {
         return this.preSignedUrl;
       },
     });
+  } */
+
+  //MEJORA 2025
+  async getPreSignedUrl(file: ApplicantAttachments): Promise<string> {
+    const payload = {
+      source_name: file.source_name.replace(/(?!\.[^.]+$)\./g, '_'), // Evitar caracteres conflictivos
+      fileweight: file.fileweight,
+      content_type: file.file?.type || 'application/octet-stream',
+      request_id: this.request_id,
+    };
+
+    const MAX_RETRIES = 3;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+      try {
+        const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'assigned'));
+
+        if (response.code === 200 && response.data) {
+          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          //file.preSignedUrl = response.data;
+          //this.uploadToPresignedUrl(file);
+        } else {
+          console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
+        }
+      } catch (error) {
+        console.error(
+          `Intento ${attempts + 1}: Falló la solicitud para obtener la URL prefirmada`,
+          error
+        );
+      }
+
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2s antes de reintentar
+    }
+
+    throw new Error('No se pudo obtener la URL prefirmada después de múltiples intentos');
   }
 
   //ESCRIBE EN LA TABLA DE PENDIENTES PENDING
+  /*
   async getPreSignedUrlPending(file: ApplicantAttachments) {
     const payload = {
       //source_name: file['source_name'],
@@ -775,8 +952,44 @@ export class RequestDetailsComponent implements OnInit {
         return this.preSignedUrl;
       },
     });
+  } */
+
+  //MEJORA 2025
+  async getPreSignedUrlPending(file: ApplicantAttachments): Promise<string> {
+    const payload = {
+      source_name: file.source_name.replace(/(?!\.[^.]+$)\./g, '_'), // Evitar caracteres conflictivos
+      fileweight: file.fileweight,
+      content_type: file.file?.type || 'application/octet-stream',
+      request_id: this.request_id,
+    };
+
+    const MAX_RETRIES = 3;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+      try {
+        const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'pending'));
+
+        if (response.code === 200 && response.data) {
+          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+        } else {
+          console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
+        }
+      } catch (error) {
+        console.error(
+          `Intento ${attempts + 1}: Falló la solicitud para obtener la URL prefirmada`,
+          error
+        );
+      }
+
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2s antes de reintentar
+    }
+
+    throw new Error('No se pudo obtener la URL prefirmada después de múltiples intentos');
   }
 
+  /*
   async uploadToPresignedUrl(file: ApplicantAttachments) {
     const uploadResponse = await this.http
       .put(this.preSignedUrl, file.file, {
@@ -787,22 +1000,123 @@ export class RequestDetailsComponent implements OnInit {
         observe: 'events',
       })
       .toPromise();
+  } */
+
+  //MEJORA 2025
+  async uploadToPresignedUrl(file: ApplicantAttachments): Promise<void> {
+    //this.isSpinnerVisible = true;
+
+    if (!file || !file.file) {
+      console.error('El archivo no es válido o está undefined.');
+      return;
+    }
+
+    if (!file.preSignedUrl) {
+      console.error(`No se encontró una URL prefirmada para el archivo: ${file.source_name}`);
+      return;
+    }
+
+    try {
+      const contentType = file.file?.type || 'application/octet-stream'; // Detectar MIME type
+      console.log('CONTENT-TYPE', contentType);
+      const MAX_RETRIES = 3;
+      const RETRY_DELAY_MS = 2000;
+
+      console.log('Subiendo archivo:', file.file.name);
+      console.log('Usando URL prefirmada:', file.preSignedUrl);
+
+      const upload$ = this.http
+        .put(file.preSignedUrl, file.file, {
+          headers: { 'Content-Type': contentType },
+          reportProgress: true,
+          observe: 'events',
+        })
+        .pipe(
+          retryWhen(errors =>
+            errors.pipe(
+              tap((error: HttpErrorResponse) => {
+                const errorDetails = {
+                  status: error.status,
+                  statusText: error.statusText,
+                  message: error.message,
+                  url: error.url,
+                };
+                console.error(`Intento fallido (${error.status}):`, errorDetails);
+
+                // Solo reintentar en errores temporales
+                if (![500, 502, 503, 504, 429].includes(error.status)) {
+                  throw error; // Detener reintentos en errores definitivos
+                }
+              }),
+              delay(RETRY_DELAY_MS),
+              take(MAX_RETRIES),
+              catchError(err => {
+                console.error('Error después de múltiples intentos:', err);
+                return throwError(() => err);
+              })
+            )
+          )
+        );
+
+      await lastValueFrom(upload$);
+      console.log(`Archivo ${file.file.name} subido correctamente.`);
+    } catch (error) {
+      console.error('Falló la subida del archivo:', error);
+    } finally {
+      //this.isSpinnerVisible = false;
+    }
   }
 
+  /*
   async attachAssignedFiles() {
     await Promise.all(
       this.arrayAssignedAttachment.map(async item => {
         await this.getPreSignedUrl(item);
       })
     );
+  } */
+
+  async attachAssignedFiles() {
+    await Promise.all(
+      this.arrayAssignedAttachment.map(async item => {
+        item.preSignedUrl = await this.getPreSignedUrl(item);
+      })
+    );
   }
 
+  async uploadAllFiles() {
+    await this.attachAssignedFiles(); // Espera que se obtengan todas las URLs
+
+    // Subimos los archivos
+    for (const file of this.arrayAssignedAttachment) {
+      await this.uploadToPresignedUrl(file);
+    }
+  }
+
+  /*
   async attachAssignedFilesPending() {
     await Promise.all(
       this.arrayAssignedAttachmentPending.map(async item => {
         await this.getPreSignedUrlPending(item);
       })
     );
+  } */
+
+  async attachAssignedFilesPending() {
+    await Promise.all(
+      this.arrayAssignedAttachmentPending.map(async item => {
+        item.preSignedUrl = await this.getPreSignedUrlPending(item);
+      })
+    );
+  }
+
+  async uploadAllFilesPending() {
+    await this.attachAssignedFilesPending(); // Espera que se obtengan todas las URLs
+
+    // Subimos los archivos
+    for (const file of this.arrayAssignedAttachmentPending) {
+      await this.uploadToPresignedUrl(file);
+    }
   }
   ///////////////////////////////////////////////////////////////////////////////
 
@@ -1010,6 +1324,12 @@ export class RequestDetailsComponent implements OnInit {
     this.isDialogVisible = true;
   }
 
+  showModalPriorizada() {
+    this.dialogHeader = 'Descripción de la solicitud';
+    this.dialogContent = this.requestDetails?.request_description || '';
+    this.isDialogVisible = true;
+  }
+
   showModal() {
     this.dialogHeader = 'Respuesta de la cerrada';
     // this.dialogContent = this.requestDetails?.request_answer || '';
@@ -1090,10 +1410,11 @@ export class RequestDetailsComponent implements OnInit {
           let respuestaPredefinida = parsedBody.respuestaPredefinida || 'Respuesta no disponible';
 
           // Reemplazar los asteriscos por el nombre del usuario
-          if (this.requestDetails && this.requestDetails.user_name_completed) {
-            const userName = this.requestDetails.user_name_completed;
-            respuestaPredefinida = respuestaPredefinida.replace(/\*+ */g, userName);
-          }
+          // if (this.requestDetails && this.requestDetails.user_name_completed) {
+          //   const userName = this.requestDetails.user_name_completed;
+
+          //   respuestaPredefinida = respuestaPredefinida.replace(/\*+ */g, userName);
+          // }
 
           // Asignar estos valores a variables locales o a propiedades del componente
           this.categoria = categoria;
@@ -1114,11 +1435,9 @@ export class RequestDetailsComponent implements OnInit {
   confirmarRespuesta() {
     // Reemplaza los asteriscos en la respuesta con el nombre del usuario
     const userName = this.requestDetails?.user_name_completed || '';
-    const respuestaConNombre =
-      'Hola, buen día!\n \n' +
-      this.respuestaPredefinida +
-      ' \n \nCordialmente, ' +
-      this.requestDetails?.user_name_completed;
+    const respuestaConNombre = 'Hola, buen día!\n \n' + this.respuestaPredefinida;
+    // ' \n \nCordialmente, ' +
+    // this.requestDetails?.user_name_completed;
 
     // Establece el valor del textarea en el formulario
     this.requestProcess.get('mensage')?.setValue(respuestaConNombre);
@@ -1181,6 +1500,7 @@ export class RequestDetailsComponent implements OnInit {
   }
 
   //NUEVA PARA ENVIAR
+  /*
   correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
 
@@ -1207,15 +1527,61 @@ export class RequestDetailsComponent implements OnInit {
             this.visibleCorreccionIaEnviar = true;
             this.informative = true;
           } else {
-            this.characterizeRequest(requestDetails);
+            this.characterizeRequestIA(requestDetails);
           }
         } catch (error) {
           console.error('Error al procesar la respuesta del servicio:', error);
         }
       } else {
+        //this.characterizeRequest(requestDetails);
         console.error('Error en la respuesta del servicio:', response);
       }
     });
+  } */
+
+  correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
+    const respuestaForm = this.requestProcess.get('mensage')?.value;
+    console.log(respuestaForm);
+
+    this.userService
+      .correccionIaWs(respuestaForm)
+      .pipe(
+        catchError(error => {
+          console.error('Error en el servicio de corrección:', error);
+          this.characterizeRequest(requestDetails); // Se ejecuta en caso de error
+          return of(null); // Retorna un observable vacío para evitar la interrupción
+        })
+      )
+      .subscribe(response => {
+        if (response?.statusCode === 200) {
+          try {
+            const parsedBody = JSON.parse(response.body);
+            const respuesta = JSON.parse(parsedBody.respuesta) || 'Respuesta no disponible';
+
+            this.respuestaCorregida = respuesta.texto_corregido;
+            this.palabrasError = respuesta.palabras_con_errores;
+            this.respuestaSolicitud = respuestaForm;
+            this.errores = respuesta.errores_encontrados;
+
+            console.log(this.respuestaCorregida);
+            console.log(this.palabrasError);
+            console.log(this.errores);
+
+            if (this.errores) {
+              this.visibleCorreccionIaEnviar = true;
+              this.informative = true;
+            } else {
+              this.characterizeRequestIA(requestDetails);
+            }
+          } catch (error) {
+            console.error('Error al procesar la respuesta del servicio:', error);
+            this.characterizeRequest(requestDetails); // Se ejecuta si hay un error en el parseo
+          }
+        } else {
+          console.error('Error en la respuesta del servicio:', response);
+          this.characterizeRequest(requestDetails); // Se ejecuta si la respuesta no es 200
+        }
+      });
   }
 
   confirmarCorreccion() {
@@ -1237,12 +1603,13 @@ export class RequestDetailsComponent implements OnInit {
     this.characterizeRequest(requestDetails);
   }
 
+/*
   consultarWs(cedula: string) {
     this.userService.respuestaInfoAfiliacion(cedula).subscribe(
       response => {
         if (response.statusCode === 200) {
           const parsedBody = JSON.parse(response.body);
-          this.afiliado = parsedBody;
+          this.afiliado = parsedBody.data;
           if (this.afiliado) {
             this.afiliado.tipoDocumento = this.getTipoDocumentoTexto(parsedBody.data.tipodoc);
             this.afiliado.documento = cedula;
@@ -1254,13 +1621,44 @@ export class RequestDetailsComponent implements OnInit {
             this.afiliado.fechaAfiliacion = parsedBody.data.fechaafi;
             this.afiliado.fechaIngreso = parsedBody.data.fechaing;
           }
+          
         }
       },
       (error: any) => {
         console.error('Error al llamar al servicio:', error);
       }
     );
-  }
+  } */
+
+  consultarWs(cedula: string) {
+  this.userService.respuestaInfoAfiliacion(cedula).subscribe(
+    response => {
+      if (response.statusCode === 200) {
+        const parsedBody = JSON.parse(response.body);
+        console.log('Respuesta completa del WS:', parsedBody);
+
+        const data = parsedBody; // ya no accedas a parsedBody.data porque tus datos están directo ahí
+
+        console.log('Tipo documento:', data.tipodoc);
+        console.log('Documento:', data.documento);
+        console.log('Nombre:', data.nombre);
+        console.log('Fecha nacimiento:', data.fechanac);
+        console.log('Estado:', data.estado);
+        console.log('Tipo trabajador:', data.tipotr);
+        console.log('Empresa:', data.empresa?.razonSocial);
+        console.log('Fecha afiliación:', data.fechaafi);
+        console.log('Fecha ingreso:', data.fechaing);
+      } else {
+        console.warn('El servicio no respondió con status 200:', response);
+      }
+    },
+    error => {
+      console.error('Error al llamar al servicio:', error);
+    }
+  );
+}
+
+
 
   getTipoTrabajadorTexto(tipo: string): string {
     switch (tipo) {
@@ -1382,8 +1780,6 @@ export class RequestDetailsComponent implements OnInit {
         console.log(err);
       },
       complete: () => {
-        console.log('La suscripción ha sido completada.');
-        console.log(this.respuestaTemp);
         return this.respuestaTemp;
       },
     });
@@ -1445,9 +1841,10 @@ export class RequestDetailsComponent implements OnInit {
         pending: true,
         message: this.pendingRequestForm.get('message')?.value,
         previus_state: this.requestDetails?.status_name,
+        user_action: this.user
       };
 
-      console.log(payload);
+      //console.log(payload);
 
       this.userService.registerPendingRequest(payload).subscribe({
         next: (response: BodyResponse<string>) => {
@@ -1457,7 +1854,8 @@ export class RequestDetailsComponent implements OnInit {
               this.router.navigate([RoutesApp.PROCESS_REQUEST]);
               this.ngOnInit();
             } else {
-              this.attachAssignedFilesPending();
+              //this.attachAssignedFilesPending();
+              this.uploadAllFilesPending();
               this.router.navigate([RoutesApp.PROCESS_REQUEST]);
               this.ngOnInit();
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
@@ -1717,4 +2115,109 @@ export class RequestDetailsComponent implements OnInit {
       },
     });
   }
+
+  // Proceso para guardar automaticamente respuesta cuando cambia de pestaña
+  // onTabChange(event: any) {
+  //   const mensajeActual = this.requestProcess.get('mensage')?.value;
+  //   this.cancelAutoSave = false;
+
+  //   if (mensajeActual !== '') {
+  //     // Verifica si el mensaje cambió antes de guardar
+  //     if (mensajeActual && mensajeActual !== this.ultimaRespuestaGuardada) {
+  //       if (this.isInitialized) {
+  //         this.borradorRespuesta(this.request_id);
+  //         this.ultimaRespuestaGuardada = mensajeActual; // Actualiza el valor guardado
+  //         this.isInitializedView = true;
+  //       }
+  //     }
+  //   }
+  //   this.isInitialized = true;
+  // }
+
+  //Metodos para darle prioridad a un radicado
+  sendPriority() {
+    this.isVisibleSolicitudPrioridad = true;
+  }
+
+  closeDialogPriority(): void {
+    this.isVisibleSolicitudPrioridad = false;
+    this.esPrioridadForm.reset();
+  }
+
+  onSubmitPriority(): void {
+    const payload: RequestAnswerTemp = {
+      request_id: this.requestDetails?.filing_number || 0,
+      mensaje_temp: this.esPrioridadForm.get('message')?.value,
+    };
+
+    this.userService.getRequestPriority(payload).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.isVisibleSolicitudPrioridad = false;
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.error('Error en la solicitud:', err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+        this.closeDialogenvioCorreoMasivo();
+      },
+    });
+  }
+
+  // Nueva función que usa Promesas (para tu flujo de descarga en ZIP)
+  async getPreSignedUrlToDownloadPromise(url: string, fileName: string, isDownload: boolean): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const payload = { url: url };
+      this.userService.getUrlSigned(payload, 'download').subscribe({
+        next: (response: BodyResponse<string>) => {
+          if (response.code === 200) {
+            resolve(response.data);  // Resolvemos con la URL prefirmada
+          } else {
+            reject('Operación fallida');
+          }
+        },
+        error: (err) => {
+          reject(err);  // Rechazamos en caso de error
+        }
+      });
+    });
+  }
+
+  async downloadAttachmentsAsZip() {
+    const zip = new JSZip();
+    const filingNumber = this.requestDetails?.filing_number || 'radicado';
+    const attachments = this.requestApplicantAttachmentsList;
+    const zipFolder = zip.folder(filingNumber.toString());
+  
+    try {
+      await Promise.all(attachments.map(async (attachment) => {
+        const presignedUrl = await this.getPreSignedUrlToDownloadPromise(attachment.url, attachment.file_name, false); // obtenemos la URL
+        const fileBlob = await this.downloadFileBlob(presignedUrl); // descargamos el blob
+        zipFolder?.file(attachment.file_name, fileBlob); // agregamos al zip
+      }));
+  
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(zipBlob);
+      downloadLink.download = `${filingNumber}_archivos.zip`;
+      downloadLink.click();
+    } catch (error) {
+      console.error('Error al descargar archivos:', error);
+    }
+  }
+  
+  async downloadFileBlob(url: string): Promise<Blob> {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Error al descargar archivo');
+    }
+    const blob = await response.blob();
+    return blob;
+  }
+  
 }

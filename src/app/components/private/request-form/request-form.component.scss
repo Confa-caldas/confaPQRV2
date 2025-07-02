@@ -567,3 +567,71 @@
   font-size: 25px; /* Ajusta el tamaño del texto según necesites */
   text-align: center; /* Centra el texto */
 }
+
+//ESTILOS PARA BARRA DE PROGRESO
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 1000;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #ddd;
+  border-top: 5px solid #4caf50; /* Color verde */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner-text {
+  font-size: 18px;
+  color: #fff;
+  margin-bottom: 15px;
+}
+
+.progress-bar-container {
+  width: 80%;
+  max-width: 400px;
+  background: #222;
+  border-radius: 10px;
+  padding: 5px;
+  box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 15px;
+  background: #444;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #4caf50, #8bc34a); /* Efecto de gradiente */
+  transition: width 0.3s ease-in-out;
+}
+
+.progress-text {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #fff;
+}

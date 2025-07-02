@@ -22,6 +22,7 @@
             formControlName="request_status_id"
             [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
             [options]="statusList"
+            appendTo="body"
             optionLabel="status_name"
             optionValue="request_status_id"
             placeholder="Tipo de estado"></p-multiSelect>
@@ -29,6 +30,7 @@
         <div class="filters-col">
           <p-multiSelect
             formControlName="assigned_user"
+            appendTo="body"
             [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
             [options]="userList"
             optionLabel="user_name_completed"
@@ -38,6 +40,7 @@
         <div class="filters-col">
           <p-dropdown
             formControlName="is_pqr"
+            appendTo="body"
             [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
             [options]="ispqrList"
             optionLabel="name"
