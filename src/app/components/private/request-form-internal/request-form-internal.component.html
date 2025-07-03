@@ -69,7 +69,7 @@
                         ? 'Campo requerido'
                         : requestForm.get('number_id')?.hasError('minlength') &&
                           requestForm.get('number_id')?.touched
-                        ? 'Debe contener al menos 8 dígitos'
+                        ? 'Debe contener al menos 7 dígitos'
                         : requestForm.get('number_id')?.hasError('pattern') &&
                           requestForm.get('number_id')?.touched
                         ? errorMensaje
