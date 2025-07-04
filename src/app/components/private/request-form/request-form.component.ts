@@ -166,7 +166,7 @@ export class RequestFormComponent implements OnInit {
     
       const validators = [
         Validators.required,
-        Validators.minLength(8),
+        Validators.minLength(7),
         Validators.pattern(value.regex || '^[0-9]+$') // fallback si no hay regex
       ];
     
