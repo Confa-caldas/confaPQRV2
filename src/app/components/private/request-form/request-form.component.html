@@ -64,14 +64,13 @@
                   {{
                     requestForm.get('number_id')?.disabled
                       ? 'Seleccione tipo de documento'
-                      : requestForm.get('number_id')?.hasError('required') &&
-                        requestForm.get('number_id')?.touched
+                      : requestForm.get('number_id')?.hasError('required') && requestForm.get('number_id')?.touched
                       ? 'Campo requerido'
-                      : requestForm.get('number_id')?.hasError('minlength') &&
-                        requestForm.get('number_id')?.touched
-                      ? 'Debe contener al menos 7 dígitos'
-                      : requestForm.get('number_id')?.hasError('pattern') &&
-                        requestForm.get('number_id')?.touched
+                      : requestForm.get('number_id')?.hasError('minlength') && requestForm.get('number_id')?.touched
+                      ? minError
+                      : requestForm.get('number_id')?.hasError('maxlength') && requestForm.get('number_id')?.touched
+                      ? maxError
+                      : requestForm.get('number_id')?.hasError('pattern') && requestForm.get('number_id')?.touched
                       ? errorMensaje
                       : ''
                   }}
