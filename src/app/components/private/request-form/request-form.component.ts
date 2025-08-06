@@ -199,7 +199,7 @@ export class RequestFormComponent implements OnInit {
       const documentRules: { [key: number]: { minLength?: number, maxLength?: number, regex: string, message: string, minMsg?: string, maxMsg?: string } } = {
         0:  { minLength: 7, maxLength: 10, regex: '^[0-9]+$', message: 'Solo números permitidos', minMsg: 'Debe contener al menos 7 dígitos', maxMsg: 'Máximo 10 dígitos permitidos' },
         15: { minLength: 6, maxLength: 15, regex: '^[0-9]+$', message: 'Solo números permitidos', minMsg: 'Debe contener al menos 6 dígitos', maxMsg: 'Máximo 15 dígitos permitidos' },
-        17: { minLength: 15, maxLength: 15, regex: '^[A-Za-z0-9]+$', message: 'Ingrese 15 caracteres alfanuméricos', minMsg: 'Debe contener 15 caracteres', maxMsg: 'Debe contener 15 caracteres' },
+        17: { minLength: 6, maxLength: 15, regex: '^[A-Za-z0-9]+$', message: 'Ingrese 15 caracteres alfanuméricos', minMsg: 'Debe contener al menos 6 dígitos', maxMsg: 'Máximo 15 dígitos permitidos' },
         1:  { minLength: 5, maxLength: 11, regex: '^[0-9]+$', message: 'Solo números permitidos', minMsg: 'Debe contener al menos 5 dígitos', maxMsg: 'Máximo 11 dígitos permitidos' },
         16: { minLength: 7, maxLength: 20, regex: '^[A-Za-z0-9]+$', message: 'Ingrese entre 5 y 20 caracteres alfanuméricos', minMsg: 'Debe contener al menos 5 caracteres', maxMsg: 'Máximo 20 caracteres permitidos' },
       };
