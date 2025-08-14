@@ -505,7 +505,7 @@ export class FormCompanyComponent implements OnInit {
         { id: 17013, name: 'Aguadas' },
         { id: 17042, name: 'Anserma' },
         { id: 17050, name: 'Aranzazu' },
-        { id: 17088, name: 'Belalcázar' },
+        { id: 17000, name: 'Belalcázar' },
         { id: 17088, name: 'Chinchiná' },
         { id: 17174, name: 'Filadelfia' },
         { id: 17272, name: 'La Dorada' },
