@@ -79,6 +79,8 @@ export class RequestFormComponent implements OnInit {
 
   useIaAttach: boolean = false;
   authorize_data: boolean = false;
+  minError: string = '';
+  maxError: string = '';
 
   ngOnInit(): void {
     let applicant = localStorage.getItem('applicant-type');
@@ -159,6 +161,7 @@ export class RequestFormComponent implements OnInit {
         this.errorMensaje = 'Ingrese solo números y máximo 11 digitos';
       }
     }); */
+    /*
     this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
       const numberIdControl = this.requestForm.get('number_id');
     
@@ -166,7 +169,7 @@ export class RequestFormComponent implements OnInit {
     
       const validators = [
         Validators.required,
-        Validators.minLength(8),
+        Validators.minLength(7),
         Validators.pattern(value.regex || '^[0-9]+$') // fallback si no hay regex
       ];
     
@@ -188,6 +191,44 @@ export class RequestFormComponent implements OnInit {
       numberIdControl?.setValidators(validators);
       numberIdControl?.updateValueAndValidity();
       numberIdControl?.enable();
+    }); */
+    this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
+      const numberIdControl = this.requestForm.get('number_id');
+      if (!value || !numberIdControl) return;
+
+      const documentRules: { [key: number]: { minLength?: number, maxLength?: number, regex: string, message: string, minMsg?: string, maxMsg?: string } } = {
+        0:  { minLength: 7, maxLength: 10, regex: '^[0-9]+$', message: 'Solo números permitidos', minMsg: 'Debe contener al menos 7 dígitos', maxMsg: 'Máximo 10 dígitos permitidos' },
+        15: { minLength: 6, maxLength: 15, regex: '^[0-9]+$', message: 'Solo números permitidos', minMsg: 'Debe contener al menos 6 dígitos', maxMsg: 'Máximo 15 dígitos permitidos' },
+        17: { minLength: 6, maxLength: 15, regex: '^[A-Za-z0-9]+$', message: 'Ingrese 15 caracteres alfanuméricos', minMsg: 'Debe contener al menos 6 dígitos', maxMsg: 'Máximo 15 dígitos permitidos' },
+        1:  { minLength: 5, maxLength: 11, regex: '^[0-9]+$', message: 'Solo números permitidos', minMsg: 'Debe contener al menos 5 dígitos', maxMsg: 'Máximo 11 dígitos permitidos' },
+        16: { minLength: 7, maxLength: 20, regex: '^[A-Za-z0-9]+$', message: 'Ingrese entre 5 y 20 caracteres alfanuméricos', minMsg: 'Debe contener al menos 5 caracteres', maxMsg: 'Máximo 20 caracteres permitidos' },
+      };
+
+      const rules = documentRules[value.catalog_item_id];
+
+      if (!rules) {
+        numberIdControl.clearValidators();
+        numberIdControl.updateValueAndValidity();
+        this.errorMensaje = '';
+        this.minError = '';
+        this.maxError = '';
+        return;
+      }
+
+      const validators = [
+        Validators.required,
+        Validators.pattern(rules.regex)
+      ];
+      if (rules.minLength) validators.push(Validators.minLength(rules.minLength));
+      if (rules.maxLength) validators.push(Validators.maxLength(rules.maxLength));
+
+      numberIdControl.setValidators(validators);
+      numberIdControl.updateValueAndValidity();
+      numberIdControl.enable();
+
+      this.errorMensaje = rules.message;
+      this.minError = rules.minMsg ?? '';
+      this.maxError = rules.maxMsg ?? '';
     });
     
   }
