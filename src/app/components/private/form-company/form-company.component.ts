@@ -36,6 +36,7 @@ import {
   ceDocumentValidator,
   noConsecutiveValidator,
   noRepeatedDigitsValidator,
+  colombianMobileValidator,
 } from '../../../shared/validators/common-email-domain.validator';
 
 @Component({
@@ -1420,6 +1421,7 @@ export class FormCompanyComponent implements OnInit {
           Validators.pattern(/^\d{10}$/),
           Validators.maxLength(10),
           noRepeatedDigitsValidator,
+          colombianMobileValidator(),
         ],
       ],
       email: [
@@ -1445,6 +1447,14 @@ export class FormCompanyComponent implements OnInit {
         { value: '', disabled: true },
         [Validators.required, Validators.email, commonEmailDomainValidator()],
       ],
+    });
+
+    this.requestForm.get('email')?.valueChanges.subscribe(() => {
+      this.requestForm.get('alternateEmail')?.updateValueAndValidity({ onlySelf: true });
+    });
+
+    this.requestForm.get('mobilePhone')?.valueChanges.subscribe(() => {
+      this.requestForm.get('alternateMobilePhone')?.updateValueAndValidity({ onlySelf: true });
     });
   }
 
@@ -2132,36 +2142,55 @@ export class FormCompanyComponent implements OnInit {
 
   irASiguiente() {
     if (this.currentSection === 1) {
-      const fieldsToValidate = [
+      const fieldsToValidate: string[] = [
         'department',
         'municipality',
         'address',
         'landline',
         'mobilePhone',
         'email',
-        'alternateMobilePhone',
-        'alternateEmail',
       ];
+
       if (!this.isCorrectData) {
-        this.requestForm.get('confirmEmail')?.enable();
-        this.requestForm.get('confirmEmail')?.markAsTouched();
+        // Habilita y valida confirmEmail solo cuando editas datos generales
+        const confirmCtrl = this.requestForm.get('confirmEmail');
+        confirmCtrl?.enable({ emitEvent: false });
+        confirmCtrl?.markAsTouched();
         fieldsToValidate.push('confirmEmail');
-      }
 
-      const altMobile = this.requestForm.get('alternateMobilePhone');
-      if (altMobile?.value && altMobile.value.trim() !== '') {
-        fieldsToValidate.push('alternateMobilePhone');
+        // Alterno móvil: solo validar si tiene valor
+        const altMobile = this.requestForm.get('alternateMobilePhone');
+        if (altMobile && (altMobile.value ?? '').toString().trim() !== '') {
+          fieldsToValidate.push('alternateMobilePhone');
+        } else {
+          altMobile?.setErrors(null);
+        }
+
+        // Alterno email: solo validar si tiene valor
+        const altEmail = this.requestForm.get('alternateEmail');
+        if (altEmail && (altEmail.value ?? '').toString().trim() !== '') {
+          fieldsToValidate.push('alternateEmail');
+        } else {
+          altEmail?.setErrors(null);
+        }
       } else {
-        altMobile?.setErrors(null);
+        // Si NO estás editando, que confirmEmail no bloquee
+        this.requestForm.get('confirmEmail')?.disable({ emitEvent: false });
+        this.requestForm.get('confirmEmail')?.setErrors(null);
       }
 
+      // Marca, recalcula y reúne inválidos para mostrar ayuda
+      const invalids: string[] = [];
       fieldsToValidate.forEach(field => {
-        if (this.requestForm.controls[field]) {
-          this.requestForm.controls[field].markAsTouched();
+        const control = this.requestForm.get(field);
+        if (control) {
+          control.markAsTouched();
+          control.updateValueAndValidity();
+          if (control.invalid) invalids.push(field);
         }
       });
 
-      if (fieldsToValidate.some(field => this.requestForm.controls[field]?.invalid)) {
+      if (invalids.length) {
         return;
       }
 
@@ -2246,6 +2275,8 @@ export class FormCompanyComponent implements OnInit {
             Validators.minLength(10),
             Validators.maxLength(10),
             noRepeatedDigitsValidator,
+            colombianMobileValidator(),
+            this.alternateMobileNotEqual,
           ])
         );
       }
@@ -2253,8 +2284,20 @@ export class FormCompanyComponent implements OnInit {
       if (!this.requestForm.contains('alternateEmail')) {
         this.requestForm.addControl(
           'alternateEmail',
-          new FormControl('', [Validators.email, commonEmailDomainValidator()])
+          new FormControl('', [
+            Validators.email,
+            commonEmailDomainValidator(),
+            this.alternateEmailNotEqual,
+          ])
         );
+      } else {
+        const c = this.requestForm.get('alternateEmail');
+        c?.setValidators([
+          Validators.email,
+          commonEmailDomainValidator(),
+          this.alternateEmailNotEqual,
+        ]);
+        c?.updateValueAndValidity();
       }
       this.requestForm.get('confirmEmail')?.enable();
       this.requestForm.get('landline')?.updateValueAndValidity();
@@ -2639,4 +2682,24 @@ export class FormCompanyComponent implements OnInit {
   sendOptions() {
     this.showConfirmationPolityModal = true;
   }
+
+  private alternateEmailNotEqual = (control: AbstractControl) => {
+    const parent = control.parent;
+    if (!parent) return null;
+
+    const principal = (parent.get('email')?.value ?? '').toString().trim().toLowerCase();
+    const alterno = (control.value ?? '').toString().trim().toLowerCase();
+
+    return alterno && principal && alterno === principal ? { sameAsEmail: true } : null;
+  };
+
+  private alternateMobileNotEqual = (control: AbstractControl) => {
+    const parent = control.parent;
+    if (!parent) return null;
+
+    const principal = (parent.get('mobilePhone')?.value ?? '').toString().trim();
+    const alterno = (control.value ?? '').toString().trim();
+
+    return alterno && principal && alterno === principal ? { sameAsMobile: true } : null;
+  };
 }

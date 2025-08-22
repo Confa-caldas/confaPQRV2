@@ -760,7 +760,7 @@ export class SearchUpdateCompanyComponent implements OnInit {
 
   onGestionChange(event: any): void {
     this.showValidationError = false;
-    if (event.value === 'YES' && this.selectedRecord) {
+    if (event.value === 'SI' && this.selectedRecord) {
       this.selectedRecord.management_observation = '';
     }
   }

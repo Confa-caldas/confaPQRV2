@@ -27,9 +27,8 @@ export function commonEmailDomainValidator(): ValidatorFn {
     // Apple
     'icloud.com',
     'me.com',
-    'mac.com'
+    'mac.com',
   ];
-
 
   return (control: AbstractControl): ValidationErrors | null => {
     const email = control.value;
@@ -132,4 +131,14 @@ export function noRepeatedDigitsValidator(control: AbstractControl): ValidationE
   }
   const repeatedPattern = /(\d)\1{4,}/;
   return repeatedPattern.test(value) ? { repeatedDigits: true } : null;
+}
+
+export function colombianMobileValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const v = (control.value || '').toString().trim();
+    if (!v) return null;
+    if (!/^\d{10}$/.test(v)) return { invalidColombianMobile: true };
+    const pref = parseInt(v.slice(0, 3), 10);
+    return pref >= 300 && pref <= 399 ? null : { invalidColombianMobile: true };
+  };
 }
