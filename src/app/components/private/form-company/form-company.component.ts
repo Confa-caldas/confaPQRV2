@@ -182,6 +182,9 @@ export class FormCompanyComponent implements OnInit {
   showSuccessModal = false;
   economicActivityList: { code: string; description: string }[] = [];
   showConfirmationPolityModal: boolean = false;
+  estadoWarningVisible: boolean = false;
+  estadoWarningMessage: string = '';
+  estadoWarningShowSalir: boolean = false;
 
   loadMunicipalities(departmentId: number) {
     const municipios: Record<number, { id: number; name: string }[]> = {
@@ -2057,12 +2060,105 @@ export class FormCompanyComponent implements OnInit {
     });
   }
 
+  // consultarEmpresa2() {
+  //   this.restoreDisabledFields();
+  //   this.currentSection = 1;
+  //   this.isCorrectData = true;
+  //   this.isCorrectEconomicActivityData = true;
+  //   this.isCorrectLegalRepresentativeData = true;
+  //   const documentType = this.requestForm.get('documentType')?.value;
+  //   const documentNumber = this.requestForm.get('documentNumber')?.value;
+
+  //   if (!documentType || !documentNumber) {
+  //     console.warn('Tipo de documento o número de documento no proporcionado');
+  //     return;
+  //   }
+
+  //   // OPCIÓN ORIGINAL: CONSULTAR DESDE EL SERVICIO
+  //   this.userService
+  //     .getCompanyInformation(
+  //       documentNumber,
+  //       this.requestForm.controls['documentType'].value?.catalog_item_name
+  //     )
+  //     .subscribe(
+  //       (empresaData: any) => {
+  //         if (empresaData) {
+  //           if (
+  //             empresaData.estadoEmpresa === 'ACTIVO' ||
+  //             (empresaData.estadoEmpresa === 'INACTIVO' &&
+  //               empresaData.motivoRetiro == 'EXPULSION_POR_MOROSIDAD') ||
+  //             (empresaData.estadoEmpresa === 'NO_FORMALIZADO_RETIRADO_CON_APORTES' &&
+  //               empresaData.motivoRetiro == 'EXPULSION_POR_MOROSIDAD')
+  //           ) {
+  //             const selectedDepartment = this.departmentsList.find(
+  //               dept =>
+  //                 dept.name.toLowerCase().trim() === empresaData.departamento.toLowerCase().trim()
+  //             );
+
+  //             if (!selectedDepartment) {
+  //               console.error('Departamento no encontrado en la lista');
+  //               return;
+  //             }
+
+  //             this.loadMunicipalities(selectedDepartment.id);
+
+  //             const selectedMunicipality = this.municipalitiesList.find(
+  //               mun => mun.name.toLowerCase().trim() === empresaData.municipio.toLowerCase().trim()
+  //             );
+
+  //             this.requestForm.patchValue({
+  //               businessName: empresaData.razonSocial,
+  //               tradeName: empresaData.nombreComercial,
+  //               documentType: documentType,
+  //               documentNumber: empresaData.nit,
+  //               verificationDigit: empresaData.digitoVerificacion,
+  //               department: selectedDepartment,
+  //               municipality: selectedMunicipality || null,
+  //               address: empresaData.direccion,
+  //               landline: this.cleanLandline(empresaData.telefonoFijo),
+  //               mobilePhone: empresaData.telefonoCelular,
+  //               email: empresaData.email,
+  //               legalRepresentativeDocumentType:
+  //                 this.documentHomologationList.find(
+  //                   doc => doc.code === empresaData.tipoDocumentoRepresentante
+  //                 ) || null,
+  //               legalRepresentativeDocumentNumber: empresaData.numeroDocumentoRepresentante,
+  //               legalRepresentativeFirstName: empresaData.primerNombreRepresentante,
+  //               legalRepresentativeMiddleName: empresaData.segundoNombreRepresentante,
+  //               legalRepresentativeLastName: empresaData.primerApellidoRepresentante,
+  //               legalRepresentativeSecondLastName: empresaData.segundoApellidoRepresentante,
+  //               economicActivityCiiuCode: empresaData.codigoCIIU,
+  //               economicActivityCiiuDescription: empresaData.descripcionCIIU,
+  //             });
+
+  //             this.existCompany = true;
+  //           } else {
+  //           }
+  //         } else {
+  //           const currentValues = this.requestForm.value;
+  //           const preserved = {
+  //             documentType: currentValues.documentType,
+  //             documentNumber: currentValues.documentNumber,
+  //           };
+  //           this.requestForm.reset(preserved);
+  //           this.existCompany = false;
+  //           this.mostrarEmpresaNoEncontrada = true;
+  //         }
+  //       },
+  //       (error: any) => {
+  //         console.error('Error al consultar la empresa:', error);
+  //         this.existCompany = false;
+  //       }
+  //     );
+  // }
+
   consultarEmpresa2() {
     this.restoreDisabledFields();
     this.currentSection = 1;
     this.isCorrectData = true;
     this.isCorrectEconomicActivityData = true;
     this.isCorrectLegalRepresentativeData = true;
+
     const documentType = this.requestForm.get('documentType')?.value;
     const documentNumber = this.requestForm.get('documentNumber')?.value;
 
@@ -2071,7 +2167,6 @@ export class FormCompanyComponent implements OnInit {
       return;
     }
 
-    // OPCIÓN ORIGINAL: CONSULTAR DESDE EL SERVICIO
     this.userService
       .getCompanyInformation(
         documentNumber,
@@ -2079,10 +2174,53 @@ export class FormCompanyComponent implements OnInit {
       )
       .subscribe(
         (empresaData: any) => {
-          if (empresaData) {
+          if (!empresaData) {
+            this.existCompany = false;
+            this.mostrarEmpresaNoEncontrada = true;
+            return;
+          }
+
+          // === Normalizaciones para comparar de forma robusta ===
+          const estado = this.normalize(empresaData.estadoEmpresa);
+          // Motivo puede venir con distintos nombres; tomamos ambos por si acaso
+          const motivo =
+            this.normalize(empresaData.motivoRetiro) ||
+            this.normalize(empresaData.motivoDesafiliacion);
+
+          const ACTIVO = 'ACTIVO';
+          const INACTIVO = 'INACTIVO';
+          const NO_FORM_RET_APORTES = 'NO_FORMALIZADO_RETIRADO_CON_APORTES';
+          const NO_FORM_SIN_AFILI_APORTE = 'NO_FORMALIZADO_SIN_AFILIACION_CON_APORTES';
+          const EXPULSION_POR_MORA = 'EXPULSION_POR_MOROSIDAD'; // sin tilde ni guion bajo
+
+          // ====== REGLAS DEL REQUISITO ======
+          // 1) ACTIVO (motivo N/A) -> precargar normal
+          const esActivo = estado === ACTIVO;
+
+          // 2) INACTIVO o NO_FORMALIZADO_RETIRADO_CON_APORTES con motivo Expulsión por mora -> precargar y mostrar mensaje
+          const esInactivoExpMora =
+            (estado === INACTIVO || estado === NO_FORM_RET_APORTES) &&
+            motivo === EXPULSION_POR_MORA;
+
+          // 3) NO_FORMALIZADO_SIN_AFILIACION_CON_APORTE -> NO dejar actualizar, mostrar mensaje + SALIR
+          const esNoFormalizadoSinAfili = estado === NO_FORM_SIN_AFILI_APORTE;
+
+          if (esNoFormalizadoSinAfili) {
+            // Bloquear flujo y mostrar alerta con botón SALIR
+            this.existCompany = false;
+            this.openEstadoWarning(
+              `Actualmente no tiene una afiliación activa como empresa en Confa, por favor revise y registre la consulta a través del Gestor de Solucitudes ingresando en la ruta:
+Tipo del Solicitante: Empresa
+Tipo de Solicitud: Afiliación empresa`,
+              true // mostrar botón SALIR
+            );
+            return;
+          }
+
+          if (esActivo || esInactivoExpMora) {
+            // === Precargar datos (MISMO bloque que ya tenías) ===
             const selectedDepartment = this.departmentsList.find(
-              dept =>
-                dept.name.toLowerCase().trim() === empresaData.departamento.toLowerCase().trim()
+              dept => this.normalize(dept.name) === this.normalize(empresaData.departamento)
             );
 
             if (!selectedDepartment) {
@@ -2093,7 +2231,7 @@ export class FormCompanyComponent implements OnInit {
             this.loadMunicipalities(selectedDepartment.id);
 
             const selectedMunicipality = this.municipalitiesList.find(
-              mun => mun.name.toLowerCase().trim() === empresaData.municipio.toLowerCase().trim()
+              mun => this.normalize(mun.name) === this.normalize(empresaData.municipio)
             );
 
             this.requestForm.patchValue({
@@ -2110,7 +2248,9 @@ export class FormCompanyComponent implements OnInit {
               email: empresaData.email,
               legalRepresentativeDocumentType:
                 this.documentHomologationList.find(
-                  doc => doc.code === empresaData.tipoDocumentoRepresentante
+                  doc =>
+                    this.normalize(doc.code) ===
+                    this.normalize(empresaData.tipoDocumentoRepresentante)
                 ) || null,
               legalRepresentativeDocumentNumber: empresaData.numeroDocumentoRepresentante,
               legalRepresentativeFirstName: empresaData.primerNombreRepresentante,
@@ -2122,16 +2262,23 @@ export class FormCompanyComponent implements OnInit {
             });
 
             this.existCompany = true;
-          } else {
-            const currentValues = this.requestForm.value;
-            const preserved = {
-              documentType: currentValues.documentType,
-              documentNumber: currentValues.documentNumber,
-            };
-            this.requestForm.reset(preserved);
-            this.existCompany = false;
-            this.mostrarEmpresaNoEncontrada = true;
+
+            // Si es inactivo/no formalizado retirado con aportes por mora -> mostrar mensaje (pero permitir cambios)
+            if (esInactivoExpMora) {
+              this.openEstadoWarning(
+                `Actualmente no tiene una afiliación activa como empresa en Confa, por favor revise y registre la consulta a través del Gestor de Solucitudes ingresando en la ruta:
+Tipo del Solicitante: Empresa
+Tipo de Solicitud: Afiliación empresa`,
+                false // NO es obligatorio SALIR aquí; el requisito dice que SÍ puede cambiar datos
+              );
+            }
+            // Si es ACTIVO no mostramos nada adicional
+            return;
           }
+
+          // Cualquier otro estado: no aplica
+          this.existCompany = false;
+          this.mostrarEmpresaNoEncontrada = true;
         },
         (error: any) => {
           console.error('Error al consultar la empresa:', error);
@@ -2702,4 +2849,28 @@ export class FormCompanyComponent implements OnInit {
 
     return alterno && principal && alterno === principal ? { sameAsMobile: true } : null;
   };
+
+  private normalize(val: any): string {
+    return (val ?? '')
+      .toString()
+      .trim()
+      .toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  openEstadoWarning(message: string, showSalir = false) {
+    this.estadoWarningMessage = message;
+    this.estadoWarningShowSalir = showSalir;
+    this.estadoWarningVisible = true;
+  }
+
+  closeEstadoWarning() {
+    this.estadoWarningVisible = false;
+  }
+
+  salirEstadoWarning() {
+    this.estadoWarningVisible = false;
+    this.router.navigate([RoutesApp.CREATE_REQUEST]);
+  }
 }

@@ -1031,3 +1031,46 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<p-dialog
+  [(visible)]="estadoWarningVisible"
+  [style]="{ width: '30vw' }"
+  [modal]="true"
+  [closable]="false"
+  [showHeader]="false">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">
+          <i
+            class="pi pi-exclamation-triangle"
+            style="font-size: 2rem; color: #f44336; margin-bottom: 12px"></i>
+          <p class="dialog-message" style="white-space: pre-line">{{ estadoWarningMessage }}</p>
+        </div>
+      </div>
+
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">
+          <p-button
+            *ngIf="estadoWarningShowSalir"
+            label="SALIR"
+            severity="danger"
+            (click)="salirEstadoWarning()"></p-button>
+          <p-button
+            *ngIf="!estadoWarningShowSalir"
+            label="Aceptar"
+            (click)="closeEstadoWarning()"></p-button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
