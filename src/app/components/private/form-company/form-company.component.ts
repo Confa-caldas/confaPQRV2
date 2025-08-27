@@ -2222,17 +2222,18 @@ Tipo de Solicitud: Afiliación empresa`,
             const selectedDepartment = this.departmentsList.find(
               dept => this.normalize(dept.name) === this.normalize(empresaData.departamento)
             );
-
-            if (!selectedDepartment) {
-              console.error('Departamento no encontrado en la lista');
-              return;
+            let selectedMunicipality = null;
+            if (selectedDepartment) {
+              this.loadMunicipalities(selectedDepartment.id);
+              selectedMunicipality = this.municipalitiesList.find(
+                mun => this.normalize(mun.name) === this.normalize(empresaData.municipio)
+              );
+              if(!selectedMunicipality){
+                this.confirmData(false);
+              }
+            }else{
+              this.confirmData(false);
             }
-
-            this.loadMunicipalities(selectedDepartment.id);
-
-            const selectedMunicipality = this.municipalitiesList.find(
-              mun => this.normalize(mun.name) === this.normalize(empresaData.municipio)
-            );
 
             this.requestForm.patchValue({
               businessName: empresaData.razonSocial,
@@ -2240,7 +2241,7 @@ Tipo de Solicitud: Afiliación empresa`,
               documentType: documentType,
               documentNumber: empresaData.nit,
               verificationDigit: empresaData.digitoVerificacion,
-              department: selectedDepartment,
+              department: selectedDepartment || null,
               municipality: selectedMunicipality || null,
               address: empresaData.direccion,
               landline: this.cleanLandline(empresaData.telefonoFijo),
@@ -2283,6 +2284,7 @@ Tipo de Solicitud: Afiliación empresa`,
         (error: any) => {
           console.error('Error al consultar la empresa:', error);
           this.existCompany = false;
+          this.mostrarEmpresaNoEncontrada = true;
         }
       );
   }
