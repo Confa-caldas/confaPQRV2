@@ -125,7 +125,7 @@
   <p-toast />
   <br />
   <div
-    *ngIf="requestDetails.status_name === 'Cerrada'"
+    *ngIf="requestDetails.status_name === 'Cerrada' && PERFIL !== 'NIYARAKI'"
     style="text-align: right; margin-right: 10px">
     <p-menu #menu [model]="items" [popup]="true"></p-menu>
     <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
@@ -539,7 +539,11 @@
               </div>
 
 
-              <p class="static-text">Cordialmente, {{ requestDetails.user_name_completed }}</p>
+              <!-- <p class="static-text">Cordialmente, {{ requestDetails.user_name_completed }}</p> -->
+
+              <p class="static-text">
+                Cordialmente, {{ requestDetails.user_name_completed === 'ext_niyaraki' ? 'Confa' : requestDetails.user_name_completed }}
+              </p>
 
               <label class="formProcess-card-text-placeholder-invalid">
                 {{

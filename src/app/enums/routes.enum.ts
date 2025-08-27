@@ -9,6 +9,7 @@ export enum RoutesApp {
   CATEGORY = 'category',
   SEARCH_REQUEST = 'search-requests',
   REQUEST_REPORT = 'request-report',
+  REQUEST_REPORT_EXTERNAL = 'request-report-external',
   LOGOUT = 'logout',
   CREATE_REQUEST = 'create-request',
   REQUEST_DETAILS = 'request-details',
@@ -24,6 +25,7 @@ export enum RoutesApp {
   INTERN_SEARCH_REQUEST = 'intern-search-request',
   SEARCH_UPDATE_COMPANY = 'search-update-company',
   SEARCH_REQUEST_INTERNAL = 'search-requests-internal',
+  SEARCH_REQUEST_EXTERNAL = 'search-requests-external',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',

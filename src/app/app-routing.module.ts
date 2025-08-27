@@ -77,6 +77,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.SEARCH_REQUEST_EXTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-request-external/search-request-external.module').then(
+        m => m.SearchRequestExternalModule
+      ),
+  },
+  {
     path: RoutesApp.SEARCH_UPDATE_COMPANY,
     canActivate: [sessionGuard],
     component: LayoutComponent,
@@ -92,6 +101,15 @@ const routes: Routes = [
     loadChildren: () =>
       import('./components/private/requests-report/requests-report.module').then(
         m => m.RequestsReportModule
+      ),
+  },
+  {
+    path: RoutesApp.REQUEST_REPORT_EXTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/requests-report-external/requests-report-external.module').then(
+        m => m.RequestsReportExternalModule
       ),
   },
   {
