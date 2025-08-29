@@ -335,14 +335,14 @@ export interface FilterRequests {
   i_date: string | null;
   f_date: string | null;
   status_id?: number | number[] | null;
-  assigned_user?: string | null;
+  assigned_user?: string | string[] | null;
   is_pqr?: number | null;
   filing_number?: number | null;
   doc_id?: string | null;
   applicant_name?: string | null;
   request_days?: number | null;
   applicant_type_id?: number | null;
-  request_type_id?: number | null;
+  request_type_id?: number[] | null;
   confa_user?: string | null;
   area_name?: string | null;
   priority_level?: number | null;
