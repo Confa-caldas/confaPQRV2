@@ -804,6 +804,8 @@ export class RequestDetailsComponent implements OnInit {
   submitAnswer() {
     let payloadAnswer: answerRequest;
 
+    const userNameCompleted = this.PERFIL === 'NIYARAKI' ? '' : this.requestDetails?.user_name_completed;
+
     if (this.requestDetails?.contact_cellphone === true){
       payloadAnswer = {
       request_id: this.request_id,
@@ -812,7 +814,8 @@ export class RequestDetailsComponent implements OnInit {
         'Solicitud N.' + this.requestDetails.request_id + ': ' +
         this.requestProcess.get('mensage')?.value +
         ' \n \nCordialmente, ' +
-        this.requestDetails?.user_name_completed,
+        //this.requestDetails?.user_name_completed,
+        userNameCompleted,
       assigned_attachments: null,
       contact_cellphone: this.requestDetails?.contact_cellphone,
       applicant_cellphone: this.requestDetails?.applicant_cellphone,
@@ -824,7 +827,8 @@ export class RequestDetailsComponent implements OnInit {
       request_answer:
         this.requestProcess.get('mensage')?.value +
         ' \n \nCordialmente, ' +
-        this.requestDetails?.user_name_completed,
+        //this.requestDetails?.user_name_completed,
+        userNameCompleted,
       assigned_attachments: null,
       contact_cellphone: this.requestDetails?.contact_cellphone,
       applicant_cellphone: this.requestDetails?.applicant_cellphone,

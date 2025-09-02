@@ -1,7 +1,7 @@
 <div *ngIf="isSpinnerVisible" class="spinner-overlay">
-  
+
     <p class="spinner-text">Procesando su solicitud, por favor espere...</p>
-  
+
     <div class="progress-bar-container">
       <div class="progress-bar">
         <div class="progress-fill" [style.width.%]="uploadProgress"></div>
@@ -9,13 +9,13 @@
       <p class="progress-text">{{ uploadProgress }}% completado</p>
     </div>
   </div>
-  
-  
+
+
   <p-card class="container">
     <div class="container-principal">
       <form [formGroup]="requestForm">
         <h4 class="card-form-banner-title">Ingresa aquí tu solicitud</h4>
-  
+
         <p-card class="container-card">
           <div class="rows">
             <div class="card-form-row">
@@ -61,24 +61,23 @@
                   class="card-form-input-options"
                   placeholder="*Ingresa el número de documento" />
                   <label class="card-form-input-placeholder-invalid">
-                    {{
-                      requestForm.get('number_id')?.disabled
-                        ? 'Seleccione tipo de documento'
-                        : requestForm.get('number_id')?.hasError('required') &&
-                          requestForm.get('number_id')?.touched
-                        ? 'Campo requerido'
-                        : requestForm.get('number_id')?.hasError('minlength') &&
-                          requestForm.get('number_id')?.touched
-                        ? 'Debe contener al menos 7 dígitos'
-                        : requestForm.get('number_id')?.hasError('pattern') &&
-                          requestForm.get('number_id')?.touched
-                        ? errorMensaje
-                        : ''
-                    }}
-                  </label>
+                  {{
+                    requestForm.get('number_id')?.disabled
+                      ? 'Seleccione tipo de documento'
+                      : requestForm.get('number_id')?.hasError('required') && requestForm.get('number_id')?.touched
+                      ? 'Campo requerido'
+                      : requestForm.get('number_id')?.hasError('minlength') && requestForm.get('number_id')?.touched
+                      ? minError
+                      : requestForm.get('number_id')?.hasError('maxlength') && requestForm.get('number_id')?.touched
+                      ? maxError
+                      : requestForm.get('number_id')?.hasError('pattern') && requestForm.get('number_id')?.touched
+                      ? errorMensaje
+                      : ''
+                  }}
+                </label>
               </div>
             </div>
-  
+
             <div class="card-form-row">
               <div class="card-form-input">
                 <label
@@ -108,10 +107,10 @@
                   }}</label
                 >
               </div>
-              
+
             </div>
 
-            
+
 
             <br>
             <div class="card-form-row contact-preferences">
@@ -119,7 +118,7 @@
             </div>
             <div class="card-form-row contact-preferences">
               <div *ngFor="let opcion of opciones">
-                <p-checkbox 
+                <p-checkbox
                   [binary]="true"
                   [inputId]="'check-' + opcion"
                   formControlName="{{opcion}}"
@@ -133,7 +132,7 @@
             <label class="card-form-input-placeholder-invalid" *ngIf="requestForm.get('contactos')?.hasError('atLeastOneRequired')">
                 Debes seleccionar al menos una opción.
             </label>
-            
+
             <br>
 
             <div class="card-form-row" *ngIf="estaSeleccionado('correo')">
@@ -185,7 +184,7 @@
             </div>
 
             <div class="card-form-row" *ngIf="estaSeleccionado('sms')">
-              
+
               <div class="card-form-input">
                 <label class="card-form-input-placeholder">Celular*</label>
                 <input
@@ -210,7 +209,7 @@
                 >
               </div>
 
-              
+
               <div class="card-form-input">
                 <label class="card-form-input-placeholder">Confirme el número celular*</label>
                 <input
@@ -231,15 +230,15 @@
                     Los números de celular no coinciden
                   </div>
                 </label>
-                  
+
               </div>
 
             </div>
 
-            
-  
-            
-  
+
+
+
+
             <div class="card-text">
               <label class="card-text-placeholder">Mensaje*</label>
               <textarea
@@ -265,7 +264,7 @@
                 }}</label
               >
             </div>
-  
+
             <div class="card-buttonUp">
               <label class="card-buttonUp-placeholder">Adjuntar archivo</label>
               <div class="card-buttonUp-custom-button">
@@ -331,13 +330,13 @@
       </form>
     </div>
   </p-card>
-  
+
   <p-toast></p-toast>
   <p-progressSpinner
     *ngIf="loadingAttachments"
     class="sppinerAtta p-element"
     color="blue"></p-progressSpinner>
-  
+
   <!--<app-modal-alert
   *ngIf="visibleDialogAlert"
   [select]="true"
@@ -357,16 +356,16 @@
     [informative]="informative"
     [severity]="severity"
     (setRta)="closeDialogAlert($event)"></app-modal-filing>
-  
+
   <div class="modal" *ngIf="showModal" id="adjuntarArchivoModal">
     <div class="modal-content">
       <h2>{{ modalTitle }}</h2>
       <p>{{ modalMessage }}</p>
-  
+
       <div class="modal-footer">
         <button class="btn btn-accept" (click)="onAccept()">Aceptar</button>
         <button class="btn btn-cancel" (click)="onCancel()">Cancelar</button>
       </div>
     </div>
   </div>
-  
+

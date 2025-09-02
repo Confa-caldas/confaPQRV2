@@ -125,7 +125,7 @@
   <p-toast />
   <br />
   <div
-    *ngIf="requestDetails.status_name === 'Cerrada'"
+    *ngIf="requestDetails.status_name === 'Cerrada' && PERFIL !== 'NIYARAKI'"
     style="text-align: right; margin-right: 10px">
     <p-menu #menu [model]="items" [popup]="true"></p-menu>
     <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
@@ -513,10 +513,10 @@
 
               <div *ngIf="requestDetails.contact_cellphone" class="sms-alert">
                 <ng-container *ngIf="requestDetails.contact_email; else soloSMS">
-                  Este mensaje también será enviado por <strong>SMS</strong>. El contenido debe tener máximo 160 caracteres.
+                  Este mensaje también será enviado por <strong>SMS</strong>. El contenido debe tener máximo 320 caracteres.
                 </ng-container>
                 <ng-template #soloSMS>
-                  Este mensaje será enviado únicamente por <strong>SMS</strong>. El contenido debe tener máximo 160 caracteres.
+                  Este mensaje será enviado únicamente por <strong>SMS</strong>. El contenido debe tener máximo 320 caracteres.
                 </ng-template>
               </div>
 
@@ -525,7 +525,7 @@
                 rows="5"
                 cols="30"
                 formControlName="mensage"
-                [attr.maxlength]="requestDetails.contact_cellphone ? 160 : null"
+                [attr.maxlength]="requestDetails.contact_cellphone ? 320 : null"
                 [style]="{ 'border-radius': '5px' }"
                 type="text"
                 class="custom-input"
@@ -535,11 +535,15 @@
 
               <!-- Opcional: contador de caracteres -->
               <div class="text-right text-xs text-muted">
-                {{ requestProcess.get('mensage')?.value?.length || 0 }}/{{ requestDetails.contact_cellphone ? 160 : '6000' }} caracteres
+                {{ requestProcess.get('mensage')?.value?.length || 0 }}/{{ requestDetails.contact_cellphone ? 320 : '6000' }} caracteres
               </div>
 
 
-              <p class="static-text">Cordialmente, {{ requestDetails.user_name_completed }}</p>
+              <!-- <p class="static-text">Cordialmente, {{ requestDetails.user_name_completed }}</p> -->
+
+              <p class="static-text">
+                Cordialmente, {{ requestDetails.user_name_completed === 'ext_niyaraki' ? '' : requestDetails.user_name_completed }}
+              </p>
 
               <label class="formProcess-card-text-placeholder-invalid">
                 {{

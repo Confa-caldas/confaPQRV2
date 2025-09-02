@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from '../../environments/environment';
+import { environment, parameters } from '../../environments/environment';
+import { switchMap } from 'rxjs/operators';
 import {
   BodyResponse,
   ZionResponse,
@@ -9,6 +10,7 @@ import {
 import { EndPointRoute } from '../enums/routes.enum';
 import { map, catchError } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
+import { from } from 'rxjs';
 import {
   ApplicantTypeList,
   AssignUserRequest,
@@ -63,7 +65,7 @@ import {
   CompanyUpdateRequest,
   FilterCompanyUpdate,
   CompanyUpdateRecord,
-  SimilarRequest
+  SimilarRequest,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -317,12 +319,10 @@ export class Users {
     );
   }
   attachApplicantFiles(payloadAttach: any, request_id: number) {
-    console.log(payloadAttach);
     const payload = {
       applicant_attachments: payloadAttach,
       request_id: request_id,
     };
-    console.log(payload);
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.ATTACHMENTS_FILES}`,
       payload
@@ -446,13 +446,10 @@ export class Users {
         userMessage: mensaje,
       }),
     };
-    console.log(payload);
     return this.http
       .post(this.apiUrlAdjuntos, payload, { headers }) // Envía la petición con headers
       .pipe(
         catchError(error => {
-          console.error('Error en la solicitud:', error);
-
           // Retorna un observable con un mensaje de error personalizado
           return of({
             statusCode: '500',
@@ -496,7 +493,6 @@ export class Users {
   // MEtodo para generar documento de afilicacion
   consultarInfoPersona(doc: string): Observable<any> {
     const docmd5 = MD5(doc).toString();
-    console.log('Documento en MD5:', docmd5);
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json', // Solo envía el Content-Type si es necesario
@@ -750,6 +746,73 @@ export class Users {
     return this.http.post<BodyResponse<number[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.SIMILAR_REQUEST}`,
       payload
+    );
+  }
+
+  getDeptosAndMunicipios(): Observable<any> {
+    let token = localStorage.getItem('gtoken');
+
+    // Verifica si el token no existe o es inválido
+    if (!token || token === 'null' || token === 'undefined') {
+      return this.generateGToken().pipe(
+        switchMap(() => {
+          token = localStorage.getItem('gtoken'); // Recupera el token después de generarlo
+
+          if (token) {
+            return this.fetchDeptosAndMunicipios(token); // Si el token es válido, devuelve la consulta de departamentos y municipios
+          } else {
+            return of([]); // Si no se obtiene el token, devuelve un array vacío
+          }
+        })
+      );
+    }
+
+    // Si ya hay un token válido, consulta los municipios directamente
+    return this.fetchDeptosAndMunicipios(token); // Si el token ya existe, consulta los municipios
+  }
+
+  private fetchDeptosAndMunicipios(token: string): Observable<any> {
+    let headers = new HttpHeaders();
+
+    // Verifica si el token ya tiene el prefijo 'Bearer ', si no, lo agrega
+    if (token) {
+      // Si el token no tiene el prefijo 'Bearer ', lo añadimos
+      if (!token.startsWith('Bearer ')) {
+        token = 'Bearer ' + token;
+      }
+      headers = headers.set('Authorization', token);
+    }
+
+    const body = { consultar: true };
+
+    return this.http
+      .post<any>(`${environment.ruta_consumo_municipios}metodo19`, body, { headers })
+      .pipe(
+        catchError(err => {
+          return of([]); // En caso de error, devolver un array vacío
+        })
+      );
+  }
+  generateGToken(): Observable<void> {
+    const bodyToken = {
+      parametro1: `${parameters.first}`, // Asegúrate de reemplazar estos parámetros con los correctos
+      parametro2: `${parameters.second}`,
+    };
+
+    return this.http.post<any>(`${environment.ruta_consumo_token_generico}auth`, bodyToken).pipe(
+      map((response: any) => {
+        const result = response;
+
+        if (result?.token) {
+          const token = 'Bearer ' + result.token;
+          localStorage.setItem('gtoken', token); // Guarda el token
+        } else {
+          throw new Error('No se recibió token en /auth');
+        }
+      }),
+      catchError(err => {
+        throw err; // Lanza el error para que el flujo pueda ser capturado
+      })
     );
   }
 }

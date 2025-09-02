@@ -15,4 +15,10 @@ export const environment = {
   minutesInactive: 25,
   ruta_archivos_ws: RUTAS_ARCHIVOS,
   ruta_consumo_subsidios_rest:"https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/",
+  ruta_consumo_token_generico:"https://app.confa.co:8687/ingresoConfaWSSGC/rest/",
+  ruta_consumo_municipios:"https://app.confa.co:8687/alojamientoWS/rest/alojamiento/",
+};
+export const parameters = {
+  first: "hlZTM4ZDcwNDRlODcyNzZDX1BPUlQqMjAxOCQ=",
+  second: "UG9ydGFsX0NvbmZhODRkZGZiMzQxMjZmYzNhND",
 };
