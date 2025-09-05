@@ -207,7 +207,8 @@
           <ng-template pTemplate="body" let-requestListByAssigned>
             <tr>
               <td>
-                <p-tableCheckbox [value]="requestListByAssigned" *ngIf="requestListByAssigned.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"></p-tableCheckbox>
+                <p-tableCheckbox [value]="requestListByAssigned" *ngIf="requestListByAssigned.status_name !== 'Cerrada' &&
+                requestListByAssigned.status_name !== 'Pendiente Usuario Externo' && PERFIL !== 'CONSULTANTE'"></p-tableCheckbox>
               </td>
               <td>
                 <p-button
@@ -216,7 +217,10 @@
                   (click)="redirectDetails(requestListByAssigned.request_id)"></p-button>
               </td>
               <td>
-                <div *ngIf="requestListByAssigned.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'">
+                <!-- <div *ngIf="requestListByAssigned.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"> -->
+                <div *ngIf="requestListByAssigned.status_name !== 'Cerrada' 
+                  && requestListByAssigned.status_name !== 'Pendiente Usuario Externo' 
+                  && PERFIL !== 'CONSULTANTE'">
                   <button class="custom-button" (click)="assignRequest(requestListByAssigned)">
                     {{
                       requestListByAssigned.assigned_user === null || requestListByAssigned.assigned_user === ''

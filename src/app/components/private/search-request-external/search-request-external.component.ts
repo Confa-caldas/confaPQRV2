@@ -343,6 +343,10 @@ export class SearchRequestExternalComponent implements OnInit {
           : filtros['applicant_type_id'] || null,
       request_type_id: [5],
       assigned_user: ['ext_niyaraki'],
+      // assigned_user:
+      //   this.formGroup.controls['assigned_user'].value?.length > 0
+      //     ? this.formGroup.controls['assigned_user'].value
+      //     : filtros['assigned_user'] || null,
       status_id:
         this.formGroup.controls['request_status_id'].value &&
         this.formGroup.controls['request_status_id'].value.length > 0
@@ -355,7 +359,6 @@ export class SearchRequestExternalComponent implements OnInit {
       page: this.page,
       page_size: this.rows,
     };
-    console.log('PAYLOAD', payload);
     this.getRequestListByFilter(payload);
   }
 

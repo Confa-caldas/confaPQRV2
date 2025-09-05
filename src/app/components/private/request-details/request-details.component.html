@@ -125,7 +125,7 @@
   <p-toast />
   <br />
   <div
-    *ngIf="requestDetails.status_name === 'Cerrada' && PERFIL !== 'NIYARAKI'"
+    *ngIf="requestDetails.status_name === 'Cerrada'"
     style="text-align: right; margin-right: 10px">
     <p-menu #menu [model]="items" [popup]="true"></p-menu>
     <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
