@@ -352,7 +352,7 @@ export class SearchRequestExternalComponent implements OnInit {
         this.formGroup.controls['request_status_id'].value.length > 0
           ? this.formGroup.controls['request_status_id'].value
           : filtros['request_status_id'] || null,
-      priority_level: this.formGroup.controls['priority_level'].value,
+      priority_level: this.formGroup.controls['priority_level'].value || null,
       confa_user: this.formGroup.controls['confa_user'].value || null,
       area_name: this.formGroup.controls['area_name'].value || null,
 

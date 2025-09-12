@@ -12,13 +12,13 @@ frontend:
         - ls -ltr
         - rm -rf node_modules
         - ls -ltr
-        - nvm install 18.18
+        - nvm install 22
         - node -v
-        - nvm use 18.18
+        - nvm use 22
         - npm update
     build:
       commands:
-        - nvm use 18.18
+        - nvm use 22
         - node -v
         - echo "La rama actual es:" $AWS_BRANCH
         - echo "La rama actual es:" $BUILD_ENV
