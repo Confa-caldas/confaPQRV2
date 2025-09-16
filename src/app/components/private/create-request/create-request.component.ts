@@ -179,8 +179,6 @@ export class CreateRequestComponent {
         platform: navigator.platform || 'No disponible',
       };
 
-      console.log(payload);
-
       this.userService.registerProcessRequest(payload).subscribe({
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
