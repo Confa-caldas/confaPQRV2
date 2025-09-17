@@ -450,7 +450,6 @@ export class RequestDetailsComponent implements OnInit {
         this.userService.getSimilarRequest(payload).subscribe({
           next: (similares) => {
             this.similares = similares.data;
-            console.log('Similares:', this.similares);
           },
           error: (error) => {
             console.error('Error buscando similares:', error);
