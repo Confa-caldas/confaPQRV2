@@ -342,7 +342,7 @@ export class SearchRequestExternalComponent implements OnInit {
           ? this.formGroup.controls['applicant_type_id'].value
           : filtros['applicant_type_id'] || null,
       request_type_id: [5],
-      assigned_user: ['ext_niyaraki'],
+      assigned_user: ['ext_niyaraky'],
       // assigned_user:
       //   this.formGroup.controls['assigned_user'].value?.length > 0
       //     ? this.formGroup.controls['assigned_user'].value

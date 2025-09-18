@@ -30,6 +30,7 @@ export class ModalAssignSelectorComponent implements OnInit {
   ngOnInit(): void {
     this.getUsersTable();
   }
+  /*
   getUsersTable() {
     this.userService.getUsersList().subscribe({
       next: (response: BodyResponse<UserList[]>) => {
@@ -47,6 +48,15 @@ export class ModalAssignSelectorComponent implements OnInit {
       complete: () => {
         console.log('La suscripción ha sido completada.');
       },
+    });
+  } */
+
+  getUsersTable() {
+    this.userService.getUsersList().subscribe({
+      next: (res: BodyResponse<UserList[]>) => {
+        this.userList = res.data.filter(s => s.is_active === 1);
+      },
+      error: err => console.log(err),
     });
   }
 

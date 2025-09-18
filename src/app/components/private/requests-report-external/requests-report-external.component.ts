@@ -219,7 +219,7 @@ export class RequestsReportExternalComponent implements OnInit {
           : this.convertDates(this.formGroup.controls['dates_range']?.value[1] || null),
       status_id: this.formGroup.controls['request_status_id'].value || null,
       //assigned_user: this.formGroup.controls['assigned_user'].value || null,
-      assigned_user: ['ext_niyaraki'],
+      assigned_user: ['ext_niyaraky'],
       is_pqr: this.formGroup.controls['is_pqr'].value,
       page: this.page,
       page_size: this.rows,
@@ -258,7 +258,7 @@ export class RequestsReportExternalComponent implements OnInit {
           : this.convertDates(this.formGroup.controls['dates_range']?.value[1] || null),
       status_id: this.formGroup.controls['request_status_id'].value || null,
       //assigned_user: this.formGroup.controls['assigned_user'].value || null,
-      assigned_user: ['ext_niyaraki'],
+      assigned_user: ['ext_niyaraky'],
       is_pqr: this.formGroup.controls['is_pqr'].value || null,
     };
     this.userService.getRequestReportAll(payload).subscribe({
