@@ -12,7 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { ModalInputDocumentModule } from "../../shared/modal-input-document/modal-input-document.module";
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { PickListModule } from 'primeng/picklist'; 
+import { PickListModule } from 'primeng/picklist';
 
 @NgModule({
   declarations: [RequestTypeDocumentsComponent],

@@ -6,3 +6,71 @@
 .p-field {
   margin-bottom: 1rem;
 }
+
+:host ::ng-deep .p-picklist {
+  border: none;
+  background: #f9fafb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+:host ::ng-deep .p-picklist .p-picklist-header {
+  background: #0099d8;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.6rem;
+  border-radius: 8px 8px 0 0;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+:host ::ng-deep .p-picklist .p-picklist-list {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  min-height: 250px;
+  background: #fff;
+  padding: 0.5rem;
+  overflow-y: auto;
+}
+
+:host ::ng-deep .p-picklist .p-picklist-item {
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  color: #374151;
+  background: #f3f4f6;
+}
+
+:host ::ng-deep .p-picklist .p-picklist-item:hover {
+  background: #e0e7ff;
+  color: #0288c2;
+}
+
+:host ::ng-deep .p-picklist .p-picklist-item.p-highlight {
+  background: #57cdff;
+  color: #fff;
+}
+
+:host ::ng-deep .p-picklist .p-picklist-buttons,
+:host ::ng-deep .p-picklist .p-picklist-transfer-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+:host ::ng-deep .p-picklist .p-button {
+  border-radius: 8px;
+  background: #0288c2;
+  border: none;
+  color: #fff;
+  transition: background 0.3s ease;
+}
+
+:host ::ng-deep .p-picklist .p-button:hover {
+  background: #0288c2;
+}

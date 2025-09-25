@@ -73,17 +73,23 @@
     </p-pickList>
     -->
     <p-pickList 
-      [source]="availableDocuments" 
-      [target]="availableDocuments" 
-      sourceHeader="Disponibles" 
-      targetHeader="Asociados"
-      [dragdrop]="true" 
-      [showSourceControls]="true" 
-      [showTargetControls]="true" 
-      optionLabel="document_type_name"
-      (onMoveToTarget)="onAssociationChange()"
-      (onMoveToSource)="onAssociationChange()">
-    </p-pickList>
+  [source]="availableDocuments" 
+  [target]="associatedDocuments" 
+  sourceHeader="Disponibles" 
+  targetHeader="Asociados"
+  [dragdrop]="true" 
+  [showSourceControls]="true" 
+  [showTargetControls]="true"
+  (onMoveToTarget)="onAssociationChange()"
+  (onMoveToSource)="onAssociationChange()">
+
+  <!-- Template para los ítems -->
+  <ng-template let-doc pTemplate="item">
+    <div style="padding:4px 8px; font-size:14px; color:#000;">
+      {{ doc.document_type_name }}
+    </div>
+  </ng-template>
+</p-pickList>
 
     <ng-template pTemplate="footer">
       <button pButton label="Cancelar" class="p-button-text" (click)="displayDialog=false"></button>

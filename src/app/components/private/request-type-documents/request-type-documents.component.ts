@@ -96,15 +96,14 @@ export class RequestTypeDocumentsComponent implements OnInit {
   } */
 
   // Abrir modal y cargar pickList
+  /*
   openDialog() {
     this.userService.getDocumentsTypesList().subscribe({
       next: (res: any) => {
         if (res.code === 200) {
           const allDocs = res.data;
-          this.availableDocuments = allDocs;
 
           // cargar asociados
-          /*
           this.userService.getRequestTypeDocuments(this.selectedRequestTypeId).subscribe({
             next: (resp: any) => {
               if (resp.code === 200) {
@@ -117,12 +116,25 @@ export class RequestTypeDocumentsComponent implements OnInit {
               }
               this.displayDialog = true;
             }
-          }); */
+          });
         }
-        this.displayDialog = true;
       }
     });
   }
+    */
+
+  openDialog() {
+  this.userService.getDocumentsTypesList().subscribe({
+    next: (res: any) => {
+      if (res.code === 200) {
+        this.availableDocuments = res.data;  // lo que venga del servicio
+        this.associatedDocuments = [];       // vacío por ahora para probar
+      }
+      this.displayDialog = true;
+    }
+  });
+}
+
 
   onAssociationChange() {
     console.log("Documentos asociados en UI:", this.associatedDocuments);
