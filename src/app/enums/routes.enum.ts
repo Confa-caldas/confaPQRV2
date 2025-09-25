@@ -26,6 +26,8 @@ export enum RoutesApp {
   SEARCH_UPDATE_COMPANY = 'search-update-company',
   SEARCH_REQUEST_INTERNAL = 'search-requests-internal',
   SEARCH_REQUEST_EXTERNAL = 'search-requests-external',
+  DOCUMENT_TYPE = 'document-type',
+  REQUEST_TYPE_DOCUMENTS = 'request-type-documents',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
@@ -114,4 +116,9 @@ export enum EndPointRoute {
   COMPANY_UPDATE_MANAGEMENT = 'company/followup',
   REQUEST_INTERNAL_BY_FILTER = 'requests-intern/filter',
   SIMILAR_REQUEST = 'request/get_similar',
+  DOCUMENT_TYPE_LIST_PAGINATION = 'db/pagination/document_type',
+  INACTIVATE_DOCUMENT = 'document/in-activate',
+  CREATE_DOCUMENT_TYPE = 'document/create',
+  MODIFY_DOCUMENT_TYPE = 'document/modify',
+  DOCUMENT_TYPE_LIST = 'db/document_type',
 }

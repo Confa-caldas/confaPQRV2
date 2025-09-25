@@ -36,6 +36,24 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.DOCUMENT_TYPE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/document-type/document-type.module').then(
+        m => m.DocumentTypeModule
+      ),
+  },
+  {
+    path: RoutesApp.REQUEST_TYPE_DOCUMENTS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/request-type-documents/request-type-documents.module').then(
+        m => m.RequestTypeDocumentsModule
+      ),
+  },
+  {
     path: RoutesApp.APPLICANT_REQUEST,
     canActivate: [sessionGuard],
     component: LayoutComponent,

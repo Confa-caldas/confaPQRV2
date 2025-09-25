@@ -66,6 +66,8 @@ import {
   FilterCompanyUpdate,
   CompanyUpdateRecord,
   SimilarRequest,
+  DocumentTypeList,
+  CreateDocumentType,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -813,6 +815,35 @@ export class Users {
       catchError(err => {
         throw err; // Lanza el error para que el flujo pueda ser capturado
       })
+    );
+  }
+  getDocumentTypesListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<DocumentTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  inactivateDocument(payload: DocumentTypeList) {
+    return this.http.post<BodyResponse<DocumentTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_DOCUMENT}`,
+      payload
+    );
+  }
+  createDocumentType(payload: CreateDocumentType) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_DOCUMENT_TYPE}`,
+      payload
+    );
+  }
+  modifyDocumentType(payload: CreateDocumentType) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.MODIFY_DOCUMENT_TYPE}`,
+      payload
+    );
+  }
+  getDocumentsTypesList() {
+    return this.http.get<BodyResponse<RequestTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST}`
     );
   }
 }

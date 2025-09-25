@@ -134,6 +134,18 @@ export interface ApplicantTypeList {
   updated_date: string;
 }
 
+export interface DocumentTypeList {
+  document_type_id: number;
+  document_type_code: string;
+  document_type_name: string;
+  document_type_description: string;
+  is_active: number | boolean;
+  created_by: string;
+  created_date: string;
+  updated_by: string;
+  updated_date: string;
+}
+
 export interface RequestTypeList {
   request_type_id: number;
   is_active: number | boolean;
@@ -215,6 +227,12 @@ export interface AssociationApplicantRequestList {
 export interface CreateApplicantType {
   applicant_type_name: string;
   applicant_type_description: string;
+}
+
+export interface CreateDocumentType {
+  document_type_code: string;
+  document_type_name: string;
+  document_type_description: string;
 }
 
 export interface CreateRequestType {
