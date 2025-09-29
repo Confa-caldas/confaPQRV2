@@ -51,12 +51,17 @@
 
   <!-- Modal con PickList -->
   <p-dialog 
-    header="Asociar Documentos" 
+    header="Asociar Documentos"
+    [showHeader]="false"
     [(visible)]="displayDialog" 
     [modal]="true" 
-    [style]="{width: '700px'}"
+    [style]="{width: '900px'}"
     [draggable]="false" 
     [resizable]="false">
+
+    <div class="col-10">
+        <div class="title-page">Asociar Documentos</div>
+    </div>
 
     <!--
     <p-pickList 
@@ -73,23 +78,23 @@
     </p-pickList>
     -->
     <p-pickList 
-  [source]="availableDocuments" 
-  [target]="associatedDocuments" 
-  sourceHeader="Disponibles" 
-  targetHeader="Asociados"
-  [dragdrop]="true" 
-  [showSourceControls]="true" 
-  [showTargetControls]="true"
-  (onMoveToTarget)="onAssociationChange()"
-  (onMoveToSource)="onAssociationChange()">
+        [source]="availableDocuments" 
+        [target]="associatedDocuments" 
+        sourceHeader="Disponibles" 
+        targetHeader="Asociados"
+        [dragdrop]="true" 
+        [showSourceControls]="true" 
+        [showTargetControls]="true"
+        (onMoveToTarget)="onAssociationChange()"
+        (onMoveToSource)="onAssociationChange()">
 
-  <!-- Template para los ítems -->
-  <ng-template let-doc pTemplate="item">
-    <div style="padding:4px 8px; font-size:14px; color:#000;">
-      {{ doc.document_type_name }}
-    </div>
-  </ng-template>
-</p-pickList>
+        <!-- Template para los ítems -->
+        <ng-template let-doc pTemplate="item">
+            <div style="padding:4px 8px; font-size:14px; color:#000;">
+            {{ doc.document_type_code }} - {{ doc.document_type_name }}
+            </div>
+        </ng-template>
+        </p-pickList>
 
     <ng-template pTemplate="footer">
       <button pButton label="Cancelar" class="p-button-text" (click)="displayDialog=false"></button>
