@@ -195,6 +195,7 @@ export interface answerRequest {
   assigned_attachments?: ApplicantAttachments[] | null;
   contact_cellphone?: boolean;
   applicant_cellphone?: string;
+  contact_email?: boolean;
 }
 export interface ApplicantAttachments {
   base64file: string;
