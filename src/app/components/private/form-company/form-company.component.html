@@ -217,11 +217,13 @@
                           ? 'Este campo es obligatorio.'
                           : requestForm.get('landline')?.errors?.['pattern']
                             ? 'Debe contener exactamente 7 dígitos numéricos.'
-                            : requestForm.get('landline')?.errors?.['maxlength']
-                              ? 'No puede tener más de 7 dígitos.'
-                              : requestForm.get('landline')?.errors?.['consecutiveDigits']
-                                ? 'El número no puede ser una secuencia consecutiva.'
-                                : ''
+                            : requestForm.get('landline')?.errors?.['minlength']
+                              ? 'No puede tener menos de 7 dígitos.'
+                              : requestForm.get('landline')?.errors?.['maxlength']
+                                ? 'No puede tener más de 7 dígitos.'
+                                : requestForm.get('landline')?.errors?.['consecutiveDigits']
+                                  ? 'El número no puede ser una secuencia consecutiva.'
+                                  : ''
                       }}
                     </small>
                   </div>
