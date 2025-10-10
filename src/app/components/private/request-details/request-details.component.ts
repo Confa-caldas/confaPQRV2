@@ -805,7 +805,7 @@ export class RequestDetailsComponent implements OnInit {
 
     const userNameCompleted = this.PERFIL === 'NIYARAKI' ? '' : this.requestDetails?.user_name_completed;
 
-    if (this.requestDetails?.contact_cellphone === true){
+    if (this.requestDetails?.contact_cellphone === true && this.requestDetails?.contact_email === false){
       payloadAnswer = {
       request_id: this.request_id,
       request_status: 4,
@@ -818,6 +818,7 @@ export class RequestDetailsComponent implements OnInit {
       assigned_attachments: null,
       contact_cellphone: this.requestDetails?.contact_cellphone,
       applicant_cellphone: this.requestDetails?.applicant_cellphone,
+      contact_email: this.requestDetails?.contact_email,
     };
     } else {
       payloadAnswer = {
@@ -831,6 +832,7 @@ export class RequestDetailsComponent implements OnInit {
       assigned_attachments: null,
       contact_cellphone: this.requestDetails?.contact_cellphone,
       applicant_cellphone: this.requestDetails?.applicant_cellphone,
+      contact_email: this.requestDetails?.contact_email,
     };
     }
 

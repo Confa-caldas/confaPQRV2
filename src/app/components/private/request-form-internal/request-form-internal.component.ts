@@ -81,7 +81,7 @@ export class RequestFormInternalComponent implements OnInit {
   useIaAttach: boolean = false;
   authorize_data: boolean = false;
 
-  opciones = ['sms', 'correo'];
+  opciones = ['correo', 'sms'];
 
   minError: string = '';
   maxError: string = '';
@@ -125,7 +125,7 @@ export class RequestFormInternalComponent implements OnInit {
       regex: '^[0-9]{0,9}$',
     };
 
-    this.opciones = ['sms', 'correo']; // Opciones dinámicas
+    this.opciones = ['correo', 'sms']; // Opciones dinámicas
 
     const contactosGroup = this.formBuilder.group({}, { validators: this.validateAtLeastOneSelected });
     this.opciones.forEach(opcion => {

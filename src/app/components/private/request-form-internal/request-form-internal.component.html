@@ -122,7 +122,10 @@
                   [binary]="true"
                   [inputId]="'check-' + opcion"
                   formControlName="{{opcion}}"
-                  (onChange)="toggleCampo($event, opcion)">
+                  (onChange)="toggleCampo($event, opcion)"
+                  [disabled]="opcion === 'sms' 
+                  && requestForm.get('contactos.correo')?.value 
+                  && !requestForm.get('contactos.sms')?.value">
                 </p-checkbox>
                   <label [for]="'check-' + opcion">{{ opcion | titlecase }}</label>
 

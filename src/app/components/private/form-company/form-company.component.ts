@@ -1415,7 +1415,12 @@ export class FormCompanyComponent implements OnInit {
       address: [{ value: '', disabled: true }, Validators.required],
       landline: [
         { value: '', disabled: true },
-        [Validators.pattern(/^\d*$/), Validators.maxLength(7), noConsecutiveValidator],
+        [
+          Validators.pattern(/^\d*$/),
+          Validators.minLength(7),
+          Validators.maxLength(7),
+          noConsecutiveValidator,
+        ],
       ],
       mobilePhone: [
         { value: '', disabled: true },
@@ -2228,10 +2233,10 @@ Tipo de Solicitud: Afiliación empresa`,
               selectedMunicipality = this.municipalitiesList.find(
                 mun => this.normalize(mun.name) === this.normalize(empresaData.municipio)
               );
-              if(!selectedMunicipality){
+              if (!selectedMunicipality) {
                 this.confirmData(false);
               }
-            }else{
+            } else {
               this.confirmData(false);
             }
 
@@ -2796,20 +2801,21 @@ Tipo de Solicitud: Afiliación empresa`,
     const input = event.target as HTMLInputElement;
     let sanitizedValue = input.value;
 
+    // Sanitización
     if (type === 'numeric') {
-      sanitizedValue = sanitizedValue.replace(/\D/g, '');
+      sanitizedValue = sanitizedValue.replace(/\D/g, ''); // Elimina todo lo que no sea número
     } else if (type === 'alpha') {
-      sanitizedValue = sanitizedValue.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+      sanitizedValue = sanitizedValue.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''); // Elimina caracteres no alfabéticos
     }
 
-    input.value = sanitizedValue;
+    input.value = sanitizedValue; // Asigna el valor sanitisado
 
     const controlName = input.getAttribute('formControlName');
     if (controlName) {
       const control = this.requestForm.get(controlName);
-      control?.setValue(sanitizedValue, { emitEvent: true });
-      control?.markAsTouched();
-      control?.updateValueAndValidity();
+      control?.setValue(sanitizedValue, { emitEvent: true }); // Actualiza el valor
+      control?.markAsTouched(); // Marca el control como tocado
+      control?.updateValueAndValidity(); // Recalcula la validez
     }
   }
 
