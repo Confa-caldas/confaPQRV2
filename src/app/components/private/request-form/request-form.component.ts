@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild, HostListener } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators, ValidationErrors } from '@angular/forms';
 import { Users } from '../../../services/users.service';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import {
@@ -81,6 +81,14 @@ export class RequestFormComponent implements OnInit {
   authorize_data: boolean = false;
   minError: string = '';
   maxError: string = '';
+  requiredDocuments: {
+    document_type_id: number;
+    document_type_description: string;
+  }[] = [];
+  uploadedFiles: { [key: string]: File } = {};
+
+  objectKeys = Object.keys;
+
 
   ngOnInit(): void {
     let applicant = localStorage.getItem('applicant-type');
@@ -88,6 +96,11 @@ export class RequestFormComponent implements OnInit {
     const visitedFirstPage = localStorage.getItem('visitedFirstPage');
     const authorize_data_raw = localStorage.getItem('authorize_data');
     this.authorize_data = authorize_data_raw ? JSON.parse(authorize_data_raw) : null;
+
+    const storedDocs = localStorage.getItem('requiredDocuments');
+    this.requiredDocuments = storedDocs ? JSON.parse(storedDocs) : [];
+
+    console.log('Documentos requeridos cargados:', this.requiredDocuments);
 
 
     //console.log(visitedFirstPage);
@@ -102,6 +115,7 @@ export class RequestFormComponent implements OnInit {
       //let request = localStorage.getItem('request-type');
       if (request) {
         this.requestType = JSON.parse(request);
+        console.log('requestType recuperado:', this.requestType);
       }
       this.getApplicantList();
       this.requestForm.get('number_id')?.disable();
@@ -122,24 +136,28 @@ export class RequestFormComponent implements OnInit {
       regex: '^[0-9]{0,9}$',
     };
     this.requestForm = this.formBuilder.group(
-      {
-        document_type: ['', Validators.required],
-        number_id: ['', Validators.required],
-        name: ['', [Validators.required, Validators.pattern('^[^@#$%&]+$')]],
-
-        cellphone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-        email: [
-          '',
-          [
-            Validators.required,
-            Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'),
-          ],
+    {
+      document_type: ['', Validators.required],
+      number_id: ['', Validators.required],
+      name: ['', [Validators.required, Validators.pattern('^[^@#$%&]+$')]],
+      cellphone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      email: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'),
         ],
-        validator_email: ['', [Validators.required]],
-        mensage: ['', [Validators.required, Validators.maxLength(1000)]],
-      },
-      { validator: this.emailMatcher }
-    );
+      ],
+      validator_email: ['', [Validators.required]],
+      mensage: ['', [Validators.required, Validators.maxLength(1000)]],
+    },
+    {
+      validators: [
+        this.emailMatcher,
+        this.validateAttachments.bind(this),
+      ],
+    }
+  );
 
     /*
     this.requestForm.get('document_type')?.valueChanges.subscribe(value => {
@@ -243,17 +261,33 @@ export class RequestFormComponent implements OnInit {
   showSuccessMessage(state: string, title: string, message: string) {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
+
+  /*
   emailMatcher: ValidatorFn = (formControl: AbstractControl) => {
     const email = formControl.get('email')?.value;
     const emailConfirmed = formControl.get('validator_email')?.value;
     return email === emailConfirmed ? null : { notMatched: true };
   };
+  */
+
+  emailMatcher: ValidatorFn = (formGroup: AbstractControl): ValidationErrors | null => {
+    const email = formGroup.get('email')?.value?.trim();
+    const emailConfirmed = formGroup.get('validator_email')?.value?.trim();
+
+    if (!email || !emailConfirmed) {
+      return null; // no validar si falta alguno
+    }
+
+    return email === emailConfirmed ? null : { notMatched: true };
+  };
+
 
   openFileInput() {
     this.fileInput.nativeElement.value = ''; // Limpiar la entrada de archivos antes de abrir el cuadro de diálogo
     this.fileInput.nativeElement.click();
   }
 
+  /*
   onFileSelected(event: any) {
     const files: FileList = event.target.files;
     if (this.arrayApplicantAttachment.length === 0) {
@@ -327,6 +361,207 @@ export class RequestFormComponent implements OnInit {
       this.errorSizeFile = false;
     }, 5000);
   }
+    */
+
+  /*
+  onFileSelected(event: any, doc?: any) {
+  const files: FileList = event.target.files;
+  if (this.arrayApplicantAttachment.length === 0) {
+    this.fileNameList.clear();
+  }
+
+  const isRequiredDoc = !!doc; // indica si el archivo viene de los documentos requeridos
+
+  for (let i = 0; i < files.length; i++) {
+    let file: File = files[i];
+
+    // --- Verifica si es imagen y viene desde móvil ---
+    const isImage = file.type.startsWith('image/');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isImage && isMobile) {
+      const extension = file.name.split('.').pop();
+      const timestamp = new Date().getTime();
+      const newName = `photo_${timestamp}.${extension}`;
+      file = new File([file], newName, { type: file.type });
+    }
+
+    // --- Tamaño formateado ---
+    const fileName: string = file.name;
+    const fileSizeInKiloBytes = file.size / 1024;
+    const fileSizeFormat =
+      fileSizeInKiloBytes < 1024
+        ? `${fileSizeInKiloBytes.toFixed(2)}KB`
+        : `${(fileSizeInKiloBytes / 1024).toFixed(2)}MB`;
+
+    // --- Validaciones ---
+    if (this.isValidExtension(file)) {
+      this.errorMensajeFile = `El archivo ${fileName} tiene una extensión no permitida.`;
+      this.errorExtensionFile = true;
+      continue;
+    }
+
+    if (file.size > 30720000) {
+      this.errorMensajeFile = `El archivo ${fileName} supera los 30MB.`;
+      this.errorSizeFile = true;
+      continue;
+    }
+
+    const exists = this.arrayApplicantAttachment.some(
+      (item) => item.source_name === fileName
+    );
+    if (exists) {
+      this.errorMensajeFile = `El archivo ${fileName} ya está adjunto.`;
+      this.errorRepeatFile = true;
+      continue;
+    }
+
+    // --- Convertir a Base64 ---
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const base64String: string = e.target.result.split(',')[1];
+
+      // --- Estructura del adjunto ---
+      const applicantAttach: ApplicantAttachments = {
+        base64file: base64String,
+        source_name: fileName,
+        fileweight: fileSizeFormat,
+        file,
+        // nuevo campo para asociar al documento requerido
+        document_type_id: isRequiredDoc ? doc.document_type_id : null,
+      };
+
+      // --- Guardar en el arreglo global ---
+      this.fileNameList.add(fileName);
+      this.arrayApplicantAttachment.push(applicantAttach);
+
+      // --- Si es documento requerido, guardar referencia ---
+      if (isRequiredDoc) {
+        if (!this.uploadedFiles) this.uploadedFiles = {}; // inicializar si no existe
+        this.uploadedFiles[doc.document_type_description] = file;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  console.log(this.arrayApplicantAttachment, 'seleccionados');
+
+  // --- Limpiar errores después de 5 segundos ---
+  setTimeout(() => {
+    this.errorRepeatFile = false;
+    this.errorExtensionFile = false;
+    this.errorSizeFile = false;
+  }, 5000);
+}
+  */
+
+  onFileSelected(event: any, doc?: any) {
+  const files: FileList = event.target.files;
+  if (!files || files.length === 0) return;
+
+  const isRequiredDoc = !!doc; // indica si el archivo viene de los documentos requeridos
+
+  // Solo limpiar lista si no hay adjuntos y no es documento obligatorio
+  if (!isRequiredDoc && this.arrayApplicantAttachment.length === 0) {
+    this.fileNameList = new Set<string>(); // aseguramos que sea un nuevo Set vacío
+  }
+
+  for (let i = 0; i < files.length; i++) {
+    let file: File = files[i];
+
+    // --- Verifica si es imagen y viene desde móvil ---
+    const isImage = file.type.startsWith('image/');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
+    if (isImage && isMobile) {
+      const extension = file.name.split('.').pop();
+      const timestamp = new Date().getTime();
+      const newName = `photo_${timestamp}.${extension}`;
+      file = new File([file], newName, { type: file.type });
+    }
+
+    // --- Tamaño formateado ---
+    const fileName: string = file.name;
+    const fileSizeInKiloBytes = file.size / 1024;
+    const fileSizeFormat =
+      fileSizeInKiloBytes < 1024
+        ? `${fileSizeInKiloBytes.toFixed(2)}KB`
+        : `${(fileSizeInKiloBytes / 1024).toFixed(2)}MB`;
+
+    // --- Validaciones ---
+    if (this.isValidExtension(file)) {
+      this.errorMensajeFile = `El archivo ${fileName} tiene una extensión no permitida.`;
+      this.errorExtensionFile = true;
+      continue;
+    }
+
+    if (file.size > 30720000) {
+      this.errorMensajeFile = `El archivo ${fileName} supera los 30MB.`;
+      this.errorSizeFile = true;
+      continue;
+    }
+
+    // --- Evitar duplicados solo si NO es documento obligatorio ---
+    if (!isRequiredDoc) {
+      const exists = this.arrayApplicantAttachment.some(
+        (item) => item.source_name === fileName
+      );
+      if (exists) {
+        this.errorMensajeFile = `El archivo ${fileName} ya está adjunto.`;
+        this.errorRepeatFile = true;
+        continue;
+      }
+    }
+
+    // --- Convertir a Base64 ---
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const base64String: string = e.target.result.split(',')[1];
+
+      // --- Estructura del adjunto ---
+      const applicantAttach: ApplicantAttachments = {
+        base64file: base64String,
+        source_name: fileName,
+        fileweight: fileSizeFormat,
+        file,
+        document_type_id: isRequiredDoc ? doc.document_type_id : null,
+      };
+
+      // --- Registrar tanto en el mapa de obligatorios como en el arreglo principal ---
+      if (isRequiredDoc) {
+        if (!this.uploadedFiles) this.uploadedFiles = {};
+        this.uploadedFiles[doc.document_type_description] = file;
+      } else {
+        this.fileNameList.add(fileName);
+      }
+
+      // 👉 Aseguramos que todos (requeridos y opcionales) se agreguen al array principal
+      this.arrayApplicantAttachment.push(applicantAttach);
+      this.requestForm.updateValueAndValidity();
+
+      console.log(
+        `${isRequiredDoc ? 'Documento obligatorio' : 'Adjunto opcional'} agregado:`,
+        applicantAttach
+      );
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // --- Limpiar errores después de 5 segundos ---
+  setTimeout(() => {
+    this.errorRepeatFile = false;
+    this.errorExtensionFile = false;
+    this.errorSizeFile = false;
+  }, 5000);
+}
+
+
+
+
+
+
 
   getAplicant(): ApplicantAttachments[] {
     return this.arrayApplicantAttachment;
@@ -1193,6 +1428,7 @@ async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): P
       count_attacments: 0,
     };
 
+    console.log("PAYLOAD-------: ", payload);
     this.setParameter(payload);
   }
   closeDialogAlert(value: boolean) {
@@ -1260,4 +1496,25 @@ async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): P
         return '*Descripción detallada de la solicitud incluyendo los datos de las personas a cargo';
     }
   } */
+
+  validateAttachments(formGroup: AbstractControl): ValidationErrors | null {
+  const hasRequiredDocs = this.requiredDocuments?.length > 0;
+
+  //Si hay documentos obligatorios → todos deben estar adjuntos
+  if (hasRequiredDocs) {
+    const allUploaded = this.requiredDocuments.every(
+      (doc) => this.uploadedFiles && this.uploadedFiles[doc.document_type_description]
+    );
+
+    if (!allUploaded) {
+      return { missingAttachments: true }; //faltan adjuntos obligatorios
+    }
+  }
+
+  return null;
+}
+
+
+
+
 }

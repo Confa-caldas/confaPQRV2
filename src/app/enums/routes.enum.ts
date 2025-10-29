@@ -120,5 +120,7 @@ export enum EndPointRoute {
   INACTIVATE_DOCUMENT = 'document/in-activate',
   CREATE_DOCUMENT_TYPE = 'document/create',
   MODIFY_DOCUMENT_TYPE = 'document/modify',
-  DOCUMENT_TYPE_LIST = 'db/document_type',
+  DOCUMENT_TYPE_LIST = 'document/get_documents_requests',
+  DOCUMENT_TYPE_LIST_PUBLIC = 'document/get_documents_public',
+  REQUEST_TYPE_DOCUMENT = 'document/create_request_document',
 }

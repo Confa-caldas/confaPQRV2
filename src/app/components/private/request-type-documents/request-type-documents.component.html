@@ -15,32 +15,38 @@
         optionValue="request_type_id"
         [(ngModel)]="selectedRequestTypeId"
         placeholder="Seleccione un tipo de solicitud"
-        [showClear]="true">
+        [showClear]="true"
+        (onChange)="onRequestTypeChange($event)">
     </p-dropdown>
   </div>
 
   <!-- Tabla de documentos -->
-  <p-table [value]="documents" *ngIf="selectedRequestTypeId">
+  <p-table [value]="documents" *ngIf="selectedRequestTypeId"
+  [tableStyle]="{ 'min-width': '50rem' }">
     <ng-template pTemplate="header">
       <tr>
         <th>Documento</th>
         <th>Obligatorio</th>
         <th>Estado</th>
-        <th>Acciones</th>
+        <!-- <th>Acciones</th> -->
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-doc>
       <tr>
-        <td>{{ doc.documentName }}</td>
-        <td>{{ doc.mandatory ? 'Sí' : 'No' }}</td>
-        <td>{{ doc.status }}</td>
-        <td>
-          <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text"></button>
-          <!-- <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-text" (click)="deleteDocument(doc)"></button> -->
-        </td>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.documentName }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.mandatory ? 'Sí' : 'No' }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.status }}</td>
+
       </tr>
     </ng-template>
   </p-table>
+  <br>
+  <!-- Mensaje cuando no hay documentos -->
+  <p *ngIf="selectedRequestTypeId && (!documents || documents.length === 0)">
+    No hay documentos asociados a este tipo de solicitud.
+  </p>
+
+  <br>
 
   <!-- Botón agregar documento -->
   <div class="p-mt-3">
@@ -91,14 +97,14 @@
         <!-- Template para los ítems -->
         <ng-template let-doc pTemplate="item">
             <div style="padding:4px 8px; font-size:14px; color:#000;">
-            {{ doc.document_type_code }} - {{ doc.document_type_name }}
+            {{ doc.document_type_id }} - {{ doc.document_type_description }}
             </div>
         </ng-template>
         </p-pickList>
 
     <ng-template pTemplate="footer">
       <button pButton label="Cancelar" class="p-button-text" (click)="displayDialog=false"></button>
-      <!-- <button pButton label="Guardar" icon="pi pi-check" (click)="saveAssociations()"></button> -->
+      <button pButton label="Guardar" icon="pi pi-check" (click)="saveAssociations()"></button>
     </ng-template>
   </p-dialog>
 

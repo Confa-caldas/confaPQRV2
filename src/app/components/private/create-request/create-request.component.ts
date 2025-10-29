@@ -31,6 +31,9 @@ export class CreateRequestComponent {
 
   authorizeValue: boolean | null = null;
 
+  displayRequiredDocsDialog = false;
+  requiredDocuments: any[] = [];
+
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
@@ -146,10 +149,18 @@ export class CreateRequestComponent {
       'applicant-type',
       JSON.stringify(this.optionsRequest.controls['applicant_id'].value)
     );
+    /*
     localStorage.setItem(
       'request-type',
       JSON.stringify(this.optionsRequest.controls['request_id'].value)
+    ); */
+    localStorage.setItem(
+      'request-type',
+      JSON.stringify(this.requestList.find(
+        r => r.request_type_id === this.optionsRequest.controls['request_id'].value
+      ))
     );
+
     localStorage.setItem('id-transaction', this.transactionId);
     localStorage.setItem(
       'authorize_data',
@@ -204,4 +215,39 @@ export class CreateRequestComponent {
   setParameterDataT(dataTreatment: boolean) {
     this.optionsRequest.get('authorize')?.setValue(null);
   }
+
+  onRequestTypeSelected(event: any) {
+  const requestTypeId = event.value;
+
+  if (!requestTypeId) {
+    this.requiredDocuments = [];
+    return;
+  }
+
+  // Llamada al servicio existente
+  this.userService.getDocumentsPublicByRequestType(requestTypeId).subscribe({
+    next: (res: any) => {
+      if (res.code === 200 && res.data.associated && res.data.associated.length > 0) {
+        this.requiredDocuments = res.data.associated;
+        this.displayRequiredDocsDialog = true;
+
+        //Guardamos los documentos requeridos en localStorage
+        localStorage.setItem('requiredDocuments', JSON.stringify(res.data.associated));
+      } else {
+        this.requiredDocuments = [];
+        this.displayRequiredDocsDialog = false;
+
+        //Limpiamos si no hay documentos
+        localStorage.removeItem('requiredDocuments');
+      }
+    },
+    error: (err) => {
+      console.error('Error al obtener los documentos requeridos:', err);
+      this.requiredDocuments = [];
+      this.displayRequiredDocsDialog = true;
+    }
+  });
 }
+}
+
+

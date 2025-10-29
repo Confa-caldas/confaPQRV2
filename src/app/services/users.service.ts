@@ -846,4 +846,27 @@ export class Users {
       `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST}`
     );
   }
+
+  saveRequestTypeDocuments(payload: { request_type_id?: number, document_ids?: number[] }) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_TYPE_DOCUMENT}`,
+      payload
+    );
+  }
+
+  getRequestTypeDocuments(selectedRequestTypeId?: number) {
+    return this.http.get<BodyResponse<RequestTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST}`
+    );
+  }
+
+  getDocumentsByRequestType(request_type_id?: number) {
+    return this.http.get(`${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST}/${request_type_id}`);
+  }
+
+  getDocumentsPublicByRequestType(request_type_id?: number) {
+    return this.http.get(`${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST_PUBLIC}/${request_type_id}`);
+  }
+
+
 }

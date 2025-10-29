@@ -34,11 +34,14 @@ export class RequestTypeDocumentsComponent implements OnInit {
   availableDocuments: any[] = []; // Documentos disponibles
   associatedDocuments: any[] = []; // Documentos asociados
 
+  /*
   documents: DocumentRelation[] = [
     { id: 1, documentName: 'Cédula', mandatory: true, status: 'Activo' },
     { id: 2, documentName: 'Certificado Laboral', mandatory: true, status: 'Activo' },
     { id: 3, documentName: 'Foto', mandatory: false, status: 'Inactivo' },
   ];
+  */
+  documents: DocumentRelation[] = [];
 
   displayDialog: boolean = false;
   documentForm!: FormGroup;
@@ -62,6 +65,18 @@ export class RequestTypeDocumentsComponent implements OnInit {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
 
+  onRequestTypeChange(event: any) {
+  const selectedId = event.value;
+  console.log('📋 Tipo de solicitud seleccionado:', selectedId);
+
+  if (selectedId) {
+    this.selectedRequestTypeId = selectedId;
+    this.loadDocumentsForRequestType();
+  } else {
+    this.documents = []; // Si se limpia el dropdown
+  }
+}
+
   getRequestTypeList() {
       this.userService.getRequestTypesList().subscribe({
         next: (response: BodyResponse<RequestTypeList[]>) => {
@@ -80,57 +95,19 @@ export class RequestTypeDocumentsComponent implements OnInit {
       });
     }
 
-  // Cargar documentos asociados al cambiar de request type
-  /*
-  loadAssociatedDocuments() {
-    if (!this.selectedRequestTypeId) return;
 
-    this.userService.getRequestTypeDocuments(this.selectedRequestTypeId).subscribe({
-      next: (res: any) => {
-        if (res.code === 200) {
-          this.associatedDocuments = res.data;
-        }
-      },
-      error: (err) => console.error(err)
-    });
-  } */
-
-  // Abrir modal y cargar pickList
-  /*
-  openDialog() {
-    this.userService.getDocumentsTypesList().subscribe({
-      next: (res: any) => {
-        if (res.code === 200) {
-          const allDocs = res.data;
-
-          // cargar asociados
-          this.userService.getRequestTypeDocuments(this.selectedRequestTypeId).subscribe({
-            next: (resp: any) => {
-              if (resp.code === 200) {
-                this.associatedDocuments = resp.data;
-
-                // disponibles = todos - asociados
-                this.availableDocuments = allDocs.filter(doc => 
-                  !this.associatedDocuments.find(ad => ad.document_type_id === doc.document_type_id)
-                );
-              }
-              this.displayDialog = true;
-            }
-          });
-        }
-      }
-    });
-  }
-    */
-
-  openDialog() {
-  this.userService.getDocumentsTypesList().subscribe({
+openDialog() {
+  console.log("Entroooo: ", this.selectedRequestTypeId)
+  this.userService.getDocumentsByRequestType(this.selectedRequestTypeId).subscribe({
     next: (res: any) => {
       if (res.code === 200) {
-        this.availableDocuments = res.data;  // lo que venga del servicio
-        this.associatedDocuments = [];       // vacío por ahora para probar
+        this.availableDocuments = res.data.available;
+        this.associatedDocuments = res.data.associated;
       }
       this.displayDialog = true;
+    },
+    error: (err) => {
+      console.error('Error al cargar los documentos:', err);
     }
   });
 }
@@ -141,23 +118,53 @@ export class RequestTypeDocumentsComponent implements OnInit {
   }
 
   // Guardar relaciones
-  /*
   saveAssociations() {
-    const payload = {
-      request_type_id: this.selectedRequestTypeId,
-      document_ids: this.associatedDocuments.map(d => d.document_type_id)
-    };
+  const payload = {
+    request_type_id: this.selectedRequestTypeId,
+    document_type_ids: this.associatedDocuments.map(d => d.document_type_id)
+  };
 
-    this.userService.saveRequestTypeDocuments(payload).subscribe({
-      next: (res: any) => {
-        if (res.code === 200) {
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Asociaciones guardadas' });
-          this.displayDialog = false;
-          this.loadAssociatedDocuments(); // refrescar la tabla
-        }
-      },
-      error: (err) => console.error(err)
-    });
-  } */
+  this.userService.saveRequestTypeDocuments(payload).subscribe({
+    next: (res: any) => {
+      if (res.code === 200) {
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Asociaciones guardadas correctamente' });
+        this.displayDialog = false;
+        this.loadDocumentsForRequestType(); // refresca tu tabla o lista
+      } else {
+        this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'No se pudieron guardar las asociaciones' });
+      }
+    },
+    error: (err) => {
+      console.error(err);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error al guardar las asociaciones' });
+    }
+  });
+}
+
+loadDocumentsForRequestType() {
+  if (!this.selectedRequestTypeId) return;
+
+  this.userService.getDocumentsByRequestType(this.selectedRequestTypeId).subscribe({
+    next: (res: any) => {
+      console.log('Respuesta de Lambda:', res);
+
+      if (res.code === 200 && res.data && Array.isArray(res.data.associated)) {
+        this.documents = res.data.associated.map((doc: any) => ({
+          documentName: doc.document_type_description,
+          mandatory: doc.is_required,
+          status: doc.is_active ? 'Activo' : 'Inactivo'
+        }));
+      } else {
+        this.documents = [];
+      }
+    },
+    error: (err) => {
+      console.error('Error al cargar los documentos asociados:', err);
+      this.documents = [];
+    }
+  });
+}
+
+
   
 }

@@ -206,6 +206,7 @@
             >
           </div>
 
+          <!--
           <div class="card-buttonUp">
             <label class="card-buttonUp-placeholder">Adjuntar archivo</label>
             <div class="card-buttonUp-custom-button">
@@ -234,6 +235,9 @@
               >
             </div>
           </div>
+
+          
+
           <div class="card-table">
             <div class="card-table-header">Tabla de Adjuntos</div>
             <div class="card-table-body" *ngFor="let fileName of fileNameList; let i = index">
@@ -258,6 +262,114 @@
               </div>
             </div>
           </div>
+          -->
+
+          <!--Caso 1: Cuando HAY documentos obligatorios -->
+          <div *ngIf="(requiredDocuments?.length ?? 0) > 0; else noRequiredDocuments">
+            <div class="card-buttonUp" *ngFor="let doc of requiredDocuments; let i = index">
+              <label class="card-buttonUp-placeholder">
+                {{ doc.document_type_description }}
+              </label>
+
+              <div class="card-buttonUp-custom-button">
+                <!-- 🔹 id dinámico por documento -->
+                <input
+                  type="file"
+                  [id]="'fileInput-' + i"
+                  class="card-buttonUp-custom-icon"
+                  (change)="onFileSelected($event, doc)"
+                  accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+                  maxFileSize="20971520"
+                />
+
+                <!-- 🔹 Label vinculado al input -->
+                <label class="card-buttonUp-label" [for]="'fileInput-' + i">
+                  <i class="pi pi-file" [style]="{ 'font-size': '19px', 'margin-right': '8px' }"></i>
+                  Adjuntar archivo
+                  <i class="pi pi-upload" [style]="{ 'margin-left': '20px', 'font-size': '19px' }"></i>
+                </label>
+
+                <label class="card-form-input-placeholder-invalid">
+                  {{ errorSizeFile ? errorMensajeFile : '' }}
+                  {{ errorExtensionFile ? errorMensajeFile : '' }}
+                  {{ errorRepeatFile ? errorMensajeFile : '' }}
+                </label>
+              </div>
+
+              <!-- Mostrar archivo seleccionado -->
+              <div *ngIf="uploadedFiles[doc.document_type_description]" class="uploaded-file-info">
+                <i class="pi pi-check-circle" style="color: #28a745; margin-right: 5px"></i>
+                Archivo seleccionado:
+                <strong>{{ uploadedFiles[doc.document_type_description]?.name }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!--Caso 2: Cuando NO hay documentos obligatorios -->
+          <ng-template #noRequiredDocuments>
+            <div class="card-buttonUp">
+              <label class="card-buttonUp-placeholder">Adjuntar archivo</label>
+              <div class="card-buttonUp-custom-button">
+                <input
+                  type="file"
+                  #archive_request
+                  class="card-buttonUp-custom-icon"
+                  name="archive_request"
+                  (change)="onFileSelected($event)"
+                  accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+                  maxFileSize="20971520"
+                  multiple
+                />
+
+                <label class="card-buttonUp-label" (click)="openFileInput()">
+                  <i
+                    class="pi pi-file-pdf"
+                    [style]="{ 'font-size': '19px', 'margin-right': '8px' }"
+                  ></i>
+                  Adjuntar archivo
+                  <i
+                    class="pi pi-upload"
+                    [style]="{ 'margin-left': '69px', 'font-size': '19px' }"
+                  ></i>
+                </label>
+
+                <label class="card-form-input-placeholder-invalid">
+                  {{ errorSizeFile ? errorMensajeFile : '' }}
+                  {{ errorExtensionFile ? errorMensajeFile : '' }}
+                  {{ errorRepeatFile ? errorMensajeFile : '' }}
+                </label>
+              </div>
+            </div>
+
+            <div class="card-table" *ngIf="fileNameList && fileNameList.size > 0">
+              <div class="card-table-header">Tabla de Adjuntos</div>
+              <div class="card-table-body" *ngFor="let fileName of fileNameList; let i = index">
+                <div class="card-table-itemName">
+                  <p class="truncate-text">
+                    {{ fileName === '' ? 'Nombre de Archivo' : fileName }}
+                  </p>
+                </div>
+                <div class="card-table-item">
+                  <span class="remover-text">Remover archivo</span>
+                  <p-button
+                    icon="pi pi-times"
+                    [style]="{
+                      'border-radius': '50%',
+                      height: '20px',
+                      width: '20px',
+                      'background-color': '#ebebeb',
+                      color: 'red',
+                      'margin-right': '20px'
+                    }"
+                    [text]="true"
+                    severity="danger"
+                    (click)="clearFileInput(i)"
+                  ></p-button>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+
         </div>
       </p-card>
       <div class="button-container">

@@ -635,3 +635,56 @@
   font-size: 16px;
   color: #fff;
 }
+
+//Nuevo
+.card-buttonUp {
+  margin-bottom: 20px;
+
+  .card-buttonUp-placeholder {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+  }
+
+  .card-buttonUp-custom-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .card-buttonUp-label {
+      background-color: #00afef;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease-in-out;
+
+      &:hover {
+        background-color: #0099d4;
+      }
+
+      &.uploaded {
+        background-color: #28a745;
+      }
+    }
+
+    .card-form-input-placeholder-invalid {
+      display: block;
+      color: #dc3545;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+  }
+
+  .uploaded-file-info {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #444;
+    display: flex;
+    align-items: center;
+  }
+}
