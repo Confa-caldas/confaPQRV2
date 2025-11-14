@@ -70,6 +70,8 @@ export interface RequestsDetails {
   priority_level: number;
   contact_cellphone: boolean;
   contact_email: boolean;
+  answer_date?: string;
+  answer_time?: string;
 }
 export interface RequestAttachmentsList {
   url: string;
@@ -485,15 +487,21 @@ export interface MiPerfilConfa {
 }
 
 export interface Afiliado {
-  tipoDocumento: string;
-  documento: string;
-  nombre: string;
-  fechaNacimiento: string;
-  estado: string;
-  empresa: string;
-  tipoTrabajador: string;
-  fechaAfiliacion: string;
-  fechaIngreso: string;
+  tipoDocumento?: string;
+  documento?: string;
+  nombre?: string;
+  edad?: string;
+  fechaNacimiento?: string;
+  estado?: string;
+  categoria?: string;
+  telefono?: string;
+  sexo?: string;
+  estadoCivil?: string;
+  email?: string;
+  empresa?: string;
+  tipoTrabajador?: string;
+  fechaAfiliacion?: string;
+  fechaIngreso?: string;
 }
 export interface RequestReportStatus {
   date: Date;
@@ -587,6 +595,11 @@ export interface PendingRequest {
   previus_state?: string;
   user_action?: string;
 }
+
+export interface AdditionalDocsRequest {
+  request_id: number;
+  user_action?: string;
+}
 export interface RequestsReview {
   request_id: number;
   filing_number: number;
@@ -646,15 +659,20 @@ export interface RequestFormListPending {
 }
 
 export interface Empresa {
-  tipoDocumento: string;
+  codigoGenesys: string;
   documento: string;
   digitoVerificacion: string;
   razonSocial: string;
   nombreComercial: string;
-  email: string;
-  direccion: string;
   telefono: string;
+  direccion: string;
+  email: string;
+  estado: string;
+  nombreRepLeg: string;
+  tipoDocumentoRepLeg: string;
+  documentoRepLeg: string;
   actividadEconomica: string;
+  numTrabajadores: string;
 }
 
 export interface FilterRequestsIntern {

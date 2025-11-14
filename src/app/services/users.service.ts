@@ -68,6 +68,7 @@ import {
   SimilarRequest,
   DocumentTypeList,
   CreateDocumentType,
+  AdditionalDocsRequest,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -519,13 +520,18 @@ export class Users {
   //   return this.http.post(urlSubsidios, payload, { headers }); // Envía la petición con headers
   // }
 
-  respuestaInfoAfiliacion(cedula: string): Observable<any> {
-    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarAfiliadoDoc/${cedula}/1`;
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
 
-    return this.http.get(url, { headers });
+
+  respuestaInfoAfiliacion(cedula: string) {
+    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarAfiliadoDoc/${cedula}/1`;
+    // observe: 'response' para tener status y body
+    return this.http.get(url, { observe: 'response' });
+  }
+
+  respuestaInfoEmpresa(document: string) {
+    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarEmpresaNit/${document}/1`;
+    // observe: 'response' para tener status y body
+    return this.http.get(url, { observe: 'response' });
   }
 
   createAnswerTemp(payload: RequestAnswerTemp) {
@@ -868,5 +874,11 @@ export class Users {
     return this.http.get(`${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST_PUBLIC}/${request_type_id}`);
   }
 
+  registerAdditionalDocsRequest(payload: AdditionalDocsRequest) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_ADDITIONAL_DOCS_REQUEST}`,
+      payload
+    );
+  }
 
 }

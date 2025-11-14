@@ -123,4 +123,5 @@ export enum EndPointRoute {
   DOCUMENT_TYPE_LIST = 'document/get_documents_requests',
   DOCUMENT_TYPE_LIST_PUBLIC = 'document/get_documents_public',
   REQUEST_TYPE_DOCUMENT = 'document/create_request_document',
+  CREATE_ADDITIONAL_DOCS_REQUEST = 'document/upload_additional_document',
 }

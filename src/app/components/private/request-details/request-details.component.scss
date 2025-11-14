@@ -920,7 +920,22 @@ p-timeline {
 }
 
 :host ::ng-deep .custom-zip-button .p-button {
-  background-color: #007bff; /* Azul más limpio */
+  background-color: #01aeef; /* Azul más limpio */
+  border: none;
+  font-size: 12px;
+  padding: 0.4rem 0.8rem;
+  height: 32px;
+  margin-bottom: 5px;
+}
+
+:host ::ng-deep .custom-carrusel-button {
+  background: transparent !important; /* Fondo del p-button */
+  border: none !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .custom-carrusel-button .p-button {
+  background-color: #ff9700; /* Azul más limpio */
   border: none;
   font-size: 12px;
   padding: 0.4rem 0.8rem;
@@ -972,4 +987,120 @@ p-timeline {
   font-size: 0.75rem;
   color: #6c757d;
   margin-top: 4px;
+}
+
+.no-info {
+  text-align: center;
+  padding: 16px;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  color: #555;
+  background-color: #f9f9f9;
+  font-style: italic;
+}
+
+:host ::ng-deep .p-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Layout del visor ===== */
+.preview-viewer-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  gap: 1rem;
+  min-height: 450px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0.5rem 3rem;
+}
+
+/* Flechas de navegación */
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  width: 42px !important;
+  height: 42px !important;
+  z-index: 2;
+}
+
+.nav-btn.left {
+  left: 10px;
+}
+
+.nav-btn.right {
+  right: 10px;
+}
+
+.nav-btn .pi {
+  font-size: 1.2rem;
+  color: #2563eb;
+}
+
+/* Contenedor del visor */
+.preview-viewer {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  max-height: 85vh;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  background-color: #fff;
+  padding: 0.5rem;
+}
+
+
+/* Imagen */
+.image-container {
+  width: 100%;
+  text-align: center;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+
+/* Loader */
+.preview-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #6b7280;
+  gap: 0.5rem;
+}
+
+.preview-spinner {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+/* Tipos no soportados */
+.unsupported {
+  text-align: center;
+  color: #4b5563;
+}
+.unsupported .pi {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
 }

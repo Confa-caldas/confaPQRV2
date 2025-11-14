@@ -8,16 +8,21 @@
   <p-card>
     <ul class="list-unstyled">
       <div class="container">
-        <div class="container-row"
-          *ngIf="(requestDetails?.priority_level === 1 || requestDetails?.priority_level === 2) 
-              && requestDetails?.status_name !== 'Cerrada'">
+        <div
+          class="container-row"
+          *ngIf="
+            (requestDetails?.priority_level === 1 || requestDetails?.priority_level === 2) &&
+            requestDetails?.status_name !== 'Cerrada'
+          ">
           <div class="container-column">
-            <label class="container-label prioridad-label"
-                  [ngClass]="{
-                    'prioridad-baja': requestDetails.priority_level === 1,
-                    'prioridad-alta': requestDetails.priority_level === 2
-                  }">
-              <i class="pi"
+            <label
+              class="container-label prioridad-label"
+              [ngClass]="{
+                'prioridad-baja': requestDetails.priority_level === 1,
+                'prioridad-alta': requestDetails.priority_level === 2
+              }">
+              <i
+                class="pi"
                 [ngClass]="{
                   'pi-exclamation-circle': requestDetails.priority_level === 1,
                   'pi-exclamation-triangle': requestDetails.priority_level === 2
@@ -33,16 +38,16 @@
             </label>
           </div>
         </div>
-        
-        
+
         <div class="container-row">
           <div class="container-column">
             <label class="container-label"> Número de Radicado </label>
             <li class="container-text">{{ requestDetails.filing_number }}</li>
           </div>
           <div class="container-column">
-            <label class="container-label"> Fecha radicación </label>
-            <li class="container-text">{{ requestDetails.filing_date }}</li>
+            <label class="container-label"> Fecha y hora radicación </label>
+            <li class="container-text">{{ requestDetails.filing_date }} - {{ ('1970-01-01T' + requestDetails.filing_time) | date:'shortTime':'America/Bogota' }}
+</li>
           </div>
           <div class="container-column">
             <label class="container-label"> Tipo de solicitante </label>
@@ -112,14 +117,14 @@
     </div>
 
     <!-- Similares sutiles, debajo del detalle -->
-<div *ngIf="similares && similares.length > 0" class="similares-discretos">
-  <small>Solicitudes similares:</small>
-  <div class="similares-badges">
-    <span *ngFor="let id of similares"  [routerLink]="['/request-details', id]" class="badge">
-      #{{ id }}
-    </span>
-  </div>
-</div>
+    <div *ngIf="similares && similares.length > 0" class="similares-discretos">
+      <small>Solicitudes similares:</small>
+      <div class="similares-badges">
+        <span *ngFor="let id of similares" [routerLink]="['/request-details', id]" class="badge">
+          #{{ id }}
+        </span>
+      </div>
+    </div>
   </p-card>
 
   <p-toast />
@@ -144,10 +149,12 @@
         [style]="{ 'border-radius': '10px' }"></p-button>
     </div>
 
-    <div class="container-button"
-     *ngIf="requestDetails &&
-            (requestDetails.status_name !== 'Cerrada' &&
-             requestDetails.priority_level !== 2)">
+    <div
+      class="container-button"
+      *ngIf="
+        requestDetails &&
+        requestDetails.status_name !== 'Cerrada' && requestDetails.priority_level !== 2
+      ">
       <p-menu #menu [model]="itemsGenerals" [popup]="true"></p-menu>
       <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
     </div>
@@ -247,6 +254,14 @@
             </div>
             <div class="process-container-row" *ngIf="requestDetails.request_answer !== ''">
               <div class="process-container-col-description">
+                <label class="process-container-label"> Tiempo de respuesta de la solicitud </label>
+                <li class="process-container-text" [ngStyle]="{ 'white-space': 'pre-line' }">
+                  {{ tiempoRespuesta }}
+                </li>
+              </div>
+            </div>
+            <div class="process-container-row" *ngIf="requestDetails.request_answer !== ''">
+              <div class="process-container-col-description">
                 <label class="process-container-label"> Respuesta solicitud </label>
                 <li class="process-container-text" [ngStyle]="{ 'white-space': 'pre-line' }">
                   {{ requestDetails.request_answer }}
@@ -272,13 +287,27 @@
         <div class="p-tab-view">
           <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
             <p-tabPanel header="Adjunto de solicitante" headerStyleClass="p-tabview-nav-link-sub">
-              <p-button 
-  *ngIf="requestApplicantAttachmentsList && requestApplicantAttachmentsList.length > 0"
-  label="Descargar .zip"
-  icon="pi pi-download"
-  (click)="downloadAttachmentsAsZip()"
-  class="p-button-sm p-button-primary custom-zip-button">
-</p-button>
+              <p-button
+                *ngIf="
+                  requestApplicantAttachmentsList && requestApplicantAttachmentsList.length > 0
+                "
+                label="Descargar .zip"
+                icon="pi pi-download"
+                (click)="downloadAttachmentsAsZip()"
+                class="p-button-sm p-button-primary custom-zip-button">
+              </p-button>
+
+              <!-- Botón para abrir el visor -->
+              <p-button
+              *ngIf="
+                  requestApplicantAttachmentsList && requestApplicantAttachmentsList.length > 0
+                "
+              type="button"
+              icon="pi pi-images"
+              label="Ver adjuntos"
+              (click)="openPreviewCarousel()"
+              class="p-button-sm p-button-primary custom-carrusel-button">
+              </p-button>
 
               <p-table
                 [value]="requestApplicantAttachmentsList"
@@ -304,11 +333,17 @@
                 <ng-template pTemplate="body" let-requestApplicantAttachmentsList>
                   <tr>
                     <td [ngStyle]="{ 'text-align': 'center' }">
-                      <span 
-                      style="color: #0d6efd; text-decoration: underline; cursor: pointer;"
-                      (click)="getPreSignedUrlToDownload(requestApplicantAttachmentsList.url, requestApplicantAttachmentsList.file_name, false)">
-                      {{ requestApplicantAttachmentsList.file_name }}
-                    </span>
+                      <span
+                        style="color: #0d6efd; text-decoration: underline; cursor: pointer"
+                        (click)="
+                          getPreSignedUrlToDownload(
+                            requestApplicantAttachmentsList.url,
+                            requestApplicantAttachmentsList.file_name,
+                            false
+                          )
+                        ">
+                        {{ requestApplicantAttachmentsList.file_name }}
+                      </span>
                     </td>
                     <td [ngStyle]="{ 'text-align': 'center' }">
                       {{ requestApplicantAttachmentsList.file_date }}
@@ -511,21 +546,32 @@
               </textarea>
               -->
 
-              <div *ngIf="requestDetails.contact_cellphone === true && requestDetails.contact_email === false" class="sms-alert">
+              <div
+                *ngIf="
+                  requestDetails.contact_cellphone === true &&
+                  requestDetails.contact_email === false
+                "
+                class="sms-alert">
                 <ng-container *ngIf="requestDetails.contact_email; else soloSMS">
-                  Este mensaje también será enviado por <strong>SMS</strong>. El contenido debe tener máximo 320 caracteres.
+                  Este mensaje también será enviado por <strong>SMS</strong>. El contenido debe
+                  tener máximo 320 caracteres.
                 </ng-container>
                 <ng-template #soloSMS>
-                  Este mensaje será enviado únicamente por <strong>SMS</strong>. El contenido debe tener máximo 320 caracteres.
+                  Este mensaje será enviado únicamente por <strong>SMS</strong>. El contenido debe
+                  tener máximo 320 caracteres.
                 </ng-template>
               </div>
-
 
               <textarea
                 rows="5"
                 cols="30"
                 formControlName="mensage"
-                [attr.maxlength]="requestDetails.contact_cellphone===true && requestDetails.contact_email===false ? 320 : null"
+                [attr.maxlength]="
+                  requestDetails.contact_cellphone === true &&
+                  requestDetails.contact_email === false
+                    ? 320
+                    : null
+                "
                 [style]="{ 'border-radius': '5px' }"
                 type="text"
                 class="custom-input"
@@ -535,14 +581,24 @@
 
               <!-- Opcional: contador de caracteres -->
               <div class="text-right text-xs text-muted">
-                {{ requestProcess.get('mensage')?.value?.length || 0 }}/{{ requestDetails.contact_cellphone===true && requestDetails.contact_email===false ? 320 : '6000' }} caracteres
+                {{ requestProcess.get('mensage')?.value?.length || 0 }}/{{
+                  requestDetails.contact_cellphone === true &&
+                  requestDetails.contact_email === false
+                    ? 320
+                    : '6000'
+                }}
+                caracteres
               </div>
-
 
               <!-- <p class="static-text">Cordialmente, {{ requestDetails.user_name_completed }}</p> -->
 
               <p class="static-text">
-                Cordialmente, {{ requestDetails.user_name_completed === 'ext_niyaraky' ? '' : requestDetails.user_name_completed }}
+                Cordialmente,
+                {{
+                  requestDetails.user_name_completed === 'ext_niyaraky'
+                    ? ''
+                    : requestDetails.user_name_completed
+                }}
               </p>
 
               <label class="formProcess-card-text-placeholder-invalid">
@@ -570,11 +626,13 @@
               </p-button>
             </div> -->
           </form>
-          <div class="formProcess-buttonUp" *ngIf="
-            (requestDetails.contact_email && !requestDetails.contact_cellphone) ||
-            (requestDetails.contact_email && requestDetails.contact_cellphone) ||
-            (!requestDetails.contact_email && !requestDetails.contact_cellphone)
-                  ">
+          <div
+            class="formProcess-buttonUp"
+            *ngIf="
+              (requestDetails.contact_email && !requestDetails.contact_cellphone) ||
+              (requestDetails.contact_email && requestDetails.contact_cellphone) ||
+              (!requestDetails.contact_email && !requestDetails.contact_cellphone)
+            ">
             <label class="formProcess-card-text-placeholder">Adjuntos</label>
             <div class="formProcess-buttonUp-custom-button">
               <input
@@ -684,7 +742,7 @@
                         requestHistoric.status_name
                       )
                     "></p-button>
-                    <p-button
+                  <p-button
                     *ngIf="requestHistoric.status_name === 'Priorizada'"
                     icon="pi pi-eye"
                     [styleClass]="'btn-icon-info'"
@@ -701,76 +759,215 @@
             [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
         </div>
       </p-tabPanel>
-      <!-- //Esto es nuevo -->
-       <!--
+
       <p-tabPanel header="Consultas Genesys" headerStyleClass="p-tabview-nav-link-1">
-        <ul class="list-unstyled">
-          <div class="container">
+        <p-tabView>
+          <!-- Tab 1: Afiliado -->
+          <p-tabPanel header="Afiliado" headerStyleClass="p-tabview-nav-link-1">
+              <div class="container-row">
+                  <label class="container-label">
+                    Documento Afiliado
+                    <input
+                      rows="5"
+                      cols="30"
+                      type="text"
+                      class="input-text"
+                      placeholder="Ingresa el documento"
+                      [style]="{ 'border-radius': '5px' }"
+                      [(ngModel)]="documentAfiliadoValue" />
+                    <p-button
+                      label="Consultar"
+                      (click)="consultarWs(documentAfiliadoValue)"
+                      [style]="{ 'border-radius': '5px' }"
+                      [disabled]="!documentAfiliadoValue || !documentAfiliadoValue.trim()"></p-button>
+                  </label>
+              </div>
+              
+              <ul class="list-unstyled">
+          <div class="process-container" *ngIf="afiliado; else noInfo">
             <div class="container-row">
-              <div class="container-column">
-                <label class="container-label">
-                  Documento
-                  <input
-                    type="text"
-                    class="input-text"
-                    placeholder="Ingresa el documento"
-                    [(ngModel)]="documentValue" />
-                  <p-button
-                    label="Consultar"
-                    (click)="consultarWs(documentValue)"
-                    [style]="{ 'border-radius': '10px' }"></p-button>
-                </label>
+                  <label class="container-label" style="font-size: 15px"
+                    >Información Afiliado</label>
+              </div>
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Tipo documento </label>
+                <li class="process-container-text">{{ afiliado.tipoDocumento }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Número documento </label>
+                <li class="process-container-text">{{ afiliado.documento }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Nombre </label>
+                <li class="process-container-text">{{ afiliado.nombre }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Edad </label>
+                <li class="process-container-text">{{ afiliado.edad }}
+                </li>
               </div>
             </div>
-            <div class="container-row">
-              <div class="container-column">
-                <label class="container-label" style="font-size: 15px">Información Afiliado</label>
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Fecha de nacimiento </label>
+                <li class="process-container-text">{{ afiliado.fechaNacimiento }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Género </label>
+                <li class="process-container-text">{{ afiliado.sexo }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Estado </label>
+                <li class="process-container-text">{{ afiliado.estado }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Categoría </label>
+                <li class="process-container-text">{{ afiliado.categoria }}</li>
               </div>
             </div>
-            <div class="container-row">
-              <div class="container-column">
-                <label class="container-label"> Tipo documento </label>
-                <li class="container-text">{{ afiliado?.tipoDocumento }}</li>
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Teléfono </label>
+                <li class="process-container-text">{{ afiliado.telefono }}</li>
               </div>
-              <div class="container-column">
-                <label class="container-label"> Documento </label>
-                <li class="container-text">{{ afiliado?.documento }}</li>
+              <div class="process-container-col">
+                <label class="process-container-label"> Estado civil </label>
+                <li class="process-container-text">{{ afiliado.estadoCivil }}</li>
               </div>
-              <div class="container-column">
-                <label class="container-label"> Nombre Afiliado </label>
-                <li class="container-text">{{ afiliado?.nombre }}</li>
+              <div class="process-container-col">
+                <label class="process-container-label"> Correo electrónico </label>
+                <li class="process-container-text">{{ afiliado.email }}</li>
               </div>
-              <div class="container-column">
-                <label class="container-label"> Fecha nacimiento</label>
-                <li class="container-text">{{ afiliado?.fechaNacimiento }}</li>
+              <div class="process-container-col">
+                <label class="process-container-label"> Nombre empresa </label>
+                <li class="process-container-text">{{ afiliado.empresa }}</li>
               </div>
-              <div class="container-column">
-                <label class="container-label"> Estado </label>
-                <li class="container-text">{{ afiliado?.estado }}</li>
+              
+            </div>
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Tipo de trabajador </label>
+                <li class="process-container-text">{{ afiliado.tipoTrabajador }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Fecha afiliación </label>
+                <li class="process-container-text">{{ afiliado.fechaAfiliacion }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Fecha ingreso </label>
+                <li class="process-container-text">{{ afiliado.fechaIngreso }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label">  </label>
+                <li class="process-container-text"></li>
               </div>
             </div>
-            <div class="container-row">
-              <div class="container-column">
-                <label class="container-label"> Empresa </label>
-                <li class="container-text">{{ afiliado?.empresa }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Tipo Trabajador </label>
-                <li class="container-text">{{ afiliado?.tipoTrabajador }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Fecha ingreso </label>
-                <li class="container-text">{{ afiliado?.fechaIngreso }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Fecha afiliación </label>
-                <li class="container-text">{{ afiliado?.fechaAfiliacion }}</li>
-              </div>
-              <div class="container-column"></div>
-            </div>
+            <br />
           </div>
+          <!-- Si NO existe afiliado, muestra este bloque -->
+          <ng-template #noInfo>
+            <div *ngIf="consultaRealizadaAfiliado && !afiliado" class="no-info">
+              <p>No hay información disponible para el documento ingresado.</p>
+            </div>
+          </ng-template>
         </ul>
-      </p-tabPanel> -->
+          </p-tabPanel>
+
+          <!-- Tab 2: Empresa -->
+          <p-tabPanel header="Empresa" headerStyleClass="p-tabview-nav-link-2">
+            <div class="container-row">
+                  <label class="container-label">
+                    Documento Empresa
+                    <input
+                      rows="5"
+                      cols="30"
+                      type="text"
+                      class="input-text"
+                      placeholder="Ingresa el documento"
+                      [style]="{ 'border-radius': '5px' }"
+                      [(ngModel)]="documentEmpresaValue" />
+                    <p-button
+                      label="Consultar"
+                      (click)="consultarEmpresaWs(documentEmpresaValue)"
+                      [style]="{ 'border-radius': '5px' }"
+                      [disabled]="!documentEmpresaValue || !documentEmpresaValue.trim()"></p-button>
+                  </label>
+              </div>
+              
+              <ul class="list-unstyled">
+          <div class="process-container" *ngIf="empresa; else noInfoEmpresa">
+            <div class="container-row">
+                  <label class="container-label" style="font-size: 15px"
+                    >Información Empresa</label>
+              </div>
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Código Genesys </label>
+                <li class="process-container-text">{{ empresa.codigoGenesys }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Número documento </label>
+                <li class="process-container-text">{{ empresa.documento }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Razón social </label>
+                <li class="process-container-text">{{ empresa.razonSocial }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Nombre comercial </label>
+                <li class="process-container-text">{{ empresa.nombreComercial }}
+                </li>
+              </div>
+            </div>
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Teléfono </label>
+                <li class="process-container-text">{{ empresa.telefono }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Dirección </label>
+                <li class="process-container-text">{{ empresa.direccion }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Correo electrónico </label>
+                <li class="process-container-text">{{ empresa.email }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Estado </label>
+                <li class="process-container-text">{{ empresa.estado }}</li>
+              </div>
+            </div>
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Representante legal </label>
+                <li class="process-container-text">{{ empresa.nombreRepLeg }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Tipo documento representante legal</label>
+                <li class="process-container-text">{{ empresa.tipoDocumentoRepLeg }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Documento representante legal </label>
+                <li class="process-container-text">{{ empresa.documentoRepLeg }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Actividad económica </label>
+                <li class="process-container-text">{{ empresa.actividadEconomica }}</li>
+              </div>
+            </div>
+            <br />
+          </div>
+          <!-- Si NO existe empresa, muestra este bloque -->
+          <ng-template #noInfoEmpresa>
+            <div *ngIf="consultaRealizadaEmpresa && !empresa" class="no-info">
+              <p>No hay información disponible para el documento ingresado.</p>
+            </div>
+          </ng-template>
+        </ul>
+          </p-tabPanel>
+        </p-tabView>
+      </p-tabPanel>
     </p-tabView>
   </div>
   <!-- <p-dialog
@@ -1349,3 +1546,169 @@
     </div>
   </form>
 </p-dialog>
+
+<!-- Subida de adjuntos adicionales -->
+<p-dialog
+  [(visible)]="isVisibleAdjuntosAdicionales"
+  [modal]="true"
+  [showHeader]="false"
+  [style]="{ width: '50vw', 'border-radius': '12px', 'max-width': '700px' }"
+  [contentStyle]="{ padding: '2em' }"
+  [closable]="false"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false">
+  <!-- Encabezado personalizado -->
+  <div class="custom-dialog-header">
+    <i class="pi pi-upload"></i>
+    <h2>Subida de adjuntos adicionales Radicación: {{ requestDetails?.request_id }}</h2>
+  </div>
+
+  <!-- Formulario -->
+  <form [formGroup]="additionalRequestForm" (ngSubmit)="onSubmitAdditional()">
+    <!-- Archivos adjuntos -->
+    <div class="form-group">
+      <label for="file">Archivos adjuntos</label>
+      <div class="custom-file-upload">
+        <input
+          id="file"
+          type="file"
+          #archive_request_additional
+          name="archive_request_additional"
+          (change)="onFileSelectedAdditional($event)"
+          accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+          maxFileSize="20971520"
+          multiple />
+        <label class="upload-label" (click)="openFileInputAdditional()">
+          Seleccionar Archivo <i class="pi pi-upload"></i>
+        </label>
+      </div>
+
+      <!-- Mensajes de error -->
+      <p class="error-message" *ngIf="errorSizeFile || errorExtensionFile || errorRepeatFile">
+        {{ errorSizeFile ? errorMensajeFile : '' }}
+        {{ errorExtensionFile ? errorMensajeFile : '' }}
+        {{ errorRepeatFile ? errorMensajeFile : '' }}
+      </p>
+    </div>
+
+    <!-- Lista de archivos seleccionados -->
+    <div class="file-list" *ngFor="let fileNameP of fileNameListAdditional; let i = index">
+      <p class="file-name">{{ fileNameP }}</p>
+      <i (click)="clearFileInputAdditional(i)" class="pi pi-times remove-file"></i>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-primary" [disabled]="additionalRequestForm.invalid">
+        Subir archivos
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="closeDialogAdditional()">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</p-dialog>
+
+<!-- Diálogo visor -->
+<p-dialog
+  [(visible)]="isPreviewCarouselVisible"
+  [modal]="true"
+  [style]="{ width: '90vw', height: '90vh', 'max-width': '1200px' }"
+  [contentStyle]="{ padding: '0', height: '100%' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  styleClass="preview-dialog"
+  (onHide)="isPreviewCarouselVisible = false">
+
+
+  <!-- HEADER PERSONALIZADO -->
+  <ng-template pTemplate="header">
+    <div class="preview-header">
+      <div class="preview-header-left">
+        
+        <div class="preview-header-text">
+          <i class="pi pi-images"></i>
+          <span class="title">Adjuntos de la solicitud</span>
+          <span class="subtitle" *ngIf="attachments.length">
+            {{ currentIndex + 1 }} de {{ attachments.length }} documentos
+          </span>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- CONTENIDO -->
+  <div class="preview-body" *ngIf="attachments.length; else noAttachments">
+    <!-- VISOR CENTRAL CON FLECHAS A LOS LADOS -->
+<div class="preview-viewer-layout">
+  <!-- Flecha izquierda -->
+  <button
+    pButton
+    type="button"
+    icon="pi pi-chevron-circle-left"
+    class="nav-btn left"
+    (click)="prevAttachment()"
+    [disabled]="currentIndex === 0 || loadingFile">
+    <span class="p-button-icon pi pi-chevron-left"></span>
+  </button>
+
+  <!-- Contenedor del documento -->
+  <div class="preview-viewer">
+    <!-- Imagen -->
+    <div *ngIf="!loadingFile && viewerType === 'image'" class="image-container">
+      <img [src]="preSignedUrlDownload" alt="Preview" class="image-preview" />
+    </div>
+
+    <!-- PDF -->
+    <div *ngIf="!loadingFile && viewerType === 'pdf'">
+      <ngx-doc-viewer
+        [url]="preSignedUrlDownload"
+        viewer="google"
+        style="width: 100%; height: 80vh;">
+      </ngx-doc-viewer>
+    </div>
+
+    <!-- Documentos de Office -->
+    <div *ngIf="!loadingFile && viewerType === 'office'">
+      <ngx-doc-viewer
+        [url]="preSignedUrlDownload"
+        viewer="office"
+        style="width: 100%; height: 80vh;">
+      </ngx-doc-viewer>
+    </div>
+
+    <!-- Documentos de Google -->
+    <div *ngIf="!loadingFile && viewerType === 'google'">
+      <ngx-doc-viewer
+        [url]="preSignedUrlDownload"
+        viewer="google"
+        style="width: 100%; height: 80vh;">
+      </ngx-doc-viewer>
+    </div>
+  </div>
+
+  <!-- Flecha derecha -->
+  <button
+    pButton
+    type="button"
+    icon="pi pi-arrow-circle-right"
+    class="nav-btn right"
+    (click)="nextAttachment()"
+    [disabled]="currentIndex === attachments.length - 1 || loadingFile">
+    <span class="p-button-icon pi pi-chevron-right"></span>
+  </button>
+</div>
+
+  </div>
+
+  <!-- SIN ADJUNTOS -->
+  <ng-template #noAttachments>
+    <div class="preview-empty">
+      <i class="pi pi-folder-open"></i>
+      <p>No hay adjuntos para mostrar.</p>
+    </div>
+  </ng-template>
+</p-dialog>
+
