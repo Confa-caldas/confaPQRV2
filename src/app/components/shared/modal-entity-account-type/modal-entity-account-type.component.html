@@ -1,0 +1,122 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '40vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">{{ message }}</div>
+      </div>
+      <form [formGroup]="formGroup">
+        <div class="row my-4 px-5">
+          <div class="col-12">
+            <label> Código </label>
+            <input
+              [readonly]="this.buttonmsg !== 'Crear' ? true : false"
+              formControlName="entity_account_type_id"
+              pInputText
+              pKeyFilter="integer"
+              placeholder="000" />
+            <label class="invalid">
+              {{
+                formGroup.get('entity_account_type_id')?.hasError('required') &&
+                formGroup.get('entity_account_type_id')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}{{
+                formGroup.get('entity_account_type_id')?.hasError('pattern') &&
+                formGroup.get('entity_account_type_id')?.touched
+                  ? 'Ingrese solo números'
+                  : ''
+              }}</label
+            >
+          </div>
+          <div class="col-12" [style]="{ display: 'flex', 'flex-direction': 'column' }">
+            <label> Seleccione la entidad </label>
+            <p-dropdown
+              formControlName="entity_id"
+              [style]="{ height: '30px', width: '100%' }"
+              [options]="entityList"
+              optionLabel="entity_name"
+              [disabled]="read_only"
+              optionValue="entity_id"
+              placeholder="Seleccione una opción"></p-dropdown>
+          </div>
+          <div class="col-12" [style]="{ display: 'flex', 'flex-direction': 'column' }">
+            <label> Seleccione el tipo de cuenta </label>
+            <p-dropdown
+              formControlName="account_type_id"
+              [style]="{ height: '30px', width: '100%' }"
+              [options]="accountTypeList"
+              optionLabel="account_type_name"
+              [disabled]="read_only"
+              optionValue="account_type_id"
+              placeholder="Seleccione una opción"></p-dropdown>
+          </div>
+          <div class="col-12">
+            <label> Longitud </label>
+            <input
+              [readonly]="read_only"
+              formControlName="length"
+              pInputText
+              pKeyFilter="int"
+              placeholder="Escriba la longitud" />
+            <label class="invalid">
+              {{
+                formGroup.get('length')?.hasError('required') &&
+                formGroup.get('length')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}{{
+                formGroup.get('length')?.hasError('pattern') &&
+                formGroup.get('length')?.touched
+                  ? 'Ingrese solo números entre el 1 y 20'
+                  : ''
+              }}</label
+            >
+          </div>
+          <div class="col-12">
+            <label> Observación </label>
+            <textarea
+              [readonly]="read_only"
+              formControlName="observation"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba la Observación" ></textarea>
+            <label class="invalid">
+              {{
+                formGroup.get('observation')?.hasError('pattern') &&
+                formGroup.get('observation')?.touched
+                  ? 'Ingrese hasta 100 caracteres sin símbolos especiales'
+                  : ''
+              }}</label
+            >
+          </div>
+        </div>
+      </form>
+      <div *ngIf="read_only">
+        <div class="row my-4 px-5">
+          <div class="col-12 d-flex justify-content-evenly">
+            <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!read_only">
+        <div class="row my-4 px-5">
+          <div class="col-12 d-flex justify-content-evenly">
+            <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+            <p-button
+              [label]="buttonmsg"
+              [disabled]="!formGroup.valid"
+              (click)="closeDialog(true)"></p-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

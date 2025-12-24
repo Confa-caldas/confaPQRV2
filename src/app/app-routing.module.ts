@@ -70,6 +70,58 @@ const routes: Routes = [
       import('./components/private/modality/modality.module').then(m => m.ModalityModule),
   },
   {
+    path: RoutesApp.REASON_ACCOUNT_UPDATE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/reason-account-update/reason-account-update.module').then(
+        m => m.ReasonAccountUpdateModule
+      ),
+  },
+  {
+    path: RoutesApp.ACCOUNT_TYPE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/account-type/account-type.module').then(
+        m => m.AccountTypeModule
+      ),
+  },
+  {
+    path: RoutesApp.ENTITY,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/entity/entity.module').then(m => m.EntityModule),
+  },
+  {
+    path: RoutesApp.ENTITY_ACCOUNT_TYPE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/entity-account-type/entity-account-type.module').then(
+        m => m.EntityAccountTypeModule
+      ),
+  },
+  {
+    path: RoutesApp.PAYMENT_METHOD_REQUEST,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/payment-method-request/payment-method-request.module').then(
+        m => m.PaymentMethodRequestModule
+      ),
+  },
+  {
+    path: RoutesApp.PAYMENT_METHOD_REQUEST_DETAILS + '/:id',
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import(
+        './components/private/payment-method-request-details/payment-method-request-details.module'
+      ).then(m => m.PaymentMethodRequestDetailsModule),
+  },
+  {
     path: RoutesApp.CATEGORY,
     canActivate: [sessionGuard],
     component: LayoutComponent,

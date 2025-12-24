@@ -1,0 +1,646 @@
+<div *ngIf="isSpinnerVisible" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
+
+<div class="row mb-2">
+  <div class="title">Consultar solicitudes</div>
+</div>
+
+@if (requestDetails) {
+  <p-card>
+    <ul class="list-unstyled">
+      <div class="container">
+        <!-- Resumen superior sin adjuntos/acciones -->
+        <div class="container-row">
+          <div class="container-column">
+            <label class="container-label"> Número de Radicado </label>
+            <li class="container-text">{{ requestDetails.filing_number }}</li>
+          </div>
+          <div class="container-column">
+            <label class="container-label"> Fecha y hora radicación </label>
+            <li class="container-text">{{ requestDetails.request_datetime }}</li>
+          </div>
+          <div class="container-column">
+            <label class="container-label"> Estado de solicitud</label>
+            <li class="container-text">{{ requestDetails.payment_method_status_name }}</li>
+          </div>
+          <div class="container-column">
+            <label class="container-label"> Método anterior </label>
+            <li class="container-text">{{ requestDetails.previous_payment_method }}</li>
+          </div>
+          <div class="container-column">
+            <label class="container-label"> Nuevo método </label>
+            <li class="container-text">{{ requestDetails.new_payment_method }}</li>
+          </div>
+        </div>
+
+        <div class="container-row">
+          <div class="container-column">
+            <label class="container-label"> Trabajador - Tipo/Número </label>
+            <li class="container-text">
+              {{ requestDetails.worker_document_type }} {{ requestDetails.worker_document_number }}
+            </li>
+          </div>
+          <div class="container-column">
+            <label class="container-label"> Trabajador - Nombre </label>
+            <li class="container-text">{{ requestDetails.worker_full_name }}</li>
+          </div>
+          <div class="container-column">
+            <label class="container-label"> Administrador - Tipo/Número </label>
+            <li class="container-text">
+              {{ requestDetails.admin_document_type }} {{ requestDetails.admin_document_number }}
+            </li>
+          </div>
+          <div class="container-column">
+            <label class="container-label"> Administrador - Nombre </label>
+            <li class="container-text">{{ requestDetails.admin_full_name }}</li>
+          </div>
+          <div class="container-column"></div>
+        </div>
+      </div>
+    </ul>
+  </p-card>
+
+  <div class="process-container-row-generals">
+    <div class="container-button">
+      <p-button
+        *ngIf="
+          !requestDetails.internal_management &&
+          ((requestDetails.payment_method_status_name === 'Radicada' &&
+            (requestDetails.payment_method_process_status_name === 'No termino' ||
+              requestDetails.transfer_process_status_name === 'No termino')) ||
+            (requestDetails.transfer_process_status_name === 'Aplicado con saldo' &&
+              requestDetails.transfer_status_name === null
+            ))
+        "
+        label="Asignar Solicitud"
+        [style]="{ 'border-radius': '10px' }"
+        (onClick)="assignRequest()">
+      </p-button>
+    </div>
+  </div>
+
+  <div class="p-tabview" style="margin-top: 1rem">
+    <p-tabView class="p-tabview-nav" (onChange)="onTabChange($event)">
+      <!-- Radicación -->
+      <p-tabPanel header="Radicación" headerStyleClass="p-tabview-nav-link-1 ">
+        <ul class="list-unstyled">
+          <div class="process-container">
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> ID </label>
+                <li class="process-container-text">{{ requestDetails.request_id }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Número de radicado </label>
+                <li class="process-container-text">{{ requestDetails.filing_number }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Fecha de radicación </label>
+                <li class="process-container-text">{{ requestDetails.request_datetime }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Estado de solicitud </label>
+                <li class="process-container-text">
+                  {{ requestDetails.payment_method_status_name }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Motivo del cambio </label>
+                <li class="process-container-text">{{ requestDetails.change_reason }}</li>
+              </div>
+            </div>
+
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Trabajador documento </label>
+                <li class="process-container-text">
+                  {{ requestDetails.worker_document_type }}
+                  {{ requestDetails.worker_document_number }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Trabajador nombre </label>
+                <li class="process-container-text">{{ requestDetails.worker_full_name }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Administrador documento </label>
+                <li class="process-container-text">
+                  {{ requestDetails.admin_document_type }}
+                  {{ requestDetails.admin_document_number }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Administrador nombre </label>
+                <li class="process-container-text">{{ requestDetails.admin_full_name }}</li>
+              </div>
+              <div class="process-container-col"></div>
+            </div>
+
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Método de pago anterior </label>
+                <li class="process-container-text">{{ requestDetails.previous_payment_method }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Banco anterior / Tipo / Cuenta </label>
+                <li class="process-container-text">
+                  {{ requestDetails.previous_bank_name }} •
+                  {{ requestDetails.previous_account_type }} •
+                  {{ requestDetails.previous_account_number }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Nuevo método de pago </label>
+                <li class="process-container-text">{{ requestDetails.new_payment_method }}</li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Banco actual / Tipo / Cuenta </label>
+                <li class="process-container-text">
+                  {{ requestDetails.bank_name }} • {{ requestDetails.account_type }} •
+                  {{ requestDetails.account_number }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Llave </label>
+                <li class="process-container-text">{{ requestDetails.key_value }}</li>
+              </div>
+            </div>
+
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Estado gestión medio de pago </label>
+                <li class="process-container-text">
+                  {{ requestDetails.payment_method_process_status_name }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Fecha de novedad medio de pago </label>
+                <li class="process-container-text">
+                  {{ requestDetails.payment_method_update_datetime }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label">
+                  Usuario que actualizó novedad medio de pago
+                </label>
+                <li class="process-container-text">
+                  {{ requestDetails.payment_method_update_user }}
+                </li>
+              </div>
+              <div class="process-container-col"></div>
+              <div class="process-container-col"></div>
+            </div>
+
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Estado gestión traslado </label>
+                <li class="process-container-text">
+                  {{ requestDetails.transfer_process_status_name }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Fecha de novedad traslado </label>
+                <li class="process-container-text">
+                  {{ requestDetails.payment_method_update_datetime }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label">
+                  Usuario que actualizó novedad traslado
+                </label>
+                <li class="process-container-text">
+                  {{ requestDetails.transfer_update_user }}
+                </li>
+              </div>
+              <div class="process-container-col"></div>
+              <div class="process-container-col"></div>
+            </div>
+
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> En gestión interna </label>
+                <li class="process-container-text">
+                  {{ requestDetails.internal_management }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Fecha trámite de la solicitud </label>
+                <li class="process-container-text">
+                  {{ requestDetails.processed_datetime }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label">
+                  Usuario que actualizó novedad traslado
+                </label>
+                <li class="process-container-text">
+                  {{ requestDetails.internal_management_user }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Días de solicitud </label>
+                <li class="process-container-text">
+                  {{ requestDetails.request_days }}
+                </li>
+              </div>
+              <div class="process-container-col"></div>
+            </div>
+
+            <div class="process-container-row">
+              <div class="process-container-col">
+                <label class="process-container-label"> Observación usuario </label>
+                <li class="process-container-text">
+                  {{ requestDetails.user_observation }}
+                </li>
+              </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Cuenta validada </label>
+                <li class="process-container-text">
+                  {{ requestDetails.account_validation_status }}
+                </li>
+              </div>
+              <div class="process-container-col"></div>
+              <div class="process-container-col"></div>
+              <div class="process-container-col"></div>
+            </div>
+          </div>
+        </ul>
+      </p-tabPanel>
+
+      <!-- Histórico Gestión -->
+      <p-tabPanel header="Histórico Gestión" headerStyleClass="p-tabview-nav-link-3">
+        <div class="process-container">
+          <p-table
+            [value]="requestHistoric"
+            [scrollable]="true"
+            scrollHeight="400px"
+            selectionMode="single"
+            [paginator]="false"
+            [rows]="5"
+            [showCurrentPageReport]="true"
+            [tableStyle]="{ 'min-width': '50rem' }">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="updated_date" style="width: 10%">
+                  Fecha<p-sortIcon field="updated_date"></p-sortIcon>
+                </th>
+                <th>Fecha y hora solicitud</th>
+                <th>Estado solicitud</th>
+                <th>Estado gestión medio de pago</th>
+                <th>Estado gestión traslado</th>
+                <th>Fecha y hora novedad medio de pago</th>
+                <th>Fecha y hora novedad traslado</th>
+                <th>Fecha y hora solicitud tramitada</th>
+                <th>Usuario que actualizó novedad medio de pago</th>
+                <th>Usuario que actualizó novedad traslado</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-requestHistoric>
+              <tr>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ requestHistoric.request_datetime }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ requestHistoric.payment_method_status_name }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ requestHistoric.payment_method_process_status_name }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ requestHistoric.transfer_process_status_name }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ requestHistoric.payment_method_update_datetime }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ requestHistoric.transfer_update_datetime }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ requestHistoric.processed_datetime }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ requestHistoric.payment_method_update_user }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ requestHistoric.transfer_update_user }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+          <p-paginator
+            (onPageChange)="onPageChangeHistoric($event)"
+            [first]="firstHistoric"
+            [rows]="rowsHistoric"
+            [totalRecords]="totalRowsHistoric"
+            [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+        </div>
+      </p-tabPanel>
+
+      <!-- Adjuntos -->
+      <p-tabPanel header="Adjuntos" headerStyleClass="p-tabview-nav-link-2">
+        <div class="process-container">
+          <p-table
+            *ngIf="requestDetails.attachment"
+            [value]="[requestDetails.attachment]"
+            [scrollable]="true"
+            scrollHeight="400px"
+            selectionMode="single"
+            [showCurrentPageReport]="true"
+            [tableStyle]="{ 'min-width': '52rem' }">
+            <ng-template pTemplate="header">
+              <tr style="height: 60px">
+                <th style="width: 40%">Archivo</th>
+                <th style="width: 15%">Formato</th>
+                <th style="width: 15%">Peso</th>
+                <th style="width: 15%">Previsualizar</th>
+                <th style="width: 15%">Descargar</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-attachment>
+              <tr>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  <span
+                    style="color: #0d6efd; text-decoration: underline; cursor: pointer"
+                    (click)="getPreSignedUrlToDownload(attachment, false)">
+                    {{ getFileName(attachment) }}
+                  </span>
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ getFileExtension(attachment) }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  {{ getFileSize(attachment) }}
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  <p-button
+                    icon="pi pi-eye"
+                    [styleClass]="'btn-icon-info'"
+                    (click)="getPreSignedUrlToDownload(attachment, false)">
+                  </p-button>
+                </td>
+                <td [ngStyle]="{ 'text-align': 'center' }">
+                  <p-button
+                    icon="pi pi-download"
+                    [styleClass]="'btn-icon-info'"
+                    (click)="getPreSignedUrlToDownload(attachment, true)">
+                  </p-button>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+          <div *ngIf="!requestDetails.attachment" style="text-align: center; padding: 20px">
+            <p>No hay archivos adjuntos para esta solicitud.</p>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- Tramitar solicitud -->
+      <p-tabPanel
+        *ngIf="requestDetails.internal_management"
+        header="Tramitar solicitud"
+        headerStyleClass="p-tabview-nav-link-4">
+        <form [formGroup]="processForm">
+          <div class="process-container">
+            <div class="process-container-row">
+              <div
+                class="process-container-col"
+                *ngIf="requestDetails.payment_method_process_status_name === 'No termino'">
+                <label class="process-container-label"> Estado gestión medio de pago </label>
+                <p-dropdown
+                  formControlName="medioPagoStatus"
+                  [options]="medioPagoStatusOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccione">
+                </p-dropdown>
+                <p-message
+                  *ngIf="
+                    processForm.get('medioPagoStatus')?.touched &&
+                    processForm.get('medioPagoStatus')?.invalid
+                  "
+                  severity="warn"
+                  text="Campo requerido">
+                </p-message>
+              </div>
+
+              <div
+                class="process-container-col"
+                *ngIf="requestDetails.transfer_process_status_name === 'No termino'">
+                <label class="process-container-label"> Estado gestión traslado </label>
+                <p-dropdown
+                  formControlName="trasladoStatus"
+                  [options]="trasladoStatusOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccione">
+                </p-dropdown>
+                <p-message
+                  *ngIf="
+                    processForm.get('trasladoStatus')?.touched &&
+                    processForm.get('trasladoStatus')?.invalid
+                  "
+                  severity="warn"
+                  text="Campo requerido">
+                </p-message>
+              </div>
+
+              <div
+                class="process-container-col"
+                *ngIf="requestDetails.payment_method_status_name === 'Radicada'">
+                <label class="process-container-label"> Estado solicitud </label>
+                <p-dropdown
+                  formControlName="requestStatus"
+                  [options]="requestStatusOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccione">
+                </p-dropdown>
+                <p-message
+                  *ngIf="
+                    processForm.get('requestStatus')?.touched &&
+                    processForm.get('requestStatus')?.invalid
+                  "
+                  severity="warn"
+                  text="Campo requerido">
+                </p-message>
+              </div>
+
+              <div
+                class="process-container-col"
+                *ngIf="
+                  this.requestDetails.payment_method_status_name === 'Tramitada' &&
+                  this.requestDetails.transfer_process_status_name === 'Aplicado con saldo'
+                ">
+                <label class="process-container-label"> Confirmación transferencia saldo </label>
+                <p-dropdown
+                  formControlName="pagoStatus"
+                  [options]="transferenciaStatusOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccione">
+                </p-dropdown>
+                <p-message
+                  *ngIf="
+                    processForm.get('pagoStatus')?.touched && processForm.get('pagoStatus')?.invalid
+                  "
+                  severity="warn"
+                  text="Campo requerido">
+                </p-message>
+              </div>
+            </div>
+
+            <div class="process-container-row">
+              <div class="process-container-col" *ngIf="processForm.get('observations')?.enabled">
+                <label class="process-container-label"> Observaciones (máx. 100) </label>
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="observations"
+                  maxlength="100"
+                  placeholder="Escriba el motivo del rechazo" />
+                <p-message
+                  *ngIf="
+                    processForm.get('observations')?.touched &&
+                    processForm.get('observations')?.invalid
+                  "
+                  severity="warn"
+                  text="Campo requerido (máx. 100 caracteres)">
+                </p-message>
+              </div>
+
+              <div class="process-container-col" *ngIf="processForm.get('attachment')?.enabled">
+                <label class="process-container-label"> Adjuntar archivo </label>
+                <div class="card-buttonUp-custom-button">
+                  <input
+                    type="file"
+                    #attachment_file
+                    class="card-buttonUp-custom-icon"
+                    name="attachment_file"
+                    (change)="onAttachmentFileSelected($event)"
+                    accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+                    maxFileSize="20971520"
+                  />
+
+                  <label class="card-buttonUp-label" (click)="openAttachmentFileInput()">
+                    <i
+                      class="pi pi-file-pdf"
+                      [style]="{ 'font-size': '19px', 'margin-right': '8px' }"
+                    ></i>
+                    Adjuntar archivo
+                    <i
+                      class="pi pi-upload"
+                      [style]="{ 'margin-left': '69px', 'font-size': '19px' }"
+                    ></i>
+                  </label>
+
+                  <label class="card-form-input-placeholder-invalid">
+                    {{ errorSizeAttachmentFile ? errorMensajeAttachmentFile : '' }}
+                    {{ errorExtensionAttachmentFile ? errorMensajeAttachmentFile : '' }}
+                  </label>
+                </div>
+
+                <!-- Mostrar archivo seleccionado -->
+                <div *ngIf="selectedAttachmentFile" class="uploaded-file-info" style="margin-top: 10px;">
+                  <i class="pi pi-check-circle" style="color: #28a745; margin-right: 5px"></i>
+                  Archivo seleccionado:
+                  <strong>{{ selectedAttachmentFile.name }}</strong>
+                  <p-button
+                    icon="pi pi-times"
+                    [style]="{
+                      'border-radius': '50%',
+                      height: '20px',
+                      width: '20px',
+                      'background-color': '#ebebeb',
+                      color: 'red',
+                      'margin-left': '10px'
+                    }"
+                    [text]="true"
+                    severity="danger"
+                    (click)="clearAttachmentFile()"
+                  ></p-button>
+                </div>
+
+                <p-message
+                  *ngIf="
+                    processForm.get('attachment')?.touched && processForm.get('attachment')?.invalid
+                  "
+                  severity="warn"
+                  text="Campo requerido - debe adjuntar un archivo">
+                </p-message>
+              </div>
+              <div class="process-container-col"></div>
+              <div class="process-container-col"></div>
+              <div class="process-container-col"></div>
+            </div>
+
+            <div class="process-container-row" style="justify-content: flex-end">
+              <div
+                class="process-container-col"
+                style="display: flex; gap: 0.5rem; justify-content: flex-end; align-items: end">
+                <button
+                  pButton
+                  type="button"
+                  label="Guardar"
+                  icon="pi pi-save"
+                  class="p-button-primary"
+                  (click)="onSaveProcess()"></button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+}
+
+<app-modal-dinamic
+  *ngIf="visibleDialog"
+  [select]="true"
+  [visible]="visibleDialog"
+  [message]="message"
+  (setRta)="closeDialog($event)"></app-modal-dinamic>
+
+<app-modal-assign-user
+  *ngIf="visibleDialogInput"
+  [visible]="visibleDialogInput"
+  [filingNumber]="filingNumber"
+  [loggedUserName]="loggedUserName"
+  (setRta)="closeDialogInput($event)">
+</app-modal-assign-user>
+
+<!-- Modal para previsualización de archivos -->
+<p-dialog
+  header="Previsualización del Documento"
+  [(visible)]="displayPreviewModal"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="displayPreviewModal = false">
+  <div *ngIf="viewerType === 'google'">
+    <ngx-doc-viewer
+      [url]="preSignedUrlDownload"
+      viewer="google"
+      style="width: 100%; height: 500px"></ngx-doc-viewer>
+  </div>
+
+  <div *ngIf="viewerType === 'office'">
+    <ngx-doc-viewer
+      [url]="preSignedUrlDownload"
+      viewer="office"
+      style="width: 100%; height: 500px"></ngx-doc-viewer>
+  </div>
+
+  <div *ngIf="viewerType === 'image'" class="image-container">
+    <img [src]="preSignedUrlDownload" alt="Preview" class="image-preview" />
+  </div>
+
+  <div *ngIf="viewerType === 'pdf'">
+    <ngx-doc-viewer
+      [url]="preSignedUrlDownload"
+      viewer="google"
+      style="width: 100%; height: 500px"></ngx-doc-viewer>
+  </div>
+</p-dialog>

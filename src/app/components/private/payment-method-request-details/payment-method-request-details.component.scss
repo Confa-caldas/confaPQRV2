@@ -1,0 +1,1216 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+.text-respuesta {
+  color: red !important;
+}
+
+.title {
+  font-weight: 600;
+  font-size: x-large;
+  margin: 25px 30px;
+}
+
+.container-button {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  /* Align items to the end of the container */
+}
+
+.custom-input {
+  font-size: small;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  color: #66798d;
+  /* Agrega cualquier otro estilo necesario */
+}
+
+td {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.button {
+  border-radius: 20px;
+}
+
+.table {
+  &-body {
+    font-weight: 600;
+    color: $color-black;
+  }
+}
+
+.formProcess {
+  margin: 25px 25px;
+
+  &-card-text {
+    display: flex;
+    flex-direction: column;
+
+    &-placeholder {
+      display: flex;
+      color: $color-black;
+      font-size: 14px;
+      font-weight: normal;
+
+      &-invalid {
+        color: $color-red;
+        font-size: x-small;
+        margin-left: 5px;
+      }
+    }
+  }
+
+  &-buttonUp {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+
+    &-custom-button {
+      display: inline-block;
+      position: relative;
+      margin-top: 10px;
+    }
+
+    &-custom-icon {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      display: none;
+    }
+
+    &-label {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: $color-tab-blue;
+      border-radius: 5px;
+      border: 0.1px $color-tab-blue;
+      color: $color-white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  }
+
+  &-labelUpload {
+    display: flex;
+    flex-direction: row;
+    margin: 5px 0;
+    align-items: baseline;
+
+    &-name {
+      font-size: 12px;
+      color: $color-black;
+      margin-right: 5px;
+      max-width: 300px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis !important;
+      align-items: center;
+      margin: auto 0;
+
+    }
+  }
+}
+
+
+@media screen and (min-width: 768px) and (max-width: 1374px) {
+
+
+  .container {
+
+    &-label {
+      font-size: x-small;
+      color: $color-black;
+    }
+
+    &-text {
+      font-size: small;
+      font-weight: 600;
+      color: $color-black;
+    }
+
+    &-row {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    &-column {
+      width: 100px;
+      margin-right: 10px;
+
+    }
+
+  }
+
+  .process-container {
+
+
+    &-label {
+      font-size: small;
+      color: $color-black;
+      border-bottom: 1px solid $color-tab-blue;
+    }
+
+    &-text {
+      font-size: x-small;
+      font-weight: 600;
+      color: $color-black;
+    }
+
+    &-row {
+      display: flex;
+      justify-content: start;
+      margin: 10px 0;
+    }
+
+    &-col {
+      width: 200px;
+      margin: 0 40px;
+
+    }
+
+
+    &-col-description {
+      width: auto;
+      margin: 0 40px;
+
+    }
+
+    &-row-generals {
+      display: flex;
+      justify-content: flex-end;
+      /* Alinear a la derecha */
+      gap: 10px;
+      /* Espacio entre botones */
+      margin: 10px 0;
+    }
+  }
+}
+
+/* Estilos para dispositivos grandes (escritorios) */
+@media screen and (min-width: 1375px) {
+
+  .container {
+    &-label {
+      font-size: x-small;
+      color: $color-black;
+    }
+
+    &-text {
+      font-size: small;
+      font-weight: 600;
+      color: $color-black;
+    }
+
+    &-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    &-column {
+      width: 200px;
+      margin-right: 10px;
+    }
+
+  }
+
+  .process-container {
+    &-label {
+      font-size: small;
+      color: $color-black;
+      border-bottom: 1px solid $color-tab-blue;
+    }
+
+    &-text {
+      font-size: x-small;
+      font-weight: 600;
+      color: $color-black;
+    }
+
+    &-row {
+      display: flex;
+      justify-content: start;
+      margin: 20px 0;
+    }
+
+    &-col {
+      width: 200px;
+      margin: 0 41px;
+
+    }
+
+
+
+    &-col-description {
+      width: auto;
+      margin: 0 40px;
+
+    }
+  }
+}
+
+
+:host ::ng-deep .p-dialog.custom-dialog .p-dialog-header {
+  background-color: #007ad9 !important;
+  /* Color de fondo azul */
+  font-family: $font-bold;
+}
+
+:host ::ng-deep .p-dialog.custom-dialog .p-dialog-header .p-dialog-title {
+  background-color: #007ad9 !important;
+  /* Color de fondo azul */
+  color: #ffffff;
+  /* Color del texto blanco */
+  font-family: $font-bold;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  /* Mantiene las proporciones de la imagen dentro del contenedor */
+}
+
+.image-container {
+  text-align: center;
+}
+
+:host ::ng-deep .custom-dialog {
+  .ui-dialog-titlebar {
+    background-color: #007bff !important;
+    /* Color de la barra del título */
+    color: #fff !important;
+  }
+
+  .dialog-content {
+    p {
+      font-size: 1.1rem !important;
+      color: #000000 !important;
+      margin-bottom: 1rem !important;
+    }
+
+    .confirmation-text {
+      font-size: 1rem !important;
+      font-weight: bold !important;
+      margin-bottom: 1.5rem !important;
+    }
+  }
+
+  .dialog-buttons {
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 15px !important;
+    margin-top: 20px !important;
+
+    button {
+      padding: 0.5rem 1.5rem !important;
+      font-size: 1rem !important;
+      border: none !important;
+      border-radius: 5px !important;
+      cursor: pointer !important;
+      transition: background-color 0.3s ease !important;
+
+      &.btn-yes {
+        background-color: #a0bf1b !important;
+        color: white !important;
+
+        &:hover {
+          background-color: #94af18 !important;
+        }
+      }
+
+      &.btn-no {
+        background-color: #dc3545 !important;
+        color: white !important;
+
+        &:hover {
+          background-color: #c82333 !important;
+        }
+      }
+    }
+  }
+}
+
+.custom-dialog .dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  color: #555;
+}
+
+.custom-textarea {
+  width: 100%;
+  padding: 0.5em;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  resize: none;
+  /* Evita redimensionamiento */
+  height: 150px;
+}
+
+.custom-textareaErrores {
+  width: 100%;
+  padding: 0.5em;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  resize: none;
+  /* Evita redimensionamiento */
+  height: 50px;
+  color: #c82333;
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.btn {
+  padding: 0.75em 1.5em;
+  font-size: 1em;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.disclaimer {
+  display: block;
+  /* Asegura que ocupe todo el ancho disponible */
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f8d7da;
+  /* Fondo rojo claro para captar atención */
+  color: #721c24;
+  /* Texto rojo oscuro */
+  border-left: 4px solid #f5c6cb;
+  /* Línea roja a la izquierda */
+  border-radius: 5px;
+  font-size: 13px;
+  font-style: italic;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-in-out;
+  /* Efecto de entrada */
+}
+
+/* Animación para el disclaimer */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Resaltar el ícono de advertencia */
+.disclaimer::before {
+  content: "⚠️ ";
+  font-size: 16px;
+  margin-right: 5px;
+}
+
+.custom-dialog {
+  .form-group {
+    margin-bottom: 20px;
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  }
+
+  .file-list {
+    margin-top: 10px;
+
+    ul {
+      list-style: none;
+      padding: 0;
+
+      li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+
+        .btn-remove {
+          background-color: #f44336;
+          /* Rojo */
+          color: white;
+          border: none;
+          padding: 5px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+
+  .dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+
+      &.btn-yes {
+        background-color: #4caf50;
+        /* Verde */
+        color: white;
+      }
+
+      &.btn-cancel {
+        background-color: #9e9e9e;
+        /* Gris */
+        color: white;
+      }
+    }
+  }
+}
+
+.email-list {
+  margin-top: 10px;
+}
+
+.horizontal-list {
+  display: flex;
+  /* Cambia la dirección a horizontal */
+  flex-wrap: wrap;
+  /* Permite que los elementos se ajusten si exceden el ancho */
+  list-style-type: none;
+  /* Quita los puntos de la lista */
+  padding: 0;
+  gap: 10px;
+  /* Espaciado entre elementos */
+}
+
+.horizontal-item {
+  display: flex;
+  /* Alinea el contenido dentro de cada item */
+  align-items: center;
+  /* Centra el contenido verticalmente */
+  background-color: #f1f1f1;
+  /* Color de fondo opcional */
+  border: 1px solid #ddd;
+  /* Borde opcional */
+  padding: 5px 10px;
+  border-radius: 5px;
+  /* Bordes redondeados */
+}
+
+.btn-remove {
+  margin-left: 10px;
+  /* Espaciado entre el texto y el botón */
+  background-color: #dc3545;
+  /* Color rojo para el botón */
+  color: white;
+  border: none;
+  padding: 2px 8px;
+  border-radius: 50%;
+  /* Hacer el botón circular */
+  cursor: pointer;
+}
+
+.btn-remove:hover {
+  background-color: #b71c1c;
+  /* Oscurece el botón al pasar el ratón */
+}
+
+.email-input-group {
+  display: flex;
+  /* Flexbox para alinear elementos en línea */
+  align-items: center;
+  /* Centra el botón verticalmente */
+}
+
+.input-short {
+  flex: 1;
+  /* Permite que el campo ocupe espacio proporcionalmente */
+  padding: 5px 10px;
+  /* Ajusta el relleno interno */
+  border: 1px solid #ccc;
+  /* Borde estándar */
+  border-radius: 4px 0 0 4px;
+  /* Bordes redondeados (solo izquierda) */
+  margin-right: -1px;
+  /* Elimina el espacio entre input y botón */
+}
+
+.btn.btn-add {
+  padding: 5px 15px;
+  /* Tamaño del botón */
+  background-color: #007bff;
+  /* Color azul */
+  color: white;
+  border: 1px solid #ccc;
+  /* Igual borde que el input */
+  border-radius: 0 4px 4px 0;
+  /* Bordes redondeados (solo derecha) */
+  cursor: pointer;
+}
+
+.btn.btn-add:hover {
+  background-color: #0056b3;
+  /* Oscurece el botón al pasar el ratón */
+}
+
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+/* Reducir la altura del contenedor del timeline */
+.timeline-container {
+  display: flex;
+  justify-content: center;
+  /* Centra el contenido horizontalmente */
+  align-items: center;
+  /* Centra el contenido verticalmente, si es necesario */
+  width: 100%;
+  /* Asegura que ocupe todo el ancho disponible */
+  position: relative;
+}
+
+
+p-timeline {
+  width: 70%;
+  /* Ocupa todo el ancho disponible en el contenedor */
+  height: 100px;
+  /* Aumenta la altura si es necesario */
+}
+
+/* Ajustar los marcadores y el contenido del timeline */
+p-timeline .ui-timeline-event {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ajustar los puntos del timeline */
+p-timeline .ui-timeline-event-marker {
+  width: 12px !important;
+  /* Tamaño del punto */
+  height: 12px !important;
+}
+
+/* Ajustar el contenido del evento */
+p-timeline .ui-timeline-event-content {
+  font-size: 12px !important;
+  /* Reducir el tamaño de la fuente */
+  margin-top: 0 !important;
+}
+
+/* Estilo por defecto para las bolitas */
+.timeline-marker {
+  // width: 12px;
+  // height: 12px;
+  // background-color: #ccc; /* Color por defecto */
+  // border-radius: 50%;
+  // display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #ccc;
+  transition: background-color 0.3s;
+}
+
+/* Estilo para la bolita activa */
+.active-marker {
+  background-color: #4caf50;
+  /* Cambia al color deseado */
+}
+
+
+.timeline-event-state {
+  font-size: 12px;
+  /* Cambia el tamaño de fuente según tu necesidad */
+  font-weight: bold;
+  /* Opcional: Cambia el peso de la fuente */
+  color: #333;
+  /* Opcional: Cambia el color del texto */
+  font-family: 'ubuntu-regular';
+  text-align: left;
+}
+
+.timeline-event-label {
+  font-size: 10px;
+  /* Cambia el tamaño de fuente según tu necesidad */
+  color: #333;
+  /* Opcional: Cambia el color del texto */
+  font-family: 'ubuntu-regular';
+  text-align: left;
+}
+
+.timeline-event-state .ng-star-inserted {
+  width: 500px;
+}
+
+
+/* Contenedor del timeline */
+.timeline-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+/* Timeline personalizado */
+p-timeline {
+  width: 70%;
+}
+
+/* Personalización de los marcadores */
+.timeline-marker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  /* Tamaño del punto */
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ccc;
+  /* Color por defecto */
+  transition: background-color 0.3s;
+  font-size: 20px;
+  /* Tamaño del ícono */
+  color: white;
+  /* Color del ícono */
+}
+
+/* Marcador activo */
+.active-marker {
+  background-color: #01aeef;
+  /* Color verde */
+  color: white;
+  /* Color del ícono */
+}
+
+/* Marcador anterior */
+.previous-marker {
+  background-color: lightgreen;
+  /* Color verde claro */
+  color: white;
+  /* Color del ícono */
+}
+
+/* Ícono en los marcadores */
+.timeline-marker i {
+  font-size: 18px;
+  /* Tamaño del ícono */
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1em;
+}
+
+.chat-bubble {
+  padding: 1em;
+  margin: 0.5em 0;
+  border-radius: 15px;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header {
+  font-family: 'ubuntu-regular';
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chat-message {
+  font-size: 14px;
+}
+
+.user-internal {
+  color: #2d572c;
+}
+
+.user-external {
+  color: #2d496a;
+}
+
+::ng-deep .p-dialog {
+  border-radius: 12px !important;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* 🔹 Estilos para encabezado personalizado */
+.custom-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.custom-dialog-header h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.custom-icon {
+  font-size: 2rem;
+  color: #f59e0b;
+  /* Amarillo de advertencia */
+}
+
+/* 🔹 Estilos para inputs y formularios */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* 🔹 Estilos de subida de archivos */
+.custom-file-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-label {
+  background-color: #01aeef;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.upload-label:hover {
+  background-color: #01aeef;
+}
+
+.error-message {
+  color: #d9534f;
+  font-size: 0.9rem;
+}
+
+.file-list {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-top: 5px;
+}
+
+.file-name {
+  font-size: 0.9rem;
+}
+
+.remove-file {
+  color: #d9534f;
+  cursor: pointer;
+}
+
+.remove-file:hover {
+  color: #b52b27;
+}
+
+/* 🔹 Botones alineados correctamente */
+.dialog-buttons {
+  display: grid;
+  justify-content: center;
+  /* Centra los botones */
+  align-items: center;
+  /* Asegura alineación vertical */
+  gap: 10px;
+  /* Espacio entre botones */
+  margin-top: 1.5rem;
+}
+
+/* 🔹 Estilos generales de botones */
+.dialog-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+/* 🔹 Botón "Enviar" */
+.btn-yes {
+  background-color: #a4c000 !important;
+  color: white !important;
+}
+
+.btn-yes:hover {
+  background-color: #8ba200 !important;
+  /* Oscurecido manualmente */
+}
+
+/* 🔹 Botón "Cancelar" */
+.btn-cancel {
+  background-color: #ccc !important;
+  color: #333 !important;
+}
+
+.btn-cancel:hover {
+  background-color: #b3b3b3 !important;
+  /* Oscurecido manualmente */
+}
+
+/* 🔹 Estilos generales para botones */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background-color: #a4c000;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #bbdb01;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+/* 🔹 Oculta el input real de archivos */
+.custom-file-upload input[type="file"] {
+  display: none;
+}
+
+.static-text {
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+}
+
+.prioridad-label {
+  display: flex;
+  justify-content: center; // Centra horizontalmente
+  align-items: center; // Centra verticalmente
+  font-size: 1.3rem; // Letra más grande
+  gap: 0.5rem; // Espacio entre el ícono y el texto
+  text-align: center; // Asegura que el texto esté centrado
+}
+
+.prioridad-text {
+  font-weight: bold;
+}
+
+.prioridad-baja {
+  color: #ffc107; // Amarillo advertencia
+}
+
+.prioridad-alta {
+  color: #dc3545; // Rojo peligro
+}
+
+.pi {
+  font-size: 1.3rem; // Hace que el tamaño del ícono sea igual al del texto
+}
+
+.my-custom-button {
+  background-color: #007bff;
+  /* azul bonito */
+  border: none;
+  font-size: 12px;
+  padding: 0.4rem 0.8rem;
+  height: 32px;
+}
+
+:host ::ng-deep .custom-zip-button {
+  background: transparent !important;
+  /* Fondo del p-button */
+  border: none !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .custom-zip-button .p-button {
+  background-color: #01aeef;
+  /* Azul más limpio */
+  border: none;
+  font-size: 12px;
+  padding: 0.4rem 0.8rem;
+  height: 32px;
+  margin-bottom: 5px;
+}
+
+:host ::ng-deep .custom-carrusel-button {
+  background: transparent !important;
+  /* Fondo del p-button */
+  border: none !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .custom-carrusel-button .p-button {
+  background-color: #ff9700;
+  /* Azul más limpio */
+  border: none;
+  font-size: 12px;
+  padding: 0.4rem 0.8rem;
+  height: 32px;
+  margin-bottom: 5px;
+}
+
+.similares-discretos {
+  margin-top: 12px;
+
+  small {
+    color: #666;
+    font-size: 0.85rem;
+  }
+
+  .similares-badges {
+    margin-top: 4px;
+
+    .badge {
+      display: inline-block;
+      background-color: #e0e0e0;
+      color: #333;
+      padding: 4px 8px;
+      border-radius: 12px;
+      margin-right: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+
+      &:hover {
+        background-color: #d0d0d0;
+      }
+    }
+  }
+}
+
+.sms-alert {
+  background-color: #e6f7ff;
+  color: #005780;
+  border: 1px solid #91d5ff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.char-counter {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
+.no-info {
+  text-align: center;
+  padding: 16px;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  color: #555;
+  background-color: #f9f9f9;
+  font-style: italic;
+}
+
+:host ::ng-deep .p-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Layout del visor ===== */
+.preview-viewer-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  gap: 1rem;
+  min-height: 450px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0.5rem 3rem;
+}
+
+/* Flechas de navegación */
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  width: 42px !important;
+  height: 42px !important;
+  z-index: 2;
+}
+
+.nav-btn.left {
+  left: 10px;
+}
+
+.nav-btn.right {
+  right: 10px;
+}
+
+.nav-btn .pi {
+  font-size: 1.2rem;
+  color: #2563eb;
+}
+
+/* Contenedor del visor */
+.preview-viewer {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  max-height: 85vh;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  background-color: #fff;
+  padding: 0.5rem;
+}
+
+
+/* Imagen */
+.image-container {
+  width: 100%;
+  text-align: center;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+
+/* Loader */
+.preview-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #6b7280;
+  gap: 0.5rem;
+}
+
+.preview-spinner {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+/* Tipos no soportados */
+.unsupported {
+  text-align: center;
+  color: #4b5563;
+}
+
+.unsupported .pi {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+.card-buttonUp-custom-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .card-buttonUp-label {
+    background-color: #00afef;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      background-color: #0099d4;
+    }
+
+    &.uploaded {
+      background-color: #28a745;
+    }
+  }
+
+  .card-form-input-placeholder-invalid {
+    display: block;
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 5px;
+  }
+}

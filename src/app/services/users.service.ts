@@ -69,6 +69,22 @@ import {
   DocumentTypeList,
   CreateDocumentType,
   AdditionalDocsRequest,
+  ReasonAccountUpdateList,
+  AccountTypeList,
+  EntityList,
+  EntityTypeList,
+  EntityAccountTypeList,
+  FilterPaymentMethodRequests,
+  PaymentMethodRequestList,
+  RequestPaymentMethodStatusList,
+  PaymentMethodRequestDetails,
+  PaymentMethodRequestsInManagementByUser,
+  PaymentMethodProcessStatusList,
+  TransferProcessStatusList,
+  AssignManagementUser,
+  AnswerPaymentMethodRequest,
+  RequestHistoricPaymentMethodRequest,
+  TransferStatusList,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -520,8 +536,6 @@ export class Users {
   //   return this.http.post(urlSubsidios, payload, { headers }); // Envía la petición con headers
   // }
 
-
-
   respuestaInfoAfiliacion(cedula: string) {
     const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarAfiliadoDoc/${cedula}/1`;
     // observe: 'response' para tener status y body
@@ -853,7 +867,7 @@ export class Users {
     );
   }
 
-  saveRequestTypeDocuments(payload: { request_type_id?: number, document_ids?: number[] }) {
+  saveRequestTypeDocuments(payload: { request_type_id?: number; document_ids?: number[] }) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_TYPE_DOCUMENT}`,
       payload
@@ -867,11 +881,15 @@ export class Users {
   }
 
   getDocumentsByRequestType(request_type_id?: number) {
-    return this.http.get(`${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST}/${request_type_id}`);
+    return this.http.get(
+      `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST}/${request_type_id}`
+    );
   }
 
   getDocumentsPublicByRequestType(request_type_id?: number) {
-    return this.http.get(`${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST_PUBLIC}/${request_type_id}`);
+    return this.http.get(
+      `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST_PUBLIC}/${request_type_id}`
+    );
   }
 
   registerAdditionalDocsRequest(payload: AdditionalDocsRequest) {
@@ -881,4 +899,217 @@ export class Users {
     );
   }
 
+  getReasonAccountUpdateList() {
+    return this.http.get<BodyResponse<ReasonAccountUpdateList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REASON_ACCOUNT_UPDATE_LIST}`
+    );
+  }
+
+  getReasonAccountUpdateListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<ReasonAccountUpdateList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REASON_ACCOUNT_UPDATE_LIST_PAGINATION}`,
+      payload
+    );
+  }
+
+  createReasonAccountUpdateList(payload: ReasonAccountUpdateList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_REASON_ACCOUNT_UPDATE}`,
+      payload
+    );
+  }
+
+  modifyReasonAccountUpdate(payload: ReasonAccountUpdateList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_REASON_ACCOUNT_UPDATE}`,
+      payload
+    );
+  }
+
+  inactivateReasonAccountUpdate(payload: ReasonAccountUpdateList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_REASON_ACCOUNT_UPDATE}`,
+      payload
+    );
+  }
+
+  getAccountTypeList() {
+    return this.http.get<BodyResponse<AccountTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST}`
+    );
+  }
+
+  getAccountTypeListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AccountTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST_PAGINATION}`,
+      payload
+    );
+  }
+
+  createAccountType(payload: AccountTypeList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_ACCOUNT_TYPE}`,
+      payload
+    );
+  }
+
+  modifyAccountType(payload: AccountTypeList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_ACCOUNT_TYPE}`,
+      payload
+    );
+  }
+
+  inactivateAccountType(payload: AccountTypeList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_ACCOUNT_TYPE}`,
+      payload
+    );
+  }
+
+  getEntityList() {
+    return this.http.get<BodyResponse<EntityList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ENTITY_LIST}`
+    );
+  }
+
+  getEntityListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<EntityList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ENTITY_LIST_PAGINATION}`,
+      payload
+    );
+  }
+
+  createEntity(payload: EntityList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_ENTITY}`,
+      payload
+    );
+  }
+
+  modifyEntity(payload: EntityList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_ENTITY}`,
+      payload
+    );
+  }
+
+  inactivateEntity(payload: EntityList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_ENTITY}`,
+      payload
+    );
+  }
+
+  getEntityTypeList() {
+    return this.http.get<BodyResponse<EntityTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ENTITY_TYPE_LIST}`
+    );
+  }
+
+  getEntityAccountTypeList() {
+    return this.http.get<BodyResponse<EntityAccountTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ENTITY_ACCOUNT_TYPE_LIST}`
+    );
+  }
+
+  getEntityAccountTypeListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<EntityAccountTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ENTITY_ACCOUNT_TYPE_LIST_PAGINATION}`,
+      payload
+    );
+  }
+
+  createEntityAccountType(payload: EntityAccountTypeList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_ENTITY_ACCOUNT_TYPE}`,
+      payload
+    );
+  }
+
+  modifyEntityAccountType(payload: EntityAccountTypeList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_ENTITY_ACCOUNT_TYPE}`,
+      payload
+    );
+  }
+
+  inactivateEntityAccountType(payload: EntityAccountTypeList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_ENTITY_ACCOUNT_TYPE}`,
+      payload
+    );
+  }
+
+  getRequestPaymentMethodListByFilter(payload: FilterPaymentMethodRequests) {
+    return this.http.post<BodyResponse<PaymentMethodRequestList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_PAYMENT_METHOD_BY_FILTER}`,
+      payload
+    );
+  }
+
+  getRequestPaymentMethodStatusList() {
+    return this.http.get<BodyResponse<RequestPaymentMethodStatusList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_PAYMENT_METHOD_STATUS}`
+    );
+  }
+
+  getPaymentMethodRequestDetails(payload: number) {
+    return this.http.get<BodyResponse<PaymentMethodRequestDetails>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PAYMENT_METHOD_REQUEST_DETAILS}/${payload}`
+    );
+  }
+
+  getPaymentMethodRequestsInManagementByUser(payload: any) {
+    return this.http.post<BodyResponse<PaymentMethodRequestsInManagementByUser>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PAYMENT_METHOD_REQUEST_IN_MANAGEMENT_BY_USER}`,
+      payload
+    );
+  }
+
+  getPaymentMethodProcessStatusList() {
+    return this.http.get<BodyResponse<PaymentMethodProcessStatusList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PAYMENT_METHOD_PROCESS_STATUS}`
+    );
+  }
+
+  getTransferProcessStatusList() {
+    return this.http.get<BodyResponse<TransferProcessStatusList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.TRANSFER_PROCESS_STATUS}`
+    );
+  }
+
+  assignManagementUserToRequest(payload: AssignManagementUser) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ASSIGN_MANAGEMENT_USER}`,
+      payload
+    );
+  }
+
+  answerPaymentMethodRequest(payload: AnswerPaymentMethodRequest) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ANSWER_PAYMENT_METHOD_REQUEST}`,
+      payload
+    );
+  }
+
+  getPaymentMethodRequestHistoric(payload: Pagination) {
+    return this.http.post<BodyResponse<RequestHistoricPaymentMethodRequest[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PAYMENT_METHOD_REQUEST_HISTORIC}`,
+      payload
+    );
+  }
+
+  getUrlSignedPaymentMethodRequest(payload: PreSignedAttach, type: string) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_PAYMENT_METHOD_FILES}/${type}`,
+      payload
+    );
+  }
+
+  getTransferStatusList() {
+    return this.http.get<BodyResponse<TransferStatusList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.TRANSFER_STATUS}`
+    );
+  }
 }
