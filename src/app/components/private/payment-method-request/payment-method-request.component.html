@@ -76,38 +76,38 @@
     scrollHeight="500px">
     <ng-template pTemplate="header">
       <tr [style]="{ height: '50px' }">
-        <th style="width: 5%"></th>
+        <th style="width: 2%"></th>
         <th pSortableColumn="filing_number" style="min-width: 7rem">
           Numero de radicado <p-sortIcon field="filing_number"></p-sortIcon>
         </th>
         <th pSortableColumn="filing_datetime" style="min-width: 10rem">
           Fecha y hora solicitud <p-sortIcon field="filing_datetime"></p-sortIcon>
         </th>
-        <th pSortableColumn="worker_doc_type" style="min-width: 10rem">
+        <th pSortableColumn="worker_doc_type" style="min-width: 2rem">
           Tipo doc. trabajador <p-sortIcon field="worker_doc_type"></p-sortIcon>
         </th>
-        <th pSortableColumn="worker_doc_number" style="min-width: 10rem">
+        <th pSortableColumn="worker_doc_number" style="min-width: 5rem">
           Número doc. trabajador <p-sortIcon field="worker_doc_number"></p-sortIcon>
         </th>
-        <th pSortableColumn="worker_full_name" style="min-width: 15rem">
+        <th pSortableColumn="worker_full_name" style="min-width: 13rem">
           Nombre completo trabajador <p-sortIcon field="worker_full_name"></p-sortIcon>
         </th>
-        <th pSortableColumn="admin_doc_type" style="min-width: 10rem">
+        <th pSortableColumn="admin_doc_type" style="min-width: 2rem">
           Tipo doc. administrador <p-sortIcon field="admin_doc_type"></p-sortIcon>
         </th>
-        <th pSortableColumn="admin_doc_number" style="min-width: 10rem">
+        <th pSortableColumn="admin_doc_number" style="min-width: 5rem">
           Número doc. administrador <p-sortIcon field="admin_doc_number"></p-sortIcon>
         </th>
-        <th pSortableColumn="admin_full_name" style="min-width: 15rem">
+        <th pSortableColumn="admin_full_name" style="min-width: 13rem">
           Nombre completo administrador <p-sortIcon field="admin_full_name"></p-sortIcon>
         </th>
-        <th pSortableColumn="previous_payment_method" style="min-width: 12rem">
+        <th pSortableColumn="previous_payment_method" style="min-width: 7rem">
           Medio de pago anterior <p-sortIcon field="previous_payment_method"></p-sortIcon>
         </th>
-        <th pSortableColumn="new_payment_method" style="min-width: 12rem">
+        <th pSortableColumn="new_payment_method" style="min-width: 7rem">
           Medio de pago nuevo <p-sortIcon field="new_payment_method"></p-sortIcon>
         </th>
-        <th pSortableColumn="status_name" style="min-width: 11rem">
+        <th pSortableColumn="status_name" style="min-width: 5rem">
           Estado solicitud <p-sortIcon field="status_name"></p-sortIcon>
         </th>
       </tr>
@@ -121,7 +121,7 @@
             (click)="redirectDetails(row.request_id)"></p-button>
         </td>
         <td style="text-align: center">{{ row.radication_code }}</td>
-        <td>{{ row.request_datetime | date: 'short' }}</td>
+        <td>{{ row.request_datetime | date: 'yyyy-MM-dd HH:mm:ss' }}</td>
         <td>{{ row.worker_document_type }}</td>
         <td>{{ row.worker_document_number }}</td>
         <td>{{ row.worker_full_name }}</td>

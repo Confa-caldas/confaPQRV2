@@ -212,17 +212,7 @@ export class PaymentMethodRequestComponent implements OnInit {
     this.userService.getRequestPaymentMethodListByFilter(payload).subscribe({
       next: (response: BodyResponse<PaymentMethodRequestList[]>) => {
         if (response.code === 200) {
-          this.requestList = response.data.map(item => {
-            // Normalize any date fields if needed (example: request_datetime)
-            const filingDate = item.request_datetime
-              ? this.convertDates(item.request_datetime as unknown as string)
-              : null;
-            return {
-              ...item,
-              request_datetime: filingDate ?? item.request_datetime,
-            } as PaymentMethodRequestList;
-          });
-
+          this.requestList = response.data;
           this.totalRows = Number(response.message);
         } else {
           // Use a toast if available; keeping simple here
@@ -267,6 +257,7 @@ export class PaymentMethodRequestComponent implements OnInit {
   redirectDetails(request_id: number) {
     // Obtener el registro objetivo
     const current = this.requestList.find(r => r.request_id === request_id);
+    console.log('Registro actual:', current);
 
     // Función utilitaria para interpretar valores truthy
     const isTrue = (v: any) => {
@@ -291,7 +282,7 @@ export class PaymentMethodRequestComponent implements OnInit {
           this.showSuccessMessage(
             'warn',
             'Gestión en curso',
-            'La solicitud ya esta siendo gestionada por otro usuario'
+            'La solicitud ya esta siendo gestionada por el usuario: ' + current.internal_management_user
           );
           return;
         }
