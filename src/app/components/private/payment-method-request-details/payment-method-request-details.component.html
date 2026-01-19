@@ -447,7 +447,7 @@
 
               <div
                 class="process-container-col"
-                *ngIf="requestDetails.payment_method_status_name === 'Radicada'">
+                *ngIf="showRequestStatus">
                 <label class="process-container-label"> Estado solicitud </label>
                 <p-dropdown
                   formControlName="requestStatus"

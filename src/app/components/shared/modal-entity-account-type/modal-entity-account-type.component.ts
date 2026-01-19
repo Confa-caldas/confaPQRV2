@@ -33,7 +33,7 @@ export class ModalEntityAccountTypeComponent {
     private formBuilder: FormBuilder
   ) {
     this.formGroup = this.formBuilder.group({
-      entity_account_type_id: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      entity_account_type_id: ['', [Validators.pattern('^[0-9]+$')]],
       entity_id: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       account_type_id: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
       length: ['', [Validators.required, Validators.pattern('^(?:[1-9]|1\\d|20)$')]],
@@ -44,10 +44,21 @@ export class ModalEntityAccountTypeComponent {
     this.getEntityTable();
     this.getAccountTypeTable();
     if (this.buttonmsg != 'Crear' && this.entityAccountTypeForm) {
+      // Modo Editar: agregar validación requerida al ID
+      this.formGroup.controls['entity_account_type_id'].setValidators([
+        Validators.required,
+        Validators.pattern('^[0-9]+$')
+      ]);
       this.formGroup.patchValue(this.entityAccountTypeForm);
     } else {
+      // Modo Crear: remover validación requerida del ID
+      this.formGroup.controls['entity_account_type_id'].clearValidators();
+      this.formGroup.controls['entity_account_type_id'].setValidators([
+        Validators.pattern('^[0-9]+$')
+      ]);
       this.formGroup.reset();
     }
+    this.formGroup.controls['entity_account_type_id'].updateValueAndValidity();
   }
 
   formGroup: FormGroup<any> = new FormGroup<any>({});
@@ -57,13 +68,15 @@ export class ModalEntityAccountTypeComponent {
 
   closeDialog(value: boolean) {
     this.setRta.emit(value);
-    const payload: EntityAccountTypeList = {
-      entity_account_type_id: this.formGroup.controls['entity_account_type_id'].value,
+    const payload: any = {
       entity_id: this.formGroup.controls['entity_id'].value,
       account_type_id: this.formGroup.controls['account_type_id'].value,
       length: this.formGroup.controls['length'].value,
       observation: this.formGroup.controls['observation'].value,
     };
+    if (this.buttonmsg !== 'Crear') {
+      payload.entity_account_type_id = this.formGroup.controls['entity_account_type_id'].value;
+    }
     this.setRtaParameter.emit(payload);
     this.visible = false;
   }

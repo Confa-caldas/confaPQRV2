@@ -150,10 +150,10 @@ export class EntityAccountTypeComponent {
     if (!this.enableAction || this.read_only) {
       return;
     } else if (this.enableCreate) {
-      if (this.entityAccountTypeList.some(obj => obj.entity_account_type_id === +entityAccountType_details.entity_account_type_id)) {
+      if (this.entityAccountTypeList.some(obj => obj.entity_id === entityAccountType_details.entity_id && obj.account_type_id === entityAccountType_details.account_type_id)) {
         this.visibleDialogAlert = true;
         this.informative = true;
-        this.message = 'Ya existe el código ' + entityAccountType_details.entity_account_type_id;
+        this.message = 'Ya existe un registro con la misma entidad y tipo de cuenta';
         this.severity = 'danger';
       } else {
         this.userService.createEntityAccountType(entityAccountType_details).subscribe({

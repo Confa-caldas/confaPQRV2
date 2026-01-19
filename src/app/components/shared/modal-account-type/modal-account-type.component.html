@@ -14,7 +14,7 @@
       </div>
       <form [formGroup]="formGroup">
         <div class="row my-4 px-5">
-          <div class="col-12">
+          <div class="col-12" *ngIf="this.buttonmsg !== 'Crear'">
             <label> Código </label>
             <input
               [readonly]="this.buttonmsg !== 'Crear' ? true : false"

@@ -10,7 +10,7 @@ import { PaginatorState } from 'primeng/paginator';
 @Component({
   selector: 'app-entity',
   templateUrl: './entity.component.html',
-  styleUrl: './entity.component.scss'
+  styleUrl: './entity.component.scss',
 })
 export class EntityComponent {
   data!: IRequestManager[];
@@ -29,7 +29,7 @@ export class EntityComponent {
   informative: boolean = false;
   severity = '';
 
-//paginador
+  //paginador
   first: number = 0;
   page: number = 1;
   rows: number = 10;
@@ -41,7 +41,7 @@ export class EntityComponent {
     private messageService: MessageService
   ) {}
 
-ngOnInit() {
+  ngOnInit() {
     this.getEntityTablePagination();
   }
   showSuccessMessage(state: string, title: string, message: string) {
@@ -66,9 +66,9 @@ ngOnInit() {
     this.page = 1;
     this.rows = 10;
     this.getEntityTablePagination();
-  }  
+  }
 
-getEntityTablePagination() {
+  getEntityTablePagination() {
     const payload: Pagination = {
       page: this.page,
       page_size: this.rows,
@@ -92,7 +92,7 @@ getEntityTablePagination() {
         console.log('La suscripción ha sido completada.');
       },
     });
-  } 
+  }
 
   inActiveEntity(entity_details: EntityList) {
     if (!entity_details.is_active) {
@@ -105,7 +105,7 @@ getEntityTablePagination() {
       entity_details.is_active = 1;
     }
     this.entity_details = entity_details;
-  } 
+  }
 
   displayEntity(entity_details: EntityList) {
     this.visibleDialogEntity = true;
@@ -198,6 +198,11 @@ getEntityTablePagination() {
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+          } else if (response.code === 409 && response.data === 'ENTITY_IN_USE') {
+            this.visibleDialogAlert = true;
+            this.informative = true;
+            this.message = 'La entidad no puede inactivarse porque está siendo utilizada en PARAMETRIZAR CUENTA Y ENTIDAD';
+            this.severity = 'danger';
           } else {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
           }

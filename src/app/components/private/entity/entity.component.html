@@ -81,6 +81,15 @@
   [message]="message"
   (setRta)="closeDialog($event)"></app-modal-dinamic>
 
+<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>
+
 <app-modal-entity
   *ngIf="visibleDialogEntity"
   [select]="true"

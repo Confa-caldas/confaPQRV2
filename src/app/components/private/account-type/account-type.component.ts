@@ -145,10 +145,10 @@ setParameter(account_type_details: AccountTypeList) {
     if (!this.enableAction || this.read_only) {
       return;
     } else if (this.enableCreate) {
-      if (this.accountTypeList.some(obj => obj.account_type_id === +account_type_details.account_type_id)) {
+      if (this.accountTypeList.some(obj => obj.account_type_name.toLowerCase() === account_type_details.account_type_name.toLowerCase())) {
         this.visibleDialogAlert = true;
         this.informative = true;
-        this.message = 'Ya existe tipo de cuenta con código ' + account_type_details.account_type_id;
+        this.message = 'Ya existe tipo de cuenta con nombre ' + account_type_details.account_type_name;
         this.severity = 'danger';
       } else {
         this.userService.createAccountType(account_type_details).subscribe({
@@ -196,6 +196,11 @@ setParameter(account_type_details: AccountTypeList) {
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+          } else if (response.code === 409 && response.data === 'ACCOUNT_TYPE_IN_USE') {
+            this.visibleDialogAlert = true;
+            this.informative = true;
+            this.message = 'El tipo de cuenta no puede inactivarse porque está siendo utilizada en PARAMETRIZAR CUENTA Y ENTIDAD';
+            this.severity = 'danger';
           } else {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
           }

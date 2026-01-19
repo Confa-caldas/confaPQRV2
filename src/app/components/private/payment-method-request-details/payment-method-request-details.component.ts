@@ -61,6 +61,7 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
   trasladoStatusOptions: { label: string; value: number }[] = [];
   requestStatusOptions: { label: string; value: number }[] = [];
   transferenciaStatusOptions: { label: string; value: number }[] = [];
+  showRequestStatus: boolean = false;
 
   // Propiedades para manejo de archivos adjuntos
   selectedAttachmentFile: File | null = null;
@@ -170,10 +171,19 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     this.processForm = this.fb.group({
       medioPagoStatus: [null],
       trasladoStatus: [null],
-      requestStatus: [null, Validators.required],
+      requestStatus: [{ value: null, disabled: true }],
       observations: [{ value: '', disabled: true }, [Validators.maxLength(100)]],
       pagoStatus: [null],
       attachment: [{ value: null, disabled: true }],
+    });
+
+    // Agregar suscripciones para medioPagoStatus y trasladoStatus:
+    this.processForm.get('medioPagoStatus')!.valueChanges.subscribe(() => {
+      this.updateRequestStatusState();
+    });
+
+    this.processForm.get('trasladoStatus')!.valueChanges.subscribe(() => {
+      this.updateRequestStatusState();
     });
 
     // Show/hide observations for rejection
@@ -251,6 +261,35 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     pagoStatusControl.updateValueAndValidity();
   }
 
+  // Crear el método updateRequestStatusState():
+  private updateRequestStatusState(): void {
+    const medioPagoValue = this.processForm.get('medioPagoStatus')!.value;
+    const trasladoValue = this.processForm.get('trasladoStatus')!.value;
+    const requestStatusControl = this.processForm.get('requestStatus')!;
+
+    // Buscar el ID de "No aplicado" en las opciones cargadas
+    const medioPagoNoAplicadoId = this.medioPagoStatusOptions.find(
+      opt => opt.label === 'No aplicado'
+    )?.value;
+
+    const trasladoNoAplicadoId = this.trasladoStatusOptions.find(
+      opt => opt.label === 'No aplicado'
+    )?.value;
+
+    // Habilitar solo si AMBOS son "No aplicado"
+    if (medioPagoValue === medioPagoNoAplicadoId && trasladoValue === trasladoNoAplicadoId) {
+      this.showRequestStatus = true;
+      requestStatusControl.enable();
+      requestStatusControl.setValidators([Validators.required]);
+    } else {
+      this.showRequestStatus = false;
+      requestStatusControl.disable();
+      requestStatusControl.clearValidators();
+      requestStatusControl.setValue(null);
+    }
+    requestStatusControl.updateValueAndValidity();
+  }
+
   // Tab change handler
   onTabChange(event: any): void {
     // Si es el tab "Tramitar solicitud" (índice 2) y no se han cargado las listas
@@ -268,7 +307,11 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<RequestPaymentMethodStatusList[]>) => {
         if (response.code === 200) {
           this.requestStatusOptions = response.data
-            .filter(item => item.payment_method_status_name !== 'Radicada')
+            .filter(
+              item =>
+                item.payment_method_status_name.toLocaleLowerCase() !== 'radicada' &&
+                item.payment_method_status_name.toLocaleLowerCase() !== 'tramitada'
+            )
             .map(item => ({
               label: item.payment_method_status_name,
               value: item.payment_method_status_id,

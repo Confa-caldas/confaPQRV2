@@ -874,7 +874,7 @@ export interface SimilarRequest {
 }
 
 export interface ReasonAccountUpdateList {
-  reason_account_update_id: number;
+  reason_account_update_id?: number;
   reason: string;
   is_active?: number | boolean;
   created_by?: string;

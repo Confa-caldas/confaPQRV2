@@ -22,17 +22,28 @@ export class ModalReasonAccountUpdateComponent {
 
   constructor(private formBuilder: FormBuilder) {
     this.formGroup = this.formBuilder.group({
-      reason_account_update_id: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      reason_account_update_id: ['', [Validators.pattern('^[0-9]+$')]],
       reason: ['', [Validators.required, Validators.pattern('^[^#$%&+-/*]+$')]],
     });
   }
 
   ngOnInit(): void {
     if (this.buttonmsg != 'Crear' && this.reasonAccountUpdateForm) {
+      // Modo Editar: agregar validación requerida al ID
+      this.formGroup.controls['reason_account_update_id'].setValidators([
+        Validators.required,
+        Validators.pattern('^[0-9]+$')
+      ]);
       this.formGroup.patchValue(this.reasonAccountUpdateForm);
     } else {
+      // Modo Crear: remover validación requerida del ID
+      this.formGroup.controls['reason_account_update_id'].clearValidators();
+      this.formGroup.controls['reason_account_update_id'].setValidators([
+        Validators.pattern('^[0-9]+$')
+      ]);
       this.formGroup.reset();
     }
+    this.formGroup.controls['reason_account_update_id'].updateValueAndValidity();
   }
 
   formGroup: FormGroup<any> = new FormGroup<any>({});
@@ -42,10 +53,10 @@ export class ModalReasonAccountUpdateComponent {
 
   closeDialog(value: boolean) {
     this.setRta.emit(value);
-    const payload: ReasonAccountUpdateList = {
-      reason_account_update_id: this.formGroup.controls['reason_account_update_id'].value,
-      reason: this.formGroup.controls['reason'].value,
-    };
+    const payload: any = { reason: this.formGroup.controls['reason'].value };
+    if (this.buttonmsg !== 'Crear') {
+      payload.reason_account_update_id = this.formGroup.controls['reason_account_update_id'].value;
+    }
     this.setRtaParameter.emit(payload);
     this.visible = false;
   }  

@@ -145,10 +145,10 @@ export class ReasonAccountUpdateComponent {
     if (!this.enableAction || this.read_only) {
       return;
     } else if (this.enableCreate) {
-      if (this.reasonAccountUpdateList.some(obj => obj.reason_account_update_id === +reasonAccountUpdate_details.reason_account_update_id)) {
+      if (this.reasonAccountUpdateList.some(obj => obj.reason.toLowerCase() === reasonAccountUpdate_details.reason.toLowerCase())) {
         this.visibleDialogAlert = true;
         this.informative = true;
-        this.message = 'Ya existe un motivo de actualización de cuenta ' + reasonAccountUpdate_details.reason_account_update_id;
+        this.message = 'Ya existe un motivo con ese nombre: ' + reasonAccountUpdate_details.reason;
         this.severity = 'danger';
       } else {
         this.userService.createReasonAccountUpdateList(reasonAccountUpdate_details).subscribe({
