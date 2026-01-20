@@ -943,6 +943,10 @@ export interface PaymentMethodRequestList {
   payment_method_status_name: string;
   internal_management: string;
   internal_management_user: string;
+  payment_method_process_status_id: number;
+  payment_method_process_status_name: string;
+  transfer_process_status_id: number;
+  transfer_process_status_name: string;
 }
 
 export interface PaymentMethodRequestDetails {
@@ -994,6 +998,8 @@ export interface FilterPaymentMethodRequests {
   filing_number?: string | null;
   worker_document_number?: string | null;
   status_id?: number | number[] | null;
+  payment_method_status_id?: number | number[] | null;
+  transfer_process_status_id?: number | number[] | null;
   page?: number;
   page_size?: number;
 }

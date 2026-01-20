@@ -38,6 +38,9 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
 
   requestHistoric: RequestHistoricPaymentMethodRequest[] = [];
 
+  // Índice activo de las pestañas (0-based)
+  activeTabIndex: number = 0;
+
   firstHistoric: number = 0;
   pageHistoric: number = 1;
   rowsHistoric: number = 10;
@@ -59,6 +62,8 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
   processForm!: FormGroup;
   medioPagoStatusOptions: { label: string; value: number }[] = [];
   trasladoStatusOptions: { label: string; value: number }[] = [];
+  // Lista filtrada que se mostrará en el dropdown de traslado según selección de medioPago
+  trasladoStatusFiltered: { label: string; value: number }[] = [];
   requestStatusOptions: { label: string; value: number }[] = [];
   transferenciaStatusOptions: { label: string; value: number }[] = [];
   showRequestStatus: boolean = false;
@@ -177,8 +182,31 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
       attachment: [{ value: null, disabled: true }],
     });
 
-    // Agregar suscripciones para medioPagoStatus y trasladoStatus:
-    this.processForm.get('medioPagoStatus')!.valueChanges.subscribe(() => {
+    // Suscripción para medioPagoStatus: además de actualizar estado, filtrará las opciones de traslado
+    this.processForm.get('medioPagoStatus')!.valueChanges.subscribe(medioVal => {
+      // Identificar ids por label (si no están cargadas las opciones, mantener las opciones completas)
+      const aplicadoId = this.medioPagoStatusOptions.find(opt => opt.label.toLowerCase() === 'aplicado')?.value;
+      const noAplicadoId = this.medioPagoStatusOptions.find(opt => opt.label.toLowerCase() === 'no aplicado')?.value;
+
+      if (medioVal === aplicadoId) {
+        // Permitir solo las opciones Aplicado con saldo y Aplicado sin saldo
+        this.trasladoStatusFiltered = this.trasladoStatusOptions.filter(
+          opt => opt.label.toLowerCase() === 'aplicado con saldo' || opt.label.toLowerCase() === 'aplicado sin saldo'
+        );
+      } else if (medioVal === noAplicadoId) {
+        // Permitir solo No aplicado
+        this.trasladoStatusFiltered = this.trasladoStatusOptions.filter(opt => opt.label.toLowerCase() === 'no aplicado');
+      } else {
+        // Si no hay selección o valores inesperados, mostrar todas
+        this.trasladoStatusFiltered = [...this.trasladoStatusOptions];
+      }
+
+      // Si el valor seleccionado actualmente en traslado no está dentro del filtrado, limpiarlo
+      const trasladoControl = this.processForm.get('trasladoStatus')!;
+      if (trasladoControl && !this.trasladoStatusFiltered.some(opt => opt.value === trasladoControl.value)) {
+        trasladoControl.setValue(null);
+      }
+
       this.updateRequestStatusState();
     });
 
@@ -224,21 +252,21 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     const pagoStatusControl = this.processForm.get('pagoStatus')!;
 
     // Si el estado es 'No termino', el campo es requerido
-    if (this.requestDetails.payment_method_process_status_name === 'No termino') {
+    if (this.requestDetails.payment_method_process_status_name.toLowerCase() === 'no termino') {
       medioPagoControl.setValidators([Validators.required]);
     } else {
       medioPagoControl.clearValidators();
       medioPagoControl.setValue(null);
     }
 
-    if (this.requestDetails.transfer_process_status_name === 'No termino') {
+    if (this.requestDetails.transfer_process_status_name.toLowerCase() === 'no termino') {
       trasladoControl.setValidators([Validators.required]);
     } else {
       trasladoControl.clearValidators();
       trasladoControl.setValue(null);
     }
 
-    if (this.requestDetails.payment_method_status_name === 'Radicada') {
+    if (this.requestDetails.payment_method_status_name.toLowerCase() === 'radicada') {
       requestStatusControl.setValidators([Validators.required]);
     } else {
       requestStatusControl.clearValidators();
@@ -246,8 +274,8 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     }
 
     if (
-      this.requestDetails.payment_method_status_name === 'Tramitada' &&
-      this.requestDetails.transfer_process_status_name === 'Aplicado con saldo'
+      this.requestDetails.payment_method_status_name.toLowerCase() === 'tramitada' &&
+      this.requestDetails.transfer_process_status_name.toLowerCase() === 'aplicado con saldo'
     ) {
       pagoStatusControl.setValidators([Validators.required]);
     } else {
@@ -269,11 +297,11 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
 
     // Buscar el ID de "No aplicado" en las opciones cargadas
     const medioPagoNoAplicadoId = this.medioPagoStatusOptions.find(
-      opt => opt.label === 'No aplicado'
+      opt => opt.label.toLowerCase() === 'no aplicado'
     )?.value;
 
     const trasladoNoAplicadoId = this.trasladoStatusOptions.find(
-      opt => opt.label === 'No aplicado'
+      opt => opt.label.toLowerCase() === 'no aplicado'
     )?.value;
 
     // Habilitar solo si AMBOS son "No aplicado"
@@ -292,9 +320,11 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
 
   // Tab change handler
   onTabChange(event: any): void {
-    // Si es el tab "Tramitar solicitud" (índice 2) y no se han cargado las listas
+    // Si es el tab "Tramitar solicitud" (índice 3) y no se han cargado las listas
     if (event.index === 3 && !this.processListsLoaded) {
       this.loadProcessLists();
+    } else if (event.index == 1) {
+      this.initPaginadorHistoric();
     }
   }
 
@@ -309,8 +339,8 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
           this.requestStatusOptions = response.data
             .filter(
               item =>
-                item.payment_method_status_name.toLocaleLowerCase() !== 'radicada' &&
-                item.payment_method_status_name.toLocaleLowerCase() !== 'tramitada'
+                item.payment_method_status_name.toLowerCase() !== 'radicada' &&
+                item.payment_method_status_name.toLowerCase() !== 'tramitada'
             )
             .map(item => ({
               label: item.payment_method_status_name,
@@ -335,8 +365,8 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
           this.medioPagoStatusOptions = response.data
             .filter(
               item =>
-                item.payment_method_process_status_name === 'No aplicado' ||
-                item.payment_method_process_status_name === 'Aplicado'
+                item.payment_method_process_status_name.toLowerCase() === 'no aplicado' ||
+                item.payment_method_process_status_name.toLowerCase() === 'aplicado'
             )
             .map(item => ({
               label: item.payment_method_process_status_name,
@@ -361,14 +391,16 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
           this.trasladoStatusOptions = response.data
             .filter(
               item =>
-                item.transfer_process_status_name === 'Aplicado con saldo' ||
-                item.transfer_process_status_name === 'Aplicado sin saldo' ||
-                item.transfer_process_status_name === 'No aplicado'
+                item.transfer_process_status_name.toLowerCase() === 'aplicado con saldo' ||
+                item.transfer_process_status_name.toLowerCase() === 'aplicado sin saldo' ||
+                item.transfer_process_status_name.toLowerCase() === 'no aplicado'
             )
             .map(item => ({
               label: item.transfer_process_status_name,
               value: item.transfer_process_status_id,
             }));
+          // Inicializar la lista filtrada con todas las opciones por defecto
+          this.trasladoStatusFiltered = [...this.trasladoStatusOptions];
         }
       },
       error: (err: any) => {
@@ -451,6 +483,15 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
             );
             // Recargar los detalles de la solicitud para reflejar el cambio
             this.getPaymentMethodRequestDetails(this.request_id);
+            setTimeout(() => {
+              this.activeTabIndex = 3;
+              try {
+                this.loadProcessLists();
+                this.changeDetectorRef.detectChanges();
+              } catch (e) {
+                console.error('Error al forzar la detección de cambios:', e);
+              }
+            }, 300);
           } else {
             this.showSuccessMessage('error', 'Error', 'No se pudo asignar la solicitud');
           }

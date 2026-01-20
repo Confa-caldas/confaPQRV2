@@ -70,8 +70,7 @@
             (requestDetails.payment_method_process_status_name === 'No termino' ||
               requestDetails.transfer_process_status_name === 'No termino')) ||
             (requestDetails.transfer_process_status_name === 'Aplicado con saldo' &&
-              requestDetails.transfer_status_name === null
-            ))
+              requestDetails.transfer_status_name === null))
         "
         label="Gestionar Solicitud"
         [style]="{ 'border-radius': '10px' }"
@@ -81,7 +80,10 @@
   </div>
 
   <div class="p-tabview" style="margin-top: 1rem">
-    <p-tabView class="p-tabview-nav" (onChange)="onTabChange($event)">
+    <p-tabView
+      class="p-tabview-nav"
+      [(activeIndex)]="activeTabIndex"
+      (onChange)="onTabChange($event)">
       <!-- Radicación -->
       <p-tabPanel header="Radicación" headerStyleClass="p-tabview-nav-link-1 ">
         <ul class="list-unstyled">
@@ -213,7 +215,12 @@
                   {{ requestDetails.transfer_update_user }}
                 </li>
               </div>
-              <div class="process-container-col"></div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Traslado de saldo </label>
+                <li class="process-container-text">
+                  {{ requestDetails.transfer_status_name }}
+                </li>
+              </div>
               <div class="process-container-col"></div>
             </div>
 
@@ -231,9 +238,7 @@
                 </li>
               </div>
               <div class="process-container-col">
-                <label class="process-container-label">
-                  Usuario que actualizó novedad traslado
-                </label>
+                <label class="process-container-label"> Usuario gestión interna </label>
                 <li class="process-container-text">
                   {{ requestDetails.internal_management_user }}
                 </li>
@@ -283,9 +288,8 @@
             <ng-template pTemplate="header">
               <tr>
                 <th pSortableColumn="updated_date" style="width: 10%">
-                  Fecha<p-sortIcon field="updated_date"></p-sortIcon>
+                  Fecha y hora solicitud<p-sortIcon field="updated_date"></p-sortIcon>
                 </th>
-                <th>Fecha y hora solicitud</th>
                 <th>Estado solicitud</th>
                 <th>Estado gestión medio de pago</th>
                 <th>Estado gestión traslado</th>
@@ -299,7 +303,7 @@
             <ng-template pTemplate="body" let-requestHistoric>
               <tr>
                 <td [ngStyle]="{ 'text-align': 'center' }">
-                  {{ requestHistoric.request_datetime }}
+                  {{ requestHistoric.request_datetime?.slice(0, 19) }}
                 </td>
                 <td [ngStyle]="{ 'text-align': 'center' }">
                   {{ requestHistoric.payment_method_status_name }}
@@ -311,13 +315,13 @@
                   {{ requestHistoric.transfer_process_status_name }}
                 </td>
                 <td [ngStyle]="{ 'text-align': 'center' }">
-                  {{ requestHistoric.payment_method_update_datetime }}
+                  {{ requestHistoric.payment_method_update_datetime?.slice(0, 19) }}
                 </td>
                 <td [ngStyle]="{ 'text-align': 'center' }">
-                  {{ requestHistoric.transfer_update_datetime }}
+                  {{ requestHistoric.transfer_update_datetime?.slice(0, 19) }}
                 </td>
                 <td [ngStyle]="{ 'text-align': 'center' }">
-                  {{ requestHistoric.processed_datetime }}
+                  {{ requestHistoric.processed_datetime?.slice(0, 19) }}
                 </td>
                 <td [ngStyle]="{ 'text-align': 'center' }">
                   {{ requestHistoric.payment_method_update_user }}
@@ -430,7 +434,7 @@
                 <label class="process-container-label"> Estado gestión traslado </label>
                 <p-dropdown
                   formControlName="trasladoStatus"
-                  [options]="trasladoStatusOptions"
+                  [options]="trasladoStatusFiltered"
                   optionLabel="label"
                   optionValue="value"
                   placeholder="Seleccione">
@@ -445,9 +449,7 @@
                 </p-message>
               </div>
 
-              <div
-                class="process-container-col"
-                *ngIf="showRequestStatus">
+              <div class="process-container-col" *ngIf="showRequestStatus">
                 <label class="process-container-label"> Estado solicitud </label>
                 <p-dropdown
                   formControlName="requestStatus"
@@ -469,7 +471,7 @@
               <div
                 class="process-container-col"
                 *ngIf="
-                  this.requestDetails.payment_method_status_name === 'Tramitada' &&
+                  this.requestDetails.payment_method_process_status_name === 'Aplicado' &&
                   this.requestDetails.transfer_process_status_name === 'Aplicado con saldo'
                 ">
                 <label class="process-container-label"> Confirmación transferencia saldo </label>
@@ -493,12 +495,14 @@
             <div class="process-container-row">
               <div class="process-container-col" *ngIf="processForm.get('observations')?.enabled">
                 <label class="process-container-label"> Observaciones (máx. 100) </label>
-                <input
-                  type="text"
-                  pInputText
+                <textarea
+                  pInputTextarea
+                  autoResize="true"
+                  rows="1"
+                  class="observations-input"
                   formControlName="observations"
                   maxlength="100"
-                  placeholder="Escriba el motivo del rechazo" />
+                  placeholder="Escriba el motivo del rechazo"></textarea>
                 <p-message
                   *ngIf="
                     processForm.get('observations')?.touched &&
@@ -519,19 +523,16 @@
                     name="attachment_file"
                     (change)="onAttachmentFileSelected($event)"
                     accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
-                    maxFileSize="20971520"
-                  />
+                    maxFileSize="20971520" />
 
                   <label class="card-buttonUp-label" (click)="openAttachmentFileInput()">
                     <i
                       class="pi pi-file-pdf"
-                      [style]="{ 'font-size': '19px', 'margin-right': '8px' }"
-                    ></i>
+                      [style]="{ 'font-size': '19px', 'margin-right': '8px' }"></i>
                     Adjuntar archivo
                     <i
                       class="pi pi-upload"
-                      [style]="{ 'margin-left': '69px', 'font-size': '19px' }"
-                    ></i>
+                      [style]="{ 'margin-left': '69px', 'font-size': '19px' }"></i>
                   </label>
 
                   <label class="card-form-input-placeholder-invalid">
@@ -541,7 +542,10 @@
                 </div>
 
                 <!-- Mostrar archivo seleccionado -->
-                <div *ngIf="selectedAttachmentFile" class="uploaded-file-info" style="margin-top: 10px;">
+                <div
+                  *ngIf="selectedAttachmentFile"
+                  class="uploaded-file-info"
+                  style="margin-top: 10px">
                   <i class="pi pi-check-circle" style="color: #28a745; margin-right: 5px"></i>
                   Archivo seleccionado:
                   <strong>{{ selectedAttachmentFile.name }}</strong>
@@ -557,8 +561,7 @@
                     }"
                     [text]="true"
                     severity="danger"
-                    (click)="clearAttachmentFile()"
-                  ></p-button>
+                    (click)="clearAttachmentFile()"></p-button>
                 </div>
 
                 <p-message

@@ -46,6 +46,24 @@
             optionValue="payment_method_status_id"
             placeholder="Estado solicitud"></p-multiSelect>
         </div>
+        <div class="filters-col">
+          <p-multiSelect
+            formControlName="payment_method_status_id"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="paymentMethodStatusList"
+            optionLabel="payment_method_process_status_name"
+            optionValue="payment_method_process_status_id"
+            placeholder="Estado medio de pago"></p-multiSelect>
+        </div>
+        <div class="filters-col">
+          <p-multiSelect
+            formControlName="transfer_process_status_id"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="transferProcessStatusList"
+            optionLabel="transfer_process_status_name"
+            optionValue="transfer_process_status_id"
+            placeholder="Estado proceso de transferencia"></p-multiSelect>
+        </div>
         <div>
           <p-button
             icon="pi pi-trash"
@@ -77,26 +95,26 @@
     <ng-template pTemplate="header">
       <tr [style]="{ height: '50px' }">
         <th style="width: 2%"></th>
-        <th pSortableColumn="filing_number" style="min-width: 7rem">
-          Numero de radicado <p-sortIcon field="filing_number"></p-sortIcon>
+        <th pSortableColumn="radication_code" style="min-width: 7rem">
+          Numero de radicado <p-sortIcon field="radication_code"></p-sortIcon>
         </th>
-        <th pSortableColumn="filing_datetime" style="min-width: 10rem">
-          Fecha y hora solicitud <p-sortIcon field="filing_datetime"></p-sortIcon>
+        <th pSortableColumn="request_datetime" style="min-width: 10rem">
+          Fecha y hora solicitud <p-sortIcon field="request_datetime"></p-sortIcon>
         </th>
-        <th pSortableColumn="worker_doc_type" style="min-width: 2rem">
-          Tipo doc. trabajador <p-sortIcon field="worker_doc_type"></p-sortIcon>
+        <th pSortableColumn="worker_document_type" style="min-width: 2rem">
+          Tipo doc. trabajador <p-sortIcon field="worker_document_type"></p-sortIcon>
         </th>
-        <th pSortableColumn="worker_doc_number" style="min-width: 5rem">
-          Número doc. trabajador <p-sortIcon field="worker_doc_number"></p-sortIcon>
+        <th pSortableColumn="worker_document_number" style="min-width: 5rem">
+          Número doc. trabajador <p-sortIcon field="worker_document_number"></p-sortIcon>
         </th>
         <th pSortableColumn="worker_full_name" style="min-width: 13rem">
           Nombre completo trabajador <p-sortIcon field="worker_full_name"></p-sortIcon>
         </th>
-        <th pSortableColumn="admin_doc_type" style="min-width: 2rem">
-          Tipo doc. administrador <p-sortIcon field="admin_doc_type"></p-sortIcon>
+        <th pSortableColumn="admin_document_type" style="min-width: 2rem">
+          Tipo doc. administrador <p-sortIcon field="admin_document_type"></p-sortIcon>
         </th>
-        <th pSortableColumn="admin_doc_number" style="min-width: 5rem">
-          Número doc. administrador <p-sortIcon field="admin_doc_number"></p-sortIcon>
+        <th pSortableColumn="admin_document_number" style="min-width: 5rem">
+          Número doc. administrador <p-sortIcon field="admin_document_number"></p-sortIcon>
         </th>
         <th pSortableColumn="admin_full_name" style="min-width: 13rem">
           Nombre completo administrador <p-sortIcon field="admin_full_name"></p-sortIcon>
@@ -107,8 +125,14 @@
         <th pSortableColumn="new_payment_method" style="min-width: 7rem">
           Medio de pago nuevo <p-sortIcon field="new_payment_method"></p-sortIcon>
         </th>
-        <th pSortableColumn="status_name" style="min-width: 5rem">
-          Estado solicitud <p-sortIcon field="status_name"></p-sortIcon>
+        <th pSortableColumn="payment_method_status_name" style="min-width: 5rem">
+          Estado solicitud <p-sortIcon field="payment_method_status_name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="payment_method_process_status_name" style="min-width: 5rem">
+          Estado medio de pago <p-sortIcon field="payment_method_process_status_name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="transfer_process_status_name" style="min-width: 5rem">
+          Estado traslado <p-sortIcon field="transfer_process_status_name"></p-sortIcon>
         </th>
       </tr>
     </ng-template>
@@ -131,6 +155,8 @@
         <td>{{ row.previous_payment_method }}</td>
         <td>{{ row.new_payment_method }}</td>
         <td style="text-align: center">{{ row.payment_method_status_name }}</td>
+        <td style="text-align: center">{{ row.payment_method_process_status_name }}</td>
+        <td style="text-align: center">{{ row.transfer_process_status_name }}</td>
       </tr>
     </ng-template>
   </p-table>

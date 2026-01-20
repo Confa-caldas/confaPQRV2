@@ -1214,3 +1214,26 @@ p-timeline {
     margin-top: 5px;
   }
 }
+
+/* Estilos para el campo de observaciones que se expande automáticamente */
+.observations-input {
+  width: 40rem;
+  max-width: 100%;
+  min-height: 5rem;
+  height: auto;
+  padding: 0.5rem;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  resize: none; /* dejar que PrimeNG ajuste el alto */
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+@media screen and (max-width: 768px) {
+  .observations-input {
+    width: 100%;
+    min-height: 3rem;
+  }
+}

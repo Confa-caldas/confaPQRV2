@@ -7,6 +7,8 @@ import {
   PaymentMethodRequestList,
   RequestPaymentMethodStatusList,
   PaymentMethodRequestsInManagementByUser,
+  PaymentMethodProcessStatusList,
+  TransferProcessStatusList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -23,6 +25,8 @@ import { Table } from 'primeng/table';
 export class PaymentMethodRequestComponent implements OnInit {
   requestList: PaymentMethodRequestList[] = [];
   statusList: RequestPaymentMethodStatusList[] = [];
+  paymentMethodStatusList: PaymentMethodProcessStatusList[] = [];
+  transferProcessStatusList: TransferProcessStatusList[] = [];
 
   loading: boolean = false;
   PERFIL!: string;
@@ -46,12 +50,26 @@ export class PaymentMethodRequestComponent implements OnInit {
       dates_range: new FormControl(null),
       worker_document_number: new FormControl(null),
       request_status_id: new FormControl(null),
+      payment_method_status_id: new FormControl(null),
+      transfer_process_status_id: new FormControl(null),
     });
 
     // Normalización: si el multiSelect queda vacío, establecer null
     this.formGroup.get('request_status_id')?.valueChanges.subscribe(value => {
       if (Array.isArray(value) && value.length === 0) {
         this.formGroup.get('request_status_id')?.setValue(null, { emitEvent: false });
+      }
+    });
+
+    this.formGroup.get('payment_method_status_id')?.valueChanges.subscribe(value => {
+      if (Array.isArray(value) && value.length === 0) {
+        this.formGroup.get('payment_method_status_id')?.setValue(null, { emitEvent: false });
+      }
+    });
+
+    this.formGroup.get('transfer_process_status_id')?.valueChanges.subscribe(value => {
+      if (Array.isArray(value) && value.length === 0) {
+        this.formGroup.get('transfer_process_status_id')?.setValue(null, { emitEvent: false });
       }
     });
   }
@@ -74,6 +92,14 @@ export class PaymentMethodRequestComponent implements OnInit {
 
           if (filtros.request_status_id && !Array.isArray(filtros.request_status_id)) {
             filtros.request_status_id = [filtros.request_status_id];
+          }
+
+          if (filtros.payment_method_status_id && !Array.isArray(filtros.payment_method_status_id)) {
+            filtros.payment_method_status_id = [filtros.payment_method_status_id];
+          }
+
+          if (filtros.transfer_process_status_id && !Array.isArray(filtros.transfer_process_status_id)) {
+            filtros.transfer_process_status_id = [filtros.transfer_process_status_id];
           }
 
           const valoresValidos = Object.keys(filtros).reduce((acc: any, key) => {
@@ -106,6 +132,8 @@ export class PaymentMethodRequestComponent implements OnInit {
 
     this.searchRequests();
     this.getRequestPaymentMethodStatusList();
+    this.getPaymentMethodProcessStatusList();
+    this.getTransferProcessStatusList();
   }
 
   onPageChange(event: PaginatorState) {
@@ -183,6 +211,16 @@ export class PaymentMethodRequestComponent implements OnInit {
         this.formGroup.controls['request_status_id'].value.length > 0
           ? this.formGroup.controls['request_status_id'].value
           : filtros['request_status_id'] || null,
+      payment_method_status_id:
+        this.formGroup.controls['payment_method_status_id'].value &&
+        this.formGroup.controls['payment_method_status_id'].value.length > 0
+          ? this.formGroup.controls['payment_method_status_id'].value
+          : filtros['payment_method_status_id'] || null,
+      transfer_process_status_id:
+        this.formGroup.controls['transfer_process_status_id'].value &&
+        this.formGroup.controls['transfer_process_status_id'].value.length > 0
+          ? this.formGroup.controls['transfer_process_status_id'].value
+          : filtros['transfer_process_status_id'] || null,
       page: this.page,
       page_size: this.rows,
     };
@@ -250,7 +288,43 @@ export class PaymentMethodRequestComponent implements OnInit {
     });
   }
 
-    showSuccessMessage(state: string, title: string, message: string) {
+  getPaymentMethodProcessStatusList() {
+    this.userService.getPaymentMethodProcessStatusList().subscribe({
+      next: (response: BodyResponse<PaymentMethodProcessStatusList[]>) => {
+        if (response.code === 200) {
+          this.paymentMethodStatusList = response.data;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  getTransferProcessStatusList() {
+    this.userService.getTransferProcessStatusList().subscribe({
+      next: (response: BodyResponse<TransferProcessStatusList[]>) => {
+        if (response.code === 200) {
+          this.transferProcessStatusList = response.data;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  showSuccessMessage(state: string, title: string, message: string) {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
 
@@ -282,7 +356,8 @@ export class PaymentMethodRequestComponent implements OnInit {
           this.showSuccessMessage(
             'warn',
             'Gestión en curso',
-            'La solicitud ya esta siendo gestionada por el usuario: ' + current.internal_management_user
+            'La solicitud ya esta siendo gestionada por el usuario: ' +
+              current.internal_management_user
           );
           return;
         }
@@ -291,7 +366,7 @@ export class PaymentMethodRequestComponent implements OnInit {
         const payload = {
           internal_management_user: this.user,
           request_id: request_id,
-        }
+        };
         this.userService.getPaymentMethodRequestsInManagementByUser(payload).subscribe({
           next: (resp: BodyResponse<PaymentMethodRequestsInManagementByUser>) => {
             if (resp.code === 200 && Array.isArray(resp.data) && resp.data.length > 0) {
@@ -346,5 +421,4 @@ export class PaymentMethodRequestComponent implements OnInit {
     localStorage.setItem('route', this.router.url);
     this.router.navigate([RoutesApp.PAYMENT_METHOD_REQUEST_DETAILS, request_id]);
   }
-
 }
