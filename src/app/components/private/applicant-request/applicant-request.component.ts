@@ -170,6 +170,7 @@ export class ApplicantRequestComponent implements OnInit {
         this.message = 'Ya existe esa asociación';
         this.severity = 'danger';
       } else {
+        console.log("------------: ", inputValue);
         this.userService.createAssociationApplicantRequest(inputValue).subscribe({
           next: (response: BodyResponse<string>) => {
             if (response.code === 200) {
