@@ -46,6 +46,20 @@
             optionValue="payment_method_status_id"
             placeholder="Estado solicitud"></p-multiSelect>
         </div>
+        <div>
+          <p-button
+            icon="pi pi-trash"
+            [styleClass]="'btn-icon-info'"
+            (click)="cleanForm()"></p-button>
+        </div>
+        <div>
+          <p-button
+            icon="pi pi-search"
+            [styleClass]="'btn-icon-info'"
+            (click)="initPaginator()"></p-button>
+        </div>
+      </div>
+      <div class="filters-row">
         <div class="filters-col">
           <p-multiSelect
             formControlName="payment_method_status_id"
@@ -63,18 +77,6 @@
             optionLabel="transfer_process_status_name"
             optionValue="transfer_process_status_id"
             placeholder="Estado proceso de transferencia"></p-multiSelect>
-        </div>
-        <div>
-          <p-button
-            icon="pi pi-trash"
-            [styleClass]="'btn-icon-info'"
-            (click)="cleanForm()"></p-button>
-        </div>
-        <div>
-          <p-button
-            icon="pi pi-search"
-            [styleClass]="'btn-icon-info'"
-            (click)="initPaginator()"></p-button>
         </div>
       </div>
     </div>
