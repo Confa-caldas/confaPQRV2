@@ -26,6 +26,10 @@ export enum RoutesApp {
   SEARCH_UPDATE_COMPANY = 'search-update-company',
   SEARCH_REQUEST_INTERNAL = 'search-requests-internal',
   SEARCH_REQUEST_EXTERNAL = 'search-requests-external',
+  SEARCH_REQUEST_AFILIATIONS = 'search-requests-afiliations',
+  SEARCH_REQUEST_AFI_MASSIVE = 'search-requests-afi-massive',
+  SEARCH_REQUEST_AFI_PENDING = 'search-requests-afi-pending',
+  REQUEST_DETAILS_AFILIATION = 'request-details-afiliation',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',

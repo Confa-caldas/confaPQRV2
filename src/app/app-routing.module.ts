@@ -220,6 +220,42 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.SEARCH_REQUEST_AFILIATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-request-afiliations/search-request-afiliations.module').then(
+        m => m.SearchRequestAfiliationsModule
+      ),
+  },
+  {
+    path: RoutesApp.SEARCH_REQUEST_AFI_MASSIVE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-request-afi-massive/search-request-afi-massive.module').then(
+        m => m.SearchRequestAfiMassiveModule
+      ),
+  },
+  {
+    path: RoutesApp.SEARCH_REQUEST_AFI_PENDING,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-request-afi-pending/search-request-afi-pending.module').then(
+        m => m.SearchRequestAfiPendingModule
+      ),
+  },
+  {
+    path: RoutesApp.REQUEST_DETAILS_AFILIATION + '/:id',
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/request-details-afiliation/request-details-afiliation.module').then(
+        m => m.RequestDetailsAfiliationModule
+      ),
+  },
+  {
     path: RoutesApp.MAIN_PAGE,
     canActivate: [sessionGuard],
     component: LayoutComponent,
