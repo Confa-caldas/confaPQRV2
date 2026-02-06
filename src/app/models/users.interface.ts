@@ -503,6 +503,28 @@ export interface Afiliado {
   fechaAfiliacion?: string;
   fechaIngreso?: string;
 }
+
+/** Persona a cargo del grupo familiar (respuesta consultarInfoGrupoFamiliar) */
+export interface Beneficiario {
+  nombre?: string;
+  documento?: string;
+  tipoDoc?: string;
+  parentesco?: string;
+  edad?: number;
+  fechaNacimiento?: string;
+  estadoBeneficiario?: string;
+  estadoEscolaridad?: string;
+  discapacidad?: string;
+}
+
+/** Grupo familiar (respuesta consultarInfoGrupoFamiliar: cada elemento del array) */
+export interface GrupoFamiliar {
+  documentoTrabajdor: string;
+  tipoDocTrabajdor: string;
+  numGrupo: string | number;
+  personasACargo: Beneficiario[];
+}
+
 export interface RequestReportStatus {
   date: Date;
   radicadas: number;
@@ -599,6 +621,7 @@ export interface PendingRequest {
 export interface AdditionalDocsRequest {
   request_id: number;
   user_action?: string;
+  request_status: number;
 }
 export interface RequestsReview {
   request_id: number;

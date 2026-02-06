@@ -548,6 +548,15 @@ export class Users {
     return this.http.get(url, { observe: 'response' });
   }
 
+  /**
+   * Consulta información del grupo familiar del afiliado.
+   * GET https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarInfoGrupoFamiliar/{documento}/{tipo_doc}
+   */
+  consultarInfoGrupoFamiliar(documento: string, tipoDoc: string) {
+    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarInfoGrupoFamiliar/${documento}/${tipoDoc}`;
+    return this.http.get(url, { observe: 'response' });
+  }
+
   createAnswerTemp(payload: RequestAnswerTemp) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.CREATE_ANSWER_TEM}`,
