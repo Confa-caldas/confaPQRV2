@@ -2875,6 +2875,154 @@ openCurrentInNewTab(): void {
 }
 
 
+//////////////// Preview Carousel Additional ///////////////////////////////
+async openPreviewCarouselAdditional(): Promise<void> {
+
+  this.buildAttachmentsFromListAdditional();
+
+  if (!this.attachments.length) {
+    this.showSuccessMessage('info', 'Información', 'No hay adjuntos para mostrar');
+    return;
+  }
+
+  this.currentIndex = 0;
+  await this.loadCurrentAttachmentAdditional();
+
+  // 👇 Aquí abrimos el p-dialog correcto (del carrusel)
+  this.isPreviewCarouselVisible = true;
+}
+
+private async getPreSignedAdditional(storedUrl: string): Promise<string> {
+  const payload = { url: storedUrl };
+  const resp = await firstValueFrom(
+    this.userService.getUrlSigned(payload, 'download')
+  ) as BodyResponse<string>;
+
+  if (resp.code !== 200 || !resp.data) {
+    throw new Error('No hubo URL prefirmada');
+  }
+  return resp.data;
+}
+
+private extractFileNameAdditional(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const fileName = pathname.split('/').pop();
+    return decodeURIComponent(fileName || 'archivo');
+  } catch {
+    const segments = url.split('?')[0].split('#')[0].split('/');
+    return decodeURIComponent(segments.pop() || 'archivo');
+  }
+}
+
+async prevAttachmentAdditional(): Promise<void> {
+  if (this.currentIndex > 0) {
+    this.currentIndex--;
+    await this.loadCurrentAttachment();
+  }
+}
+
+async nextAttachmentAdditional(): Promise<void> {
+  if (this.currentIndex < this.attachments.length - 1) {
+    this.currentIndex++;
+    await this.loadCurrentAttachment();
+  }
+}
+
+private async loadCurrentAttachmentAdditional(): Promise<void> {
+  this.loadingFile = true;
+  const originalUrl = this.attachments[this.currentIndex];
+  this.currentName = this.extractFileNameAdditional(originalUrl);
+
+  try {
+    const signedUrl = await this.getPreSignedAdditional(originalUrl);
+    this.preSignedUrlDownload = signedUrl;
+    this.viewerType = this.getViewerType(this.currentName);
+  } catch (e) {
+    console.error('[preview-carousel] error cargando adjunto', e);
+    this.viewerType2 = 'other';
+  } finally {
+    this.loadingFile = false;
+  }
+}
+
+openCurrentInNewTabAdditional(): void {
+  if (!this.preSignedUrlDownload) return;
+
+  // Abre el archivo actual en una nueva pestaña
+  window.open(this.preSignedUrlDownload, '_blank', 'noopener');
+}
+
+///////////////////////////////////
+private buildAttachmentsFromListAdditional(): void {
+  if (!this.requestApplicantAdditionalAttachmentsList || this.requestApplicantAdditionalAttachmentsList.length === 0) {
+    this.attachments = [];
+    return;
+  }
+
+  const urls: string[] = [];
+
+  for (const row of this.requestApplicantAdditionalAttachmentsList) {
+    urls.push(...this.extractUrlsFromRowGenericAdditional(row));
+  }
+
+  // quitamos duplicados y vacíos
+  this.attachments = Array.from(new Set(urls.filter(u => !!u)));
+}
+
+private extractUrlsFromRowGenericAdditional(row: any): string[] {
+  if (!row) return [];
+
+  const candidateUrls: string[] = [];
+
+  // 1. Campos típicos de URL directa
+  const simpleProps = ['url', 'source_route', 'file_url', 'attachment_url'];
+
+  for (const prop of simpleProps) {
+    if (row[prop] && typeof row[prop] === 'string') {
+      candidateUrls.push(row[prop]);
+    }
+  }
+
+  // 2. Campos típicos que traen arrays o cadenas con varias URLs
+  const multiProps = ['applicant_attachments', 'assigned_attachments', 'attachments'];
+
+  for (const prop of multiProps) {
+    const raw = row[prop];
+
+    // Si ya es array: lo agregamos tal cual
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        if (typeof item === 'string') {
+          candidateUrls.push(this.cleanUrlString(item));
+        }
+      }
+    }
+
+    // Si es string tipo "{url1,url2}" o "url1,url2"
+    if (typeof raw === 'string' && raw.trim()) {
+      const stripped = raw.trim().replace(/^\{|\}$/g, '');
+      if (stripped) {
+        const parts = stripped.split(/\s*,\s*/);
+        for (const part of parts) {
+          candidateUrls.push(this.cleanUrlString(part));
+        }
+      }
+    }
+  }
+
+  return candidateUrls;
+}
+
+private cleanUrlStringAdditional(value: string): string {
+  if (!value) return '';
+  // Si viene con peso al final tipo "...@115.87KB" lo cortamos
+  const [urlPart] = value.split('@');
+  return urlPart.trim();
+}
+//////////////////////////////////////////////////////////////////////////
+
+
 
 
 }
