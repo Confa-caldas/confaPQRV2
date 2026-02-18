@@ -273,12 +273,12 @@
           <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
             <p-tabPanel header="Adjunto de solicitante" headerStyleClass="p-tabview-nav-link-sub">
               <p-button 
-  *ngIf="requestApplicantAttachmentsList && requestApplicantAttachmentsList.length > 0"
-  label="Descargar .zip"
-  icon="pi pi-download"
-  (click)="downloadAttachmentsAsZip()"
-  class="p-button-sm p-button-primary custom-zip-button">
-</p-button>
+                *ngIf="requestApplicantAttachmentsList && requestApplicantAttachmentsList.length > 0"
+                label="Descargar .zip"
+                icon="pi pi-download"
+                (click)="downloadAttachmentsAsZip()"
+                class="p-button-sm p-button-primary custom-zip-button">
+              </p-button>
 
               <p-table
                 [value]="requestApplicantAttachmentsList"

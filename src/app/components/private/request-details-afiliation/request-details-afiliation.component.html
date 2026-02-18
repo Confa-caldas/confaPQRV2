@@ -4,81 +4,113 @@
 <div class="row mb-2">
   <div class="title">{{ showProcessTab() ? 'Tramitar solicitudes' : 'Consultar solicitudes' }}</div>
 </div>
-@if (requestDetails) {
-  <p-card>
-    <ul class="list-unstyled">
-      <div class="container">
-        <div class="container-row"
-          *ngIf="(requestDetails?.priority_level === 1 || requestDetails?.priority_level === 2) 
-              && requestDetails?.status_name !== 'Cerrada'">
-          <div class="container-column">
-            <label class="container-label prioridad-label"
-                  [ngClass]="{
-                    'prioridad-baja': requestDetails.priority_level === 1,
-                    'prioridad-alta': requestDetails.priority_level === 2
-                  }">
-              <i class="pi"
-                [ngClass]="{
-                  'pi-exclamation-circle': requestDetails.priority_level === 1,
-                  'pi-exclamation-triangle': requestDetails.priority_level === 2
-                }"></i>
-              <span class="prioridad-text">
-                Priorización:
-                <ng-container [ngSwitch]="requestDetails.priority_level">
-                  <span *ngSwitchCase="1">Baja</span>
-                  <span *ngSwitchCase="2">Alta</span>
-                  <span *ngSwitchDefault>Sin definir</span>
-                </ng-container>
-              </span>
-            </label>
-          </div>
-        </div>
-        
-        
-        <div class="container-row">
-          <div class="container-column">
-            <label class="container-label"> Número de Radicado </label>
-            <li class="container-text">{{ requestDetails.filing_number }}</li>
-          </div>
-          <div class="container-column">
-            <label class="container-label"> Fecha radicación </label>
-            <li class="container-text">{{ requestDetails.filing_date }}</li>
-          </div>
-          <div class="container-column">
-            <label class="container-label"> Tipo de solicitante </label>
-            <li class="container-text">{{ requestDetails.applicant_type_name }}</li>
-          </div>
-          <div class="container-column">
-            <label class="container-label"> Número de documento </label>
-            <li class="container-text">{{ requestDetails.doc_id }}</li>
-          </div>
-          <div class="container-column">
-            <label class="container-label"> Nombre de empresa/Solicitante </label>
-            <li class="container-text">{{ requestDetails.applicant_name }}</li>
-          </div>
-        </div>
-        <div class="container-row">
-          <div class="container-column">
-            <label class="container-label"> Estado </label>
-            <li class="container-text">{{ requestDetails.status_name }}</li>
-          </div>
-          <div class="container-column">
-            <label class="container-label"> Días de solicitud </label>
-            <li class="container-text">{{ requestDetails.request_days }}</li>
-          </div>
-          <div class="container-column">
-            <label class="container-label"> Responsable de solicitud </label>
-            <li class="container-text">{{ requestDetails.user_name_completed }}</li>
-          </div>
-          <div class="container-column">
-            <label class="container-label"> Tipo de solicitud </label>
-            <li class="container-text">{{ requestDetails.request_type_name }}</li>
-          </div>
-          <div class="container-column"></div>
-        </div>
-      </div>
-    </ul>
+@if (afiliationRequestDetails) {
+  <ng-container *ngIf="afiliationRequestDetails as d">
+    <div class="details-grid">
+      <!-- 1) Información Solicitud -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="card-title">Información Solicitud</div>
+        </ng-template>
 
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Número de radicado</span>
+            <span class="info-value">{{ d.solicitud.numero_radicado }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Fecha de radicación</span>
+            <span class="info-value">{{ d.solicitud.fecha_radicacion | date: 'yyyy-MM-dd' }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Transacción</span>
+            <span class="info-value">{{ d.solicitud.transaccion }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Estado actual</span>
+            <!-- si tienes currentState calculado, úsalo; si no, muestra el id -->
+            <span class="status-pill">
+              {{ currentState || 'Estado #' + d.solicitud.id_estado_solicitud }}
+            </span>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- 2) Solicitante (Trabajador) -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="card-title">Solicitante</div>
+        </ng-template>
+
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Nombre completo</span>
+            <span class="info-value">{{ trabajadorNombreCompleto }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Tipo documento</span>
+            <span class="info-value">{{ d.trabajador.persona.tipo_documento }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Número documento</span>
+            <span class="info-value">{{ d.trabajador.persona.numero_documento }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ d.trabajador.trabajador.correo_electronico || '—' }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Teléfono</span>
+            <span class="info-value">{{ d.trabajador.trabajador.telefono || '—' }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Empresa</span>
+            <span class="info-value">{{ empresaNombre }}</span>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- 3) Asignado a -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="card-title">Asignado a</div>
+        </ng-template>
+
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Responsable</span>
+            <span class="info-value">
+              {{ d.solicitud.usuario_gestion || '—' }}
+            </span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Días en gestión</span>
+            <span class="info-value">—</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Última actualización</span>
+            <span class="info-value">
+              {{
+                d.solicitud.fecha_modificacion || d.solicitud.fecha_creacion
+                  | date: 'yyyy-MM-dd HH:mm'
+              }}
+            </span>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Timeline debajo, como lo tenías -->
     <div class="timeline-container">
       <p-timeline [value]="events" layout="horizontal" align="bottom">
         <ng-template pTemplate="content" let-event let-i="index">
@@ -110,22 +142,13 @@
         </ng-template>
       </p-timeline>
     </div>
-
-    <!-- Similares sutiles, debajo del detalle -->
-<div *ngIf="similares && similares.length > 0" class="similares-discretos">
-  <small>Solicitudes similares:</small>
-  <div class="similares-badges">
-    <span *ngFor="let id of similares"  [routerLink]="['/request-details', id]" class="badge">
-      #{{ id }}
-    </span>
-  </div>
-</div>
-  </p-card>
+  </ng-container>
 
   <p-toast />
   <br />
+
   <div
-    *ngIf="requestDetails.status_name === 'Cerrada'"
+    *ngIf="afiliationRequestDetails.solicitud.id_estado_solicitud === 1"
     style="text-align: right; margin-right: 10px">
     <p-menu #menu [model]="items" [popup]="true"></p-menu>
     <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
@@ -134,487 +157,344 @@
   <div class="process-container-row-generals">
     <div class="container-button">
       <p-button
-        *ngIf="requestDetails.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'"
+        *ngIf="afiliationRequestDetails.solicitud.id_estado_solicitud === 1"
         [label]="
-          requestDetails.assigned_user === null || requestDetails.assigned_user === ''
+          afiliationRequestDetails.solicitud.usuario_gestion === null ||
+          afiliationRequestDetails.solicitud.usuario_gestion === ''
             ? 'Asignar'
             : 'Reasignar'
         "
-        (click)="assignRequest(requestDetails)"
+        (click)="assignRequestAfiliation(afiliationRequestDetails)"
         [style]="{ 'border-radius': '10px' }"></p-button>
-    </div>
-
-    <div class="container-button"
-     *ngIf="requestDetails &&
-            (requestDetails.status_name !== 'Cerrada' &&
-             requestDetails.priority_level !== 2)">
-      <p-menu #menu [model]="itemsGenerals" [popup]="true"></p-menu>
-      <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
     </div>
   </div>
 
   <div class="p-tabview">
-    <!-- (onChange)="onTabChange($event)" -->
     <p-tabView class="p-tabview-nav">
       <p-tabPanel header="Radicación" headerStyleClass="p-tabview-nav-link-1 ">
-        <ul class="list-unstyled">
-          <div class="process-container">
-            <div class="process-container-row">
-              <div class="process-container-col">
-                <label class="process-container-label"> ID </label>
-                <li class="process-container-text">{{ requestDetails.request_id }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Número de radicado </label>
-                <li class="process-container-text">{{ requestDetails.filing_number }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Fecha de radicación </label>
-                <li class="process-container-text">{{ requestDetails.filing_date }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Hora de radicación </label>
-                <li class="process-container-text">
-                  {{ requestDetails.filing_time.split('+')[0] }}
-                </li>
-              </div>
+    <ng-container *ngIf="afiliationRequestDetails as d">
+
+  <p-tabView>
+
+    <!-- ===================== SOLICITUD ===================== -->
+    <p-tabPanel header="Solicitud">
+      <div class="process-container">
+
+        <div class="process-container-row">
+          <div class="process-container-col">
+            <label class="process-container-label">ID solicitud</label>
+            <div class="process-container-text">{{ d.solicitud.id }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Número de radicado</label>
+            <div class="process-container-text">{{ d.solicitud.numero_radicado }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Fecha solicitud</label>
+            <div class="process-container-text">{{ d.solicitud.fecha_solicitud | date:'yyyy-MM-dd' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Fecha radicación</label>
+            <div class="process-container-text">{{ d.solicitud.fecha_radicacion | date:'yyyy-MM-dd HH:mm' }}</div>
+          </div>
+        </div>
+
+        <div class="process-container-row">
+          <div class="process-container-col">
+            <label class="process-container-label">Transacción</label>
+            <div class="process-container-text">{{ d.solicitud.transaccion }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Estado (ID)</label>
+            <div class="process-container-text">{{ d.solicitud.id_estado_solicitud }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Usuario gestión</label>
+            <div class="process-container-text">{{ d.solicitud.usuario_gestion || '—' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Última modificación</label>
+            <div class="process-container-text">
+              {{ (d.solicitud.fecha_modificacion || d.solicitud.fecha_creacion) | date:'yyyy-MM-dd HH:mm' }}
             </div>
-            <div class="process-container-row">
-              <div class="process-container-col">
-                <label class="process-container-label"> Estado solicitud </label>
-                <li class="process-container-text">{{ requestDetails.status_name }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Tipo de solicitante </label>
-                <li class="process-container-text">{{ requestDetails.applicant_type_name }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Tipo de solicitud </label>
-                <li class="process-container-text">{{ requestDetails.request_type_name }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Tratamiento de datos </label>
-                <li class="process-container-text">
-                  {{ requestDetails.data_treatment ? 'Aceptado' : 'Negado' }}
-                </li>
-              </div>
+          </div>
+        </div>
+
+        <div class="process-container-row">
+          <div class="process-container-col-description">
+            <label class="process-container-label">Observaciones</label>
+            <div class="process-container-text" [ngStyle]="{ 'white-space': 'pre-line' }">
+              {{ d.solicitud.observaciones || '—' }}
             </div>
-            <div class="process-container-row">
-              <div class="process-container-col">
-                <label class="process-container-label"> Tipo de documento </label>
-                <li class="process-container-text">{{ requestDetails.catalog_item_name }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Número de documento </label>
-                <li class="process-container-text">{{ requestDetails.doc_id }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Nombre de empresa o solicitante </label>
-                <li class="process-container-text">{{ requestDetails.applicant_name }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Correo electrónico </label>
-                <li class="process-container-text">{{ requestDetails.applicant_email }}</li>
-              </div>
+          </div>
+        </div>
+
+      </div>
+    </p-tabPanel>
+
+    <!-- ===================== EMPRESA ===================== -->
+    <p-tabPanel header="Empresa">
+      <div class="process-container">
+
+        <div class="process-container-row">
+          <div class="process-container-col">
+            <label class="process-container-label">ID empresa</label>
+            <div class="process-container-text">{{ d.empresa.id_empresa }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Documento</label>
+            <div class="process-container-text">{{ d.empresa.tipo_documento }} {{ d.empresa.numero_documento }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Razón social</label>
+            <div class="process-container-text">{{ d.empresa.razon_social }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Nombre comercial</label>
+            <div class="process-container-text">{{ d.empresa.nombre_comercial }}</div>
+          </div>
+        </div>
+
+        <div class="process-container-row">
+          <div class="process-container-col">
+            <label class="process-container-label">Contacto</label>
+            <div class="process-container-text">{{ d.empresa.contacto }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Representante legal</label>
+            <div class="process-container-text">{{ d.empresa.representante_legal }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Correo</label>
+            <div class="process-container-text">{{ d.empresa.correo_electronico }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Teléfono</label>
+            <div class="process-container-text">{{ d.empresa.telefono }}</div>
+          </div>
+        </div>
+
+        <div class="process-container-row">
+          <div class="process-container-col-description">
+            <label class="process-container-label">Dirección</label>
+            <div class="process-container-text">{{ d.empresa.direccion }}</div>
+          </div>
+        </div>
+
+        <div class="process-container-row">
+          <div class="process-container-col">
+            <label class="process-container-label">Activa</label>
+            <div class="process-container-text">{{ d.empresa.esta_activa ? 'Sí' : 'No' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Permite masivas</label>
+            <div class="process-container-text">{{ d.empresa.permite_afiliaciones_masivas ? 'Sí' : 'No' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Estado afiliación</label>
+            <div class="process-container-text">{{ d.empresa.estado_afiliacion || '—' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Motivo desafiliación</label>
+            <div class="process-container-text">{{ d.empresa.motivo_desafiliacion || '—' }}</div>
+          </div>
+        </div>
+
+      </div>
+    </p-tabPanel>
+
+    <!-- ===================== TRABAJADOR ===================== -->
+    <p-tabPanel header="Trabajador">
+      <div class="process-container">
+
+        <div class="process-container-row">
+          <div class="process-container-col">
+            <label class="process-container-label">ID persona</label>
+            <div class="process-container-text">{{ d.trabajador.persona.id }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Documento</label>
+            <div class="process-container-text">
+              {{ d.trabajador.persona.tipo_documento }} {{ d.trabajador.persona.numero_documento }}
             </div>
-            <div class="process-container-row">
-              <div class="process-container-col">
-                <label class="process-container-label"> Teléfono móvil </label>
-                <li class="process-container-text">{{ requestDetails.applicant_cellphone }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Días de solicitud </label>
-                <li class="process-container-text">{{ requestDetails.request_days }}</li>
-              </div>
-              <div class="process-container-col">
-                <label class="process-container-label"> Responsable de solicitud </label>
-                <li class="process-container-text">{{ requestDetails.user_name_completed }}</li>
-              </div>
-              <div *ngIf="requestDetails.send_email_massive !== null" class="process-container-col">
-                <label class="process-container-label"> Respuesta a otros correos </label>
-                <li class="process-container-text">{{ requestDetails.send_email_massive }}</li>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Nombre</label>
+            <div class="process-container-text">
+              {{ d.trabajador.persona.primer_nombre }}
+              {{ d.trabajador.persona.segundo_nombre }}
+              {{ d.trabajador.persona.primer_apellido }}
+              {{ d.trabajador.persona.segundo_apellido }}
+            </div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Género</label>
+            <div class="process-container-text">{{ d.trabajador.persona.genero || '—' }}</div>
+          </div>
+        </div>
+
+        <div class="process-container-row">
+          <div class="process-container-col">
+            <label class="process-container-label">Fecha nacimiento</label>
+            <div class="process-container-text">{{ d.trabajador.persona.fecha_nacimiento || '—' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Fecha expedición doc</label>
+            <div class="process-container-text">{{ d.trabajador.persona.fecha_expedicion_doc || '—' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Correo</label>
+            <div class="process-container-text">{{ d.trabajador.trabajador.correo_electronico || '—' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Teléfono</label>
+            <div class="process-container-text">{{ d.trabajador.trabajador.telefono || '—' }}</div>
+          </div>
+        </div>
+
+        <div class="process-container-row">
+          <div class="process-container-col">
+            <label class="process-container-label">Estado civil</label>
+            <div class="process-container-text">{{ d.trabajador.trabajador.estado_civil || '—' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Zona</label>
+            <div class="process-container-text">{{ d.trabajador.trabajador.zona || '—' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Salario mensual</label>
+            <div class="process-container-text">{{ d.trabajador.trabajador.salario_mensual | number:'1.0-0' }}</div>
+          </div>
+
+          <div class="process-container-col">
+            <label class="process-container-label">Fecha ingreso empresa</label>
+            <div class="process-container-text">{{ d.trabajador.trabajador.fecha_ingreso_empresa || '—' }}</div>
+          </div>
+        </div>
+
+        <div class="process-container-row">
+          <div class="process-container-col-description">
+            <label class="process-container-label">Dirección</label>
+            <div class="process-container-text">{{ d.trabajador.persona.direccion || '—' }}</div>
+          </div>
+        </div>
+
+      </div>
+    </p-tabPanel>
+
+    <!-- ===================== BENEFICIARIOS ===================== -->
+    <p-tabPanel header="Beneficiarios">
+      <div class="process-container">
+
+        <ng-container *ngIf="d.beneficiarios?.length; else noBenef">
+
+          <div class="benef-list">
+            <div class="benef-card" *ngFor="let b of d.beneficiarios">
+              <div class="process-container-row">
+                <div class="process-container-col">
+                  <label class="process-container-label">Documento</label>
+                  <div class="process-container-text">{{ b.persona.tipo_documento }} {{ b.persona.numero_documento }}</div>
+                </div>
+
+                <div class="process-container-col">
+                  <label class="process-container-label">Nombre</label>
+                  <div class="process-container-text">
+                    {{ b.persona.primer_nombre }}
+                    {{ b.persona.segundo_nombre }}
+                    {{ b.persona.primer_apellido }}
+                    {{ b.persona.segundo_apellido }}
+                  </div>
+                </div>
+
+                <div class="process-container-col">
+                  <label class="process-container-label">Parentesco</label>
+                  <div class="process-container-text">{{ b.beneficiario.parentesco || '—' }}</div>
+                </div>
+
+                <div class="process-container-col">
+                  <label class="process-container-label">Nuevo beneficiario</label>
+                  <div class="process-container-text">{{ b.beneficiario.nuevo_beneficiario || '—' }}</div>
+                </div>
               </div>
 
-              <div class="process-container-col"></div>
-            </div>
-            <div class="process-container-row">
-              <div class="process-container-col-description">
-                <label class="process-container-label"> Descripción solicitud </label>
-                <li class="process-container-text" [ngStyle]="{ 'white-space': 'pre-line' }">
-                  {{ requestDetails.request_description }}
-                </li>
-              </div>
-            </div>
-            <div class="process-container-row" *ngIf="requestDetails.request_answer !== ''">
-              <div class="process-container-col-description">
-                <label class="process-container-label"> Respuesta solicitud </label>
-                <li class="process-container-text" [ngStyle]="{ 'white-space': 'pre-line' }">
-                  {{ requestDetails.request_answer }}
-                </li>
-              </div>
-            </div>
-            <br />
-            <div class="process-container-row" *ngIf="historyData.length > 0">
-              <div class="process-container-col-description">
-                <p-button
-                  icon="pi pi-plus"
-                  [styleClass]="'btn-icon-info'"
-                  (click)="solicitudHistory()"
-                  [style]="{ 'border-radius': '10px' }"
-                  title="Ver respuestas">
-                </p-button>
+              <div class="process-container-row">
+                <div class="process-container-col">
+                  <label class="process-container-label">Dirección corresponde trabajador</label>
+                  <div class="process-container-text">{{ b.beneficiario.direccion_corresponde_trabajador || '—' }}</div>
+                </div>
+
+                <div class="process-container-col">
+                  <label class="process-container-label">Cónyuge labora</label>
+                  <div class="process-container-text">{{ b.beneficiario.conyuge_labora || '—' }}</div>
+                </div>
+
+                <div class="process-container-col">
+                  <label class="process-container-label">Persona discapacidad</label>
+                  <div class="process-container-text">{{ b.beneficiario.persona_discapacidad || '—' }}</div>
+                </div>
+
+                <div class="process-container-col">
+                  <label class="process-container-label">Nivel educativo</label>
+                  <div class="process-container-text">{{ b.beneficiario.nivel_educativo || '—' }}</div>
+                </div>
               </div>
             </div>
           </div>
-        </ul>
-      </p-tabPanel>
-      <p-tabPanel header="Adjuntos" headerStyleClass="p-tabview-nav-link-2 ">
-        <div class="p-tab-view">
-          <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
-            <p-tabPanel header="Adjunto de solicitante" headerStyleClass="p-tabview-nav-link-sub">
-              <p-button 
-  *ngIf="requestApplicantAttachmentsList && requestApplicantAttachmentsList.length > 0"
-  label="Descargar .zip"
-  icon="pi pi-download"
-  (click)="downloadAttachmentsAsZip()"
-  class="p-button-sm p-button-primary custom-zip-button">
-</p-button>
 
-              <p-table
-                [value]="requestApplicantAttachmentsList"
-                [scrollable]="true"
-                scrollHeight="400px"
-                selectionMode="single"
-                [paginator]="false"
-                [rows]="5"
-                [showCurrentPageReport]="true"
-                [tableStyle]="{ 'min-width': '52rem' }">
-                <ng-template pTemplate="header">
-                  <tr style="height: 60px">
-                    <th style="width: 30%">Archivo</th>
-                    <th pSortableColumn="updated_date" style="width: 20%">
-                      Fecha de adjunto<p-sortIcon field="updated_date"></p-sortIcon>
-                    </th>
-                    <th style="width: 20%">Formato</th>
-                    <th style="width: 20%">Peso</th>
-                    <th style="width: 10%">Previsualizar</th>
-                    <th style="width: 10%">Descargar</th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-requestApplicantAttachmentsList>
-                  <tr>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      <span 
-                      style="color: #0d6efd; text-decoration: underline; cursor: pointer;"
-                      (click)="getPreSignedUrlToDownload(requestApplicantAttachmentsList.url, requestApplicantAttachmentsList.file_name, false)">
-                      {{ requestApplicantAttachmentsList.file_name }}
-                    </span>
-                    </td>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      {{ requestApplicantAttachmentsList.file_date }}
-                    </td>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      {{ requestApplicantAttachmentsList.file_ext }}
-                    </td>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      {{ requestApplicantAttachmentsList.file_size }}
-                    </td>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      <p-button
-                        *ngIf="
-                          handleBtn(
-                            requestApplicantAttachmentsList.file_size,
-                            requestApplicantAttachmentsList.file_ext
-                          )
-                        "
-                        icon="pi pi-eye"
-                        [styleClass]="'btn-icon-info'"
-                        (click)="
-                          getPreSignedUrlToDownload(
-                            requestApplicantAttachmentsList.url,
-                            requestApplicantAttachmentsList.file_name,
-                            false
-                          )
-                        "></p-button>
-                    </td>
-                    <td>
-                      <p-button
-                        icon="pi pi-download"
-                        [styleClass]="'btn-icon-info'"
-                        (click)="
-                          getPreSignedUrlToDownload(
-                            requestApplicantAttachmentsList.url,
-                            requestApplicantAttachmentsList.file_name,
-                            true
-                          )
-                        "></p-button>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-              <p-paginator
-                (onPageChange)="onPageChangeApplicantAttachments($event)"
-                [first]="firstApplicantAttachments"
-                [rows]="rowsApplicantAttachments"
-                [totalRecords]="totalRowsApplicantAttachments"
-                [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+        </ng-container>
+
+        <ng-template #noBenef>
+          <p-message severity="info" text="No hay beneficiarios asociados."></p-message>
+        </ng-template>
+
+      </div>
+    </p-tabPanel>
+
+  </p-tabView>
+</ng-container>
+
+    </p-tabPanel>
+
+    <p-tabPanel header="Adjuntos" headerStyleClass="p-tabview-nav-link-2 ">
+      <div class="p-tab-view">
+          <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
+            <p-tabPanel header="Adjuntos trabajador" headerStyleClass="p-tabview-nav-link-sub">
             </p-tabPanel>
-            <p-tabPanel header="Adjunto de responsable" headerStyleClass="p-tabview-nav-link-sub">
-              <p-table
-                [value]="requestAssignedAttachmentsList"
-                [scrollable]="true"
-                scrollHeight="400px"
-                selectionMode="single"
-                [paginator]="false"
-                [rows]="5"
-                [showCurrentPageReport]="true"
-                [tableStyle]="{ 'min-width': '52rem' }">
-                <ng-template pTemplate="header">
-                  <tr style="height: 60px">
-                    <th style="width: 30%">Archivo</th>
-                    <th pSortableColumn="updated_date" style="width: 20%">
-                      Fecha de adjunto<p-sortIcon field="updated_date"></p-sortIcon>
-                    </th>
-                    <th style="width: 20%">Formato</th>
-                    <th style="width: 20%">Peso</th>
-                    <th style="width: 10%"></th>
-                    <th style="width: 10%"></th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-requestAssignedAttachmentsList>
-                  <tr>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      {{ requestAssignedAttachmentsList.file_name }}
-                    </td>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      {{ requestAssignedAttachmentsList.file_date }}
-                    </td>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      {{ requestAssignedAttachmentsList.file_ext }}
-                    </td>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      {{ requestAssignedAttachmentsList.file_size }}
-                    </td>
-                    <td [ngStyle]="{ 'text-align': 'center' }">
-                      <p-button
-                        *ngIf="
-                          handleBtn(
-                            requestAssignedAttachmentsList.file_size,
-                            requestAssignedAttachmentsList.file_ext
-                          )
-                        "
-                        icon="pi pi-eye"
-                        [styleClass]="'btn-icon-info'"
-                        (click)="
-                          getPreSignedUrlToDownload(
-                            requestAssignedAttachmentsList.url,
-                            requestAssignedAttachmentsList.file_name,
-                            false
-                          )
-                        "></p-button>
-                    </td>
-                    <td>
-                      <p-button
-                        icon="pi pi-download"
-                        [styleClass]="'btn-icon-info'"
-                        (click)="
-                          getPreSignedUrlToDownload(
-                            requestAssignedAttachmentsList.url,
-                            requestAssignedAttachmentsList.file_name,
-                            true
-                          )
-                        "></p-button>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-              <p-paginator
-                (onPageChange)="onPageChangeAssignedAttachments($event)"
-                [first]="firstAssignedAttachments"
-                [rows]="rowsAssignedAttachments"
-                [totalRecords]="totalRowsAssignedAttachments"
-                [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+            <p-tabPanel header="Adjuntos beneficiarios" headerStyleClass="p-tabview-nav-link-sub">
+            </p-tabPanel>
+            <p-tabPanel header="Adjuntos Responsable" headerStyleClass="p-tabview-nav-link-sub">
             </p-tabPanel>
           </p-tabView>
-        </div>
-      </p-tabPanel>
-
-      <p-tabPanel
-        header="Tramitar solicitud"
-        *ngIf="showProcessTab()"
-        headerStyleClass="p-tabview-nav-link-4">
-        <div class="formProcess">
-          <form [formGroup]="requestProcess">
-            <div class="formProcess-card-text">
-              <label class="formProcess-card-text-placeholder"
-                >Respuesta Solicitud
-                <p style="color: red">*</p>
-                <div>
-                  <p-button
-                    icon="pi pi-bolt"
-                    [styleClass]="'btn-icon-warning'"
-                    (click)="respuestaSugeridaIa(requestDetails.request_description)"
-                    [style]="{ 'border-radius': '10px' }">
-                  </p-button>
-                </div>
-              </label>
-              <div
-                *ngIf="requestDetails.status_name !== 'Cerrado'"
-                class="formProcess-card-text-placeholder"
-                [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
-                [ngClass]="{ 'text-respuesta': existEraserAsnwer }">
-                <p-button
-                  label="Solicitud pendiente"
-                  severity="warning"
-                  icon="pi pi-stopwatch"
-                  [style]="{ 'border-radius': '10px' }"
-                  (click)="solicitudPendiente()" />
-              </div>
-
-              <div
-                *ngIf="requestDetails.status_name !== 'Cerrado'"
-                class="formProcess-card-text-placeholder"
-                [style]="{ 'border-radius': '10px', 'margin-left': 'auto' }"
-                [ngClass]="{ 'text-respuesta': existEraserAsnwer }">
-                <p-button
-                  icon="pi pi-save"
-                  severity="warning"
-                  (click)="correccionSugeridaIa(requestDetails)"
-                  [style]="{ 'border-radius': '10px', 'background-color': '#329dd1' }"
-                  [disabled]="requestProcess.invalid"
-                  label="Guardar en borrador">
-                </p-button>
-              </div>
-
-              <!-- <label class="formProcess-card-text-placeholder"
-                >Generar reporte afiliacion
-                <div>
-                  <p-button
-                    icon="pi pi-download"
-                    [styleClass]="'btn-icon-info'"
-                    (click)="generacionReporteAfiliacion(requestDetails.doc_id)"
-                    [style]="{ 'border-radius': '10px' }">
-                  </p-button>
-                </div>
-              </label> -->
-
-              <!--
-              <textarea
-                rows="5"
-                cols="30"
-                formControlName="mensage"
-                [style]="{ 'border-radius': '5px' }"
-                type="text"
-                class="custom-input"
-                placeholder="Escribir mensaje"
-                pInputTextarea>
-              </textarea>
-              -->
-
-              <div *ngIf="requestDetails.contact_cellphone === true && requestDetails.contact_email === false" class="sms-alert">
-                <ng-container *ngIf="requestDetails.contact_email; else soloSMS">
-                  Este mensaje también será enviado por <strong>SMS</strong>. El contenido debe tener máximo 320 caracteres.
-                </ng-container>
-                <ng-template #soloSMS>
-                  Este mensaje será enviado únicamente por <strong>SMS</strong>. El contenido debe tener máximo 320 caracteres.
-                </ng-template>
-              </div>
-
-
-              <textarea
-                rows="5"
-                cols="30"
-                formControlName="mensage"
-                [attr.maxlength]="requestDetails.contact_cellphone===true && requestDetails.contact_email===false ? 320 : null"
-                [style]="{ 'border-radius': '5px' }"
-                type="text"
-                class="custom-input"
-                placeholder="Escribir mensaje"
-                pInputTextarea>
-              </textarea>
-
-              <!-- Opcional: contador de caracteres -->
-              <div class="text-right text-xs text-muted">
-                {{ requestProcess.get('mensage')?.value?.length || 0 }}/{{ requestDetails.contact_cellphone===true && requestDetails.contact_email===false ? 320 : '6000' }} caracteres
-              </div>
-
-
-              <!-- <p class="static-text">Cordialmente, {{ requestDetails.user_name_completed }}</p> -->
-
-              <p class="static-text">
-                Cordialmente, {{ requestDetails.user_name_completed === 'ext_niyaraky' ? '' : requestDetails.user_name_completed }}
-              </p>
-
-              <label class="formProcess-card-text-placeholder-invalid">
-                {{
-                  requestProcess.get('mensage')?.hasError('required') &&
-                  requestProcess.get('mensage')?.touched
-                    ? ' Campo Requerido'
-                    : ''
-                }}
-                {{
-                  requestProcess.get('mensage')?.hasError('maxlength')
-                    ? ' Maximo 6000 caracteres'
-                    : ''
-                }}</label
-              >
-            </div>
-
-            <!-- <div>
-              <p-button
-                *ngIf="requestProcess.get('mensage')?.value"
-                label="Ortografía"
-                icon="pi pi-check-square"
-                [styleClass]="'btn-icon-text'"
-                (click)="correccionSugeridaIa(requestDetails)">
-              </p-button>
-            </div> -->
-          </form>
-          <div class="formProcess-buttonUp" *ngIf="
-            (requestDetails.contact_email && !requestDetails.contact_cellphone) ||
-            (requestDetails.contact_email && requestDetails.contact_cellphone) ||
-            (!requestDetails.contact_email && !requestDetails.contact_cellphone)
-                  ">
-            <label class="formProcess-card-text-placeholder">Adjuntos</label>
-            <div class="formProcess-buttonUp-custom-button">
-              <input
-                type="file"
-                #archive_request
-                class="formProcess-buttonUp-custom-icon"
-                name="archive_request"
-                (change)="onFileSelected($event)"
-                accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
-                maxFileSize="20971520"
-                multiple />
-              <label class="formProcess-buttonUp-label" (click)="openFileInput()">
-                Seleccionar
-                <i style="margin-left: 5px" class="pi pi-upload"></i>
-              </label>
-              <label class="formProcess-card-text-placeholder-invalid"
-                >{{ errorSizeFile ? errorMensajeFile : ''
-                }}{{ errorExtensionFile ? errorMensajeFile : ''
-                }}{{ errorRepeatFile ? errorMensajeFile : '' }}</label
-              >
-              <div
-                class="formProcess-labelUpload"
-                *ngFor="let fileName of fileNameList; let i = index">
-                <p class="formProcess-labelUpload-name">{{ fileName }}</p>
-                <i (click)="clearFileInput(i)" class="formProcess-labelUpload-name pi pi-times"></i>
-              </div>
-            </div>
-          </div>
-          <div class="container-button">
-            <p-button
-              label="Enviar respuesta"
-              [disabled]="requestProcess.invalid"
-              (click)="correccionSugeridaIaEnviar(requestDetails)"
-              [style]="{ 'border-radius': '10px' }"></p-button>
-          </div>
-        </div>
-      </p-tabPanel>
-
-      <p-tabPanel header="Histórico Gestión" headerStyleClass="p-tabview-nav-link-3">
-        <div class="process-container">
+      </div>
+    </p-tabPanel>
+    <p-tabPanel header="Tramitar Soliciutd" headerStyleClass="p-tabview-nav-link-4">
+      
+    </p-tabPanel>
+    <p-tabPanel header="Histórico Gestión" headerStyleClass="p-tabview-nav-link-3">
+      <div class="process-container">
           <p-table
             [value]="requestHistoric"
             [scrollable]="true"
@@ -633,7 +513,6 @@
                 <th style="width: 20%">Usuario</th>
                 <th style="width: 20%">Responsable de solicitud</th>
                 <th style="width: 15%">Estado de solicitud</th>
-                <th style="width: 10%">Descripción del estado</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-requestHistoric>
@@ -651,45 +530,6 @@
                 <td [ngStyle]="{ 'text-align': 'center' }">
                   {{ requestHistoric.status_name }}
                 </td>
-                <td [ngStyle]="{ 'text-align': 'center' }">
-                  <p-button
-                    *ngIf="requestHistoric.status_name === 'Cerrada'"
-                    icon="pi pi-eye"
-                    [styleClass]="'btn-icon-info'"
-                    (click)="showModal()"></p-button>
-                  <p-button
-                    *ngIf="requestHistoric.status_name === 'Radicada'"
-                    icon="pi pi-eye"
-                    [styleClass]="'btn-icon-info'"
-                    (click)="showModalRadicada()"></p-button>
-                  <p-button
-                    *ngIf="
-                      requestHistoric.status_name === 'Reasignada' &&
-                      requestHistoric.answer_request !== null
-                    "
-                    icon="pi pi-eye"
-                    [styleClass]="'btn-icon-info'"
-                    (click)="showModalReasignada(requestHistoric.user_name_completed)"></p-button>
-                  <p-button
-                    *ngIf="
-                      (requestHistoric.status_name === 'Asignada - En revisión' ||
-                        requestHistoric.status_name === 'Reasignada - En revisión') &&
-                      requestHistoric.answer_request !== null
-                    "
-                    icon="pi pi-eye"
-                    [styleClass]="'btn-icon-info'"
-                    (click)="
-                      showModalReview(
-                        requestHistoric.user_name_completed,
-                        requestHistoric.status_name
-                      )
-                    "></p-button>
-                    <p-button
-                    *ngIf="requestHistoric.status_name === 'Priorizada'"
-                    icon="pi pi-eye"
-                    [styleClass]="'btn-icon-info'"
-                    (click)="showModalPriorizada()"></p-button>
-                </td>
               </tr>
             </ng-template>
           </p-table>
@@ -700,104 +540,10 @@
             [totalRecords]="totalRowsHistoric"
             [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
         </div>
-      </p-tabPanel>
-      <!-- //Esto es nuevo -->
-       <!--
-      <p-tabPanel header="Consultas Genesys" headerStyleClass="p-tabview-nav-link-1">
-        <ul class="list-unstyled">
-          <div class="container">
-            <div class="container-row">
-              <div class="container-column">
-                <label class="container-label">
-                  Documento
-                  <input
-                    type="text"
-                    class="input-text"
-                    placeholder="Ingresa el documento"
-                    [(ngModel)]="documentValue" />
-                  <p-button
-                    label="Consultar"
-                    (click)="consultarWs(documentValue)"
-                    [style]="{ 'border-radius': '10px' }"></p-button>
-                </label>
-              </div>
-            </div>
-            <div class="container-row">
-              <div class="container-column">
-                <label class="container-label" style="font-size: 15px">Información Afiliado</label>
-              </div>
-            </div>
-            <div class="container-row">
-              <div class="container-column">
-                <label class="container-label"> Tipo documento </label>
-                <li class="container-text">{{ afiliado?.tipoDocumento }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Documento </label>
-                <li class="container-text">{{ afiliado?.documento }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Nombre Afiliado </label>
-                <li class="container-text">{{ afiliado?.nombre }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Fecha nacimiento</label>
-                <li class="container-text">{{ afiliado?.fechaNacimiento }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Estado </label>
-                <li class="container-text">{{ afiliado?.estado }}</li>
-              </div>
-            </div>
-            <div class="container-row">
-              <div class="container-column">
-                <label class="container-label"> Empresa </label>
-                <li class="container-text">{{ afiliado?.empresa }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Tipo Trabajador </label>
-                <li class="container-text">{{ afiliado?.tipoTrabajador }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Fecha ingreso </label>
-                <li class="container-text">{{ afiliado?.fechaIngreso }}</li>
-              </div>
-              <div class="container-column">
-                <label class="container-label"> Fecha afiliación </label>
-                <li class="container-text">{{ afiliado?.fechaAfiliacion }}</li>
-              </div>
-              <div class="container-column"></div>
-            </div>
-          </div>
-        </ul>
-      </p-tabPanel> -->
+    </p-tabPanel>
     </p-tabView>
   </div>
-  <!-- <p-dialog
-    header="Respuesta solicitud"
-    [(visible)]="visibleDialogdDescrip"
-    [modal]="true"
-    [style]="{ width: '80vw' }"
-    [contentStyle]="{ padding: '1em' }"
-    [responsive]="true"
-    [styleClass]="'custom-dialog'">
-    <p class="mb-5">
-      {{ requestDetails.request_answer }}
-    </p>
-  </p-dialog>
 
-  <p-dialog
-    header="Descripción de la solicitud"
-    [(visible)]="visibleDialogdDescripRadicada"
-    [modal]="true"
-    [style]="{ width: '80vw' }"
-    [contentStyle]="{ padding: '1em' }"
-    [responsive]="true"
-    [styleClass]="'custom-dialog'">
-    <p class="mb-5">
-      {{ requestDetails.request_description }}
-    </p>
-  </p-dialog> -->
   <p-dialog
     header="{{ dialogHeader }}"
     [(visible)]="isDialogVisible"

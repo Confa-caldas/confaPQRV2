@@ -37,6 +37,22 @@ export interface RequestsList {
   message_priority: string;
 }
 
+export interface RequestsListAfiliation {
+  id_solicitud: number;
+  numero_radicado: string | null;
+  fecha_solicitud: string; // o Date si lo conviertes en frontend
+  doc_trabajador: string;
+  nombre_trabajador: string;
+  documentos_beneficiarios: string;
+  nombres_beneficiarios: string;
+  id_empresa: string | number;
+  nombre_empresa: string;
+  id_estado_solicitud: string | number;
+  usuario_gestion: string | null;
+  total_count: number;
+}
+
+
 export interface RequestsDetails {
   request_id: number;
   filing_number: number;
@@ -347,6 +363,28 @@ export interface FilterRequests {
   confa_user?: string | null;
   area_name?: string | null;
   priority_level?: number | null;
+  page?: number;
+  page_size?: number;
+}
+
+export interface FilterRequestsMassive {
+  filing_number?: number | null;
+  i_date: string | null;
+  f_date: string | null;
+  doc_id_emp?: string | null;
+  status_id?: number | number[] | null;
+  page?: number;
+  page_size?: number;
+}
+export interface FilterRequestsAfiliation {
+  i_date: string | null;
+  f_date: string | null;
+  filing_number?: number | null;
+  doc_id_tr?: string | null;
+  doc_id_bn?: string | null;
+  applicant_name_emp?: string | null;
+  status_id?: number | number[] | null;
+  assigned_user?: string | string[] | null;
   page?: number;
   page_size?: number;
 }
@@ -836,3 +874,158 @@ export interface SimilarRequest {
   applicant_attachments: string[];
 }
 
+// INTERFACES PARA AFILIACIONES
+// Estructura estándar de tu backend
+export interface BodyResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
+
+// --------- RESPUESTA data ---------
+export interface AfiliacionRequestDetailsData {
+  solicitud: Solicitud;
+  empresa: Empresa;
+  trabajador: TrabajadorBundle;
+  beneficiarios: BeneficiarioBundle[];
+}
+
+// --------- TIPOS INTERNOS (según tu JSON) ---------
+export interface Solicitud {
+  id: number;
+  id_empresa: number;
+  numero_fila: number | null;
+  transaccion: string;
+  observaciones: string | null;
+  fecha_creacion: string;
+  excluido_masiva: boolean;
+  fecha_solicitud: string;
+  numero_radicado: string;
+  usuario_gestion: string | null;
+  fecha_radicacion: string;
+  fecha_modificacion: string | null;
+  id_estado_solicitud: number;
+  id_solicitud_masiva: number | null;
+  id_usuario_creacion: number;
+  usuario_modificacion: string | null;
+  id_usuario_radicacion: number;
+  motivo_excluido_masiva: string | null;
+  fecha_asignacion_gestion: string | null;
+  fecha_recepcion_documentos: string | null;
+}
+
+export interface Empresa {
+  contacto: string;
+  telefono: string;
+  direccion: string;
+  sinc_hora: string;
+  id_empresa: number;
+  sinc_fecha: string;
+  esta_activa: boolean;
+  sinc_accion: string;
+  razon_social: string;
+  sinc_usuario: string | null;
+  fecha_creacion: string;
+  tipo_documento: string;
+  nombre_comercial: string;
+  numero_documento: string;
+  estado_afiliacion: string | null;
+  correo_electronico: string;
+  fecha_actualizacion: string;
+  representante_legal: string;
+  motivo_desafiliacion: string | null;
+  permite_afiliaciones_masivas: boolean;
+}
+
+export interface Persona {
+  id: number;
+  genero: string | null;
+  direccion: string | null;
+  consecutivo: number;
+  id_solicitud: number;
+  tipo_persona: 'PRINCIPAL' | 'BENEFICIARIO' | string;
+  primer_nombre: string;
+  segundo_nombre: string | null;
+  tipo_documento: string;
+  primer_apellido: string;
+  fecha_nacimiento: string | null;
+  numero_documento: string;
+  segundo_apellido: string | null;
+  fecha_modificacion: string | null;
+  id_usuario_creacion: number;
+  fecha_expedicion_doc: string | null;
+  usuario_modificacion: string | null;
+  fecha_creacion: string;
+}
+
+export interface Adjunto {
+  id: number;
+  id_persona: number;
+  consecutivo: number;
+  fecha_carga: string;
+  content_type: string;
+  ruta_archivo: string;
+  tamanio_bytes: number;
+  usuario_carga: string;
+  nombre_archivo: string;
+  id_tipo_adjunto: number;
+  fecha_modificacion: string | null;
+  usuario_modificacion: string | null;
+}
+
+export interface TrabajadorInfo {
+  zona: string | null;
+  telefono: string | null;
+  id_persona: number;
+  llave_breb: string | null;
+  medio_pago: string | null;
+  tipo_cuenta: string | null;
+  estado_civil: string | null;
+  id_municipio: number | null;
+  numero_cuenta: string | null;
+  fecha_creacion: string;
+  id_departamento: number | null;
+  salario_mensual: number | null;
+  correo_electronico: string | null;
+  fecha_modificacion: string | null;
+  horas_laboradas_mes: number | null;
+  id_entidad_bancaria: number | null;
+  id_usuario_creacion: number;
+  usuario_modificacion: string | null;
+  fecha_ingreso_empresa: string | null;
+  requiere_permiso_laboral: boolean;
+}
+
+export interface BeneficiarioInfo {
+  id_persona: number;
+  parentesco: string | null;
+  observaciones: string | null;
+  revision_back: string | null;
+  conyuge_labora: string | null;
+  fecha_creacion: string;
+  nivel_educativo: string | null;
+  fecha_modificacion: string | null;
+  nuevo_beneficiario: string | null;
+  parentesco_genesys: string | null;
+  id_usuario_creacion: number;
+  nuevo_grupo_familiar: string | null;
+  persona_discapacidad: string | null;
+  usuario_modificacion: string | null;
+  numero_grupo_familiar: number | null;
+  valor_salario_mensual: number | null;
+  requiere_adjunto_registro_civil: string | null;
+  direccion_corresponde_trabajador: string | null;
+  requiere_adjunto_documento_soporte: string | null;
+}
+
+export interface TrabajadorBundle {
+  persona: Persona;
+  adjuntos: Adjunto[];
+  trabajador: TrabajadorInfo;
+}
+
+export interface BeneficiarioBundle {
+  persona: Persona;
+  adjuntos: Adjunto[];
+  beneficiario: BeneficiarioInfo;
+}

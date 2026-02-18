@@ -20,6 +20,7 @@ import {
   requestHistoryRequest,
   historyRequest,
   SimilarRequest,
+  AfiliacionRequestDetailsData
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -34,7 +35,6 @@ import { of, lastValueFrom, firstValueFrom, throwError } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-request-details-afiliation',
@@ -51,6 +51,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
   requestList: RequestsList[] = [];
   requestDetails?: RequestsDetails;
+  afiliationRequestDetails?: AfiliacionRequestDetailsData;
   requestHistoric: RequestHistoric[] = [];
   requestHistoricAttach: RequestHistoric[] = [];
   ingredient!: string;
@@ -65,6 +66,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   request_details!: RequestsDetails;
   selectedRequests: RequestsList[] = [];
   request_id: number = 0;
+  request_id_afi: string = '';
   tabWidth!: number;
   ApplicantAttach: ApplicantAttach[] = [];
   AssignedAttach: ApplicantAttach[] = [];
@@ -218,14 +220,18 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       this.request_id = +params['id'];
       this.getRequestDetails(this.request_id);
     });
-    //this.getRequestDetails(this.request_id);
+
+
+
+
+
     this.initPaginadorHistoric();
-    this.getRequestApplicantAttachments(this.request_id);
-    this.getRequestAssignedAttachments(this.request_id);
+    //this.getRequestApplicantAttachments(this.request_id);
+    //this.getRequestAssignedAttachments(this.request_id);
 
     //validar si esta cerrada
-    this.getAnswerTemp(this.request_id);
-    // histico sobre reapertura de solicitudes
+    //this.getAnswerTemp(this.request_id);
+
     this.getHistoryRequest(this.request_id);
 
     // //Neuvo pdf
@@ -305,14 +311,14 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.firstHistoric = eventHistoric.first || 0;
     this.rowsHistoric = eventHistoric.rows || 0;
     this.pageHistoric = Number(eventHistoric.page) + 1 || 0;
-    this.getRequestHistoric(this.request_id);
+    //this.getRequestHistoric(this.request_id);
   }
   cleanFormHistoric() {
     this.firstHistoric = 0;
     this.pageHistoric = 1;
     this.rowsHistoric = 10;
     this.requestHistoric = [];
-    this.getRequestHistoric(this.request_id);
+    //this.getRequestHistoric(this.request_id);
   }
 
   initPaginadorHistoric() {
@@ -326,42 +332,42 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.firstAssignedAttachments = eventAssignedAttachments.first || 0;
     this.rowsAssignedAttachments = eventAssignedAttachments.rows || 0;
     this.pageAssignedAttachments = Number(eventAssignedAttachments.page) + 1 || 0;
-    this.getRequestAssignedAttachments(this.request_id);
+    //this.getRequestAssignedAttachments(this.request_id);
   }
   cleanFormAssignedAttachments() {
     this.firstAssignedAttachments = 0;
     this.pageAssignedAttachments = 1;
     this.rowsAssignedAttachments = 10;
     this.requestAssignedAttachmentsList = [];
-    this.getRequestAssignedAttachments(this.request_id);
+    //this.getRequestAssignedAttachments(this.request_id);
   }
 
   initPaginadorAssignedAttachments() {
     this.firstAssignedAttachments = 0;
     this.pageAssignedAttachments = 1;
     this.rowsAssignedAttachments = 10;
-    this.getRequestAssignedAttachments(this.request_id);
+    //this.getRequestAssignedAttachments(this.request_id);
   }
 
   onPageChangeApplicantAttachments(eventApplicantAttachments: PaginatorState) {
     this.firstApplicantAttachments = eventApplicantAttachments.first || 0;
     this.rowsApplicantAttachments = eventApplicantAttachments.rows || 0;
     this.pageApplicantAttachments = Number(eventApplicantAttachments.page) + 1 || 0;
-    this.getRequestApplicantAttachments(this.request_id);
+    //this.getRequestApplicantAttachments(this.request_id);
   }
   cleanFormApplicantAttachments() {
     this.firstApplicantAttachments = 0;
     this.pageApplicantAttachments = 1;
     this.rowsApplicantAttachments = 10;
     this.requestApplicantAttachmentsList = [];
-    this.getRequestApplicantAttachments(this.request_id);
+    //this.getRequestApplicantAttachments(this.request_id);
   }
 
   initPaginadorApplicantAttachmentss() {
     this.firstApplicantAttachments = 0;
     this.pageApplicantAttachments = 1;
     this.rowsApplicantAttachments = 10;
-    this.getRequestApplicantAttachments(this.request_id);
+    //this.getRequestApplicantAttachments(this.request_id);
   }
 
   showSuccessMessage(state: string, title: string, message: string) {
@@ -380,45 +386,15 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       return false;
     }
   }
-
-  /*
-  getRequestDetails(request_id: number) {
-    this.userService.getRequestDetails(request_id).subscribe({
-      next: (response: BodyResponse<RequestsDetails>) => {
-        if (response.code === 200) {
-          this.requestDetails = response.data;
-          // Lista de estados que se deben agrupar
-          const estadosAgrupados = [
-            'Asignada',
-            'Reasignada',
-            'Asignada - En revisión',
-            'Reasignada - En revisión',
-            'Pendiente Usuario Externo',
-          ];
-
-          // Agrupar estados en "Gestión"
-          this.currentState = estadosAgrupados.includes(this.requestDetails.status_name)
-            ? 'Gestión'
-            : this.requestDetails.status_name;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.error(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
-  } */
-
   
-  getRequestDetails(request_id: number) {
-  this.userService.getRequestDetails(request_id).subscribe({
+  /*
+  getRequestDetails1(request_id: string) {
+  this.userService.getRequestDetailsAfiliation(request_id).subscribe({
     next: (response: BodyResponse<RequestsDetails>) => {
       if (response.code === 200) {
         this.requestDetails = response.data;
+
+        console.log("HOlalllllllllllll", this.requestDetails);
 
         // Lista de estados que se deben agrupar
         const estadosAgrupados = [
@@ -432,30 +408,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
         this.currentState = estadosAgrupados.includes(this.requestDetails.status_name)
           ? 'Gestión'
           : this.requestDetails.status_name;
-
-        // ✅ Armar payload con campos relevantes
-        const payload: SimilarRequest = {
-          request_id: this.requestDetails.request_id,
-          applicant_type_id: this.requestDetails.applicant_type_id,
-          request_type_id: this.requestDetails.request_type_id,
-          catalog_item_name: this.requestDetails.catalog_item_name,
-          doc_id: this.requestDetails.doc_id,
-          applicant_name: this.requestDetails.applicant_name,
-          applicant_email: this.requestDetails.applicant_email,
-          applicant_cellphone: this.requestDetails.applicant_cellphone,
-          applicant_attachments: this.requestDetails.applicant_attachments
-        };
-
-        // 🔍 Llamar a búsqueda de similares
-        this.userService.getSimilarRequest(payload).subscribe({
-          next: (similares) => {
-            this.similares = similares.data;
-          },
-          error: (error) => {
-            console.error('Error buscando similares:', error);
-          }
-        });
-
       } else {
         this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
       }
@@ -467,7 +419,58 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       console.log('La suscripción ha sido completada.');
     },
   });
-} 
+}
+  */
+
+loading = false;
+
+getRequestDetails(request_details: number) {
+  this.loading = true;
+
+  this.userService.getRequestDetailsAfiliation(request_details).subscribe({
+    next: (response) => {
+      this.loading = false;
+
+      if (response.code !== 200) {
+        this.showSuccessMessage('error', 'Fallida', response.message || 'Operación fallida!');
+        return;
+      }
+
+      this.afiliationRequestDetails = response.data;
+    },
+    error: (err) => {
+      this.loading = false;
+      console.error(err);
+      this.showSuccessMessage('error', 'Error', 'Error consultando el detalle');
+    },
+  });
+}
+
+get trabajadorNombreCompleto(): string {
+  const p = this.afiliationRequestDetails?.trabajador?.persona;
+  if (!p) return '';
+  return [p.primer_nombre, p.segundo_nombre, p.primer_apellido, p.segundo_apellido]
+    .filter(Boolean)
+    .join(' ');
+}
+
+get trabajadorDocumento(): string {
+  const p = this.afiliationRequestDetails?.trabajador?.persona;
+  if (!p) return '';
+  return `${p.tipo_documento} ${p.numero_documento}`;
+}
+
+get empresaNombre(): string {
+  return this.afiliationRequestDetails?.empresa?.razon_social ?? '';
+}
+
+get empresaDocumento(): string {
+  const e = this.afiliationRequestDetails?.empresa;
+  if (!e) return '';
+  return `${e.tipo_documento} ${e.numero_documento}`;
+}
+
+
 
 
   getRequestApplicantAttachments(request_id: number) {
@@ -552,7 +555,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       page: this.pageHistoric,
       page_size: this.rowsHistoric,
     };
-    this.userService.getRequestHistoric(payload).subscribe({
+    this.userService.getRequestHistoricAfiliation(payload).subscribe({
       next: (response: BodyResponse<RequestHistoric[]>) => {
         if (response.code === 200) {
           this.requestHistoric = response.data;
@@ -646,6 +649,21 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.visibleDialogInput = true;
     this.parameter = ['Usuario'];
     this.request_details = request_details;
+  }
+
+  assignRequestAfiliation(request_details: AfiliacionRequestDetailsData) {
+    if (request_details.solicitud.usuario_gestion == null || request_details.solicitud.usuario_gestion == '') {
+      this.message = 'Asignar responsable al requerimiento';
+      this.buttonmsg = 'Asignar';
+      request_details.solicitud.id_estado_solicitud = 2;
+    } else {
+      this.message = 'Reasignar responsable al requerimiento';
+      this.buttonmsg = 'Reasignar';
+      request_details.solicitud.id_estado_solicitud = 3;
+    }
+    this.visibleDialogInput = true;
+    this.parameter = ['Usuario'];
+    this.afiliationRequestDetails = request_details;
   }
 
   closeDialog(value: boolean) {
@@ -867,33 +885,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     });
   }
 
-  /*
-  async getPreSignedUrl(file: ApplicantAttachments) {
-    const payload = {
-      //source_name: file['source_name'],
-      source_name: file['source_name'].replace(/(?!\.[^.]+$)\./g, '_'),
-      fileweight: file['fileweight'],
-      request_id: this.request_id,
-    };
-    this.userService.getUrlSigned(payload, 'assigned').subscribe({
-      next: (response: BodyResponse<string>): void => {
-        if (response.code === 200) {
-          this.preSignedUrl = response.data;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-        this.uploadToPresignedUrl(file);
-        return this.preSignedUrl;
-      },
-    });
-  } */
-
   //MEJORA 2025
   async getPreSignedUrl(file: ApplicantAttachments): Promise<string> {
     const payload = {
@@ -931,34 +922,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     throw new Error('No se pudo obtener la URL prefirmada después de múltiples intentos');
   }
 
-  //ESCRIBE EN LA TABLA DE PENDIENTES PENDING
-  /*
-  async getPreSignedUrlPending(file: ApplicantAttachments) {
-    const payload = {
-      //source_name: file['source_name'],
-      source_name: file['source_name'].replace(/(?!\.[^.]+$)\./g, '_'),
-      fileweight: file['fileweight'],
-      request_id: this.request_id,
-    };
-    this.userService.getUrlSigned(payload, 'pending').subscribe({
-      next: (response: BodyResponse<string>): void => {
-        if (response.code === 200) {
-          this.preSignedUrl = response.data;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-        this.uploadToPresignedUrl(file);
-        return this.preSignedUrl;
-      },
-    });
-  } */
-
   //MEJORA 2025
   async getPreSignedUrlPending(file: ApplicantAttachments): Promise<string> {
     const payload = {
@@ -994,22 +957,9 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     throw new Error('No se pudo obtener la URL prefirmada después de múltiples intentos');
   }
 
-  /*
-  async uploadToPresignedUrl(file: ApplicantAttachments) {
-    const uploadResponse = await this.http
-      .put(this.preSignedUrl, file.file, {
-        headers: {
-          'Content-Type': 'application/png',
-        },
-        reportProgress: true,
-        observe: 'events',
-      })
-      .toPromise();
-  } */
 
   //MEJORA 2025
   async uploadToPresignedUrl(file: ApplicantAttachments): Promise<void> {
-    //this.isSpinnerVisible = true;
 
     if (!file || !file.file) {
       console.error('El archivo no es válido o está undefined.');
@@ -1072,15 +1022,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     }
   }
 
-  /*
-  async attachAssignedFiles() {
-    await Promise.all(
-      this.arrayAssignedAttachment.map(async item => {
-        await this.getPreSignedUrl(item);
-      })
-    );
-  } */
-
   async attachAssignedFiles() {
     await Promise.all(
       this.arrayAssignedAttachment.map(async item => {
@@ -1097,15 +1038,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       await this.uploadToPresignedUrl(file);
     }
   }
-
-  /*
-  async attachAssignedFilesPending() {
-    await Promise.all(
-      this.arrayAssignedAttachmentPending.map(async item => {
-        await this.getPreSignedUrlPending(item);
-      })
-    );
-  } */
 
   async attachAssignedFilesPending() {
     await Promise.all(
@@ -1237,34 +1169,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     return `data:${fileType};base64,${base64Data.split(',')[1]}`;
   }
 
-  /*
-  async getPreSignedUrlToDownload(url: string, file_name: string, is_download: boolean) {
-    const payload = {
-      url: url,
-    };
-    this.userService.getUrlSigned(payload, 'download').subscribe({
-      next: (response: BodyResponse<string>): void => {
-        if (response.code === 200) {
-          this.preSignedUrlDownload = response.data;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-        if (is_download) {
-          this.downloadFileS3(this.preSignedUrlDownload, file_name);
-        } else {
-          this.displayFileInTab(this.preSignedUrlDownload, file_name);
-        }
-        return this.preSignedUrlDownload;
-      },
-    });
-  } */
-
   async getPreSignedUrlToDownload(url: string, file_name: string, is_download: boolean) {
     const payload = { url: url };
     this.userService.getUrlSigned(payload, 'download').subscribe({
@@ -1315,14 +1219,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     }
   }
 
-  //showModal() {
-  //  this.visibleDialogdDescrip = true;
-  //}
-
-  //showModalRadicada() {
-  //  this.visibleDialogdDescripRadicada = true;
-  //}
-
   showModalRadicada() {
     this.dialogHeader = 'Descripción de la solicitud';
     this.dialogContent = this.requestDetails?.request_description || '';
@@ -1361,44 +1257,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     });
     this.isDialogVisible = true;
   }
-
-  /*
-  respuestaSugeridaIa(requestDescription: string): void {
-
-    // Verifica que `requestDescription` no sea undefined o vacío
-    const description = this.requestDetails?.request_description;
-    
-    if (!description) {
-      console.error('Descripción del mensaje no disponible.');
-      return;
-    }
-  
-    console.log(description);
-  
-    // Llama al servicio para obtener la respuesta de IA
-    this.userService.respuestaIaWs(description).subscribe(
-      (response) => {
-        // Maneja la respuesta
-        this.responseData = response;
-        console.log(this.responseData);
-  
-        if (this.responseData.statusCode === 200) {
-          console.log('Respuesta exitosa:', this.responseData);
-  
-          // Muestra el diálogo con la respuesta
-          this.visibleDialogIa = true;
-          //this.informative = true;
-          this.message = response.body;
-        } else {
-          console.error('Error en la respuesta de IA. Código:', response.code);
-        }
-      },
-      (error) => {
-        // Maneja el error en la solicitud HTTP
-        console.error('Error en la solicitud de respuesta IA:', error);
-      }
-    );
-  } */
 
   respuestaSugeridaIa(requestDescription: string) {
     this.userService.respuestaIaWs(this.requestDetails?.request_description).subscribe(response => {
@@ -1504,46 +1362,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     });
   }
 
-  //NUEVA PARA ENVIAR
-  /*
-  correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
-    const respuestaForm = this.requestProcess.get('mensage')?.value;
-
-    this.userService.correccionIaWs(respuestaForm).subscribe(response => {
-      if (response.statusCode === 200) {
-        // El cuerpo de la respuesta está en response.body y es un string JSON
-        const responseBody = response.body;
-
-        try {
-          // Analizar el cuerpo JSON
-          const parsedBody = JSON.parse(responseBody);
-
-          // Extraer los datos
-          const respuesta = JSON.parse(parsedBody.respuesta) || 'Respuesta no disponible';
-
-          // Asignar estos valores a variables locales o a propiedades del componente
-          this.respuestaCorregida = respuesta.texto_corregido;
-          this.palabrasError = respuesta.palabras_con_errores;
-          this.respuestaSolicitud = respuestaForm;
-          this.errores = respuesta.errores_encontrados;
-
-          // Mostrar el modal si hay errores
-          if (this.errores) {
-            this.visibleCorreccionIaEnviar = true;
-            this.informative = true;
-          } else {
-            this.characterizeRequestIA(requestDetails);
-          }
-        } catch (error) {
-          console.error('Error al procesar la respuesta del servicio:', error);
-        }
-      } else {
-        //this.characterizeRequest(requestDetails);
-        console.error('Error en la respuesta del servicio:', response);
-      }
-    });
-  } */
-
   correccionSugeridaIaEnviar(requestDetails: RequestsDetails) {
     const respuestaForm = this.requestProcess.get('mensage')?.value;
     console.log(respuestaForm);
@@ -1607,33 +1425,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.visibleCorreccionIaEnviar = false;
     this.characterizeRequest(requestDetails);
   }
-
-/*
-  consultarWs(cedula: string) {
-    this.userService.respuestaInfoAfiliacion(cedula).subscribe(
-      response => {
-        if (response.statusCode === 200) {
-          const parsedBody = JSON.parse(response.body);
-          this.afiliado = parsedBody.data;
-          if (this.afiliado) {
-            this.afiliado.tipoDocumento = this.getTipoDocumentoTexto(parsedBody.data.tipodoc);
-            this.afiliado.documento = cedula;
-            this.afiliado.nombre = parsedBody.data.nombre;
-            this.afiliado.fechaNacimiento = parsedBody.data.fechanac;
-            this.afiliado.estado = parsedBody.data.estado;
-            this.afiliado.tipoTrabajador = this.getTipoTrabajadorTexto(parsedBody.data.tipotr);
-            this.afiliado.empresa = parsedBody.data.nombreempresa;
-            this.afiliado.fechaAfiliacion = parsedBody.data.fechaafi;
-            this.afiliado.fechaIngreso = parsedBody.data.fechaing;
-          }
-          
-        }
-      },
-      (error: any) => {
-        console.error('Error al llamar al servicio:', error);
-      }
-    );
-  } */
 
   consultarWs(cedula: string) {
   this.userService.respuestaInfoAfiliacion(cedula).subscribe(
@@ -1893,35 +1684,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   removeFile(index: number): void {
     this.selectedFilesPending.splice(index, 1);
   }
-
-  /*
-  closeDialogPendiente(value: boolean) {
-    const token = this.generateToken();
-
-    console.log(token)
-
-    const payload: PendingRequest = {
-      request_id: this.request_details?.request_id || 0,
-      token: token,
-      pending: true,
-    };
-    this.userService.registerPendingRequest(payload).subscribe({
-      next: (response: BodyResponse<string>) => {
-        if (response.code === 200) {
-          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-        console.log("Solicitud en estado pendiente"); 
-      },
-    });   
-  } */
 
   generateToken() {
     const uuid = uuidv4().replace(/-/g, '');
@@ -2224,5 +1986,11 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     const blob = await response.blob();
     return blob;
   }
+
+  verAdjunto(a: any) {
+  // aquí luego llamas tu endpoint para presigned URL y abres window.open(url)
+  console.log('Adjunto:', a);
+}
+
   
 }

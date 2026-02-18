@@ -66,6 +66,9 @@ import {
   FilterCompanyUpdate,
   CompanyUpdateRecord,
   SimilarRequest,
+  FilterRequestsAfiliation,
+  RequestsListAfiliation,
+  AfiliacionRequestDetailsData
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -86,6 +89,11 @@ export class Users {
       `${environment.API_PUBLIC}${EndPointRoute.USERS_LIST}`
     );
   }
+  getUsersListAfiliaciones() {
+    return this.http.get<BodyResponse<UserList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.USERS_LIST_AFILIACIONES}`
+    );
+  }
   getUsersListPagination(payload: Pagination) {
     return this.http.post<BodyResponse<UserList[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.USER_LIST_PAGINATION}`,
@@ -103,9 +111,20 @@ export class Users {
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_DETAILS}/${payload}`
     );
   }
+  getRequestDetailsAfiliation(payload: number) {
+    return this.http.get<BodyResponse<AfiliacionRequestDetailsData>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_DETAILS_AFILIATION}/${payload}`
+    );
+  }
   getRequestHistoric(payload: Pagination) {
     return this.http.post<BodyResponse<RequestHistoric[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC}`,
+      payload
+    );
+  }
+  getRequestHistoricAfiliation(payload: Pagination) {
+    return this.http.post<BodyResponse<RequestHistoric[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION}`,
       payload
     );
   }
@@ -118,6 +137,12 @@ export class Users {
   assignUserToRequest(payload: AssignUserRequest) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.ASSIGN_USER_TO_REQUEST}`,
+      payload
+    );
+  }
+  assignUserToRequestAfiliation(payload: AssignUserRequest) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ASSIGN_USER_TO_REQUEST_AFILIATION}`,
       payload
     );
   }
@@ -404,6 +429,12 @@ export class Users {
       payload
     );
   }
+  getRequestAfiliationListByFilter(payload: FilterRequestsAfiliation) {
+    return this.http.post<BodyResponse<RequestsListAfiliation[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_BY_FILTER}`,
+      payload
+    );
+  }
   getUrlSigned(payload: PreSignedAttach, attachment_owner: string) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.URL_SIGNER}/${attachment_owner}`,
@@ -606,6 +637,13 @@ export class Users {
   getHistoryRequest(payload: requestHistoryRequest) {
     return this.http.post<BodyResponse<historyRequest[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.GET_HISTORY_REQUEST}`,
+      payload
+    );
+  }
+
+  getHistoryRequestAfiliation(payload: requestHistoryRequest) {
+    return this.http.post<BodyResponse<historyRequest[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GET_HISTORY_REQUEST_AFILIATION}`,
       payload
     );
   }

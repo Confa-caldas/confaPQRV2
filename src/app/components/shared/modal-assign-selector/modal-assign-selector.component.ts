@@ -1,76 +1,115 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { RequestsList, UserList } from '../../../models/users.interface';
+// modal-assign-selector.component.ts
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Observable } from 'rxjs';
+
 import { Users } from '../../../services/users.service';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
+import { UserList } from '../../../models/users.interface';
+
+export type AssignOrigin = 'GESTOR' | 'AFILIACIONES';
 
 @Component({
   selector: 'app-modal-assign-selector',
   templateUrl: './modal-assign-selector.component.html',
   styleUrl: './modal-assign-selector.component.scss',
 })
-export class ModalAssignSelectorComponent implements OnInit {
+export class ModalAssignSelectorComponent implements OnInit, OnChanges {
+  @Input() origin: AssignOrigin = 'GESTOR';
   @Input() message = '';
   @Input() buttonmsg = '';
-  @Input() parameter = [''];
-  @Input() visible: boolean = false;
+  @Input() parameter: string[] = [''];
+  @Input() visible = false;
+
   @Output() setRta = new EventEmitter<boolean>();
-  @Output() setRtaParameter = new EventEmitter<any>();
+  @Output() setRtaParameter = new EventEmitter<{
+    userName: string;
+    userNameCompleted: string;
+    mensajeReasignacion: string;
+  }>();
+
   userList: UserList[] = [];
+  formGroup: FormGroup;
+
+  loadingUsers = false;
 
   constructor(
-    private formBuilder: FormBuilder,
+    private fb: FormBuilder,
     private userService: Users
   ) {
-    this.formGroup = this.formBuilder.group({
-      selectedUser: ['', Validators.required],
+    this.formGroup = this.fb.group({
+      // Guardamos el OBJETO completo del usuario (recomendado para tu closeDialog actual)
+      selectedUser: [null, Validators.required],
       mensage: [''],
     });
   }
+
   ngOnInit(): void {
-    this.getUsersTable();
+    // Si este modal se crea/destruye con *ngIf, esto se ejecuta cada vez que se abre
+    this.loadUsers();
   }
-  /*
-  getUsersTable() {
-    this.userService.getUsersList().subscribe({
-      next: (response: BodyResponse<UserList[]>) => {
-        if (response.code === 200) {
-          this.userList = response.data;
-          this.userList.forEach(item => {
-            item.is_active = item.is_active === 1 ? true : false;
-          });
-        } else {
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
-  } */
 
-  getUsersTable() {
-    this.userService.getUsersList().subscribe({
+  ngOnChanges(changes: SimpleChanges): void {
+    // Si el origin cambia mientras el componente existe, recarga el listado
+    if (changes['origin'] && !changes['origin'].firstChange) {
+      this.resetSelection();
+      this.loadUsers();
+    }
+
+    // Si el modal se muestra/oculta sin destruirse, recarga al abrir
+    if (changes['visible'] && changes['visible'].currentValue === true) {
+      this.resetSelection();
+      this.loadUsers();
+    }
+  }
+
+  private resetSelection(): void {
+    this.formGroup.get('selectedUser')?.reset(null, { emitEvent: false });
+  }
+
+  private getUsersByOrigin(): Observable<BodyResponse<UserList[]>> {
+    // 👉 Asegúrate de implementar estos 2 métodos en tu Users service
+    if (this.origin === 'AFILIACIONES') {
+      return this.userService.getUsersListAfiliaciones();
+    }
+    return this.userService.getUsersList();
+  }
+
+  private loadUsers(): void {
+    this.loadingUsers = true;
+
+    this.getUsersByOrigin().subscribe({
       next: (res: BodyResponse<UserList[]>) => {
-        this.userList = res.data.filter(s => s.is_active === 1);
+        this.userList = (res.data ?? []).filter(u => u.is_active === 1);
       },
-      error: err => console.log(err),
+      error: (err: any) => console.log(err),
+      complete: () => (this.loadingUsers = false),
     });
   }
 
-  formGroup: FormGroup<any> = new FormGroup<any>({});
-  showDialog() {
+  showDialog(): void {
     this.visible = true;
+    this.resetSelection();
+    this.loadUsers();
   }
 
-  closeDialog(value: boolean) {
+  closeDialog(value: boolean): void {
     this.setRta.emit(value);
-    const selectedUser = this.formGroup.controls['selectedUser'].value;
-    const userName = selectedUser?.user_name || '';
-    const userNameCompleted = selectedUser?.user_name_completed || '';
-    const mensajeReasignacion = this.formGroup.controls['mensage'].value;
+
+    const selectedUser: UserList | null = this.formGroup.get('selectedUser')?.value ?? null;
+    const mensajeReasignacion: string = this.formGroup.get('mensage')?.value ?? '';
+
+    const userName = selectedUser?.user_name ?? '';
+    const userNameCompleted = selectedUser?.user_name_completed ?? '';
+
     this.setRtaParameter.emit({ userName, userNameCompleted, mensajeReasignacion });
     this.visible = false;
   }

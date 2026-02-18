@@ -124,16 +124,16 @@
           Fecha<p-sortIcon field="filing_date"></p-sortIcon>
         </th>
         <th pSortableColumn="doc_id" style="min-width: 10rem">
-          Documento trabajador<p-sortIcon style="margin: 0 5px" field="doc_id"></p-sortIcon>
+          Documento trabajador<p-sortIcon style="margin: 0 5px" field="doc_id_tr"></p-sortIcon>
         </th>
         <th pSortableColumn="applicant_name" style="min-width: 15rem">
-          Nombre Trabajador<p-sortIcon field="applicant_name"></p-sortIcon>
+          Nombre Trabajador<p-sortIcon field="applicant_name_tr"></p-sortIcon>
         </th>
         <th pSortableColumn="doc_bene_id" style="min-width: 10rem">
-          Documento beneficiario<p-sortIcon style="margin: 0 5px" field="doc_id"></p-sortIcon>
+          Documentos beneficiarios<p-sortIcon style="margin: 0 5px" field="doc_id_bn"></p-sortIcon>
         </th>
         <th pSortableColumn="applicant_name_bene" style="min-width: 15rem">
-          Nombre Beneficiario<p-sortIcon field="applicant_name_bene"></p-sortIcon>
+          Nombres Beneficiarios<p-sortIcon field="applicant_name_bene"></p-sortIcon>
         </th>
         <th pSortableColumn="empresa_name" style="min-width: 15rem">
           Nombre Empresa<p-sortIcon field="empresa_name"></p-sortIcon>
@@ -152,17 +152,17 @@
           <p-button
             icon="pi pi-eye"
             [styleClass]="'btn-icon-info'"
-            (click)="redirectDetails(requestList.request_id)"></p-button>
+            (click)="redirectDetails(requestList.id_solicitud)"></p-button>
         </td>
-        <td style="text-align: center">{{ requestList.filing_number }}</td>
-        <td>{{ requestList.filing_date_date | date }}</td>
-        <td>{{ requestList.applicant_type_name }}</td>
-        <td>{{ requestList.doc_id }}</td>
-        <td>{{ requestList.applicant_name }}</td>
-        <td>{{ requestList.request_type_name }}</td>
-        <td style="text-align: center">{{ requestList.status_name }}</td>
-        <td>{{ requestList.user_name_completed }}</td>
-        <td>{{ requestList.user_name_completed }}</td>
+        <td style="text-align: center">{{ requestList.numero_radicado }}</td>
+        <td style="text-align: center">{{ requestList.fecha_solicitud | date }}</td>
+        <td style="text-align: center">{{ requestList.doc_trabajador }}</td>
+        <td style="text-align: center">{{ requestList.nombre_trabajador }}</td>
+        <td style="text-align: center">{{ requestList.documentos_beneficiarios }}</td>
+        <td style="text-align: center">{{ requestList.nombres_beneficiarios }}</td>
+        <td style="text-align: center">{{ requestList.nombre_empresa }}</td>
+        <td style="text-align: center">{{ requestList.id_estado_solicitud }}</td>
+        <td style="text-align: center">{{ requestList.usuario_gestion }}</td>
       </tr>
     </ng-template>
   </p-table>

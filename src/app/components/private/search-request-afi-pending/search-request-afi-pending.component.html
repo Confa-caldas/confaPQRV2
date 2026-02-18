@@ -159,19 +159,15 @@
             [styleClass]="'btn-icon-info'"
             (click)="redirectDetails(requestList.request_id)"></p-button>
         </td>
-        <td style="text-align: center">{{ requestList.filing_number }}</td>
-        <td>{{ requestList.filing_date_date | date }}</td>
-        <td>{{ requestList.applicant_type_name }}</td>
-        <td>{{ requestList.doc_id }}</td>
-        <td>{{ requestList.applicant_name }}</td>
-        <td>{{ requestList.request_type_name }}</td>
-        <td style="text-align: center">{{ requestList.status_name }}</td>
-        <td>
-          <div class="circle" [style.background-color]="getColor(requestList.request_days)"></div>
-          <div style="margin-left: 19px">{{ requestList.request_days }} día(s) hábiles</div>
-        </td>
-        <td>{{ requestList.user_name_completed }}</td>
-
+        <td style="text-align: center">{{ requestList.numero_radicado }}</td>
+        <td style="text-align: center">{{ requestList.fecha_solicitud | date }}</td>
+        <td style="text-align: center">{{ requestList.doc_trabajador }}</td>
+        <td style="text-align: center">{{ requestList.nombre_trabajador }}</td>
+        <td style="text-align: center">{{ requestList.documentos_beneficiarios }}</td>
+        <td style="text-align: center">{{ requestList.nombres_beneficiarios }}</td>
+        <td style="text-align: center">{{ requestList.nombre_empresa }}</td>
+        <td style="text-align: center">{{ requestList.id_estado_solicitud }}</td>
+        <td style="text-align: center">{{ requestList.usuario_gestion }}</td>
         <td>
           <div *ngIf="requestList.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'">
             <button class="custom-button" (click)="assignRequest(requestList)">
@@ -211,6 +207,7 @@
 
 <app-modal-assign-selector
   *ngIf="visibleDialogInput"
+  [origin]="'AFILIACIONES'"
   [visible]="visibleDialogInput"
   [message]="message"
   [buttonmsg]="buttonmsg"

@@ -4,13 +4,11 @@ import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
 import {
   ApplicantTypeList,
-  FilterRequests,
+  FilterRequestsMassive,
   RequestStatusList,
   RequestTypeList,
   RequestsList,
   UserList,
-  IsPriority,
-  RequestAreaList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -31,7 +29,6 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   aplicantList: ApplicantTypeList[] = [];
   requestTypeList: RequestTypeList[] = [];
   userList: UserList[] = [];
-  requestAreaList: RequestAreaList[] = [];
   requestUserList: UserList[] = [];
 
   ingredient!: string;
@@ -62,19 +59,11 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   rows: number = 10;
   totalRows: number = 0;
 
-  isPriorityList: IsPriority[] = [];
-
   solicitudes: any[] = []; // tus datos
 
   isBulkAssign: boolean = false; // Saber si es masivo o no
   selectedRequests: RequestsList[] = []; // Solicitudes seleccionadas con checkbox
   @ViewChild('dt') table!: Table;
-
-  priorityLevelList = [
-    { name: 'Sin prioridad', value: 0 },
-    { name: 'Prioridad baja', value: 1 },
-    { name: 'Prioridad alta', value: 2 },
-  ];
 
   constructor(
     private userService: Users,
@@ -82,20 +71,10 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     private messageService: MessageService
   ) {
     this.formGroup = new FormGroup({
-      dates_range: new FormControl(null),
       filing_number: new FormControl(null),
-      doc_id: new FormControl(null),
-      applicant_name: new FormControl(null),
-      request_days: new FormControl(null),
-      applicant_type_id: new FormControl(null),
-      request_type_id: new FormControl(null),
-      assigned_user: new FormControl(null),
-      //request_status_id: new FormControl(null),
+      dates_range: new FormControl(null),
+      doc_id_emp: new FormControl(null),
       request_status_id: new FormControl([1]),
-      confa_user: new FormControl(null),
-      area_name: new FormControl(null),
-      //is_priority: new FormControl(null),
-      priority_level: new FormControl(null),
     });
 
     this.formGroup.get('request_status_id')?.valueChanges.subscribe(value => {
@@ -103,34 +82,9 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
         this.formGroup.get('request_status_id')?.setValue(null);
       }
     });
-    this.formGroup.get('applicant_type_id')?.valueChanges.subscribe(value => {
-      if (value.length === 0) {
-        this.formGroup.get('applicant_type_id')?.setValue(null);
-      }
-    });
-    this.formGroup.get('assigned_user')?.valueChanges.subscribe(value => {
-      if (value.length === 0) {
-        this.formGroup.get('assigned_user')?.setValue(null);
-      }
-    });
-    this.formGroup.get('request_type_id')?.valueChanges.subscribe(value => {
-      if (value.length === 0) {
-        this.formGroup.get('request_type_id')?.setValue(null);
-      }
-    });
   }
 
   ngOnInit() {
-    this.isPriorityList = [
-      {
-        value: true,
-        name: 'Sí',
-      },
-      {
-        value: false,
-        name: 'No',
-      },
-    ];
     const filtrosGuardados = sessionStorage.getItem('filtrosBusqueda');
     const paginacionGuardada = sessionStorage.getItem('estadoPaginacion');
 
@@ -178,15 +132,8 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     }
 
     this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
-
     this.searhRequests();
     this.getRequestStatusList();
-    this.getApplicantTypeList();
-    this.getRequestTypeList();
-    this.getUsersList();
-    this.getRequestUserList();
-    this.getRequestAreasList();
-    // this.getRequestStatusList();
     this.loading = false;
   }
 
@@ -242,7 +189,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     const filtrosGuardados = sessionStorage.getItem('filtrosBusqueda');
     let filtros = filtrosGuardados ? JSON.parse(filtrosGuardados) : {};
 
-    const payload: FilterRequests = {
+    const payload: FilterRequestsMassive = {
       i_date:
         this.formGroup.controls['dates_range'].value?.length > 0
           ? this.convertDates(this.formGroup.controls['dates_range'].value[0])
@@ -260,40 +207,16 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
         this.formGroup.controls['filing_number'].value.length > 0
           ? this.formGroup.controls['filing_number'].value
           : filtros['filing_number'] || null,
-      doc_id:
-        this.formGroup.controls['doc_id'].value &&
-        this.formGroup.controls['doc_id'].value.length > 0
-          ? this.formGroup.controls['doc_id'].value
-          : filtros['doc_id'] || null,
-      applicant_name:
-        this.formGroup.controls['applicant_name'].value?.trim().length > 0
-          ? this.formGroup.controls['applicant_name'].value
-          : filtros['applicant_name'] || null,
-      request_days: this.formGroup.controls['request_days'].value || null,
-      applicant_type_id:
-        this.formGroup.controls['applicant_type_id'].value &&
-        this.formGroup.controls['applicant_type_id'].value > 0
-          ? this.formGroup.controls['applicant_type_id'].value
-          : filtros['applicant_type_id'] || null,
-      request_type_id:
-        this.formGroup.controls['request_type_id'].value &&
-        this.formGroup.controls['request_type_id'].value > 0
-          ? this.formGroup.controls['request_type_id'].value
-          : filtros['request_type_id'] || null,
-      assigned_user:
-        this.formGroup.controls['assigned_user'].value?.length > 0
-          ? this.formGroup.controls['assigned_user'].value
-          : filtros['assigned_user'] || null,
+      doc_id_emp:
+        this.formGroup.controls['doc_id_emp'].value &&
+        this.formGroup.controls['doc_id_emp'].value.length > 0
+          ? this.formGroup.controls['doc_id_emp'].value
+          : filtros['doc_id_emp'] || null,
       status_id:
         this.formGroup.controls['request_status_id'].value &&
         this.formGroup.controls['request_status_id'].value.length > 0
           ? this.formGroup.controls['request_status_id'].value
           : filtros['request_status_id'] || null,
-      //is_priority: this.formGroup.controls['is_priority'].value || null,
-      priority_level: this.formGroup.controls['priority_level'].value,
-      confa_user: this.formGroup.controls['confa_user'].value || null,
-      area_name: this.formGroup.controls['area_name'].value || null,
-
       page: this.page,
       page_size: this.rows,
     };
@@ -308,7 +231,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     const formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
   }
-  getRequestListByFilter(payload: FilterRequests) {
+  getRequestListByFilter(payload: FilterRequestsMassive) {
     this.userService.getRequestListByFilter(payload).subscribe({
       next: (response: BodyResponse<RequestsList[]>) => {
         if (response.code === 200) {
@@ -358,98 +281,6 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
       },
     });
   }
-  getApplicantTypeList() {
-    this.userService.getApplicantTypesList().subscribe({
-      next: (response: BodyResponse<ApplicantTypeList[]>) => {
-        if (response.code === 200) {
-          this.aplicantList = response.data.filter(obj => obj.is_active !== 0);
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
-  }
-
-  getRequestTypeList() {
-    this.userService.getRequestTypesList().subscribe({
-      next: (response: BodyResponse<RequestTypeList[]>) => {
-        if (response.code === 200) {
-          this.requestTypeList = response.data;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
-  }
-
-  // Metodo para listar los usuarios que han hecho radicados
-  getRequestUserList() {
-    this.userService.getRequestUserList().subscribe({
-      next: (response: BodyResponse<UserList[]>) => {
-        if (response.code === 200) {
-          this.requestUserList = response.data;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
-  }
-
-  // Metodo para listar las areas
-  getRequestAreasList() {
-    this.userService.getRequestAreasList().subscribe({
-      next: (response: BodyResponse<RequestAreaList[]>) => {
-        if (response.code === 200) {
-          this.requestAreaList = response.data;
-          console.log(this.requestUserList, 'areas');
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
-  }
-
-  getUsersList() {
-    this.userService.getUsersList().subscribe({
-      next: (response: BodyResponse<UserList[]>) => {
-        if (response.code === 200) {
-          this.userList = response.data;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
-  }
 
   assignRequest(request_details: RequestsList) {
     this.isBulkAssign = false;
@@ -485,109 +316,6 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     this.visibleDialogAlert = false;
     this.enableAssign = value;
   }
-
-  /*
-  setParameter(inputValue: {
-    userName: string;
-    userNameCompleted: string;
-    mensajeReasignacion: string;
-  }) {
-    if (!this.enableAssign) return;
-    if (this.request_details['assigned_user'] == inputValue.userName) {
-      this.visibleDialogAlert = true;
-      this.informative = true;
-      this.message = 'Verifique el responsable a asignar';
-      this.message2 =
-        'Recuerde que, para realizar una reasignación, es necesario seleccionar un colaborador diferente';
-      this.severity = 'danger';
-      return;
-    }
-    this.request_details['assigned_user'] = inputValue.userName;
-    this.request_details['user_name_completed'] = inputValue.userNameCompleted;
-    this.request_details['mensaje_reasignacion'] = inputValue.mensajeReasignacion;
-    if (inputValue) {
-      this.userService.assignUserToRequest(this.request_details).subscribe({
-        next: (response: BodyResponse<string>) => {
-          if (response.code === 200) {
-            this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
-          } else {
-            this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-          }
-        },
-        error: (err: any) => {
-          console.log(err);
-        },
-        complete: () => {
-          this.ngOnInit();
-          console.log('La suscripción ha sido completada.');
-        },
-      });
-    }
-  } */
-
-    /*
-  setParameter(inputValue: {
-    userName: string;
-    userNameCompleted: string;
-    mensajeReasignacion: string;
-  }) {
-    if (!this.enableAssign) return;
-  
-    if (this.isBulkAssign) {
-      // Asignación masiva
-      for (const request of this.selectedRequests) {
-        request.assigned_user = inputValue.userName;
-        request.user_name_completed = inputValue.userNameCompleted;
-        request.mensaje_reasignacion = inputValue.mensajeReasignacion;
-        request.request_status = 2;
-  
-        this.userService.assignUserToRequest(request).subscribe({
-          next: (response) => {
-            if (response.code === 200) {
-              this.showSuccessMessage('success', 'Éxito', `Asignado: ${request.filing_number}`);
-            } else {
-              this.showSuccessMessage('error', 'Falló', `Falló asignación: ${request.filing_number}`);
-            }
-          },
-          error: (err) => console.error(err),
-          complete: () => {
-            this.visibleDialogInput = false;
-            this.ngOnInit();
-          },
-        });
-      }
-  
-    } else {
-      // Asignación individual
-      if (this.request_details.assigned_user === inputValue.userName) {
-        this.visibleDialogAlert = true;
-        this.informative = true;
-        this.message = 'Verifique el responsable a asignar';
-        this.message2 = 'Debe seleccionar un colaborador diferente';
-        this.severity = 'danger';
-        return;
-      }
-  
-      this.request_details.assigned_user = inputValue.userName;
-      this.request_details.user_name_completed = inputValue.userNameCompleted;
-      this.request_details.mensaje_reasignacion = inputValue.mensajeReasignacion;
-  
-      this.userService.assignUserToRequest(this.request_details).subscribe({
-        next: (response) => {
-          if (response.code === 200) {
-            this.showSuccessMessage('success', 'Éxito', 'Asignación exitosa');
-          } else {
-            this.showSuccessMessage('error', 'Falló', 'Asignación fallida');
-          }
-        },
-        error: (err) => console.error(err),
-        complete: () => {
-          this.visibleDialogInput = false;
-          this.ngOnInit();
-        },
-      });
-    }
-  } */
 
   setParameter(inputValue: {
     userName: string;

@@ -18,7 +18,9 @@ import { NgxDocViewerModule } from 'ngx-doc-viewer';
 import { DialogModule } from 'primeng/dialog';
 import { MenuModule } from 'primeng/menu';
 import { TimelineModule } from 'primeng/timeline';
-
+import { AccordionModule } from 'primeng/accordion';
+import { MessageModule } from 'primeng/message';
+ 
 @NgModule({
   declarations: [RequestDetailsAfiliationComponent],
   imports: [
@@ -39,6 +41,8 @@ import { TimelineModule } from 'primeng/timeline';
     DialogModule,
     MenuModule,
     TimelineModule,
+    AccordionModule,
+    MessageModule,
   ],
   exports: [RequestDetailsAfiliationComponent],
 })

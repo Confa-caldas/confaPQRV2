@@ -973,3 +973,52 @@ p-timeline {
   color: #6c757d;
   margin-top: 4px;
 }
+
+//////////// NUEVO
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-weight: 600;
+  padding: 12px 14px;
+}
+
+.info-list {
+  padding: 6px 14px 14px 14px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #7a7a7a;
+  font-size: 12px;
+}
+
+.info-value {
+  font-weight: 600;
+  font-size: 13px;
+  text-align: right;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f4c542; // similar al amarillo de la imagen
+  font-weight: 700;
+  font-size: 12px;
+}
