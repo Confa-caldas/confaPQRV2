@@ -1,0 +1,110 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '40vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">{{ message }}</div>
+      </div>
+      <form [formGroup]="formGroup">
+        <div class="row my-4 px-5">
+          <div class="col-12">
+            <label> *Parentesco </label>
+            <input
+              [readonly]="this.buttonmsg !== 'Crear' ? true : false"
+              formControlName="parentesco"
+              placeholder="Escriba el parentesco" 
+              pInputText />
+            <label class="invalid">
+              {{
+                formGroup.get('parentesco')?.hasError('required') &&
+                formGroup.get('parentesco')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}{{
+                formGroup.get('parentesco')?.hasError('pattern') &&
+                formGroup.get('parentesco')?.touched
+                  ? 'Solo ingrese numeros'
+                  : ''
+              }}</label
+            >
+          </div>
+          <div class="col-12">
+            <label> *Parentesco genesys </label>
+            <input
+              [readonly]="read_only"
+              formControlName="parentesco_genesys"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba parentesco genesys" />
+            <label class="invalid">
+              {{
+                formGroup.get('parentesco_genesys')?.hasError('required') &&
+                formGroup.get('parentesco_genesys')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('parentesco_genesys')?.hasError('pattern') &&
+                formGroup.get('parentesco_genesys')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+          </div>
+
+          <div class="col-12 mt-3">
+            <label>*Adjuntos requeridos</label>
+
+            <div class="d-flex flex-column gap-2 mt-2">
+              <ng-container *ngFor="let a of attachmentList">
+              <div class="d-flex align-items-center gap-2">
+              <p-checkbox
+                [disabled]="read_only"
+                [ngModelOptions]="{ standalone: true }"
+                [value]="a.id!"
+                [(ngModel)]="selectedAdjuntos"
+                (onChange)="syncAdjuntosFA()">
+              </p-checkbox>
+
+              <span>{{ a.nombre_documento }}</span>
+              </div>
+              </ng-container>
+            </div>
+
+            <small class="invalid" *ngIf="adjuntosIdsFA.touched && adjuntosIdsFA.invalid">
+             Debe seleccionar al menos un adjunto
+            </small>
+          </div>
+
+        </div>
+      </form>
+      <div *ngIf="read_only">
+        <div class="row my-4 px-5">
+          <div class="col-12 d-flex justify-content-evenly">
+            <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!read_only">
+        <div class="row my-4 px-5">
+          <div class="col-12 d-flex justify-content-evenly">
+            <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+            <p-button
+              [label]="buttonmsg"
+              [disabled]="formGroup.invalid"
+              (click)="closeDialog(true)"></p-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+

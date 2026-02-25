@@ -835,4 +835,211 @@ export interface SimilarRequest {
   applicant_cellphone: string;
   applicant_attachments: string[];
 }
+export interface GenderList {
+  id?: number;
+  genero: string;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface MaritalStatusList {
+  id?: number;
+  estado_civil: string;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface SystemVariableList {
+  id?: number;
+  nombre_variable: string;
+  valor_variable: string;
+  descripcion: string;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface AfiTemplateValidationList {
+  id?: number;
+  nombre_campo: string;
+  tipo_dato: string;
+  longitud_maxima: number;
+  es_requerido: string;
+  descripcion?: string;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface AfiliationCompanyList {
+  id_empresa?: number;
+  tipo_documento?: string;
+  numero_documento?: string;
+  nombre_comercial?: string;
+  razonSocial?: string;
+  email?: string;
+  direccion?: string;
+  telefono?: string;
+  representante_legal?: string;
+  contacto?: string;
+  estado_afiliacion?: string;
+  permite_afiliaciones_masivas?: boolean;
+  esta_activa?: boolean;
+}
+export interface PaginationFilter {
+  page: number;
+  page_size: number;
+  search_by?: 'nit' | 'nombre';
+  search_text?: string;
+}
+export interface DocumentTypeCompanyList {
+  id?: number;
+  tipo_documento?: string;
+  tipo_documento_genesys?: string;
+  codigo_verificacion?: boolean;
+  digitos_minimos?: number;
+  digitos_maximos?: number;
+  permite_letras?: boolean;
+  cantidad_letras?: number;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface DocumentTypePersonList {
+  id?: number;
+  tipo_documento: string;
+  tipo_documento_genesys: string;
+  digitos_minimos: number;
+  digitos_maximos: number;
+  permite_letras?: boolean;
+  cantidad_letras?: number;
+  requiere_adjunto?: boolean;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface DepartmentList {
+  id?: number;
+  codigo_departamento: string;
+  nombre_departamento: string;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface MunicipalityList {
+  id?: number;
+  codigo_municipio: string;
+  nombre_municipio: string;
+  id_departamento: number;
+  nombre_departamento?: number;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface AttachmentTypeList {
+  id?: number;
+  nombre_documento: string;
+  formatos_permitidos: string;
+  es_requerido?: boolean;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface RelationshipList {
+  id?: number;
+  parentesco: string;
+  parentesco_genesys: string;
+  adjuntos?: AttachmentTypeList[];//pintar desde el back
+  adjuntos_texto?: string; //pintar en la tabla
+  adjuntos_ids?: number[]; //para enviar al back
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface ResponsibleList {
+  id?: string;
+  nombre_usuario_red: string;
+  correo?: string;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+}
+export interface AfiNotificationList {
+  id?: number;
+  nombre_mensaje: string;
+  texto_mensaje: string;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface AfiCertificateList {
+  id?: number;
+  tipo_certificado?: string;
+  encabezado?: string;
+  textos_fijos?: string;
+  clausulas_legales?: string;
+  tipo_solicitante?: string;
+  texto_justificacion?: string;
+  nombre_responsable_firma?: string;
+  cargo_responsable_firma?: string;
+  firma_mime?: string;
+  firma_byte?: string;
+  firma_bytes?: string;     
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface BankList {
+  id_entidad?: number;
+  nombre_entidad: string;
+  tipo_entidad: string;
+  codigo_entidad: string;
+  orden_visualizacion?: number;
+  esta_activa?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface AccountTypeList {
+  id_tipo_cuenta?: number;
+  nombre_tipo_cuenta: string;
+  esta_activo?: boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+export interface AssociateBankAccountList {
+  id?: number;
+  id_entidad: number;
+  nombre_entidad?: string;
+  id_tipo_cuenta: number;
+  nombre_tipo_cuenta?: string;
+  longitud_cuenta: number;
+  observacion?: string;
+  esta_activo?: boolean;
+}
+
 
