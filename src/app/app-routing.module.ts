@@ -140,6 +140,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.PROCESS_REQUEST_AFILIATION,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/process-request-afiliation/process-request-afiliation.module').then(
+        m => m.ProcessRequestAfiliationModule
+      ),
+  },
+  {
     path: RoutesApp.CREATE_REQUEST,
     //canActivate: [sessionGuard],
     component: LayoutRequestComponent,
@@ -247,12 +256,30 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.SEARCH_UPDATES_DATA,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-updates-data/search-updates-data.module').then(
+        m => m.SearchUpdatesDataModule
+      ),
+  },
+  {
     path: RoutesApp.REQUEST_DETAILS_AFILIATION + '/:id',
     canActivate: [sessionGuard],
     component: LayoutComponent,
     loadChildren: () =>
       import('./components/private/request-details-afiliation/request-details-afiliation.module').then(
         m => m.RequestDetailsAfiliationModule
+      ),
+  },
+  {
+    path: RoutesApp.UPDATES_DATA_DETAILS + '/:id',
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/updates-data-details/updates-data-details.module').then(
+        m => m.UpdatesDataDetailsModule
       ),
   },
   {

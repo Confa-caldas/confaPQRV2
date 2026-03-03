@@ -56,8 +56,8 @@
             formControlName="request_status_id"
             [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
             [options]="statusList"
-            optionLabel="status_name"
-            optionValue="request_status_id"
+            optionLabel="codigo"
+            optionValue="id"
             placeholder="Tipo de estado"></p-multiSelect>
         </div>
         <div class="filters-cell">
@@ -151,7 +151,7 @@
     <ng-template pTemplate="body" let-requestList>
       <tr >
         <td>
-          <p-tableCheckbox [value]="requestList" *ngIf="requestList.status_name === 'Radicada' && PERFIL !== 'CONSULTANTE'"></p-tableCheckbox>
+          <p-tableCheckbox [value]="requestList" *ngIf="requestList.request_status === 1"></p-tableCheckbox>
         </td>
         <td>
           <p-button
@@ -159,22 +159,22 @@
             [styleClass]="'btn-icon-info'"
             (click)="redirectDetails(requestList.request_id)"></p-button>
         </td>
-        <td style="text-align: center">{{ requestList.numero_radicado }}</td>
-        <td style="text-align: center">{{ requestList.fecha_solicitud | date }}</td>
+        <td style="text-align: center">{{ requestList.filing_number }}</td>
+        <td style="text-align: center">{{ requestList.filing_date | date }}</td>
         <td style="text-align: center">{{ requestList.doc_trabajador }}</td>
-        <td style="text-align: center">{{ requestList.nombre_trabajador }}</td>
-        <td style="text-align: center">{{ requestList.documentos_beneficiarios }}</td>
-        <td style="text-align: center">{{ requestList.nombres_beneficiarios }}</td>
-        <td style="text-align: center">{{ requestList.nombre_empresa }}</td>
-        <td style="text-align: center">{{ requestList.id_estado_solicitud }}</td>
-        <td style="text-align: center">{{ requestList.usuario_gestion }}</td>
+        <td style="text-align: center">{{ requestList.name_trabajador }}</td>
+        <td style="text-align: center">{{ requestList.documents_beneficiarios }}</td>
+        <td style="text-align: center">{{ requestList.names_beneficiarios }}</td>
+        <td style="text-align: center">{{ requestList.name_empresa }}</td>
+        <td style="text-align: center">{{ requestList.cod_estatus }}</td>
+        <td style="text-align: center">{{ requestList.assigned_user }}</td>
         <td>
           <div *ngIf="requestList.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'">
             <button class="custom-button" (click)="assignRequest(requestList)">
               {{
-                requestList.assigned_user === null || requestList.assigned_user === ''
-                  ? 'Asignar'
-                  : 'Reasignar'
+                requestList.assigned_user?.trim()
+                  ? 'Reasignar'
+                  : 'Asignar'
               }}
             </button>
           </div>
@@ -205,15 +205,14 @@
   [message]="message"
   (setRta)="closeDialog($event)"></app-modal-dinamic>
 
-<app-modal-assign-selector
+<app-modal-assign-afiliation-selector
   *ngIf="visibleDialogInput"
-  [origin]="'AFILIACIONES'"
   [visible]="visibleDialogInput"
   [message]="message"
   [buttonmsg]="buttonmsg"
   [parameter]="parameter"
   (setRta)="closeDialogInput($event)"
-  (setRtaParameter)="setParameter($event)"></app-modal-assign-selector>
+  (setRtaParameter)="setParameter($event)"></app-modal-assign-afiliation-selector>
 
 <app-modal-alert
   *ngIf="visibleDialogAlert"

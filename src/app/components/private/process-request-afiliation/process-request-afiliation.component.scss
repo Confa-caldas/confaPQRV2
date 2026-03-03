@@ -1,0 +1,422 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+/* Estilos de modales (igual que shared: barra de colores + modal-body) */
+:host ::ng-deep .p-dialog .p-dialog-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+.modal-content.modal-shared-style {
+  position: relative;
+  background-color: $color-white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #495057;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+
+  &:hover {
+    background-color: #e9ecef;
+    color: #212529;
+  }
+
+  .pi {
+    font-size: 1.25rem;
+  }
+}
+
+.login-form-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  &__item {
+    width: 17%;
+    height: 20px;
+
+    &_1 { background-color: $color-blue; }
+    &_2 { background-color: $color-green; }
+    &_3 { background-color: $color-yellow; }
+    &_4 { background-color: $color-orange; }
+    &_5 { background-color: $color-rosado; }
+    &_6 { background-color: $color-red; }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem 2rem 2rem 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-title-row {
+  text-align: center;
+  margin: 0 0 1.25rem 0;
+}
+
+.modal-title {
+  font-size: 1rem;
+  color: $color-text-black;
+  font-family: $font-light;
+}
+
+tr {
+  position: relative;
+}
+
+/* Grid de filtros: organización clara para consultar */
+.filters-grid {
+  display: grid;
+  gap: 1rem 1.25rem;
+  width: 100%;
+  align-items: center;
+}
+
+.filters-cell {
+  min-width: 0;
+
+  .filters-input,
+  .calendar,
+  ::ng-deep .p-multiselect,
+  ::ng-deep .p-calendar .p-inputtext {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  &.filters-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  ::ng-deep .p-calendar {
+    width: 100%;
+    height: 28px;
+
+    .p-inputtext {
+      height: 28px;
+      padding: 0 8px;
+      border-radius: 5px;
+    }
+
+    .p-datepicker-trigger {
+      height: 28px;
+      width: 2.5rem;
+    }
+  }
+}
+
+.filters-input {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 5px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+@media screen and (min-width: 768px) {
+  .filters-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media screen and (min-width: 1375px) {
+  .filters-grid {
+    gap: 1rem 1.5rem;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .filters-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .filters-actions {
+    justify-content: flex-start;
+  }
+}
+
+.circle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Estilos generales para inputs y selects */
+.filters {
+  &-input,
+  &-select {
+    height: 28px;
+    padding-left: 5px;
+    border-radius: 5px;
+    font-size: 14px;        // Asegura que input y select tengan mismo tamaño de texto
+    border: 1px solid #ccc; // Agrega borde uniforme
+    box-sizing: border-box; // Evita que el padding altere el tamaño visual
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1374px) {
+  .filters {
+    &-row {
+      margin: 9px 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+
+    &-col {
+      margin: 0 0 0 6.5%;
+      width: 100px;
+    }
+
+    &-colButtons {
+      margin: 0 1% 0 2%;
+      display: flex;
+      flex-direction: row;
+    }
+
+    &-colAssigened {
+      margin: 0 0 0 3.5%;
+      width: 150px;
+    }
+
+    &-colButtonsAssigened {
+      margin: 0 1% 0 4%;
+      display: flex;
+      flex-direction: row;
+    }
+  }
+}
+
+@media screen and (min-width: 1375px) {
+  .filters {
+    &-row {
+      margin: 9px 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+
+    &-col {
+      margin: 0 0 0 6.5%;
+      width: 150px;
+    }
+
+    &-colButtons {
+      margin: 0 1% 0 4%;
+      display: flex;
+      flex-direction: row;
+    }
+
+    &-colAssigened {
+      margin: 0 0 0 6.5%;
+      width: 150px;
+    }
+
+    &-colButtonsAssigened {
+      margin: 0 1% 0 10%;
+      display: flex;
+      flex-direction: row;
+    }
+  }
+}
+
+
+/* Define CSS variables for each number of days */
+:root {
+  --color-4: $color-deep-red;
+  --color-9: $color-deep-yellow;
+  --color-11: $color-deep-green;
+}
+
+/* Create CSS rules for each number of days */
+tr:nth-child(1) .circle,
+tr:nth-child(2) .circle,
+tr:nth-child(3) .circle,
+tr:nth-child(4) .circle {
+  --circle-color: var(--color-4);
+}
+
+tr:nth-child(5) .circle,
+tr:nth-child(6) .circle,
+tr:nth-child(7) .circle,
+tr:nth-child(8) .circle {
+  --circle-color: var(--color-9);
+}
+
+tr:nth-child(9) .circle,
+tr:nth-child(10) .circle {
+  --circle-color: var(--color-11);
+}
+
+/* Modal personas de la solicitud */
+.modal-personas-content {
+  min-height: 120px;
+}
+
+.modal-personas-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  color: #666;
+}
+
+.modal-personas-section {
+  margin-bottom: 1.25rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.modal-personas-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.modal-personas-card {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.modal-personas-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.modal-personas-label {
+  font-weight: 500;
+  min-width: 7rem;
+  color: #555;
+}
+
+.modal-personas-empty {
+  color: #888;
+  font-size: 0.875rem;
+  margin: 0.5rem 0 0 0;
+  list-style: none;
+}
+
+.modal-personas-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.modal-personas-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.modal-personas-list-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+  gap: 0.15rem;
+
+  strong {
+    color: #333;
+  }
+}
+
+.modal-personas-list-parentesco {
+  color: #666;
+  font-size: 0.8125rem;
+}
+
+/* Modal Gestionar persona (datos formulario + internos) */
+.modal-gestionar-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-gestionar-section {
+  margin-bottom: 1.25rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.modal-gestionar-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-gestionar-dl {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  font-size: 0.8125rem;
+
+  dt {
+    margin: 0;
+    font-weight: 500;
+    color: #555;
+  }
+
+  dd {
+    margin: 0;
+    color: #333;
+  }
+}
+
+.modal-gestionar-empty {
+  color: #888;
+  font-size: 0.875rem;
+  margin: 0.5rem 0 0 0;
+}

@@ -1,0 +1,213 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Gestionar solicitudes de afiliación</div>
+  </div>
+</div>
+<div>
+  <div class="p-tabview">
+    <p-tabView class="p-tabview-nav-process" [(activeIndex)]="activeTabIndex">
+      <p-tabPanel header="Mis solicitudes" headerStyleClass="p-tabview-nav-link-process-1">
+        <form [formGroup]="filterFormAssigned" id="formAssigned">
+          <div class="position-relative">
+            <div class="card form-container">
+              <div class="filters-grid">
+                <div class="filters-cell">
+                  <input
+                    pInputText
+                    class="filters-input"
+                    pKeyFilter="int"
+                    placeholder="Número de radicado"
+                    formControlName="filing_number" />
+                </div>
+                <div class="filters-cell">
+                  <p-calendar
+                    formControlName="dates_range"
+                    selectionMode="range"
+                    [readonlyInput]="true"
+                    [iconDisplay]="'input'"
+                    [showIcon]="true"
+                    placeholder="Rango de fechas"
+                    class="calendar">
+                  </p-calendar>
+                </div>
+                <div class="filters-cell">
+                  <input
+                    pInputText
+                    pKeyFilter="text"
+                    class="filters-input"
+                    placeholder="Número de documento del trabajador"
+                    formControlName="doc_id_trabajador" />
+                </div>
+                <div class="filters-cell">
+                  <input
+                    pInputText
+                    pKeyFilter="text"
+                    class="filters-input"
+                    placeholder="Nombre empresa"
+                    formControlName="name_empresa" />
+                </div>
+                <div class="filters-cell">
+                  <p-multiSelect
+                    formControlName="request_status_id"
+                    [options]="statusList"
+                    [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                    optionLabel="codigo"
+                    optionValue="id"
+                    dataKey="id"
+                    placeholder="Tipo de estado">
+                  </p-multiSelect>
+                </div>
+                <div class="filters-cell filters-actions">
+                  <p-button
+                    icon="pi pi-trash"
+                    [styleClass]="'btn-icon-info'"
+                    (click)="cleanFormAssigned()">
+                  </p-button>
+                  <p-button
+                    icon="pi pi-search"
+                    [styleClass]="'btn-icon-info'"
+                    (click)="initPaginadorAssigned()">
+                  </p-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <button
+            *ngIf="selectedRequests.length > 0"
+            pButton
+            type="button"
+            label="Reasignar seleccionadas"
+            icon="pi pi-users"
+            class="p-button-success"
+            (click)="assignSelectedRequests(selectedRequests)"
+            [disabled]="!selectedRequests || selectedRequests.length === 0">
+          </button>
+        <div class="mt-auto">
+          
+          
+        <p-table
+          #dt
+          [value]="requestListByAssignedAfiliation"
+          [scrollable]="true"
+          scrollHeight="420px"
+          [(selection)]="selectedRequests"
+          dataKey="request_id"
+          [exportHeader]="'customExportHeader'"
+          [paginator]="false"
+          [rows]="20"
+          [showCurrentPageReport]="true"
+          [tableStyle]="{ 'min-width': '50rem' }"
+          currentPageReportTemplate="{first} de {totalRecords}">
+          <ng-template pTemplate="header">
+            <tr [style]="{ height: '50px' }">
+              <th style="width: 5%">
+                <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+              </th>
+              <th style="width: 5%"></th>
+              <th pSortableColumn="filing_number" style="min-width: 12rem">
+                Radicado<p-sortIcon field="filing_number"></p-sortIcon>
+              </th>
+              <th pSortableColumn="filing_date" style="min-width: 11rem">
+                Fecha<p-sortIcon field="filing_date"></p-sortIcon>
+              </th>
+              <th pSortableColumn="doc_id_empresa" style="min-width: 15rem">
+                N° documento empresa<p-sortIcon field="doc_id_empresa"></p-sortIcon>
+              </th>
+              <th pSortableColumn="name_empresa" style="min-width: 15rem">
+                Nombre empresa<p-sortIcon style="margin: 0 5px" field="name_empresa"></p-sortIcon>
+              </th>
+              <th pSortableColumn="doc_id_trabajador" style="min-width: 15rem">
+                N° documento trabajador<p-sortIcon field="doc_id_trabajador"></p-sortIcon>
+              </th>
+              <th pSortableColumn="name_trabajador" style="min-width: 15rem">
+                Nombre trabajador<p-sortIcon field="name_trabajador"></p-sortIcon>
+              </th>
+              <th pSortableColumn="status_name" style="min-width: 15rem">
+                Estado<p-sortIcon field="status_name"></p-sortIcon>
+              </th>
+              <th pSortableColumn="request_days" style="min-width: 15rem">
+                Días solicitud<p-sortIcon field="request_days"></p-sortIcon>
+              </th>
+              <th pSortableColumn="count_personas" style="min-width: 15rem">
+                Cantidad personas<p-sortIcon field="count_personas"></p-sortIcon>
+              </th>
+              <th pSortableColumn="assigned_user" style="min-width: 15rem">
+                Responsable
+              </th>
+              
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-requestListByAssigned>
+            <tr>
+              <td>
+                <p-tableCheckbox [value]="requestListByAssigned" *ngIf="requestListByAssigned.status_name !== 'Cerrada' &&
+                requestListByAssigned.status_name !== 'Pendiente Usuario Externo' && PERFIL !== 'CONSULTANTE'"></p-tableCheckbox>
+              </td>
+              <td>
+                <p-button
+                  icon="pi pi-eye"
+                  [styleClass]="'btn-icon-info'"
+                  (click)="redirectDetails(requestListByAssigned.request_id)"></p-button>
+              </td>
+              <td>{{ requestListByAssigned.filing_number }}</td>
+              <td>{{ requestListByAssigned.filing_date_date | date }}</td>
+              <td>{{ requestListByAssigned.applicant_type_name }}</td>
+              <td>{{ requestListByAssigned.doc_id }}</td>
+              <td>{{ requestListByAssigned.applicant_name }}</td>
+              <td>{{ requestListByAssigned.request_type_name }}</td>
+              <td>{{ requestListByAssigned.status_name }}</td>
+              <td>
+                <div
+                  class="circle"
+                  [style.background-color]="getColor(requestListByAssigned.request_days)"></div>
+                <div style="margin-left: 19px">
+                  {{ requestListByAssigned.request_days }} día(s) hábiles
+                </div>
+              </td>
+              <td>{{ requestListByAssigned.user_name_completed }}</td>
+              
+              <td>
+                <button
+                  class="custom-button"
+                  *ngIf="
+                    requestListByAssigned.status_name === 'Asignada' ||
+                    requestListByAssigned.status_name === 'Reasignada'
+                  "
+                  (click)="assignStateReviewRequest(requestListByAssigned)">
+                  En revisión
+                </button>
+              </td>
+              
+            </tr>
+          </ng-template>
+        </p-table>
+        <p-paginator
+          (onPageChange)="onPageChangeAssigned($any($event))"
+          [first]="firstAssigned"
+          [rows]="rowsAssigned"
+          [totalRecords]="totalRowsAssigned"
+          [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+          </div>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>
+<app-modal-review-state
+  *ngIf="visibleDialogInput"
+  [visible]="visibleDialogInput"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  (setRta)="closeDialogInput($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-review-state>
+<p-toast></p-toast>
+
+<app-modal-assign-selector
+  *ngIf="visibleAssignedInput"
+  [visible]="visibleAssignedInput"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [parameter]="parameter"
+  (setRta)="closeDialogAssignedInput($event)"
+  (setRtaParameter)="setParameterAssigned($event)"></app-modal-assign-selector>

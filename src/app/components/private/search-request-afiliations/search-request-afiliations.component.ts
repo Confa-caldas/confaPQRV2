@@ -10,6 +10,7 @@ import {
   RequestsListAfiliation,
   RequestsList,
   UserList,
+  RequestStatusAfiliationList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -49,7 +50,7 @@ export class SearchRequestAfiliationsComponent implements OnInit {
   enableAssign: boolean = false;
   loading: boolean = true;
   PERFIL!: string;
-  statusList: RequestStatusList[] = [];
+  statusList: RequestStatusAfiliationList[] = [];
   formGroup: FormGroup<any> = new FormGroup<any>({});
   mensajeReasignacion: string = '';
   //paginador
@@ -74,7 +75,7 @@ export class SearchRequestAfiliationsComponent implements OnInit {
       doc_id_tr: new FormControl(null),
       doc_id_bn: new FormControl(null),
       applicant_name_emp: new FormControl(null),
-      request_status_id: new FormControl([1]),
+      request_status_id: new FormControl(null),
       assigned_user: new FormControl(null),
     });
 
@@ -255,7 +256,7 @@ export class SearchRequestAfiliationsComponent implements OnInit {
           this.requestList = response.data;
           console.log(this.requestList);
           this.requestList = response.data.map(item => {
-            const transformedDate = formatDate(item.fecha_solicitud, 'MM/dd/yyyy', 'en-US');
+            const transformedDate = formatDate(item.filing_date, 'MM/dd/yyyy', 'en-US');
             return { ...item, filing_date: transformedDate };
           });
           this.totalRows = Number(response.message);
@@ -275,8 +276,8 @@ export class SearchRequestAfiliationsComponent implements OnInit {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
   getRequestStatusList() {
-    this.userService.getRequestStatusList().subscribe({
-      next: (response: BodyResponse<RequestStatusList[]>) => {
+    this.userService.getRequestAfiliationStatusList().subscribe({
+      next: (response: BodyResponse<RequestStatusAfiliationList[]>) => {
         if (response.code === 200) {
           this.statusList = response.data;
         } else {
@@ -293,7 +294,7 @@ export class SearchRequestAfiliationsComponent implements OnInit {
   }
 
   getUsersList() {
-    this.userService.getUsersList().subscribe({
+    this.userService.getUsersListAfiliaciones().subscribe({
       next: (response: BodyResponse<UserList[]>) => {
         if (response.code === 200) {
           this.userList = response.data;

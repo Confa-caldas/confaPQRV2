@@ -5,11 +5,11 @@ import { Users } from '../../../services/users.service';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 
 @Component({
-  selector: 'app-modal-assign-selector',
-  templateUrl: './modal-assign-selector.component.html',
-  styleUrl: './modal-assign-selector.component.scss',
+  selector: 'app-modal-assign-afiliation-selector',
+  templateUrl: './modal-assign-afiliation-selector.component.html',
+  styleUrl: './modal-assign-afiliation-selector.component.scss',
 })
-export class ModalAssignSelectorComponent implements OnInit {
+export class ModalAssignAfiliationSelectorComponent implements OnInit {
   @Input() message = '';
   @Input() buttonmsg = '';
   @Input() parameter = [''];
@@ -30,31 +30,11 @@ export class ModalAssignSelectorComponent implements OnInit {
   ngOnInit(): void {
     this.getUsersTable();
   }
-  /*
-  getUsersTable() {
-    this.userService.getUsersList().subscribe({
-      next: (response: BodyResponse<UserList[]>) => {
-        if (response.code === 200) {
-          this.userList = response.data;
-          this.userList.forEach(item => {
-            item.is_active = item.is_active === 1 ? true : false;
-          });
-        } else {
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
-  } */
 
   getUsersTable() {
-    this.userService.getUsersList().subscribe({
+    this.userService.getUsersListAfiliaciones().subscribe({
       next: (res: BodyResponse<UserList[]>) => {
-        this.userList = res.data.filter(s => s.is_active === 1);
+        this.userList = res.data.filter(s => s.is_active === true);
       },
       error: err => console.log(err),
     });

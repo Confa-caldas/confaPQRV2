@@ -4,13 +4,16 @@ import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
 import {
   ApplicantTypeList,
+  FilterNovedad,
   FilterRequestsAfiliation,
   RequestStatusList,
   RequestTypeList,
-  RequestsList,
   RequestsListAfiliation,
+  RequestsList,
   UserList,
-  RequestStatusAfiliationList
+  RequestStatusAfiliationList,
+  NovedadList,
+  NovedadCalidadDatosDetalle,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -20,19 +23,20 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { PaginatorState } from 'primeng/paginator';
 import { forkJoin } from 'rxjs';
 import { Table } from 'primeng/table';
+import { DatosPersonaModal } from '../../shared/modal-search-person-data/modal-search-person-data.component';
 
 @Component({
-  selector: 'app-search-request-afi-pending',
-  templateUrl: './search-request-afi-pending.component.html',
-  styleUrl: './search-request-afi-pending.component.scss',
+  selector: 'app-search-updates-data',
+  templateUrl: './search-updates-data.component.html',
+  styleUrl: './search-updates-data.component.scss',
 })
-export class SearchRequestAfiPendingComponent implements OnInit {
+export class SearchUpdatesDataComponent implements OnInit {
   requestList: RequestsListAfiliation[] = [];
+  novedadList: NovedadCalidadDatosDetalle[] = [];
   aplicantList: ApplicantTypeList[] = [];
   requestTypeList: RequestTypeList[] = [];
   userList: UserList[] = [];
   requestUserList: UserList[] = [];
-
   ingredient!: string;
   visibleDialog = false;
   visibleDialogInput = false;
@@ -40,8 +44,7 @@ export class SearchRequestAfiPendingComponent implements OnInit {
   message2 = '';
   buttonmsg = '';
   parameter = [''];
-  request_details!: RequestsListAfiliation;
-  //selectedRequests!: RequestsList[];
+  request_details!: RequestsList;
   informative: boolean = false;
   severity = '';
   visibleDialogAlert = false;
@@ -60,12 +63,14 @@ export class SearchRequestAfiPendingComponent implements OnInit {
   page: number = 1;
   rows: number = 10;
   totalRows: number = 0;
-
   solicitudes: any[] = []; // tus datos
 
   isBulkAssign: boolean = false; // Saber si es masivo o no
-  selectedRequests: RequestsListAfiliation[] = []; // Solicitudes seleccionadas con checkbox
+  selectedRequests: RequestsList[] = []; // Solicitudes seleccionadas con checkbox
   @ViewChild('dt') table!: Table;
+
+  visibleModalSearchPerson = false;
+  datosPersonaModal: DatosPersonaModal | null = null;
 
   constructor(
     private userService: Users,
@@ -75,31 +80,14 @@ export class SearchRequestAfiPendingComponent implements OnInit {
     this.formGroup = new FormGroup({
       filing_number: new FormControl(null),
       dates_range: new FormControl(null),
-      doc_id_tr: new FormControl(null),
-      doc_id_bn: new FormControl(null),
-      applicant_name_emp: new FormControl(null),
-      request_status_id: new FormControl(null),
-      assigned_user: new FormControl(null),
+      doc_id: new FormControl(null),
+      applicant_name: new FormControl(null),
+      novedad_status_id: new FormControl(null),
     });
 
-    this.formGroup.get('request_status_id')?.valueChanges.subscribe(value => {
+    this.formGroup.get('novedad_status_id')?.valueChanges.subscribe(value => {
       if (value.length === 0) {
-        this.formGroup.get('request_status_id')?.setValue(null);
-      }
-    });
-    this.formGroup.get('applicant_type_id')?.valueChanges.subscribe(value => {
-      if (value.length === 0) {
-        this.formGroup.get('applicant_type_id')?.setValue(null);
-      }
-    });
-    this.formGroup.get('assigned_user')?.valueChanges.subscribe(value => {
-      if (value.length === 0) {
-        this.formGroup.get('assigned_user')?.setValue(null);
-      }
-    });
-    this.formGroup.get('request_type_id')?.valueChanges.subscribe(value => {
-      if (value.length === 0) {
-        this.formGroup.get('request_type_id')?.setValue(null);
+        this.formGroup.get('novedad_status_id')?.setValue(null);
       }
     });
   }
@@ -118,11 +106,6 @@ export class SearchRequestAfiPendingComponent implements OnInit {
               new Date(filtros.dates_range[0]),
               new Date(filtros.dates_range[1]),
             ];
-          }
-
-          // Asegurar que assigned_user es un array (necesario para p-multiSelect)
-          if (filtros.assigned_user && !Array.isArray(filtros.assigned_user)) {
-            filtros.assigned_user = [filtros.assigned_user]; // Convertir en array si no lo es
           }
 
           // Filtrar valores nulos antes de asignarlos al formGroup
@@ -153,7 +136,8 @@ export class SearchRequestAfiPendingComponent implements OnInit {
 
     this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
 
-    this.searhRequests();
+    //this.searhRequests();
+    this.searhNovedades();
     this.getRequestStatusList();
     this.getUsersList();
     this.loading = false;
@@ -173,7 +157,7 @@ export class SearchRequestAfiPendingComponent implements OnInit {
     this.page = Number(event.page) + 1 || 0;
 
     sessionStorage.getItem('filtrosBusqueda');
-    this.searhRequests();
+    this.searhNovedades();
   }
   cleanForm() {
     sessionStorage.removeItem('filtrosBusqueda');
@@ -183,21 +167,21 @@ export class SearchRequestAfiPendingComponent implements OnInit {
     this.rows = 10;
     this.formGroup.reset();
     this.requestList = [];
-    this.searhRequests();
+    this.searhNovedades();
   }
 
   initPaginador() {
     this.first = 0;
     this.page = 1;
     this.rows = 10;
-    this.searhRequests();
+    this.searhNovedades();
   }
 
-  searhRequests() {
+  searhNovedades() {
     const filtrosGuardados = sessionStorage.getItem('filtrosBusqueda');
     let filtros = filtrosGuardados ? JSON.parse(filtrosGuardados) : {};
 
-    const payload: FilterRequestsAfiliation = {
+    const payload: FilterNovedad = {
       i_date:
         this.formGroup.controls['dates_range'].value?.length > 0
           ? this.convertDates(this.formGroup.controls['dates_range'].value[0])
@@ -215,34 +199,25 @@ export class SearchRequestAfiPendingComponent implements OnInit {
         this.formGroup.controls['filing_number'].value.length > 0
           ? this.formGroup.controls['filing_number'].value
           : filtros['filing_number'] || null,
-      doc_id_tr:
-        this.formGroup.controls['doc_id_tr'].value &&
-        this.formGroup.controls['doc_id_tr'].value.length > 0
-          ? this.formGroup.controls['doc_id_tr'].value
-          : filtros['doc_id_tr'] || null,
-      doc_id_bn:
-        this.formGroup.controls['doc_id_bn'].value &&
-        this.formGroup.controls['doc_id_bn'].value.length > 0
-          ? this.formGroup.controls['doc_id_bn'].value
-          : filtros['doc_id_bn'] || null,
-      applicant_name_emp:
-        this.formGroup.controls['applicant_name_emp'].value?.trim().length > 0
-          ? this.formGroup.controls['applicant_name_emp'].value
-          : filtros['applicant_name_emp'] || null,
-      status_id:
-        this.formGroup.controls['request_status_id'].value &&
-        this.formGroup.controls['request_status_id'].value.length > 0
-          ? this.formGroup.controls['request_status_id'].value
-          : filtros['request_status_id'] || null,
-      assigned_user:
-        this.formGroup.controls['assigned_user'].value?.length > 0
-          ? this.formGroup.controls['assigned_user'].value
-          : filtros['assigned_user'] || null,
+      doc_id:
+        this.formGroup.controls['doc_id'].value &&
+        this.formGroup.controls['doc_id'].value.length > 0
+          ? this.formGroup.controls['doc_id'].value
+          : filtros['doc_id'] || null,
+      applicant_name:
+        this.formGroup.controls['applicant_name'].value?.trim().length > 0
+          ? this.formGroup.controls['applicant_name'].value
+          : filtros['applicant_name'] || null,
+      novedad_status_id:
+        this.formGroup.controls['novedad_status_id'].value &&
+        this.formGroup.controls['novedad_status_id'].value.length > 0
+          ? this.formGroup.controls['novedad_status_id'].value
+          : filtros['novedad_status_id'] || null,
       page: this.page,
       page_size: this.rows,
     };
 
-    this.getRequestListByFilter(payload);
+    this.getNovedadesListByFilter(payload);
   }
   convertDates(dateString: string) {
     const date = new Date(dateString);
@@ -252,14 +227,14 @@ export class SearchRequestAfiPendingComponent implements OnInit {
     const formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
   }
-  getRequestListByFilter(payload: FilterRequestsAfiliation) {
-    this.userService.getRequestAfiliationListByFilter(payload).subscribe({
-      next: (response: BodyResponse<RequestsListAfiliation[]>) => {
+  getNovedadesListByFilter(payload: FilterNovedad) {
+    this.userService.getNovedadListByFilter(payload).subscribe({
+      next: (response: BodyResponse<NovedadCalidadDatosDetalle[]>) => {
         if (response.code === 200) {
-          this.requestList = response.data;
-          console.log(this.requestList);
-          this.requestList = response.data.map(item => {
-            const transformedDate = formatDate(item.filing_date, 'MM/dd/yyyy', 'en-US');
+          this.novedadList = response.data;
+          console.log(this.novedadList);
+          this.novedadList = response.data.map(item => {
+            const transformedDate = formatDate(item.fecha_hora_registro, 'MM/dd/yyyy', 'en-US');
             return { ...item, filing_date: transformedDate };
           });
           this.totalRows = Number(response.message);
@@ -314,7 +289,7 @@ export class SearchRequestAfiPendingComponent implements OnInit {
     });
   }
 
-  assignRequest(request_details: RequestsListAfiliation) {
+  assignRequest(request_details: RequestsList) {
     this.isBulkAssign = false;
 
     if (request_details.assigned_user == null || request_details.assigned_user == '') {
@@ -363,13 +338,13 @@ export class SearchRequestAfiPendingComponent implements OnInit {
         request.mensaje_reasignacion = inputValue.mensajeReasignacion;
         request.request_status = 2;
   
-        return this.userService.assignUserToRequestAfiliation(request);
+        return this.userService.assignUserToRequest(request);
       });
   
       forkJoin(requestsToAssign).subscribe({
         next: (responses) => {
           responses.forEach((response, index) => {
-            const filingNumber = this.selectedRequests[index]?.request_id || 'Desconocido';
+            const filingNumber = this.selectedRequests[index]?.filing_number || 'Desconocido';
             if (response.code === 200) {
               this.showSuccessMessage('success', 'Éxito', `Asignado: ${filingNumber}`);
             } else {
@@ -403,11 +378,8 @@ export class SearchRequestAfiPendingComponent implements OnInit {
       this.request_details.assigned_user = inputValue.userName;
       this.request_details.user_name_completed = inputValue.userNameCompleted;
       this.request_details.mensaje_reasignacion = inputValue.mensajeReasignacion;
-
-      console.log("-------------------este---------" , this.request_details);
   
-      
-      this.userService.assignUserToRequestAfiliation(this.request_details).subscribe({
+      this.userService.assignUserToRequest(this.request_details).subscribe({
         next: (response) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Éxito', 'Asignación exitosa');
@@ -426,7 +398,8 @@ export class SearchRequestAfiPendingComponent implements OnInit {
   
     
 
-  redirectDetails(request_id: number) {
+  redirectDetails(novedad_id: number) {
+    console.log(novedad_id);
     let filtros = this.formGroup.value;
 
     // Convertir valores null a cadenas vacías o arrays vacíos si es necesario
@@ -448,7 +421,7 @@ export class SearchRequestAfiPendingComponent implements OnInit {
 
     localStorage.removeItem('route');
     localStorage.setItem('route', this.router.url);
-    this.router.navigate([RoutesApp.REQUEST_DETAILS_AFILIATION, request_id]);
+    this.router.navigate([RoutesApp.UPDATES_DATA_DETAILS, novedad_id]);
   }
 
   // redirectDetails(request_id: number) {
@@ -465,7 +438,7 @@ export class SearchRequestAfiPendingComponent implements OnInit {
     // this.miServicio.asignar(this.selectedSolicitudes).subscribe(...)
   }
 
-  assignSelectedRequests(requests: RequestsListAfiliation[]) {
+  assignSelectedRequests(requests: RequestsList[]) {
     if (!requests || requests.length === 0) return;
 
     this.isBulkAssign = true;
@@ -510,4 +483,46 @@ export class SearchRequestAfiPendingComponent implements OnInit {
     }
   }
 
+  openModalSearchPerson(): void {
+    this.datosPersonaModal = null;
+    this.visibleModalSearchPerson = true;
+  }
+
+  onConsultarPersonData(event: { tipoDocumento: string; numeroDocumento: string }): void {
+    this.userService.respuestaInfoAfiliacion(event.numeroDocumento).subscribe({
+      next: (res: any) => {
+        const data = res?.persona ?? res?.data ?? res;
+        this.datosPersonaModal = {
+          primerNombre: data.primer_nombre ?? data.primerNombre ?? '',
+          segundoNombre: data.segundo_nombre ?? data.segundoNombre ?? '',
+          primerApellido: data.primer_apellido ?? data.primerApellido ?? '',
+          segundoApellido: data.segundo_apellido ?? data.segundoApellido ?? '',
+          fechaExpedicionDoc: data.fecha_expedicion_doc ?? data.fechaExpedicionDoc ?? null,
+          fechaNacimiento: data.fecha_nacimiento ?? data.fechaNacimiento ?? null,
+        };
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se encontraron datos para el documento consultado.',
+        });
+      },
+    });
+  }
+
+  closeModalSearchPerson(): void {
+    this.visibleModalSearchPerson = false;
+    this.datosPersonaModal = null;
+  }
+
+  onGuardarNovedad(datos: DatosPersonaModal): void {
+    // TODO: llamar al servicio para guardar la novedad con los datos del formulario
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Novedad guardada',
+      detail: 'Los datos se han registrado correctamente.',
+    });
+    this.closeModalSearchPerson();
+  }
 }

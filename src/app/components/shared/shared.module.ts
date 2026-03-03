@@ -14,6 +14,8 @@ import { ModalFilingModule } from './modal-filing/modal-filing.module';
 import { ModalManagerSelectorModule } from './modal-manager-selector/modal-manager-selector.module';
 import { ModalReviewStateModule } from './modal-review-state/modal-review.state.module';
 import { MainNotificationModule } from './main-notification/main-notification.module';
+import { ModalAssignAfiliationSelectorModule } from './modal-assign-afiliation-selector/modal-assign-afiliation-selector.module';
+import { ModalSearchPersonDataModule } from './modal-search-person-data/modal-search-person-data.module';
 
 @NgModule({
   declarations: [
@@ -33,6 +35,7 @@ import { MainNotificationModule } from './main-notification/main-notification.mo
     ModalManagerSelectorModule,
     ModalReviewStateModule,
     MainNotificationModule,
+    ModalSearchPersonDataModule,
   ],
   exports: [
     ModalDinamicModule,
@@ -48,7 +51,9 @@ import { MainNotificationModule } from './main-notification/main-notification.mo
     ModalFilingModule,
     ModalManagerSelectorModule,
     ModalReviewStateModule,
-    MainNotificationModule
+    MainNotificationModule,
+    ModalAssignAfiliationSelectorModule,
+    ModalSearchPersonDataModule,
   ],
 })
 export class SharedModule {}

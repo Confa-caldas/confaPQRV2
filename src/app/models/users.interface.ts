@@ -9,6 +9,13 @@ export interface UserList {
   is_visible: number | boolean;
   user_name_completed: string;
 }
+
+export interface UserListAfiliation {
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  is_active: number | boolean;
+}
 export interface RequestsList {
   request_id: number;
   filing_number: number;
@@ -38,18 +45,37 @@ export interface RequestsList {
 }
 
 export interface RequestsListAfiliation {
-  id_solicitud: number;
-  numero_radicado: string | null;
-  fecha_solicitud: string; // o Date si lo conviertes en frontend
+  request_id: number;
+  filing_number: string | null;
+  filing_date: string; // o Date si lo conviertes en frontend
   doc_trabajador: string;
-  nombre_trabajador: string;
-  documentos_beneficiarios: string;
-  nombres_beneficiarios: string;
+  name_trabajador: string;
+  documents_beneficiarios: string;
+  names_beneficiarios: string;
   id_empresa: string | number;
-  nombre_empresa: string;
-  id_estado_solicitud: string | number;
-  usuario_gestion: string | null;
+  name_empresa: string;
+  request_status: number;
+  cod_estatus:string;
+  assigned_user: string | null;
+  user_name_completed: string;
+  mensaje_reasignacion: string;
   total_count: number;
+}
+
+export interface NovedadList {
+  novedad_id: number;
+  solicitud_id: number;
+  solicitud_persona_id: number;
+  filing_number: string;
+  doc_type: string;
+  doc_id: string;
+  applicant_name: string;
+  novedad_status_id: number;
+  filing_date: string;
+  filing_time: string;
+  created_by: string;
+  created_date: string;
+  updated_by: string;
 }
 
 
@@ -344,6 +370,12 @@ export interface RequestStatusList {
   status_description: string;
   is_active: number;
 }
+export interface RequestStatusAfiliationList {
+  request_status_id: number;
+  status_name: string;
+  status_description: string;
+  is_active: boolean;
+}
 export interface IsPqrCatalog {
   id: number;
   name: string;
@@ -385,6 +417,26 @@ export interface FilterRequestsAfiliation {
   applicant_name_emp?: string | null;
   status_id?: number | number[] | null;
   assigned_user?: string | string[] | null;
+  page?: number;
+  page_size?: number;
+}
+export interface FilterRequestsAfiliationAssigned {
+  filing_number?: number | null;
+  i_date: string | null;
+  f_date: string | null;
+  doc_id_trabajador?: string | null;
+  name_empresa?: string | null;
+  request_status_id?: number | number[] | null;
+  page?: number;
+  page_size?: number;
+}
+export interface FilterNovedad {
+  i_date: string | null;
+  f_date: string | null;
+  filing_number?: number | null;
+  doc_id?: string | null;
+  applicant_name?: string | null;
+  novedad_status_id?: number | number[] | null;
   page?: number;
   page_size?: number;
 }
@@ -880,6 +932,41 @@ export interface BodyResponse<T> {
   code: number;
   message: string;
   data: T;
+}
+
+// --------- NOVEDAD CALIDAD DE DATOS (gestor.novedad_calidad_datos_detalle) ---------
+export interface NovedadCalidadDatosDetalle {
+  id_novedad: number;
+  id_solicitud: number;
+  id_solicitud_persona: number;
+  numero_radicado: string;
+  tipo_documento_genesys: string;
+  numero_documento_genesys: string;
+  primer_apellido_genesys: string | null;
+  segundo_apellido_genesys: string | null;
+  primer_nombre_genesys: string | null;
+  segundo_nombre_genesys: string | null;
+  fecha_expedicion_genesys: string | null;
+  fecha_nacimiento_genesys: string | null;
+  tipo_documento_reg: string | null;
+  numero_documento_reg: string | null;
+  primer_apellido_reg: string | null;
+  segundo_apellido_reg: string | null;
+  primer_nombre_reg: string | null;
+  segundo_nombre_reg: string | null;
+  fecha_expedicion_reg: string | null;
+  fecha_nacimiento_reg: string | null;
+  primer_apellido_novedad: string | null;
+  segundo_apellido_novedad: string | null;
+  primer_nombre_novedad: string | null;
+  segundo_nombre_novedad: string | null;
+  fecha_expedicion_novedad: string | null;
+  fecha_nacimiento_novedad: string | null;
+  estado: number;
+  fecha_hora_registro: string;
+  usuario_registro: string;
+  fecha_hora_procesado: string | null;
+  usuario_proceso: string | null;
 }
 
 // --------- RESPUESTA data ---------

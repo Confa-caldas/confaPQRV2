@@ -1,0 +1,82 @@
+<div *ngIf="isSpinnerVisible" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
+
+<div class="comparison-page">
+  <div class="comparison-title">Detalle de afiliado – Comparación de datos</div>
+
+  <div class="comparison-grid" *ngIf="novedadDetalle">
+    <!-- Columna izquierda: Datos de Genesys (solo lectura, igual que Registraduría) -->
+    <div class="comparison-column comparison-column-genesys">
+      <h2 class="comparison-column-title">Datos de Genesys</h2>
+      <div class="comparison-readonly">
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('primerNombre')">
+          <label class="comparison-label">Primer nombre</label>
+          <span class="comparison-value">{{ comparisonForm.get('primerNombre')?.value || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('segundoNombre')">
+          <label class="comparison-label">Segundo nombre</label>
+          <span class="comparison-value">{{ comparisonForm.get('segundoNombre')?.value || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('primerApellido')">
+          <label class="comparison-label">Primer apellido</label>
+          <span class="comparison-value">{{ comparisonForm.get('primerApellido')?.value || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('segundoApellido')">
+          <label class="comparison-label">Segundo apellido</label>
+          <span class="comparison-value">{{ comparisonForm.get('segundoApellido')?.value || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('fechaExpedicionDoc')">
+          <label class="comparison-label">Fecha expedición del documento</label>
+          <span class="comparison-value">{{ comparisonForm.get('fechaExpedicionDoc')?.value || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('fechaNacimiento')">
+          <label class="comparison-label">Fecha de nacimiento</label>
+          <span class="comparison-value">{{ comparisonForm.get('fechaNacimiento')?.value || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: Datos de Registraduría (solo lectura) -->
+    <div class="comparison-column comparison-column-registraduria">
+      <h2 class="comparison-column-title">Datos de Registraduría</h2>
+      <div class="comparison-readonly">
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('primerNombre')">
+          <label class="comparison-label">Primer nombre</label>
+          <span class="comparison-value">{{ datosRegistraduria.primerNombre || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('segundoNombre')">
+          <label class="comparison-label">Segundo nombre</label>
+          <span class="comparison-value">{{ datosRegistraduria.segundoNombre || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('primerApellido')">
+          <label class="comparison-label">Primer apellido</label>
+          <span class="comparison-value">{{ datosRegistraduria.primerApellido || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('segundoApellido')">
+          <label class="comparison-label">Segundo apellido</label>
+          <span class="comparison-value">{{ datosRegistraduria.segundoApellido || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('fechaExpedicionDoc')">
+          <label class="comparison-label">Fecha expedición del documento</label>
+          <span class="comparison-value">{{ datosRegistraduria.fechaExpedicionDoc || '—' }}</span>
+        </div>
+        <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('fechaNacimiento')">
+          <label class="comparison-label">Fecha de nacimiento</label>
+          <span class="comparison-value">{{ datosRegistraduria.fechaNacimiento || '—' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="comparison-actions" *ngIf="novedadDetalle">
+    <p-button
+      label="Regresar"
+      icon="pi pi-arrow-left"
+      (onClick)="regresar()"
+      [style]="{ 'border-radius': '8px' }"
+      severity="secondary" />
+  </div>
+</div>
+
+<p-toast />

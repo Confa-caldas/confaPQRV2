@@ -68,7 +68,12 @@ import {
   SimilarRequest,
   FilterRequestsAfiliation,
   RequestsListAfiliation,
-  AfiliacionRequestDetailsData
+  AfiliacionRequestDetailsData,
+  RequestStatusAfiliationList,
+  UserListAfiliation,
+  NovedadCalidadDatosDetalle,
+  FilterNovedad,
+  NovedadList,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -106,6 +111,12 @@ export class Users {
       payload
     );
   }
+  getRequestListByAssignedUserAfiliation(assigned_user: string, payload: FilterRequestsAfiliation) {
+    return this.http.post<BodyResponse<RequestsListAfiliation[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ALL_REQUESTS_BY_ASSIGNED_USER_AFILIATION}/${assigned_user}`,
+      payload
+    );
+  }
   getRequestDetails(payload: number) {
     return this.http.get<BodyResponse<RequestsDetails>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_DETAILS}/${payload}`
@@ -116,6 +127,21 @@ export class Users {
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_DETAILS_AFILIATION}/${payload}`
     );
   }
+
+  /** Obtiene el detalle de una novedad de calidad de datos por id_novedad. */
+  getNovedadCalidadDatosDetalle(idNovedad: number) {
+    return this.http.get<BodyResponse<NovedadCalidadDatosDetalle>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_DETALLE}/${idNovedad}`
+    );
+  }
+
+  /** Obtiene el detalle de una novedad de calidad de datos por id_solicitud (ej. request_id del listado). */
+  getNovedadCalidadDatosDetalleBySolicitud(idSolicitud: number) {
+    return this.http.get<BodyResponse<NovedadCalidadDatosDetalle>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_BY_SOLICITUD}/${idSolicitud}`
+    );
+  }
+
   getRequestHistoric(payload: Pagination) {
     return this.http.post<BodyResponse<RequestHistoric[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC}`,
@@ -140,7 +166,7 @@ export class Users {
       payload
     );
   }
-  assignUserToRequestAfiliation(payload: AssignUserRequest) {
+  assignUserToRequestAfiliation(payload: RequestsListAfiliation) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.ASSIGN_USER_TO_REQUEST_AFILIATION}`,
       payload
@@ -374,6 +400,11 @@ export class Users {
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_STATUS}`
     );
   }
+  getRequestAfiliationStatusList() {
+    return this.http.get<BodyResponse<RequestStatusAfiliationList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_STATUS_AFILIATION}`
+    );
+  }
   createNotification(payload: NotificationList) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.CREATE_NOTIFICATION}`,
@@ -432,6 +463,12 @@ export class Users {
   getRequestAfiliationListByFilter(payload: FilterRequestsAfiliation) {
     return this.http.post<BodyResponse<RequestsListAfiliation[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_BY_FILTER}`,
+      payload
+    );
+  }
+  getNovedadListByFilter(payload: FilterNovedad) {
+    return this.http.post<BodyResponse<NovedadCalidadDatosDetalle[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_BY_FILTER}`,
       payload
     );
   }

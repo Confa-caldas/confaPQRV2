@@ -1,0 +1,96 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="true"
+  (onHide)="onCerrar()"
+  header="Consultar datos de persona">
+  <ng-template pTemplate="headless">
+    <div class="modal-content modal-search-person">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="modal-body">
+      <div class="modal-title-row">
+        <span class="modal-title">Consultar datos de persona</span>
+      </div>
+      <form [formGroup]="searchForm" class="search-section">
+        <div class="filters-grid">
+          <div class="filters-cell">
+            <p-dropdown
+              formControlName="tipoDocumento"
+              [options]="tiposDocumento"
+              optionLabel="label"
+              optionValue="value"
+              [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+              placeholder="Tipo de documento"
+              class="filters-dropdown">
+            </p-dropdown>
+          </div>
+          <div class="filters-cell">
+            <input
+              type="text"
+              formControlName="numeroDocumento"
+              class="filters-input"
+              pInputText
+              placeholder="Número de documento" />
+          </div>
+          <div class="filters-cell filters-actions">
+            <p-button
+              label="Consultar"
+              icon="pi pi-search"
+              [style]="{ 'border-radius': '6px' }"
+              (onClick)="onConsultar()"></p-button>
+          </div>
+        </div>
+
+        <div class="data-section" *ngIf="showDataSection">
+          <h4 class="data-section-title">Datos de la persona</h4>
+          <form [formGroup]="dataForm" class="data-form">
+            <div class="data-form-row">
+              <label class="data-label">Primer nombre</label>
+              <input type="text" formControlName="primerNombre" class="data-input" pInputText />
+            </div>
+            <div class="data-form-row">
+              <label class="data-label">Segundo nombre</label>
+              <input type="text" formControlName="segundoNombre" class="data-input" pInputText />
+            </div>
+            <div class="data-form-row">
+              <label class="data-label">Primer apellido</label>
+              <input type="text" formControlName="primerApellido" class="data-input" pInputText />
+            </div>
+            <div class="data-form-row">
+              <label class="data-label">Segundo apellido</label>
+              <input type="text" formControlName="segundoApellido" class="data-input" pInputText />
+            </div>
+            <div class="data-form-row">
+              <label class="data-label">Fecha expedición del documento</label>
+              <input type="date" formControlName="fechaExpedicionDoc" class="data-input" />
+            </div>
+            <div class="data-form-row">
+              <label class="data-label">Fecha de nacimiento</label>
+              <input type="date" formControlName="fechaNacimiento" class="data-input" />
+            </div>
+          </form>
+        </div>
+      </form>
+      <div class="modal-footer-actions">
+        <div class="footer-buttons">
+          <p-button
+            *ngIf="showDataSection"
+            label="Guardar novedad"
+            icon="pi pi-save"
+            [style]="{ 'border-radius': '6px' }"
+            (onClick)="onGuardarNovedad()"></p-button>
+          <p-button label="Cerrar" severity="secondary" (onClick)="onCerrar()"></p-button>
+        </div>
+      </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
