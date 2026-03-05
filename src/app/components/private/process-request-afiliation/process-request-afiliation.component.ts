@@ -76,7 +76,7 @@ export class ProcessRequestAfiliationComponent implements OnInit {
   
   PERFIL!: string;
   isBulkAssign: boolean = false; // Saber si es masivo o no
-  request_details_process!: RequestsList;
+  request_details_process!: RequestsListAfiliation;
   visibleAssignedInput = false;
   @ViewChild('dt') table!: Table;
 
@@ -335,7 +335,7 @@ private hasActiveFilters(formGroup: FormGroup): boolean {
   });
 }
 
-assignRequest(request_details: RequestsList) {
+assignRequest(request_details: RequestsListAfiliation) {
     this.isBulkAssign = false;
 
     if (request_details.assigned_user == null || request_details.assigned_user == '') {
@@ -407,7 +407,7 @@ assignRequest(request_details: RequestsList) {
       this.request_details_process.user_name_completed = inputValue.userNameCompleted;
       this.request_details_process.mensaje_reasignacion = inputValue.mensajeReasignacion;
   
-      this.userService.assignUserToRequest(this.request_details_process).subscribe({
+      this.userService.assignUserToRequestAfiliation(this.request_details_process).subscribe({
         next: (response) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Éxito', 'Asignación exitosa');

@@ -13,13 +13,14 @@ import { CardModule } from 'primeng/card';
 import { TabViewModule } from 'primeng/tabview';
 import { DatePipe } from '@angular/common';
 import { ToastModule } from 'primeng/toast';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { NgxDocViewerModule } from 'ngx-doc-viewer';
 import { DialogModule } from 'primeng/dialog';
 import { MenuModule } from 'primeng/menu';
 import { TimelineModule } from 'primeng/timeline';
 import { AccordionModule } from 'primeng/accordion';
 import { MessageModule } from 'primeng/message';
+import { TooltipModule } from 'primeng/tooltip';
  
 @NgModule({
   declarations: [RequestDetailsAfiliationComponent],
@@ -37,12 +38,14 @@ import { MessageModule } from 'primeng/message';
     DatePipe,
     ToastModule,
     ReactiveFormsModule,
+    FormsModule,
     NgxDocViewerModule,
     DialogModule,
     MenuModule,
     TimelineModule,
     AccordionModule,
     MessageModule,
+    TooltipModule,
   ],
   exports: [RequestDetailsAfiliationComponent],
 })

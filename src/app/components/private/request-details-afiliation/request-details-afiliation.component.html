@@ -402,6 +402,68 @@
           </div>
         </div>
 
+        <!-- Archivos adjuntos del trabajador -->
+        <div class="adjuntos-section adjuntos-trabajador-block" *ngIf="getAdjuntosTrabajador().length > 0">
+          <p class="adjuntos-block-intro">Los siguientes archivos corresponden al <strong>trabajador</strong> de la solicitud.</p>
+          <h4 class="adjuntos-section-title">Archivos adjuntos del trabajador</h4>
+          <div class="adjuntos-table-wrapper">
+            <p-table
+              [value]="getAdjuntosTrabajador()"
+              [tableStyle]="{ 'min-width': '40rem' }"
+              styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 28%">Archivo</th>
+                  <th style="width: 18%">Valoración</th>
+                  <th style="width: 36%">Descripción (si aplica)</th>
+                  <th style="width: 18%">Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>{{ item.adjunto.nombre_archivo }}</td>
+                  <td>
+                    <p-dropdown
+                      [options]="valoracionOpciones"
+                      [(ngModel)]="item.valoracion"
+                      placeholder="Seleccione"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      optionLabel="label"
+                      optionValue="value" />
+                  </td>
+                  <td>
+                    <textarea
+                      *ngIf="showDescripcionValoracion(item.valoracion)"
+                      [(ngModel)]="item.descripcion"
+                      class="adjunto-descripcion-input"
+                      rows="2"
+                      placeholder="Indique el motivo o descripción"></textarea>
+                    <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                  </td>
+                  <td>
+                    <div class="adjuntos-actions">
+                      <p-button
+                        icon="pi pi-eye"
+                        pTooltip="Previsualizar"
+                        [styleClass]="'p-button-text p-button-sm'"
+                        (onClick)="openAdjunto(item.adjunto, false)"></p-button>
+                      <p-button
+                        icon="pi pi-download"
+                        pTooltip="Descargar"
+                        [styleClass]="'p-button-text p-button-sm'"
+                        (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+        <div class="adjuntos-section empty adjuntos-trabajador-block" *ngIf="getAdjuntosTrabajador().length === 0">
+          <p class="adjuntos-empty-text">No hay archivos adjuntos para el trabajador de esta solicitud.</p>
+        </div>
+
       </div>
     </p-tabPanel>
 
@@ -412,7 +474,11 @@
         <ng-container *ngIf="d.beneficiarios?.length; else noBenef">
 
           <div class="benef-list">
-            <div class="benef-card" *ngFor="let b of d.beneficiarios">
+            <div class="benef-card" *ngFor="let b of d.beneficiarios; let iBenef = index">
+              <div class="benef-card-header">
+                <span class="benef-card-title">Beneficiario {{ iBenef + 1 }}: {{ getNombreBeneficiario(b) }}</span>
+                <span class="benef-card-meta">{{ b.persona.tipo_documento }} {{ b.persona.numero_documento }} · {{ b.beneficiario.parentesco || '—' }}</span>
+              </div>
               <div class="process-container-row">
                 <div class="process-container-col">
                   <label class="process-container-label">Documento</label>
@@ -461,6 +527,67 @@
                   <div class="process-container-text">{{ b.beneficiario.nivel_educativo || '—' }}</div>
                 </div>
               </div>
+
+              <!-- Archivos adjuntos del beneficiario -->
+              <div class="adjuntos-section benef-adjuntos" *ngIf="getAdjuntosBeneficiario(iBenef).length > 0">
+                <h4 class="adjuntos-section-title">Archivos adjuntos de {{ getNombreBeneficiario(b) }}</h4>
+                <div class="adjuntos-table-wrapper">
+                  <p-table
+                    [value]="getAdjuntosBeneficiario(iBenef)"
+                    [tableStyle]="{ 'min-width': '40rem' }"
+                    styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th style="width: 28%">Archivo</th>
+                        <th style="width: 18%">Valoración</th>
+                        <th style="width: 36%">Descripción (si aplica)</th>
+                        <th style="width: 18%">Acciones</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item>
+                      <tr>
+                        <td>{{ item.adjunto.nombre_archivo }}</td>
+                        <td>
+                          <p-dropdown
+                            [options]="valoracionOpciones"
+                            [(ngModel)]="item.valoracion"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            optionLabel="label"
+                            optionValue="value" />
+                        </td>
+                        <td>
+                          <textarea
+                            *ngIf="showDescripcionValoracion(item.valoracion)"
+                            [(ngModel)]="item.descripcion"
+                            class="adjunto-descripcion-input"
+                            rows="2"
+                            placeholder="Indique el motivo o descripción"></textarea>
+                          <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                        </td>
+                        <td>
+                          <div class="adjuntos-actions">
+                            <p-button
+                              icon="pi pi-eye"
+                              pTooltip="Previsualizar"
+                              [styleClass]="'p-button-text p-button-sm'"
+                              (onClick)="openAdjunto(item.adjunto, false)"></p-button>
+                            <p-button
+                              icon="pi pi-download"
+                              pTooltip="Descargar"
+                              [styleClass]="'p-button-text p-button-sm'"
+                              (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                          </div>
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+              </div>
+              <div class="adjuntos-section empty benef-adjuntos" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">
+                <p class="adjuntos-empty-text">No hay archivos adjuntos para {{ getNombreBeneficiario(b) }}.</p>
+              </div>
             </div>
           </div>
 
@@ -480,14 +607,117 @@
 
     <p-tabPanel header="Adjuntos" headerStyleClass="p-tabview-nav-link-2 ">
       <div class="p-tab-view">
-          <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
-            <p-tabPanel header="Adjuntos trabajador" headerStyleClass="p-tabview-nav-link-sub">
-            </p-tabPanel>
-            <p-tabPanel header="Adjuntos beneficiarios" headerStyleClass="p-tabview-nav-link-sub">
-            </p-tabPanel>
-            <p-tabPanel header="Adjuntos Responsable" headerStyleClass="p-tabview-nav-link-sub">
-            </p-tabPanel>
-          </p-tabView>
+        <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
+          <p-tabPanel header="Adjuntos trabajador" headerStyleClass="p-tabview-nav-link-sub">
+            <div class="adjuntos-section" *ngIf="getAdjuntosTrabajador().length > 0">
+              <p class="adjuntos-tab-intro">Archivos adjuntos del trabajador. Valoración: Sí / No / No aplica. Si selecciona No, indique la descripción.</p>
+              <div class="adjuntos-table-wrapper">
+                <p-table
+                  [value]="getAdjuntosTrabajador()"
+                  [tableStyle]="{ 'min-width': '40rem' }"
+                  styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th style="width: 28%">Archivo</th>
+                      <th style="width: 18%">Valoración</th>
+                      <th style="width: 36%">Descripción (si aplica)</th>
+                      <th style="width: 18%">Acciones</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-item>
+                    <tr>
+                      <td>{{ item.adjunto.nombre_archivo }}</td>
+                      <td>
+                        <p-dropdown
+                          [options]="valoracionOpciones"
+                          [(ngModel)]="item.valoracion"
+                          placeholder="Seleccione"
+                          appendTo="body"
+                          [style]="{ width: '100%' }"
+                          optionLabel="label"
+                          optionValue="value" />
+                      </td>
+                      <td>
+                        <textarea
+                          *ngIf="showDescripcionValoracion(item.valoracion)"
+                          [(ngModel)]="item.descripcion"
+                          class="adjunto-descripcion-input"
+                          rows="2"
+                          placeholder="Indique el motivo o descripción"></textarea>
+                        <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                      </td>
+                      <td>
+                        <div class="adjuntos-actions">
+                          <p-button icon="pi pi-eye" pTooltip="Previsualizar" [styleClass]="'p-button-text p-button-sm'" (onClick)="openAdjunto(item.adjunto, false)"></p-button>
+                          <p-button icon="pi pi-download" pTooltip="Descargar" [styleClass]="'p-button-text p-button-sm'" (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            </div>
+            <p class="adjuntos-empty-text" *ngIf="getAdjuntosTrabajador().length === 0">No hay archivos adjuntos del trabajador.</p>
+          </p-tabPanel>
+          <p-tabPanel header="Adjuntos beneficiarios" headerStyleClass="p-tabview-nav-link-sub">
+            <p class="adjuntos-tab-intro">Archivos adjuntos por beneficiario. En la pestaña Beneficiarios puede ver y valorar los adjuntos de cada uno.</p>
+            <div class="benef-adjuntos-resumen" *ngIf="afiliationRequestDetails?.beneficiarios?.length">
+              <div class="adjuntos-section benef-adjuntos" *ngFor="let b of afiliationRequestDetails.beneficiarios; let iBenef = index">
+                <h4 class="adjuntos-section-title">Archivos adjuntos de {{ getNombreBeneficiario(b) }} ({{ b.persona.tipo_documento }} {{ b.persona.numero_documento }})</h4>
+                <div class="adjuntos-table-wrapper" *ngIf="getAdjuntosBeneficiario(iBenef).length > 0">
+                  <p-table
+                    [value]="getAdjuntosBeneficiario(iBenef)"
+                    [tableStyle]="{ 'min-width': '40rem' }"
+                    styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th style="width: 28%">Archivo</th>
+                        <th style="width: 18%">Valoración</th>
+                        <th style="width: 36%">Descripción (si aplica)</th>
+                        <th style="width: 18%">Acciones</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item>
+                      <tr>
+                        <td>{{ item.adjunto.nombre_archivo }}</td>
+                        <td>
+                          <p-dropdown
+                            [options]="valoracionOpciones"
+                            [(ngModel)]="item.valoracion"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            optionLabel="label"
+                            optionValue="value" />
+                        </td>
+                        <td>
+                          <textarea
+                            *ngIf="showDescripcionValoracion(item.valoracion)"
+                            [(ngModel)]="item.descripcion"
+                            class="adjunto-descripcion-input"
+                            rows="2"
+                            placeholder="Indique el motivo o descripción"></textarea>
+                          <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                        </td>
+                        <td>
+                          <div class="adjuntos-actions">
+                            <p-button icon="pi pi-eye" pTooltip="Previsualizar" [styleClass]="'p-button-text p-button-sm'" (onClick)="openAdjunto(item.adjunto, false)"></p-button>
+                            <p-button icon="pi pi-download" pTooltip="Descargar" [styleClass]="'p-button-text p-button-sm'" (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                          </div>
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+                <p class="adjuntos-empty-text" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">Sin archivos adjuntos.</p>
+              </div>
+            </div>
+            <p class="adjuntos-empty-text" *ngIf="!afiliationRequestDetails?.beneficiarios?.length">No hay beneficiarios en esta solicitud.</p>
+          </p-tabPanel>
+          <p-tabPanel header="Adjuntos Responsable" headerStyleClass="p-tabview-nav-link-sub">
+            <p class="adjuntos-empty-text">Archivos cargados por el responsable de la gestión. (En desarrollo)</p>
+          </p-tabPanel>
+        </p-tabView>
       </div>
     </p-tabPanel>
     <p-tabPanel header="Tramitar Soliciutd" headerStyleClass="p-tabview-nav-link-4">

@@ -20,7 +20,9 @@ import {
   requestHistoryRequest,
   historyRequest,
   SimilarRequest,
-  AfiliacionRequestDetailsData
+  AfiliacionRequestDetailsData,
+  Adjunto,
+  BeneficiarioBundle
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -35,6 +37,13 @@ import { of, lastValueFrom, firstValueFrom, throwError } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import JSZip from 'jszip';
+
+export type ValoracionAdjunto = 'si' | 'no' | 'no_aplica';
+export interface AdjuntoConValoracion {
+  adjunto: Adjunto;
+  valoracion: ValoracionAdjunto | '';
+  descripcion: string;
+}
 
 @Component({
   selector: 'app-request-details-afiliation',
@@ -172,7 +181,14 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
   similares: any[] = [];
 
-
+  /** Valoración por adjunto: Sí, No, No aplica; cuando es No se muestra descripción */
+  valoracionOpciones: { label: string; value: string }[] = [
+    { label: 'Sí', value: 'si' },
+    { label: 'No', value: 'no' },
+    { label: 'No aplica', value: 'no_aplica' },
+  ];
+  trabajadorAdjuntosEstado: AdjuntoConValoracion[] = [];
+  beneficiariosAdjuntosEstado: AdjuntoConValoracion[][] = [];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -437,6 +453,7 @@ getRequestDetails(request_details: number) {
       }
 
       this.afiliationRequestDetails = response.data;
+      this.initAdjuntosValoracion();
     },
     error: (err) => {
       this.loading = false;
@@ -445,6 +462,57 @@ getRequestDetails(request_details: number) {
     },
   });
 }
+
+  /** Inicializa el estado de valoración de adjuntos (trabajador y cada beneficiario). */
+  initAdjuntosValoracion(): void {
+    const d = this.afiliationRequestDetails;
+    if (!d) {
+      this.trabajadorAdjuntosEstado = [];
+      this.beneficiariosAdjuntosEstado = [];
+      return;
+    }
+    const adjuntosTrabajador = d.trabajador?.adjuntos ?? [];
+    this.trabajadorAdjuntosEstado = adjuntosTrabajador.map((a) => ({
+      adjunto: a,
+      valoracion: '' as ValoracionAdjunto | '',
+      descripcion: '',
+    }));
+    this.beneficiariosAdjuntosEstado = (d.beneficiarios ?? []).map((b) =>
+      (b.adjuntos ?? []).map((a) => ({
+        adjunto: a,
+        valoracion: '' as ValoracionAdjunto | '',
+        descripcion: '',
+      }))
+    );
+  }
+
+  getAdjuntosTrabajador(): AdjuntoConValoracion[] {
+    return this.trabajadorAdjuntosEstado;
+  }
+
+  getAdjuntosBeneficiario(index: number): AdjuntoConValoracion[] {
+    return this.beneficiariosAdjuntosEstado[index] ?? [];
+  }
+
+  /** Nombre completo del beneficiario para títulos y mensajes. */
+  getNombreBeneficiario(b: BeneficiarioBundle): string {
+    const p = b?.persona;
+    if (!p) return 'Beneficiario';
+    return [p.primer_nombre, p.segundo_nombre, p.primer_apellido, p.segundo_apellido]
+      .filter(Boolean)
+      .join(' ')
+      .trim() || 'Beneficiario';
+  }
+
+  /** True si debe mostrarse el campo de descripción (cuando valoración es "No"). */
+  showDescripcionValoracion(valoracion: string): boolean {
+    return valoracion === 'no';
+  }
+
+  /** Abre previsualización o descarga del adjunto (ruta_archivo como URL/key). */
+  openAdjunto(adj: Adjunto, isDownload: boolean): void {
+    this.getPreSignedUrlToDownload(adj.ruta_archivo, adj.nombre_archivo, isDownload);
+  }
 
 get trabajadorNombreCompleto(): string {
   const p = this.afiliationRequestDetails?.trabajador?.persona;

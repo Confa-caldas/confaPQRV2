@@ -283,6 +283,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.REPORT_DETAILS_AFILIATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/report-details-afiliations/report-details-afiliations.module').then(
+        m => m.ReportDetailsAfiliationsModule
+      ),
+  },
+  {
     path: RoutesApp.MAIN_PAGE,
     canActivate: [sessionGuard],
     component: LayoutComponent,

@@ -33,6 +33,7 @@ export enum RoutesApp {
   SEARCH_UPDATES_DATA = 'search-updates-data',
   REQUEST_DETAILS_AFILIATION = 'request-details-afiliation',
   UPDATES_DATA_DETAILS = 'updates-data-details',
+  REPORT_DETAILS_AFILIATIONS = 'report-details-afiliations',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
