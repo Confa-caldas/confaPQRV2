@@ -61,8 +61,8 @@
             <p-multiSelect
                 formControlName="novedad_status_id"
                 [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
-                [options]="statusList"
-                optionLabel="codigo"
+                [options]="novedadStatusList"
+                optionLabel="nombre"
                 optionValue="id"
                 placeholder="Estado de la novedad"></p-multiSelect>
             </div>
@@ -84,8 +84,8 @@
 <div class="mt-auto">
   <p-table
     #dt
-    [value]="requestList"
-    dataKey="request_id"
+    [value]="novedadList"
+    dataKey="id_novedad"
     [rows]="10"
     [showCurrentPageReport]="true"
     [loading]="loading"
@@ -101,53 +101,46 @@
     <ng-template pTemplate="header">
       <tr [style]="{ height: '50px' }">
         <th style="width: 5%">Detalle</th>
-        <th pSortableColumn="filing_number" style="min-width: 7rem">
-          Id Novedad<p-sortIcon field="filing_number"></p-sortIcon>
+        <th pSortableColumn="id_novedad" style="min-width: 7rem">
+          Id Novedad<p-sortIcon field="id_novedad"></p-sortIcon>
         </th>
         <th pSortableColumn="filing_date" style="min-width: 8rem">
           Fecha Novedad<p-sortIcon field="filing_date"></p-sortIcon>
         </th>
-        <th pSortableColumn="filing_number" style="min-width: 7rem">
-          N° Radicado<p-sortIcon field="filing_number"></p-sortIcon>
+        <th pSortableColumn="numero_radicado" style="min-width: 7rem">
+          N° Radicado<p-sortIcon field="numero_radicado"></p-sortIcon>
         </th>
-        <th pSortableColumn="doc_id" style="min-width: 10rem">
-          Tipo Documento Afiliado<p-sortIcon style="margin: 0 5px" field="doc_id_tr"></p-sortIcon>
+        <th pSortableColumn="tipo_documento_genesys" style="min-width: 10rem">
+          Tipo Documento Afiliado<p-sortIcon style="margin: 0 5px" field="tipo_documento_genesys"></p-sortIcon>
         </th>
-        <th pSortableColumn="doc_id" style="min-width: 10rem">
-          N° Documento Afiliado<p-sortIcon style="margin: 0 5px" field="doc_id_tr"></p-sortIcon>
+        <th pSortableColumn="numero_documento_genesys" style="min-width: 10rem">
+          N° Documento Afiliado<p-sortIcon style="margin: 0 5px" field="numero_documento_genesys"></p-sortIcon>
         </th>
-        <th pSortableColumn="applicant_name" style="min-width: 15rem">
-          Nombre Afiliado<p-sortIcon field="applicant_name_tr"></p-sortIcon>
-        </th>
-        <th pSortableColumn="status_name" style="min-width: 11rem">
-          Estado<p-sortIcon field="status_name"></p-sortIcon>
+        <th style="min-width: 15rem">Nombre Afiliado</th>
+        <th pSortableColumn="estado" style="min-width: 11rem">
+          Estado<p-sortIcon field="estado"></p-sortIcon>
         </th>
       </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-requestList>
+    <ng-template pTemplate="body" let-row>
       <tr>
         <td style="text-align: center">
           <p-button
             icon="pi pi-eye"
             [styleClass]="'btn-icon-info'"
-            (click)="redirectDetails(requestList.request_id)"></p-button>
+            (click)="redirectDetails(row.id_novedad)"></p-button>
         </td>
-        <td style="text-align: center">{{ requestList.filing_number }}</td>
-        <td style="text-align: center">{{ requestList.filing_date | date }}</td>
-        <td style="text-align: center">{{ requestList.doc_trabajador }}</td>
-        <td style="text-align: center">{{ requestList.name_trabajador }}</td>
-        <td style="text-align: center">{{ requestList.documents_beneficiarios }}</td>
-        <td style="text-align: center">{{ requestList.names_beneficiarios }}</td>
-        <td style="text-align: center">{{ requestList.name_empresa }}</td>
+        <td style="text-align: center">{{ row.id_novedad }}</td>
+        <td style="text-align: center">{{ row.filing_date || (row.fecha_hora_registro | date: 'shortDate') }}</td>
+        <td style="text-align: center">{{ row.numero_radicado }}</td>
+        <td style="text-align: center">{{ row.tipo_documento_genesys }}</td>
+        <td style="text-align: center">{{ row.numero_documento_genesys }}</td>
+        <td style="text-align: center">{{ getNombreCompletoNovedad(row) }}</td>
+        <td style="text-align: center">{{ row.estado_nombre }}</td>
       </tr>
     </ng-template>
   </p-table>
-  <!-- <p-paginator
-    (onPageChange)="onPageChange($event)"
-    [first]="first"
-    [rows]="rows"
-    [totalRecords]="totalRows"
-    [rowsPerPageOptions]="[10, 20, 30]"></p-paginator> -->
+
   <p-paginator
     (onPageChange)="onPageChange($event)"
     [first]="first"

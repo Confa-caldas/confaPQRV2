@@ -119,7 +119,8 @@ label { font-weight: bold; margin-bottom: 0.5em; color: #555; }
 .email-input-group { display: flex; align-items: center; }
 .input-short { flex: 1; padding: 5px 10px; border: 1px solid #ccc; border-radius: 4px 0 0 4px; margin-right: -1px; }
 
-.error-message { color: #d9534f; font-size: 0.9rem; margin-bottom: 10px; }
+.error-message { color: #d9534f; font-size: 0.9rem; margin-top: 4px; display: block; }
+.required-asterisk { color: #d9534f; }
 
 .timeline-event-state { font-size: 12px; font-weight: bold; color: #333; font-family: 'ubuntu-regular'; text-align: left; }
 .timeline-event-label { font-size: 10px; color: #333; font-family: 'ubuntu-regular'; text-align: left; }
@@ -166,6 +167,52 @@ p-timeline { width: 70%; }
 .info-value { font-weight: 600; font-size: 13px; text-align: right; }
 .status-pill { display: inline-block; padding: 6px 10px; border-radius: 6px; background: #f4c542; font-weight: 700; font-size: 12px; }
 
+.tab-data-view { padding: 1.25rem 1.5rem 1.5rem; max-width: 1100px; }
+.tab-data-section-title {
+  font-size: 0.8rem; font-weight: 700; color: #2c3e50; letter-spacing: 0.04em; margin: 0 0 1rem 0;
+  text-transform: uppercase; padding-bottom: 0.35rem; border-bottom: 1px solid #e2e6ea;
+}
+.tab-data-section-subtitle {
+  font-size: 0.78rem; font-weight: 600; color: #495057; letter-spacing: 0.02em; margin: 1rem 0 0.6rem 0;
+  text-transform: uppercase; padding-bottom: 0.25rem; border-bottom: 1px solid #e9ecef;
+}
+.tab-data-section-subtitle:first-child { margin-top: 0; }
+.tab-data-view .process-container { margin-bottom: 0; }
+.tab-data-view .process-container-row {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem 1.5rem; margin: 0 0 1rem 0;
+}
+.tab-data-view .process-container-col {
+  width: 100%; max-width: 100%; margin: 0; min-width: 0;
+}
+.tab-data-view .process-container-col-description { grid-column: 1 / -1; }
+.tab-data-view .process-container-col.estado-civil-editable-col { grid-column: 1 / -1; max-width: 360px; }
+.tab-data-view .process-container-label {
+  font-size: 0.75rem; color: #6c757d; font-weight: 500; border-bottom: none; margin-bottom: 0.3rem; display: block;
+}
+.tab-data-view .process-container-text {
+  font-size: 0.9rem; font-weight: 500; color: #212529; background: #f0f2f5; border: 1px solid #e2e6ea;
+  border-radius: 6px; padding: 0.5rem 0.75rem; min-height: 38px; display: flex; align-items: center;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+}
+.tab-data-view .process-container-text-area {
+  min-height: 60px; align-items: flex-start; white-space: pre-line; line-height: 1.4;
+}
+.data-field-input {
+  font-size: 0.9rem; font-weight: 500; color: #212529; background: #f0f2f5; border: 1px solid #e2e6ea;
+  border-radius: 6px; padding: 0.5rem 0.75rem; min-height: 38px; width: 100%; box-sizing: border-box;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+}
+.data-field-input::placeholder { color: #6c757d; }
+:host ::ng-deep .data-field-dropdown.p-dropdown .p-dropdown-label,
+:host ::ng-deep .data-field-dropdown.p-dropdown .p-inputtext {
+  background: #f0f2f5; border-radius: 6px; min-height: 38px;
+}
+.tab-data-save-row { margin-top: 1rem; margin-bottom: 0; }
+.tab-data-view .benef-card .process-container-row { margin-bottom: 0.75rem; }
+.benef-card-body { padding: 1rem 1.25rem; }
+.tab-data-view .benef-card .tab-data-section-subtitle { margin-top: 1rem; }
+.tab-data-view .benef-card .tab-data-section-subtitle:first-child { margin-top: 0; }
+
 .benef-list { display: flex; flex-direction: column; gap: 1.5rem; }
 .benef-card {
   border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
@@ -201,3 +248,29 @@ p-timeline { width: 70%; }
 .adjuntos-actions { display: flex; gap: 0.25rem; flex-wrap: wrap; }
 .adjuntos-empty-text { font-size: 0.9rem; color: #666; font-style: italic; margin: 0.5rem 0 0 0; }
 .benef-adjuntos-resumen .adjuntos-section { margin-bottom: 1.5rem; }
+
+.estado-civil-editable-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 240px;
+}
+:host ::ng-deep .estado-civil-alerta.p-message {
+  margin: 0 0 0.25rem 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}
+:host ::ng-deep .estado-civil-dropdown.p-dropdown {
+  min-width: 100%;
+  .p-dropdown-label,
+  .p-inputtext {
+    background: #f0f2f5 !important;
+    border: 1px solid #e2e6ea;
+    border-radius: 6px;
+    min-height: 38px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #212529;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+}

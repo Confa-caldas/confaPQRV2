@@ -79,6 +79,15 @@
   font-weight: 500;
   color: $color-black;
 }
+.comparison-loading,
+.comparison-empty {
+  width: 100%;
+  max-width: 900px;
+  margin: 1rem 0;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+.comparison-empty { font-style: italic; }
 .comparison-actions {
   margin-top: 24px;
   width: 100%;

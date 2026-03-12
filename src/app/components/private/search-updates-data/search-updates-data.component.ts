@@ -14,6 +14,7 @@ import {
   RequestStatusAfiliationList,
   NovedadList,
   NovedadCalidadDatosDetalle,
+  NovedadStatusList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -56,6 +57,7 @@ export class SearchUpdatesDataComponent implements OnInit {
   loading: boolean = true;
   PERFIL!: string;
   statusList: RequestStatusAfiliationList[] = [];
+  novedadStatusList: NovedadStatusList[] = [];
   formGroup: FormGroup<any> = new FormGroup<any>({});
   mensajeReasignacion: string = '';
   //paginador
@@ -136,9 +138,8 @@ export class SearchUpdatesDataComponent implements OnInit {
 
     this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
 
-    //this.searhRequests();
     this.searhNovedades();
-    this.getRequestStatusList();
+    this.getNovedadStatusList();
     this.getUsersList();
     this.loading = false;
   }
@@ -231,13 +232,11 @@ export class SearchUpdatesDataComponent implements OnInit {
     this.userService.getNovedadListByFilter(payload).subscribe({
       next: (response: BodyResponse<NovedadCalidadDatosDetalle[]>) => {
         if (response.code === 200) {
-          this.novedadList = response.data;
-          console.log(this.novedadList);
-          this.novedadList = response.data.map(item => {
+          this.novedadList = (response.data || []).map(item => {
             const transformedDate = formatDate(item.fecha_hora_registro, 'MM/dd/yyyy', 'en-US');
             return { ...item, filing_date: transformedDate };
           });
-          this.totalRows = Number(response.message);
+          this.totalRows = Number(response.message ?? 0);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -253,11 +252,11 @@ export class SearchUpdatesDataComponent implements OnInit {
   showSuccessMessage(state: string, title: string, message: string) {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
-  getRequestStatusList() {
-    this.userService.getRequestAfiliationStatusList().subscribe({
-      next: (response: BodyResponse<RequestStatusAfiliationList[]>) => {
+  getNovedadStatusList() {
+    this.userService.getNovedadStatusList().subscribe({
+      next: (response: BodyResponse<NovedadStatusList[]>) => {
         if (response.code === 200) {
-          this.statusList = response.data;
+          this.novedadStatusList = response.data;
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -397,6 +396,18 @@ export class SearchUpdatesDataComponent implements OnInit {
   }
   
     
+
+  /** Nombre completo a partir de campos Genesys de la novedad. */
+  getNombreCompletoNovedad(n: NovedadCalidadDatosDetalle): string {
+    if (!n) return '—';
+    const parts = [
+      n.primer_nombre_genesys,
+      n.segundo_nombre_genesys,
+      n.primer_apellido_genesys,
+      n.segundo_apellido_genesys,
+    ].filter(Boolean);
+    return parts.length ? parts.join(' ') : '—';
+  }
 
   redirectDetails(novedad_id: number) {
     console.log(novedad_id);

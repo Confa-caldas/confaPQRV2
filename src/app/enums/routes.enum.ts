@@ -73,6 +73,10 @@ export enum EndPointRoute {
   CATEGORY_LIST_PAGINATION = 'db/pagination/categories',
   REQUEST_STATUS = 'db/request_status',
   REQUEST_STATUS_AFILIATION = 'db_afi/estado_solicitud',
+  NOVEDAD_STATUS_LIST = 'db_afi/estado_novedad',
+  TIPO_DOCUMENTO_PERSONA_LIST = 'db_afi/parametros_tipo_documento_persona',
+  GENERO_LIST = 'db_afi/parametros_genero',
+  ESTADO_CIVIL_LIST = 'db_afi/parametros_estado_civil',
   QUALITY_DIMENSION_LIST = 'db/quality_dimensions',
   CATEGORIES_BY_MODALITY = 'categories/by',
   TIPOLOGIES_BY_CATEGORY = 'tipologies/by/category',
@@ -132,6 +136,7 @@ export enum EndPointRoute {
   REQUEST_INTERNAL_BY_FILTER = 'requests-intern/filter',
   SIMILAR_REQUEST = 'request/get_similar',
   /** Detalle de novedad calidad de datos (por id_novedad o por id_solicitud) */
-  NOVEDAD_CALIDAD_DATOS_DETALLE = 'novedad-calidad-datos-detalle',
-  NOVEDAD_CALIDAD_DATOS_BY_SOLICITUD = 'novedad-calidad-datos-detalle/by-solicitud',
+  NOVEDAD_CALIDAD_DATOS_DETALLE = 'novedad-afiliation/details',
+  /** Actualizar datos de persona trabajador en solicitud de afiliación (CE/PPT) */
+  REQUEST_AFILIATION_UPDATE_PERSONA = 'requests-afiliation/update-persona',
 }

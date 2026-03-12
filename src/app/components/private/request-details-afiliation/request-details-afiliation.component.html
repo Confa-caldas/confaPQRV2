@@ -177,235 +177,311 @@
   <p-tabView>
 
     <!-- ===================== SOLICITUD ===================== -->
-    <p-tabPanel header="Solicitud">
-      <div class="process-container">
-
-        <div class="process-container-row">
-          <div class="process-container-col">
-            <label class="process-container-label">ID solicitud</label>
-            <div class="process-container-text">{{ d.solicitud.id }}</div>
+    <p-tabPanel header="Solicitud" headerStyleClass="p-tabview-nav-link-1 ">
+      <div class="tab-data-view">
+        <h3 class="tab-data-section-title">Datos de la solicitud</h3>
+        <div class="process-container">
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">ID solicitud</label>
+              <div class="process-container-text">{{ d.solicitud.id }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Número de radicado</label>
+              <div class="process-container-text">{{ d.solicitud.numero_radicado }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha solicitud</label>
+              <div class="process-container-text">{{ d.solicitud.fecha_solicitud | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha radicación</label>
+              <div class="process-container-text">{{ d.solicitud.fecha_radicacion | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Transacción</label>
+              <div class="process-container-text">{{ d.solicitud.transaccion || '—' }}</div>
+            </div>
           </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Número de radicado</label>
-            <div class="process-container-text">{{ d.solicitud.numero_radicado }}</div>
+        <h3 class="tab-data-section-title">Estado y gestión</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Estado</label>
+              <div class="process-container-text">{{ currentState || 'Estado #' + d.solicitud.id_estado_solicitud }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Usuario asignado</label>
+              <div class="process-container-text">{{ d.solicitud.usuario_gestion || 'Sin asignar' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Última modificación</label>
+              <div class="process-container-text">{{ (d.solicitud.fecha_modificacion || d.solicitud.fecha_creacion) | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
           </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Fecha solicitud</label>
-            <div class="process-container-text">{{ d.solicitud.fecha_solicitud | date:'yyyy-MM-dd' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Fecha radicación</label>
-            <div class="process-container-text">{{ d.solicitud.fecha_radicacion | date:'yyyy-MM-dd HH:mm' }}</div>
-          </div>
-        </div>
-
-        <div class="process-container-row">
-          <div class="process-container-col">
-            <label class="process-container-label">Transacción</label>
-            <div class="process-container-text">{{ d.solicitud.transaccion }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Estado (ID)</label>
-            <div class="process-container-text">{{ d.solicitud.id_estado_solicitud }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Usuario gestión</label>
-            <div class="process-container-text">{{ d.solicitud.usuario_gestion || '—' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Última modificación</label>
-            <div class="process-container-text">
-              {{ (d.solicitud.fecha_modificacion || d.solicitud.fecha_creacion) | date:'yyyy-MM-dd HH:mm' }}
+        <h3 class="tab-data-section-title">Observaciones</h3>
+          <div class="process-container-row">
+            <div class="process-container-col-description">
+              <label class="process-container-label">Comentarios o notas</label>
+              <div class="process-container-text process-container-text-area" [ngStyle]="{ 'white-space': 'pre-line' }">{{ d.solicitud.observaciones || '—' }}</div>
             </div>
           </div>
         </div>
-
-        <div class="process-container-row">
-          <div class="process-container-col-description">
-            <label class="process-container-label">Observaciones</label>
-            <div class="process-container-text" [ngStyle]="{ 'white-space': 'pre-line' }">
-              {{ d.solicitud.observaciones || '—' }}
-            </div>
-          </div>
-        </div>
-
       </div>
     </p-tabPanel>
 
     <!-- ===================== EMPRESA ===================== -->
-    <p-tabPanel header="Empresa">
-      <div class="process-container">
-
-        <div class="process-container-row">
-          <div class="process-container-col">
-            <label class="process-container-label">ID empresa</label>
-            <div class="process-container-text">{{ d.empresa.id_empresa }}</div>
+    <p-tabPanel header="Empresa" headerStyleClass="p-tabview-nav-link-2">
+      <div class="tab-data-view">
+        <h3 class="tab-data-section-title">Identificación</h3>
+        <div class="process-container">
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">ID empresa</label>
+              <div class="process-container-text">{{ d.empresa.id_empresa }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Documento</label>
+              <div class="process-container-text">{{ d.empresa.tipo_documento }} {{ d.empresa.numero_documento }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Razón social</label>
+              <div class="process-container-text">{{ d.empresa.razon_social || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Nombre comercial</label>
+              <div class="process-container-text">{{ d.empresa.nombre_comercial || '—' }}</div>
+            </div>
           </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Documento</label>
-            <div class="process-container-text">{{ d.empresa.tipo_documento }} {{ d.empresa.numero_documento }}</div>
+        <h3 class="tab-data-section-title">Contacto</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Persona de contacto</label>
+              <div class="process-container-text">{{ d.empresa.contacto || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Representante legal</label>
+              <div class="process-container-text">{{ d.empresa.representante_legal || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Correo electrónico</label>
+              <div class="process-container-text">{{ d.empresa.correo_electronico || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Teléfono</label>
+              <div class="process-container-text">{{ d.empresa.telefono || '—' }}</div>
+            </div>
           </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Razón social</label>
-            <div class="process-container-text">{{ d.empresa.razon_social }}</div>
+        <h3 class="tab-data-section-title">Ubicación</h3>
+          <div class="process-container-row">
+            <div class="process-container-col-description">
+              <label class="process-container-label">Dirección</label>
+              <div class="process-container-text process-container-text-area">{{ d.empresa.direccion || '—' }}</div>
+            </div>
           </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Nombre comercial</label>
-            <div class="process-container-text">{{ d.empresa.nombre_comercial }}</div>
-          </div>
-        </div>
-
-        <div class="process-container-row">
-          <div class="process-container-col">
-            <label class="process-container-label">Contacto</label>
-            <div class="process-container-text">{{ d.empresa.contacto }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Representante legal</label>
-            <div class="process-container-text">{{ d.empresa.representante_legal }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Correo</label>
-            <div class="process-container-text">{{ d.empresa.correo_electronico }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Teléfono</label>
-            <div class="process-container-text">{{ d.empresa.telefono }}</div>
-          </div>
-        </div>
-
-        <div class="process-container-row">
-          <div class="process-container-col-description">
-            <label class="process-container-label">Dirección</label>
-            <div class="process-container-text">{{ d.empresa.direccion }}</div>
-          </div>
-        </div>
-
-        <div class="process-container-row">
-          <div class="process-container-col">
-            <label class="process-container-label">Activa</label>
-            <div class="process-container-text">{{ d.empresa.esta_activa ? 'Sí' : 'No' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Permite masivas</label>
-            <div class="process-container-text">{{ d.empresa.permite_afiliaciones_masivas ? 'Sí' : 'No' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Estado afiliación</label>
-            <div class="process-container-text">{{ d.empresa.estado_afiliacion || '—' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Motivo desafiliación</label>
-            <div class="process-container-text">{{ d.empresa.motivo_desafiliacion || '—' }}</div>
+        <h3 class="tab-data-section-title">Estado de la empresa</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Activa</label>
+              <div class="process-container-text">{{ d.empresa.esta_activa ? 'Sí' : 'No' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Permite afiliaciones masivas</label>
+              <div class="process-container-text">{{ d.empresa.permite_afiliaciones_masivas ? 'Sí' : 'No' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Estado afiliación</label>
+              <div class="process-container-text">{{ d.empresa.estado_afiliacion || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Motivo desafiliación</label>
+              <div class="process-container-text">{{ d.empresa.motivo_desafiliacion || '—' }}</div>
+            </div>
           </div>
         </div>
-
       </div>
     </p-tabPanel>
 
     <!-- ===================== TRABAJADOR ===================== -->
-    <p-tabPanel header="Trabajador">
-      <div class="process-container">
-
-        <div class="process-container-row">
-          <div class="process-container-col">
-            <label class="process-container-label">ID persona</label>
-            <div class="process-container-text">{{ d.trabajador.persona.id }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Documento</label>
-            <div class="process-container-text">
-              {{ d.trabajador.persona.tipo_documento }} {{ d.trabajador.persona.numero_documento }}
+    <p-tabPanel header="Trabajador" headerStyleClass="p-tabview-nav-link-3">
+      <div class="tab-data-view">
+        <h3 class="tab-data-section-title">Datos del afiliado</h3>
+        <div class="process-container">
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">ID persona</label>
+              <div class="process-container-text">{{ d.trabajador.persona.id }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Tipo de documento</label>
+              <p-dropdown
+                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                [options]="opcionesTipoDocumento"
+                [(ngModel)]="d.trabajador.persona.tipo_documento"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione"
+                appendTo="body"
+                [style]="{ width: '100%' }"
+                styleClass="data-field-dropdown" />
+              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.tipo_documento || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Número de documento</label>
+              <input
+                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.numero_documento"
+                placeholder="Número de documento" />
+              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.numero_documento || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Primer nombre</label>
+              <input
+                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.primer_nombre"
+                placeholder="Primer nombre" />
+              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.primer_nombre || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Segundo nombre</label>
+              <input
+                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.segundo_nombre"
+                placeholder="Segundo nombre" />
+              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.segundo_nombre || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Primer apellido</label>
+              <input
+                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.primer_apellido"
+                placeholder="Primer apellido" />
+              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.primer_apellido || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Segundo apellido</label>
+              <input
+                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.segundo_apellido"
+                placeholder="Segundo apellido" />
+              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.segundo_apellido || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha expedición del documento</label>
+              <input
+                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                type="date"
+                class="data-field-input"
+                [ngModel]="d.trabajador.persona.fecha_expedicion_doc"
+                (ngModelChange)="d.trabajador.persona.fecha_expedicion_doc = $event || null" />
+              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.fecha_expedicion_doc || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha de nacimiento</label>
+              <input
+                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                type="date"
+                class="data-field-input"
+                [ngModel]="d.trabajador.persona.fecha_nacimiento"
+                (ngModelChange)="d.trabajador.persona.fecha_nacimiento = $event || null" />
+              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.fecha_nacimiento || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Género</label>
+              <p-dropdown
+                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                [options]="opcionesGenero"
+                [(ngModel)]="d.trabajador.persona.genero"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione"
+                appendTo="body"
+                [style]="{ width: '100%' }"
+                styleClass="data-field-dropdown" />
+              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.genero || '—' }}</div>
+            </div>
+            <div class="process-container-col" [class.estado-civil-editable-col]="mostrarEstadoCivilEditable">
+              <label class="process-container-label">Estado civil</label>
+              <ng-container *ngIf="mostrarEstadoCivilEditable; else estadoCivilSoloLectura">
+                <p-message
+                  *ngIf="tieneAlertaEstadoCivilSolteroConConyuge"
+                  severity="warn"
+                  styleClass="estado-civil-alerta"
+                  [text]="'El afiliado figura como Soltero pero tiene un beneficiario con parentesco Cónyuge. Posiblemente el campo deba actualizarse.'" />
+                <p-dropdown
+                  [options]="opcionesEstadoCivil"
+                  [(ngModel)]="d.trabajador.trabajador.estado_civil"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccione estado civil"
+                  appendTo="body"
+                  [style]="{ width: '100%' }"
+                  styleClass="estado-civil-dropdown" />
+              </ng-container>
+              <ng-template #estadoCivilSoloLectura>
+                <div class="process-container-text">{{ d.trabajador.trabajador.estado_civil || '—' }}</div>
+              </ng-template>
             </div>
           </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Nombre</label>
-            <div class="process-container-text">
-              {{ d.trabajador.persona.primer_nombre }}
-              {{ d.trabajador.persona.segundo_nombre }}
-              {{ d.trabajador.persona.primer_apellido }}
-              {{ d.trabajador.persona.segundo_apellido }}
+          <div class="process-container-row tab-data-save-row" *ngIf="puedeEditarDatosTrabajadorCE_PPT || mostrarEstadoCivilEditable">
+            <div class="process-container-col">
+              <p-button
+                label="Guardar cambios"
+                icon="pi pi-check"
+                (onClick)="guardarDatosTrabajadorCE_PPT()"
+                [loading]="guardandoDatosTrabajador"
+                [disabled]="guardandoDatosTrabajador || !hayCambiosEnDatosTrabajador"
+                severity="primary"
+                [style]="{ 'border-radius': '6px' }" />
             </div>
           </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Género</label>
-            <div class="process-container-text">{{ d.trabajador.persona.genero || '—' }}</div>
+        <h3 class="tab-data-section-title">Contacto y datos personales</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Correo electrónico</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.correo_electronico || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Teléfono</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.telefono || '—' }}</div>
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Datos laborales</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Zona</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.zona || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Salario mensual</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.salario_mensual | number:'1.0-0' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha ingreso a la empresa</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.fecha_ingreso_empresa || '—' }}</div>
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Domicilio</h3>
+          <div class="process-container-row">
+            <div class="process-container-col-description">
+              <label class="process-container-label">Dirección</label>
+              <div class="process-container-text process-container-text-area">{{ d.trabajador.persona.direccion || '—' }}</div>
+            </div>
           </div>
         </div>
 
-        <div class="process-container-row">
-          <div class="process-container-col">
-            <label class="process-container-label">Fecha nacimiento</label>
-            <div class="process-container-text">{{ d.trabajador.persona.fecha_nacimiento || '—' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Fecha expedición doc</label>
-            <div class="process-container-text">{{ d.trabajador.persona.fecha_expedicion_doc || '—' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Correo</label>
-            <div class="process-container-text">{{ d.trabajador.trabajador.correo_electronico || '—' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Teléfono</label>
-            <div class="process-container-text">{{ d.trabajador.trabajador.telefono || '—' }}</div>
-          </div>
-        </div>
-
-        <div class="process-container-row">
-          <div class="process-container-col">
-            <label class="process-container-label">Estado civil</label>
-            <div class="process-container-text">{{ d.trabajador.trabajador.estado_civil || '—' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Zona</label>
-            <div class="process-container-text">{{ d.trabajador.trabajador.zona || '—' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Salario mensual</label>
-            <div class="process-container-text">{{ d.trabajador.trabajador.salario_mensual | number:'1.0-0' }}</div>
-          </div>
-
-          <div class="process-container-col">
-            <label class="process-container-label">Fecha ingreso empresa</label>
-            <div class="process-container-text">{{ d.trabajador.trabajador.fecha_ingreso_empresa || '—' }}</div>
-          </div>
-        </div>
-
-        <div class="process-container-row">
-          <div class="process-container-col-description">
-            <label class="process-container-label">Dirección</label>
-            <div class="process-container-text">{{ d.trabajador.persona.direccion || '—' }}</div>
-          </div>
-        </div>
-
-        <!-- Archivos adjuntos del trabajador -->
+        <h3 class="tab-data-section-title">Archivos adjuntos del trabajador</h3>
         <div class="adjuntos-section adjuntos-trabajador-block" *ngIf="getAdjuntosTrabajador().length > 0">
           <p class="adjuntos-block-intro">Los siguientes archivos corresponden al <strong>trabajador</strong> de la solicitud.</p>
-          <h4 class="adjuntos-section-title">Archivos adjuntos del trabajador</h4>
           <div class="adjuntos-table-wrapper">
             <p-table
               [value]="getAdjuntosTrabajador()"
@@ -468,63 +544,160 @@
     </p-tabPanel>
 
     <!-- ===================== BENEFICIARIOS ===================== -->
-    <p-tabPanel header="Beneficiarios">
-      <div class="process-container">
-
+    <p-tabPanel header="Beneficiarios" headerStyleClass="p-tabview-nav-link-4">
+      <div class="tab-data-view">
         <ng-container *ngIf="d.beneficiarios?.length; else noBenef">
-
           <div class="benef-list">
             <div class="benef-card" *ngFor="let b of d.beneficiarios; let iBenef = index">
               <div class="benef-card-header">
                 <span class="benef-card-title">Beneficiario {{ iBenef + 1 }}: {{ getNombreBeneficiario(b) }}</span>
                 <span class="benef-card-meta">{{ b.persona.tipo_documento }} {{ b.persona.numero_documento }} · {{ b.beneficiario.parentesco || '—' }}</span>
               </div>
-              <div class="process-container-row">
-                <div class="process-container-col">
-                  <label class="process-container-label">Documento</label>
-                  <div class="process-container-text">{{ b.persona.tipo_documento }} {{ b.persona.numero_documento }}</div>
-                </div>
-
-                <div class="process-container-col">
-                  <label class="process-container-label">Nombre</label>
-                  <div class="process-container-text">
-                    {{ b.persona.primer_nombre }}
-                    {{ b.persona.segundo_nombre }}
-                    {{ b.persona.primer_apellido }}
-                    {{ b.persona.segundo_apellido }}
+              <div class="benef-card-body">
+                <h4 class="tab-data-section-subtitle">Datos del beneficiario</h4>
+                <div class="process-container">
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">Parentesco</label>
+                      <p-dropdown
+                        *ngIf="puedeEditarBeneficiarioCE_PPT(b)"
+                        [options]="getOpcionesParentescoBeneficiario(b)"
+                        [(ngModel)]="b.beneficiario.parentesco"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!puedeEditarBeneficiarioCE_PPT(b)" class="process-container-text">{{ b.beneficiario.parentesco || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Tipo de documento</label>
+                      <p-dropdown
+                        *ngIf="puedeEditarBeneficiarioCE_PPT(b)"
+                        [options]="opcionesTipoDocumento"
+                        [(ngModel)]="b.persona.tipo_documento"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!puedeEditarBeneficiarioCE_PPT(b)" class="process-container-text">{{ b.persona.tipo_documento || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Número de documento</label>
+                      <input
+                        *ngIf="puedeEditarBeneficiarioCE_PPT(b)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.numero_documento"
+                        placeholder="Número de documento" />
+                      <div *ngIf="!puedeEditarBeneficiarioCE_PPT(b)" class="process-container-text">{{ b.persona.numero_documento || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Primer nombre</label>
+                      <input
+                        *ngIf="puedeEditarBeneficiarioCE_PPT(b)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.primer_nombre"
+                        placeholder="Primer nombre" />
+                      <div *ngIf="!puedeEditarBeneficiarioCE_PPT(b)" class="process-container-text">{{ b.persona.primer_nombre || '—' }}</div>
+                    </div>
                   </div>
-                </div>
-
-                <div class="process-container-col">
-                  <label class="process-container-label">Parentesco</label>
-                  <div class="process-container-text">{{ b.beneficiario.parentesco || '—' }}</div>
-                </div>
-
-                <div class="process-container-col">
-                  <label class="process-container-label">Nuevo beneficiario</label>
-                  <div class="process-container-text">{{ b.beneficiario.nuevo_beneficiario || '—' }}</div>
-                </div>
-              </div>
-
-              <div class="process-container-row">
-                <div class="process-container-col">
-                  <label class="process-container-label">Dirección corresponde trabajador</label>
-                  <div class="process-container-text">{{ b.beneficiario.direccion_corresponde_trabajador || '—' }}</div>
-                </div>
-
-                <div class="process-container-col">
-                  <label class="process-container-label">Cónyuge labora</label>
-                  <div class="process-container-text">{{ b.beneficiario.conyuge_labora || '—' }}</div>
-                </div>
-
-                <div class="process-container-col">
-                  <label class="process-container-label">Persona discapacidad</label>
-                  <div class="process-container-text">{{ b.beneficiario.persona_discapacidad || '—' }}</div>
-                </div>
-
-                <div class="process-container-col">
-                  <label class="process-container-label">Nivel educativo</label>
-                  <div class="process-container-text">{{ b.beneficiario.nivel_educativo || '—' }}</div>
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">Segundo nombre</label>
+                      <div class="process-container-text">{{ b.persona.segundo_nombre || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Primer apellido</label>
+                      <div class="process-container-text">{{ b.persona.primer_apellido || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Segundo apellido</label>
+                      <div class="process-container-text">{{ b.persona.segundo_apellido || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha de nacimiento (dd/mm/aaaa)</label>
+                      <div class="process-container-text">{{ formatFechaDDMMYYYY(b.persona.fecha_nacimiento) }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Género</label>
+                      <div class="process-container-text">{{ b.persona.genero || '—' }}</div>
+                    </div>
+                  </div>
+                  <!-- Dirección beneficiario: Si/No si es misma del trabajador; si No, campo requerido -->
+                  <div class="process-container-row" *ngIf="puedeEditarBeneficiarioCE_PPT(b)">
+                    <div class="process-container-col process-container-col-description">
+                      <label class="process-container-label">La dirección corresponde a la misma del trabajador</label>
+                      <p-dropdown
+                        [options]="opcionesDireccionTrabajador"
+                        [(ngModel)]="b.beneficiario.direccion_corresponde_trabajador"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%', maxWidth: '200px' }"
+                        styleClass="data-field-dropdown" />
+                    </div>
+                  </div>
+                  <div class="process-container-row" *ngIf="puedeEditarBeneficiarioCE_PPT(b) && direccionCorrespondeTrabajadorEsSi(b)">
+                    <div class="process-container-col process-container-col-description">
+                      <label class="process-container-label">Dirección (del trabajador)</label>
+                      <div class="process-container-text">{{ getDireccionTrabajador() || '—' }}</div>
+                    </div>
+                  </div>
+                  <div class="process-container-row" *ngIf="puedeEditarBeneficiarioCE_PPT(b) && direccionCorrespondeTrabajadorEsNo(b)">
+                    <div class="process-container-col process-container-col-description">
+                      <label class="process-container-label">Dirección del beneficiario <span class="required-asterisk">*</span></label>
+                      <input
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.direccion"
+                        placeholder="Ingrese la dirección"
+                        [class.ng-invalid]="!direccionBeneficiarioRequeridaValida(b)" />
+                      <small *ngIf="!direccionBeneficiarioRequeridaValida(b)" class="error-message">La dirección es requerida cuando no corresponde a la del trabajador.</small>
+                    </div>
+                  </div>
+                  <div class="process-container-row tab-data-save-row" *ngIf="puedeEditarBeneficiarioCE_PPT(b)">
+                    <div class="process-container-col">
+                      <p-button
+                        label="Guardar cambios"
+                        icon="pi pi-check"
+                        (onClick)="guardarBeneficiario(b, iBenef)"
+                        [loading]="guardandoBeneficiarioIndex === iBenef"
+                        [disabled]="guardandoBeneficiarioIndex === iBenef || !hayCambiosBeneficiario(iBenef) || !direccionBeneficiarioRequeridaValida(b)"
+                        severity="primary"
+                        [style]="{ 'border-radius': '6px' }" />
+                    </div>
+                  </div>
+                  <!-- Campos solo lectura cuando no es CE/PPT -->
+                  <ng-container *ngIf="!puedeEditarBeneficiarioCE_PPT(b)">
+                    <div class="process-container-row">
+                      <div class="process-container-col">
+                        <label class="process-container-label">Nuevo beneficiario</label>
+                        <div class="process-container-text">{{ b.beneficiario.nuevo_beneficiario || '—' }}</div>
+                      </div>
+                      <div class="process-container-col">
+                        <label class="process-container-label">Dirección corresponde al trabajador</label>
+                        <div class="process-container-text">{{ b.beneficiario.direccion_corresponde_trabajador || '—' }}</div>
+                      </div>
+                      <div class="process-container-col">
+                        <label class="process-container-label">Cónyuge labora</label>
+                        <div class="process-container-text">{{ b.beneficiario.conyuge_labora || '—' }}</div>
+                      </div>
+                      <div class="process-container-col">
+                        <label class="process-container-label">Persona en situación de discapacidad</label>
+                        <div class="process-container-text">{{ b.beneficiario.persona_discapacidad || '—' }}</div>
+                      </div>
+                      <div class="process-container-col">
+                        <label class="process-container-label">Nivel educativo</label>
+                        <div class="process-container-text">{{ b.beneficiario.nivel_educativo || '—' }}</div>
+                      </div>
+                    </div>
+                  </ng-container>
                 </div>
               </div>
 

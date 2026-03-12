@@ -74,6 +74,10 @@ import {
   NovedadCalidadDatosDetalle,
   FilterNovedad,
   NovedadList,
+  NovedadStatusList,
+  ParametroTipoDocumentoPersona,
+  ParametroEstadoCivil,
+  ParametroGenero,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -128,17 +132,53 @@ export class Users {
     );
   }
 
-  /** Obtiene el detalle de una novedad de calidad de datos por id_novedad. */
-  getNovedadCalidadDatosDetalle(idNovedad: number) {
-    return this.http.get<BodyResponse<NovedadCalidadDatosDetalle>>(
-      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_DETALLE}/${idNovedad}`
+  /** Actualiza datos de la persona trabajador en solicitud de afiliación (CE/PPT) y/o estado civil (alerta Soltero/Cónyuge). */
+  updatePersonaTrabajadorSolicitud(payload: {
+    id_persona: number;
+    id_solicitud?: number;
+    tipo_documento: string;
+    numero_documento: string;
+    primer_apellido: string;
+    segundo_apellido: string | null;
+    primer_nombre: string;
+    segundo_nombre: string | null;
+    fecha_expedicion_doc: string | null;
+    fecha_nacimiento: string | null;
+    genero: string | null;
+    estado_civil?: string | null;
+  }) {
+    return this.http.put<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_UPDATE_PERSONA}`,
+      payload
     );
   }
 
-  /** Obtiene el detalle de una novedad de calidad de datos por id_solicitud (ej. request_id del listado). */
-  getNovedadCalidadDatosDetalleBySolicitud(idSolicitud: number) {
+  /** Actualiza datos de la persona beneficiario (CE/PPT): persona + parentesco + dirección. */
+  updatePersonaBeneficiarioSolicitud(payload: {
+    id_persona: number;
+    id_solicitud?: number;
+    tipo_documento: string;
+    numero_documento: string;
+    primer_apellido: string;
+    segundo_apellido: string | null;
+    primer_nombre: string;
+    segundo_nombre: string | null;
+    fecha_nacimiento: string | null;
+    genero: string | null;
+    parentesco?: string | null;
+    direccion_corresponde_trabajador?: string | null;
+    direccion?: string | null;
+  }) {
+    return this.http.put<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_UPDATE_PERSONA}`,
+      payload
+    );
+  }
+
+  /** Obtiene el detalle de una novedad de calidad de datos por id_novedad. */
+  getNovedadCalidadDatosDetalleById(idNovedad: number) {
     return this.http.get<BodyResponse<NovedadCalidadDatosDetalle>>(
-      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_BY_SOLICITUD}/${idSolicitud}`
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_DETALLE}/${idNovedad}`
     );
   }
 
@@ -403,6 +443,33 @@ export class Users {
   getRequestAfiliationStatusList() {
     return this.http.get<BodyResponse<RequestStatusAfiliationList[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_STATUS_AFILIATION}`
+    );
+  }
+
+  /** Lista de tipos de documento de persona (tabla parametros_tipo_documento_persona, solo activos). */
+  getTipoDocumentoPersonaList() {
+    return this.http.get<BodyResponse<ParametroTipoDocumentoPersona[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.TIPO_DOCUMENTO_PERSONA_LIST}`
+    );
+  }
+
+  /** Lista de géneros (RETURNS TABLE(id, genero, esta_activo)). */
+  getGeneroList() {
+    return this.http.get<BodyResponse<ParametroGenero[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GENERO_LIST}`
+    );
+  }
+
+  /** Lista de estados civiles (RETURNS TABLE(id, estado_civil, esta_activo)). */
+  getEstadoCivilList() {
+    return this.http.get<BodyResponse<ParametroEstadoCivil[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ESTADO_CIVIL_LIST}`
+    );
+  }
+
+  getNovedadStatusList() {
+    return this.http.get<BodyResponse<NovedadStatusList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_STATUS_LIST}`
     );
   }
   createNotification(payload: NotificationList) {

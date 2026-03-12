@@ -187,6 +187,52 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     { label: 'No', value: 'no' },
     { label: 'No aplica', value: 'no_aplica' },
   ];
+  /** Opciones para Estado civil (cargadas desde parametros_estado_civil). */
+  opcionesEstadoCivil: { label: string; value: string }[] = [];
+  /** Opciones para tipo de documento (cargadas desde parametros_tipo_documento_persona). */
+  opcionesTipoDocumento: { label: string; value: string }[] = [];
+  /** Opciones para género (cargadas desde parametros_genero). */
+  opcionesGenero: { label: string; value: string }[] = [];
+  guardandoDatosTrabajador = false;
+  /** Opciones para Parentesco (beneficiarios CE/PPT). */
+  opcionesParentesco: { label: string; value: string }[] = [
+    { label: 'Cónyuge', value: 'Cónyuge' },
+    { label: 'Hijo(a)', value: 'Hijo(a)' },
+    { label: 'Hija', value: 'Hija' },
+    { label: 'Padre', value: 'Padre' },
+    { label: 'Madre', value: 'Madre' },
+    { label: 'Hermano(a)', value: 'Hermano(a)' },
+    { label: 'Otro', value: 'Otro' },
+  ];
+  /** Opciones para "La dirección corresponde a la misma del trabajador" (Si/No). */
+  opcionesDireccionTrabajador: { label: string; value: string }[] = [
+    { label: 'Sí', value: 'Si' },
+    { label: 'No', value: 'No' },
+  ];
+  /** Índice del beneficiario cuyo guardado está en curso (null si ninguno). */
+  guardandoBeneficiarioIndex: number | null = null;
+  /** Snapshots de datos editables por beneficiario (índice) para detectar cambios. */
+  private snapshotBeneficiarios: Array<{
+    parentesco: string | null;
+    tipo_documento: string;
+    numero_documento: string;
+    primer_nombre: string;
+    direccion_corresponde_trabajador: string | null;
+    direccion: string | null;
+  }> = [];
+  /** Snapshot de los datos editables del afiliado al cargar/guardar; se usa para detectar si hay cambios. */
+  private snapshotDatosTrabajador: {
+    tipo_documento: string;
+    numero_documento: string;
+    primer_apellido: string;
+    segundo_apellido: string | null;
+    primer_nombre: string;
+    segundo_nombre: string | null;
+    fecha_expedicion_doc: string | null;
+    fecha_nacimiento: string | null;
+    genero: string | null;
+    estado_civil: string | null;
+  } | null = null;
   trabajadorAdjuntosEstado: AdjuntoConValoracion[] = [];
   beneficiariosAdjuntosEstado: AdjuntoConValoracion[][] = [];
 
@@ -440,6 +486,90 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
 loading = false;
 
+  /** Carga los tipos de documento desde parametros_tipo_documento_persona (solo activos). Asegura que el valor actual del afiliado esté en opciones para que se muestre. */
+  loadTiposDocumentoPersona(): void {
+    const persona = this.afiliationRequestDetails?.trabajador?.persona;
+    const valorActual = persona?.tipo_documento;
+    const asegurarValorActual = (opciones: { label: string; value: string }[]) => {
+      if (valorActual && typeof valorActual === 'string' && valorActual.trim() && !opciones.some((o) => o.value === valorActual)) {
+        return [{ label: valorActual.trim(), value: valorActual.trim() }, ...opciones];
+      }
+      return opciones;
+    };
+    this.userService.getTipoDocumentoPersonaList().subscribe({
+      next: (res) => {
+        if (res?.code === 200 && Array.isArray(res.data)) {
+          const activos = res.data.filter((t) => t.esta_activo !== false);
+          let opciones = activos.map((t) => ({
+            label: t.tipo_documento || '',
+            value: t.tipo_documento_genesys ?? t.tipo_documento ?? '',
+          })).filter((o) => o.value !== '' || o.label !== '');
+          let opts = asegurarValorActual(opciones);
+          (this.afiliationRequestDetails?.beneficiarios ?? []).forEach((ben) => {
+            const t = ben.persona?.tipo_documento;
+            if (t && typeof t === 'string' && t.trim() && !opts.some((o) => o.value === t)) {
+              opts = [{ label: t.trim(), value: t.trim() }, ...opts];
+            }
+          });
+          this.opcionesTipoDocumento = opts;
+        } else {
+          this.opcionesTipoDocumento = valorActual ? [{ label: String(valorActual).trim(), value: String(valorActual).trim() }] : [];
+        }
+      },
+      error: () => {
+        this.opcionesTipoDocumento = valorActual ? [{ label: String(valorActual).trim(), value: String(valorActual).trim() }] : [];
+      },
+    });
+  }
+
+  /** Carga géneros (solo activos). Incluye el valor actual si no coincide con ningún value para que se muestre. */
+  loadGeneros(): void {
+    const valorActual = this.afiliationRequestDetails?.trabajador?.persona?.genero;
+    const asegurar = (opciones: { label: string; value: string }[]) => {
+      if (valorActual && typeof valorActual === 'string' && valorActual.trim() && !opciones.some((o) => o.value === valorActual)) {
+        return [{ label: valorActual.trim(), value: valorActual.trim() }, ...opciones];
+      }
+      return opciones;
+    };
+    this.userService.getGeneroList().subscribe({
+      next: (res) => {
+        if (res?.code === 200 && Array.isArray(res.data)) {
+          let opciones = res.data.filter((t) => t.esta_activo !== false).map((t) => ({ label: t.genero ?? '', value: t.genero ?? '' })).filter((o) => o.value !== '' || o.label !== '');
+          this.opcionesGenero = asegurar(opciones);
+        } else {
+          this.opcionesGenero = valorActual ? [{ label: String(valorActual).trim(), value: String(valorActual).trim() }] : [];
+        }
+      },
+      error: () => {
+        this.opcionesGenero = valorActual ? [{ label: String(valorActual).trim(), value: String(valorActual).trim() }] : [];
+      },
+    });
+  }
+
+  /** Carga estados civiles (solo activos). Incluye el valor actual si no coincide con ningún value para que se muestre. */
+  loadEstadoCivil(): void {
+    const valorActual = this.afiliationRequestDetails?.trabajador?.trabajador?.estado_civil;
+    const asegurar = (opciones: { label: string; value: string }[]) => {
+      if (valorActual && typeof valorActual === 'string' && valorActual.trim() && !opciones.some((o) => o.value === valorActual)) {
+        return [{ label: valorActual.trim(), value: valorActual.trim() }, ...opciones];
+      }
+      return opciones;
+    };
+    this.userService.getEstadoCivilList().subscribe({
+      next: (res) => {
+        if (res?.code === 200 && Array.isArray(res.data)) {
+          let opciones = res.data.filter((t) => t.esta_activo !== false).map((t) => ({ label: t.estado_civil ?? '', value: t.estado_civil ?? '' })).filter((o) => o.value !== '' || o.label !== '');
+          this.opcionesEstadoCivil = asegurar(opciones);
+        } else {
+          this.opcionesEstadoCivil = valorActual ? [{ label: String(valorActual).trim(), value: String(valorActual).trim() }] : [];
+        }
+      },
+      error: () => {
+        this.opcionesEstadoCivil = valorActual ? [{ label: String(valorActual).trim(), value: String(valorActual).trim() }] : [];
+      },
+    });
+  }
+
 getRequestDetails(request_details: number) {
   this.loading = true;
 
@@ -453,7 +583,12 @@ getRequestDetails(request_details: number) {
       }
 
       this.afiliationRequestDetails = response.data;
+      this.guardarSnapshotDatosTrabajador();
+      this.guardarSnapshotBeneficiarios();
       this.initAdjuntosValoracion();
+      this.loadTiposDocumentoPersona();
+      this.loadGeneros();
+      this.loadEstadoCivil();
     },
     error: (err) => {
       this.loading = false;
@@ -504,6 +639,240 @@ getRequestDetails(request_details: number) {
       .trim() || 'Beneficiario';
   }
 
+  /** Opciones de parentesco para un beneficiario; incluye el valor actual si no está en la lista. */
+  getOpcionesParentescoBeneficiario(b: BeneficiarioBundle): { label: string; value: string }[] {
+    const actual = (b?.beneficiario?.parentesco ?? '').toString().trim();
+    if (!actual) return this.opcionesParentesco;
+    if (this.opcionesParentesco.some((o) => o.value === actual || o.label === actual)) return this.opcionesParentesco;
+    return [{ label: actual, value: actual }, ...this.opcionesParentesco];
+  }
+
+  /** True si el beneficiario tiene tipo de documento CE o PPT; en ese caso se permiten editar parentesco, tipo doc, número doc, primer nombre y dirección. */
+  puedeEditarBeneficiarioCE_PPT(b: BeneficiarioBundle): boolean {
+    const tipo = (b?.persona?.tipo_documento ?? '').toString().trim().toUpperCase();
+    return tipo === 'CE' || tipo === 'PPT';
+  }
+
+  /** Dirección del trabajador (para mostrar cuando el beneficiario indica que usa la misma). */
+  getDireccionTrabajador(): string {
+    const d = this.afiliationRequestDetails;
+    const dir = d?.trabajador?.persona?.direccion;
+    return dir != null ? String(dir).trim() : '';
+  }
+
+  /** Formatea fecha para mostrar como dd/mm/yyyy. */
+  formatFechaDDMMYYYY(value: string | Date | null | undefined): string {
+    if (value == null) return '—';
+    const d = typeof value === 'string' ? new Date(value) : value;
+    if (isNaN(d.getTime())) return '—';
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  /** Guarda snapshots de los datos editables de cada beneficiario para detectar cambios. */
+  guardarSnapshotBeneficiarios(): void {
+    const list = this.afiliationRequestDetails?.beneficiarios ?? [];
+    this.snapshotBeneficiarios = list.map((b) => ({
+      parentesco: b.beneficiario?.parentesco != null ? String(b.beneficiario.parentesco).trim() || null : null,
+      tipo_documento: (b.persona?.tipo_documento ?? '').toString().trim(),
+      numero_documento: (b.persona?.numero_documento ?? '').toString().trim(),
+      primer_nombre: (b.persona?.primer_nombre ?? '').toString().trim(),
+      direccion_corresponde_trabajador: b.beneficiario?.direccion_corresponde_trabajador != null ? String(b.beneficiario.direccion_corresponde_trabajador).trim() || null : null,
+      direccion: b.persona?.direccion != null ? String(b.persona.direccion).trim() || null : null,
+    }));
+  }
+
+  /** True si el beneficiario en el índice dado tiene cambios respecto a su snapshot (solo si es CE/PPT). */
+  hayCambiosBeneficiario(index: number): boolean {
+    const list = this.afiliationRequestDetails?.beneficiarios ?? [];
+    const b = list[index];
+    if (!b || !this.puedeEditarBeneficiarioCE_PPT(b)) return false;
+    const snap = this.snapshotBeneficiarios[index];
+    if (!snap) return false;
+    const p = b.persona;
+    const ben = b.beneficiario;
+    if ((ben?.parentesco ?? '').toString().trim() !== (snap.parentesco ?? '')) return true;
+    if ((p?.tipo_documento ?? '').toString().trim() !== snap.tipo_documento) return true;
+    if ((p?.numero_documento ?? '').toString().trim() !== snap.numero_documento) return true;
+    if ((p?.primer_nombre ?? '').toString().trim() !== snap.primer_nombre) return true;
+    const dirTrab = (ben?.direccion_corresponde_trabajador ?? '').toString().trim();
+    if (dirTrab !== (snap.direccion_corresponde_trabajador ?? '')) return true;
+    const dir = (p?.direccion ?? '').toString().trim();
+    if (dir !== (snap.direccion ?? '')) return true;
+    return false;
+  }
+
+  /** Valida dirección beneficiario CE/PPT: debe elegir Si/No; si elige No, la dirección es requerida. */
+  direccionBeneficiarioRequeridaValida(b: BeneficiarioBundle): boolean {
+    if (!this.puedeEditarBeneficiarioCE_PPT(b)) return true;
+    const ben = b?.beneficiario;
+    const valor = (ben?.direccion_corresponde_trabajador ?? '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (valor !== 'si' && valor !== 'no') return false;
+    if (valor === 'no') {
+      const dir = (b?.persona?.direccion ?? '').toString().trim();
+      return dir.length > 0;
+    }
+    return true;
+  }
+
+  /** True si el beneficiario tiene "dirección corresponde al trabajador" = Sí. */
+  direccionCorrespondeTrabajadorEsSi(b: BeneficiarioBundle): boolean {
+    const v = (b?.beneficiario?.direccion_corresponde_trabajador ?? '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return v === 'si';
+  }
+
+  /** True si el beneficiario tiene "dirección corresponde al trabajador" = No. */
+  direccionCorrespondeTrabajadorEsNo(b: BeneficiarioBundle): boolean {
+    const v = (b?.beneficiario?.direccion_corresponde_trabajador ?? '').toString().trim().toLowerCase();
+    return v === 'no';
+  }
+
+  /** Guarda los cambios del beneficiario (solo cuando tipo doc CE/PPT). */
+  guardarBeneficiario(b: BeneficiarioBundle, index: number): void {
+    if (!this.puedeEditarBeneficiarioCE_PPT(b)) return;
+    const ben = b.beneficiario;
+    const p = b.persona;
+    if (!p) return;
+    const dirTrab = (ben?.direccion_corresponde_trabajador ?? '').toString().trim();
+    const dirTrabNorm = dirTrab.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (dirTrabNorm === 'no') {
+      const dir = (p.direccion ?? '').toString().trim();
+      if (!dir) {
+        this.messageService.add({ severity: 'warn', summary: 'Campo requerido', detail: 'Cuando la dirección no corresponde a la del trabajador, debe ingresar la dirección del beneficiario.' });
+        return;
+      }
+    }
+    const d = this.afiliationRequestDetails;
+    if (!d?.solicitud?.id) return;
+    this.guardandoBeneficiarioIndex = index;
+    const payload = {
+      id_persona: p.id,
+      id_solicitud: d.solicitud.id,
+      tipo_documento: (p.tipo_documento ?? '').toString().trim(),
+      numero_documento: (p.numero_documento ?? '').toString().trim(),
+      primer_apellido: (p.primer_apellido ?? '').toString().trim(),
+      segundo_apellido: p.segundo_apellido != null ? String(p.segundo_apellido).trim() || null : null,
+      primer_nombre: (p.primer_nombre ?? '').toString().trim(),
+      segundo_nombre: p.segundo_nombre != null ? String(p.segundo_nombre).trim() || null : null,
+      fecha_nacimiento: p.fecha_nacimiento ?? null,
+      genero: p.genero ?? null,
+      parentesco: ben?.parentesco ?? null,
+      direccion_corresponde_trabajador: dirTrab || null,
+      direccion: dirTrabNorm === 'si' ? (this.getDireccionTrabajador() || null) : (p.direccion ?? null),
+    };
+    this.userService.updatePersonaBeneficiarioSolicitud(payload).subscribe({
+      next: (res) => {
+        this.guardandoBeneficiarioIndex = null;
+        if (res?.code === 200) {
+          this.guardarSnapshotBeneficiarios();
+          this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Los datos del beneficiario se actualizaron correctamente.' });
+        } else {
+          this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: res?.message || 'No se pudo actualizar.' });
+        }
+      },
+      error: () => {
+        this.guardandoBeneficiarioIndex = null;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar los cambios del beneficiario.' });
+      },
+    });
+  }
+
+  /**
+   * True si el trabajador tiene tipo de documento CE o PPT; en ese caso se permiten editar
+   * tipo documento, número documento, nombres, apellidos, fechas y género, y se muestra el botón Guardar cambios.
+   */
+  get puedeEditarDatosTrabajadorCE_PPT(): boolean {
+    const tipo = (this.afiliationRequestDetails?.trabajador?.persona?.tipo_documento ?? '').toString().trim().toUpperCase();
+    return tipo === 'CE' || tipo === 'PPT';
+  }
+
+  /** True si existe al menos un beneficiario con parentesco "Cónyuge". El campo Estado civil queda editable para poder cambiar la opción. */
+  get mostrarEstadoCivilEditable(): boolean {
+    const d = this.afiliationRequestDetails;
+    if (!d?.beneficiarios?.length) return false;
+    const parentescoConyuge = (p: string | null | undefined) => {
+      if (p == null) return false;
+      const n = p.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return n === 'conyuge' || n.includes('conyuge');
+    };
+    return d.beneficiarios.some((b) => parentescoConyuge(b.beneficiario?.parentesco));
+  }
+
+  /** True solo cuando el estado civil actual es "Soltero(a)" Y hay beneficiario Cónyuge. Solo para mostrar el mensaje de alerta. */
+  get tieneAlertaEstadoCivilSolteroConConyuge(): boolean {
+    const d = this.afiliationRequestDetails;
+    if (!d?.trabajador?.trabajador || !this.mostrarEstadoCivilEditable) return false;
+    const estadoCivil = (d.trabajador.trabajador.estado_civil ?? '').toString().trim();
+    return estadoCivil.toLowerCase().includes('soltero');
+  }
+
+  /** Guarda snapshot de los datos editables del afiliado para detectar cambios. */
+  guardarSnapshotDatosTrabajador(): void {
+    const d = this.afiliationRequestDetails;
+    const p = d?.trabajador?.persona;
+    const t = d?.trabajador?.trabajador;
+    if (!p) {
+      this.snapshotDatosTrabajador = null;
+      return;
+    }
+    const norm = (v: string | Date | null | undefined): string | null => {
+      if (v == null) return null;
+      if (v instanceof Date) return v.toISOString().split('T')[0] ?? null;
+      const s = String(v).trim();
+      return s === '' ? null : s;
+    };
+    this.snapshotDatosTrabajador = {
+      tipo_documento: (p.tipo_documento ?? '').toString().trim(),
+      numero_documento: (p.numero_documento ?? '').toString().trim(),
+      primer_apellido: (p.primer_apellido ?? '').toString().trim(),
+      segundo_apellido: p.segundo_apellido != null ? String(p.segundo_apellido).trim() || null : null,
+      primer_nombre: (p.primer_nombre ?? '').toString().trim(),
+      segundo_nombre: p.segundo_nombre != null ? String(p.segundo_nombre).trim() || null : null,
+      fecha_expedicion_doc: norm(p.fecha_expedicion_doc),
+      fecha_nacimiento: norm(p.fecha_nacimiento),
+      genero: p.genero != null ? String(p.genero).trim() || null : null,
+      estado_civil: t?.estado_civil != null ? String(t.estado_civil).trim() || null : null,
+    };
+  }
+
+  /** True si hay cambios en algún campo editable respecto al snapshot (solo cuando el botón Guardar está visible). */
+  get hayCambiosEnDatosTrabajador(): boolean {
+    if (!this.snapshotDatosTrabajador) return false;
+    if (!this.puedeEditarDatosTrabajadorCE_PPT && !this.mostrarEstadoCivilEditable) return false;
+    const d = this.afiliationRequestDetails;
+    const p = d?.trabajador?.persona;
+    const t = d?.trabajador?.trabajador;
+    if (!p) return false;
+    const norm = (v: string | Date | null | undefined): string | null => {
+      if (v == null) return null;
+      if (v instanceof Date) return v.toISOString().split('T')[0] ?? null;
+      const s = String(v).trim();
+      return s === '' ? null : s;
+    };
+    const s = this.snapshotDatosTrabajador;
+    if (this.puedeEditarDatosTrabajadorCE_PPT) {
+      if ((p.tipo_documento ?? '').toString().trim() !== s.tipo_documento) return true;
+      if ((p.numero_documento ?? '').toString().trim() !== s.numero_documento) return true;
+      if ((p.primer_apellido ?? '').toString().trim() !== s.primer_apellido) return true;
+      const segApe = p.segundo_apellido != null ? String(p.segundo_apellido).trim() || null : null;
+      if (segApe !== s.segundo_apellido) return true;
+      if ((p.primer_nombre ?? '').toString().trim() !== s.primer_nombre) return true;
+      const segNom = p.segundo_nombre != null ? String(p.segundo_nombre).trim() || null : null;
+      if (segNom !== s.segundo_nombre) return true;
+      if (norm(p.fecha_expedicion_doc) !== s.fecha_expedicion_doc) return true;
+      if (norm(p.fecha_nacimiento) !== s.fecha_nacimiento) return true;
+      const gen = p.genero != null ? String(p.genero).trim() || null : null;
+      if (gen !== s.genero) return true;
+    }
+    if (this.mostrarEstadoCivilEditable && t) {
+      const ec = t.estado_civil != null ? String(t.estado_civil).trim() || null : null;
+      if (ec !== s.estado_civil) return true;
+    }
+    return false;
+  }
+
   /** True si debe mostrarse el campo de descripción (cuando valoración es "No"). */
   showDescripcionValoracion(valoracion: string): boolean {
     return valoracion === 'no';
@@ -512,6 +881,46 @@ getRequestDetails(request_details: number) {
   /** Abre previsualización o descarga del adjunto (ruta_archivo como URL/key). */
   openAdjunto(adj: Adjunto, isDownload: boolean): void {
     this.getPreSignedUrlToDownload(adj.ruta_archivo, adj.nombre_archivo, isDownload);
+  }
+
+  /** Guarda los cambios de datos del afiliado: persona (cuando CE/PPT) y/o estado civil (cuando alerta Soltero/Cónyuge). */
+  guardarDatosTrabajadorCE_PPT(): void {
+    const d = this.afiliationRequestDetails;
+    if (!d?.trabajador?.persona) return;
+    const puedeGuardarPersona = this.puedeEditarDatosTrabajadorCE_PPT;
+    const puedeGuardarEstadoCivil = this.mostrarEstadoCivilEditable;
+    if (!puedeGuardarPersona && !puedeGuardarEstadoCivil) return;
+    this.guardandoDatosTrabajador = true;
+    const persona = d.trabajador.persona;
+    const payload = {
+      id_persona: persona.id,
+      id_solicitud: d.solicitud?.id,
+      tipo_documento: persona.tipo_documento,
+      numero_documento: persona.numero_documento,
+      primer_apellido: persona.primer_apellido,
+      segundo_apellido: persona.segundo_apellido ?? null,
+      primer_nombre: persona.primer_nombre,
+      segundo_nombre: persona.segundo_nombre ?? null,
+      fecha_expedicion_doc: persona.fecha_expedicion_doc ?? null,
+      fecha_nacimiento: persona.fecha_nacimiento ?? null,
+      genero: persona.genero ?? null,
+      ...(puedeGuardarEstadoCivil && d.trabajador.trabajador && { estado_civil: d.trabajador.trabajador.estado_civil ?? null }),
+    };
+    this.userService.updatePersonaTrabajadorSolicitud(payload).subscribe({
+      next: (res) => {
+        this.guardandoDatosTrabajador = false;
+        if (res?.code === 200) {
+          this.guardarSnapshotDatosTrabajador();
+          this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Los datos del afiliado se actualizaron correctamente.' });
+        } else {
+          this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: res?.message || 'No se pudo actualizar.' });
+        }
+      },
+      error: () => {
+        this.guardandoDatosTrabajador = false;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar los cambios.' });
+      },
+    });
   }
 
 get trabajadorNombreCompleto(): string {

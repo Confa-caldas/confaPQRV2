@@ -1,11 +1,14 @@
-<div *ngIf="isSpinnerVisible" class="spinner-overlay">
+<div *ngIf="isSpinnerVisible || loading" class="spinner-overlay">
   <div class="spinner"></div>
 </div>
 
 <div class="comparison-page">
   <div class="comparison-title">Detalle de afiliado – Comparación de datos</div>
 
-  <div class="comparison-grid" *ngIf="novedadDetalle">
+  <p class="comparison-loading" *ngIf="loading && !novedadDetalle">Cargando detalle de la novedad...</p>
+  <p class="comparison-empty" *ngIf="!loading && !novedadDetalle">No hay datos de novedad para mostrar. Verifique el identificador o regrese al listado.</p>
+
+  <div class="comparison-grid" *ngIf="novedadDetalle && !loading">
     <!-- Columna izquierda: Datos de Genesys (solo lectura, igual que Registraduría) -->
     <div class="comparison-column comparison-column-genesys">
       <h2 class="comparison-column-title">Datos de Genesys</h2>
@@ -69,7 +72,7 @@
     </div>
   </div>
 
-  <div class="comparison-actions" *ngIf="novedadDetalle">
+  <div class="comparison-actions">
     <p-button
       label="Regresar"
       icon="pi pi-arrow-left"

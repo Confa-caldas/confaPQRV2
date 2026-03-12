@@ -376,6 +376,51 @@ export interface RequestStatusAfiliationList {
   status_description: string;
   is_active: boolean;
 }
+export interface NovedadStatusList {
+  novedad_status_id: number;
+  status_name: string;
+}
+
+/** Registro de la tabla parametros_tipo_documento_persona */
+export interface ParametroTipoDocumentoPersona {
+  id: number;
+  tipo_documento: string;
+  tipo_documento_genesys?: string;
+  digitos_minimos?: number;
+  digitos_maximos?: number;
+  permite_letras?: boolean;
+  cantidad_letras?: number;
+  requiere_adjunto?: boolean;
+  esta_activo: boolean;
+  sinc_fecha?: string;
+  sinc_hora?: string;
+  sinc_usuario?: string | null;
+  sinc_accion?: string;
+}
+
+/** Parámetro genérico para catálogos: id + nombre/valor/descripcion + activo */
+export interface ParametroCatalogo {
+  id: number;
+  nombre?: string;
+  valor?: string;
+  descripcion?: string;
+  esta_activo: boolean;
+}
+
+/** Retorno tabla/ función estado civil: id, estado_civil, esta_activo */
+export interface ParametroEstadoCivil {
+  id: number;
+  estado_civil: string;
+  esta_activo: boolean;
+}
+
+/** Retorno tabla/función género: id, genero, esta_activo */
+export interface ParametroGenero {
+  id: number;
+  genero: string;
+  esta_activo: boolean;
+}
+
 export interface IsPqrCatalog {
   id: number;
   name: string;

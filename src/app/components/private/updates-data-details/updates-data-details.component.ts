@@ -248,7 +248,7 @@ export class UpdatesDataDetailsComponent implements OnInit {
 
     this.route.params.subscribe(params => {
       this.request_id = +params['id'];
-      this.getRequestDetails(this.request_id);
+      this.getNovedadDetails(this.request_id);
     });
 
 
@@ -454,28 +454,34 @@ export class UpdatesDataDetailsComponent implements OnInit {
 
 loading = false;
 
-getRequestDetails(request_details: number) {
-  this.loading = true;
-  this.novedadDetalle = undefined;
-  this.afiliationRequestDetails = undefined;
+/** Carga el detalle de la novedad de calidad de datos llamando al endpoint por id_solicitud y actualiza el formulario y la vista. */
+  getNovedadDetails(idParam: number) {
+    this.loading = true;
+    this.novedadDetalle = undefined;
+    this.afiliationRequestDetails = undefined;
 
-  this.userService.getNovedadCalidadDatosDetalleBySolicitud(request_details).subscribe({
-    next: (response) => {
-      this.loading = false;
-      if (response.code !== 200 || !response.data) {
-        this.showSuccessMessage('error', 'Fallida', response.message || 'No se encontró el detalle de la novedad.');
-        return;
-      }
-      this.novedadDetalle = response.data;
-      this.patchFromNovedadDetalle(this.novedadDetalle);
-    },
-    error: (err) => {
-      this.loading = false;
-      console.error(err);
-      this.showSuccessMessage('error', 'Error', 'Error consultando el detalle de la novedad.');
-    },
-  });
-}
+    this.userService.getNovedadCalidadDatosDetalleById(idParam).subscribe({
+      next: (response: BodyResponse<NovedadCalidadDatosDetalle>) => {
+        this.loading = false;
+        if (response.code !== 200) {
+          this.showSuccessMessage('error', 'Fallida', response.message || 'No se encontró el detalle de la novedad.');
+          return;
+        }
+        const data = response.data;
+        if (data == null) {
+          this.showSuccessMessage('error', 'Fallida', 'No se encontró el detalle de la novedad.');
+          return;
+        }
+        this.novedadDetalle = data;
+        this.patchFromNovedadDetalle(this.novedadDetalle);
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error(err);
+        this.showSuccessMessage('error', 'Error', 'Error consultando el detalle de la novedad.');
+      },
+    });
+  }
 
   /** Rellena Genesys y Registraduría desde la fila de novedad_calidad_datos_detalle. */
   private patchFromNovedadDetalle(n: NovedadCalidadDatosDetalle): void {
