@@ -22,7 +22,9 @@ import {
   SimilarRequest,
   AfiliacionRequestDetailsData,
   Adjunto,
-  BeneficiarioBundle
+  BeneficiarioBundle,
+  AdjuntoConValoracion,
+  ValoracionAdjunto,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -38,12 +40,7 @@ import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import JSZip from 'jszip';
 
-export type ValoracionAdjunto = 'si' | 'no' | 'no_aplica';
-export interface AdjuntoConValoracion {
-  adjunto: Adjunto;
-  valoracion: ValoracionAdjunto | '';
-  descripcion: string;
-}
+
 
 @Component({
   selector: 'app-request-details-afiliation',
@@ -54,6 +51,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   @ViewChild('archive_request') fileInput!: ElementRef;
 
   @ViewChild('archive_request_pending') fileInputPending!: ElementRef;
+  @ViewChild('fileInputAdjuntosAdicionales') fileInputAdjuntosAdicionalesRef?: ElementRef<HTMLInputElement>;
 
   displayPreviewModal: boolean = false;
   viewerType: 'google' | 'office' | 'image' | 'pdf' = 'google';
@@ -181,11 +179,11 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
   similares: any[] = [];
 
-  /** Valoración por adjunto: Sí, No, No aplica; cuando es No se muestra descripción */
+  /** Valoración por adjunto (valores BD: SI, NO, NA); cuando es NO se muestra descripción */
   valoracionOpciones: { label: string; value: string }[] = [
-    { label: 'Sí', value: 'si' },
-    { label: 'No', value: 'no' },
-    { label: 'No aplica', value: 'no_aplica' },
+    { label: 'Sí', value: 'SI' },
+    { label: 'No', value: 'NO' },
+    { label: 'No aplica', value: 'NA' },
   ];
   /** Opciones para Estado civil (cargadas desde parametros_estado_civil). */
   opcionesEstadoCivil: { label: string; value: string }[] = [];
@@ -194,16 +192,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   /** Opciones para género (cargadas desde parametros_genero). */
   opcionesGenero: { label: string; value: string }[] = [];
   guardandoDatosTrabajador = false;
-  /** Opciones para Parentesco (beneficiarios CE/PPT). */
-  opcionesParentesco: { label: string; value: string }[] = [
-    { label: 'Cónyuge', value: 'Cónyuge' },
-    { label: 'Hijo(a)', value: 'Hijo(a)' },
-    { label: 'Hija', value: 'Hija' },
-    { label: 'Padre', value: 'Padre' },
-    { label: 'Madre', value: 'Madre' },
-    { label: 'Hermano(a)', value: 'Hermano(a)' },
-    { label: 'Otro', value: 'Otro' },
-  ];
+  /** Opciones para Parentesco (cargadas desde parametros_parentesco). */
+  opcionesParentesco: { label: string; value: string }[] = [];
   /** Opciones para "La dirección corresponde a la misma del trabajador" (Si/No). */
   opcionesDireccionTrabajador: { label: string; value: string }[] = [
     { label: 'Sí', value: 'Si' },
@@ -211,6 +201,28 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   ];
   /** Índice del beneficiario cuyo guardado está en curso (null si ninguno). */
   guardandoBeneficiarioIndex: number | null = null;
+  /** Id del adjunto cuya validación está en curso (null si ninguno). */
+  validandoAdjuntoId: number | null = null;
+  /** Diálogo de confirmación para validar adjunto. */
+  visibleConfirmarValidarAdjunto = false;
+  /** Adjunto pendiente de confirmación de validación. */
+  adjuntoAValidar: AdjuntoConValoracion | null = null;
+  /** Diálogo de confirmación para guardar datos del trabajador. */
+  visibleConfirmarGuardarTrabajador = false;
+  /** Diálogo de confirmación para guardar datos del beneficiario. */
+  visibleConfirmarGuardarBeneficiario = false;
+  /** Beneficiario e índice pendientes de confirmación de guardado. */
+  beneficiarioAGuardar: { b: BeneficiarioBundle; index: number } | null = null;
+  /** Modal subir adjuntos adicionales. */
+  visibleModalAdjuntosAdicionales = false;
+  /** Para quién se suben: 'trabajador' o índice del beneficiario. */
+  adjuntosAdicionalesPara: 'trabajador' | number = 'trabajador';
+  /** Archivos seleccionados para subir. */
+  archivosAdjuntosAdicionales: File[] = [];
+  /** En curso la subida de adjuntos adicionales. */
+  subiendoAdjuntosAdicionales = false;
+  /** Por cada índice de beneficiario, true si al cargar tenía tipo doc CE o PPT (la sección editable se mantiene aunque cambie el selector). */
+  private beneficioEditablePorIndice: boolean[] = [];
   /** Snapshots de datos editables por beneficiario (índice) para detectar cambios. */
   private snapshotBeneficiarios: Array<{
     parentesco: string | null;
@@ -333,40 +345,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
         ],
       },
     ];
-
-    // // guardado automatico de respuesta cada 5 seg
-    // this.requestProcess
-    //   .get('mensage')
-    //   ?.valueChanges.pipe(debounceTime(8000), distinctUntilChanged())
-    //   .subscribe(() => {
-    //     if (this.cancelAutoSave) return; // Evita el guardado si cambia de página
-
-    //     const mensajeActual = this.requestProcess.get('mensage')?.value || '';
-    //     if (mensajeActual !== '') {
-    //       if (mensajeActual !== this.respuestaTemp) {
-    //         if (this.isInitialized && !this.isInitializedView) {
-    //           this.borradorRespuesta(this.request_id);
-    //         }
-    //       }
-    //     }
-    //     this.isInitialized = true; // Marcar como inicializado después del primer cambio
-    //   });
-
-    // this.router.events.subscribe(event => {
-    //   if (event instanceof NavigationStart) {
-    //     this.cancelAutoSave = true; // Marcar para cancelar el guardado de 8s
-
-    //     const mensajeActual = this.requestProcess.get('mensage')?.value || '';
-    //     if (mensajeActual !== '') {
-    //       if (mensajeActual !== this.respuestaTemp) {
-    //         if (this.isInitialized && !this.isInitializedView) {
-    //           this.borradorRespuesta(this.request_id);
-    //         }
-    //       }
-    //     }
-    //     this.isInitialized = true;
-    //   }
-    // });
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
@@ -448,41 +426,6 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       return false;
     }
   }
-  
-  /*
-  getRequestDetails1(request_id: string) {
-  this.userService.getRequestDetailsAfiliation(request_id).subscribe({
-    next: (response: BodyResponse<RequestsDetails>) => {
-      if (response.code === 200) {
-        this.requestDetails = response.data;
-
-        console.log("HOlalllllllllllll", this.requestDetails);
-
-        // Lista de estados que se deben agrupar
-        const estadosAgrupados = [
-          'Asignada',
-          'Reasignada',
-          'Asignada - En revisión',
-          'Reasignada - En revisión',
-          'Pendiente Usuario Externo',
-        ];
-
-        this.currentState = estadosAgrupados.includes(this.requestDetails.status_name)
-          ? 'Gestión'
-          : this.requestDetails.status_name;
-      } else {
-        this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-      }
-    },
-    error: (err: any) => {
-      console.error(err);
-    },
-    complete: () => {
-      console.log('La suscripción ha sido completada.');
-    },
-  });
-}
-  */
 
 loading = false;
 
@@ -570,6 +513,33 @@ loading = false;
     });
   }
 
+  /** Carga parentescos desde parametros_parentesco (solo activos). Añade los valores actuales de los beneficiarios que no estén en la lista. */
+  loadParentescos(): void {
+    const beneficiarios = this.afiliationRequestDetails?.beneficiarios ?? [];
+    const valoresActuales = [...new Set(beneficiarios.map((b) => (b.beneficiario?.parentesco ?? '').toString().trim()).filter(Boolean))];
+    this.userService.getParentescoList().subscribe({
+      next: (res) => {
+        if (res?.code === 200 && Array.isArray(res.data)) {
+          let opciones = res.data
+            .filter((t) => t.esta_activo !== false)
+            .map((t) => ({ label: t.parentesco ?? '', value: t.parentesco ?? '' }))
+            .filter((o) => o.value !== '' || o.label !== '');
+          valoresActuales.forEach((v) => {
+            if (v && !opciones.some((o) => o.value === v || o.label === v)) {
+              opciones = [{ label: v, value: v }, ...opciones];
+            }
+          });
+          this.opcionesParentesco = opciones;
+        } else {
+          this.opcionesParentesco = valoresActuales.length ? valoresActuales.map((v) => ({ label: v, value: v })) : [];
+        }
+      },
+      error: () => {
+        this.opcionesParentesco = valoresActuales.length ? valoresActuales.map((v) => ({ label: v, value: v })) : [];
+      },
+    });
+  }
+
 getRequestDetails(request_details: number) {
   this.loading = true;
 
@@ -589,6 +559,7 @@ getRequestDetails(request_details: number) {
       this.loadTiposDocumentoPersona();
       this.loadGeneros();
       this.loadEstadoCivil();
+      this.loadParentescos();
     },
     error: (err) => {
       this.loading = false;
@@ -606,18 +577,24 @@ getRequestDetails(request_details: number) {
       this.beneficiariosAdjuntosEstado = [];
       return;
     }
+    const mapAdjunto = (a: Adjunto) => {
+      const est = (a.estado_validacion ?? '').toString().trim().toUpperCase();
+      const pendiente = est === '' || est === 'PENDIENTE';
+      let valoracion: ValoracionAdjunto | '' = '';
+      let descripcion = '';
+      if (!pendiente && est) {
+        if (est === 'SI' || est === 'SÍ') valoracion = 'SI';
+        else if (est === 'NO') valoracion = 'NO';
+        else if (est === 'NA') valoracion = 'NA';
+        else valoracion = est as ValoracionAdjunto;
+        descripcion = (a.observacion_validacion ?? '').toString().trim();
+      }
+      return { adjunto: a, valoracion, descripcion };
+    };
     const adjuntosTrabajador = d.trabajador?.adjuntos ?? [];
-    this.trabajadorAdjuntosEstado = adjuntosTrabajador.map((a) => ({
-      adjunto: a,
-      valoracion: '' as ValoracionAdjunto | '',
-      descripcion: '',
-    }));
+    this.trabajadorAdjuntosEstado = adjuntosTrabajador.map(mapAdjunto);
     this.beneficiariosAdjuntosEstado = (d.beneficiarios ?? []).map((b) =>
-      (b.adjuntos ?? []).map((a) => ({
-        adjunto: a,
-        valoracion: '' as ValoracionAdjunto | '',
-        descripcion: '',
-      }))
+      (b.adjuntos ?? []).map(mapAdjunto)
     );
   }
 
@@ -627,6 +604,21 @@ getRequestDetails(request_details: number) {
 
   getAdjuntosBeneficiario(index: number): AdjuntoConValoracion[] {
     return this.beneficiariosAdjuntosEstado[index] ?? [];
+  }
+
+  /** True si el adjunto está pendiente de validación (estado_validacion vacío o PENDIENTE). */
+  esAdjuntoPendienteValidacion(item: AdjuntoConValoracion): boolean {
+    const est = (item?.adjunto?.estado_validacion ?? '').toString().trim().toUpperCase();
+    return est === '' || est === 'PENDIENTE';
+  }
+
+  /** Etiqueta para mostrar el valor de valoración cuando no está pendiente (solo lectura). */
+  getLabelValoracionAdjunto(item: AdjuntoConValoracion): string {
+    const v = (item?.valoracion ?? item?.adjunto?.estado_validacion ?? '').toString().trim().toUpperCase();
+    if (v === 'SI' || v === 'SÍ') return 'Sí';
+    if (v === 'NO') return 'No';
+    if (v === 'NA') return 'No aplica';
+    return v || '—';
   }
 
   /** Nombre completo del beneficiario para títulos y mensajes. */
@@ -671,9 +663,13 @@ getRequestDetails(request_details: number) {
     return `${day}/${month}/${year}`;
   }
 
-  /** Guarda snapshots de los datos editables de cada beneficiario para detectar cambios. */
+  /** Guarda snapshots de los datos editables de cada beneficiario y marca cuáles tienen sección editable (CE/PPT al cargar). */
   guardarSnapshotBeneficiarios(): void {
     const list = this.afiliationRequestDetails?.beneficiarios ?? [];
+    this.beneficioEditablePorIndice = list.map((b) => {
+      const tipo = (b.persona?.tipo_documento ?? '').toString().trim().toUpperCase();
+      return tipo === 'CE' || tipo === 'PPT';
+    });
     this.snapshotBeneficiarios = list.map((b) => ({
       parentesco: b.beneficiario?.parentesco != null ? String(b.beneficiario.parentesco).trim() || null : null,
       tipo_documento: (b.persona?.tipo_documento ?? '').toString().trim(),
@@ -684,11 +680,16 @@ getRequestDetails(request_details: number) {
     }));
   }
 
-  /** True si el beneficiario en el índice dado tiene cambios respecto a su snapshot (solo si es CE/PPT). */
+  /** True si el beneficiario en el índice dado tiene la sección editable (era CE/PPT al cargar; los selectores no se ocultan al cambiar). */
+  beneficioPuedeEditar(index: number): boolean {
+    return this.beneficioEditablePorIndice[index] === true;
+  }
+
+  /** True si el beneficiario en el índice dado tiene cambios respecto a su snapshot (solo si tiene sección editable). */
   hayCambiosBeneficiario(index: number): boolean {
     const list = this.afiliationRequestDetails?.beneficiarios ?? [];
     const b = list[index];
-    if (!b || !this.puedeEditarBeneficiarioCE_PPT(b)) return false;
+    if (!b || !this.beneficioPuedeEditar(index)) return false;
     const snap = this.snapshotBeneficiarios[index];
     if (!snap) return false;
     const p = b.persona;
@@ -704,9 +705,9 @@ getRequestDetails(request_details: number) {
     return false;
   }
 
-  /** Valida dirección beneficiario CE/PPT: debe elegir Si/No; si elige No, la dirección es requerida. */
-  direccionBeneficiarioRequeridaValida(b: BeneficiarioBundle): boolean {
-    if (!this.puedeEditarBeneficiarioCE_PPT(b)) return true;
+  /** Valida dirección beneficiario en sección editable: debe elegir Si/No; si elige No, la dirección es requerida. */
+  direccionBeneficiarioRequeridaValida(b: BeneficiarioBundle, index: number): boolean {
+    if (!this.beneficioPuedeEditar(index)) return true;
     const ben = b?.beneficiario;
     const valor = (ben?.direccion_corresponde_trabajador ?? '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (valor !== 'si' && valor !== 'no') return false;
@@ -729,9 +730,31 @@ getRequestDetails(request_details: number) {
     return v === 'no';
   }
 
-  /** Guarda los cambios del beneficiario (solo cuando tipo doc CE/PPT). */
+  /** Abre el diálogo de confirmación para guardar los datos del beneficiario. */
+  abrirConfirmacionGuardarBeneficiario(b: BeneficiarioBundle, index: number): void {
+    if (!this.beneficioPuedeEditar(index)) return;
+    if (this.guardandoBeneficiarioIndex === index) return;
+    if (!this.direccionBeneficiarioRequeridaValida(b, index)) return;
+    this.beneficiarioAGuardar = { b, index };
+    this.visibleConfirmarGuardarBeneficiario = true;
+  }
+
+  /** Cierra el diálogo de confirmación de guardar beneficiario. */
+  cerrarConfirmacionGuardarBeneficiario(): void {
+    this.visibleConfirmarGuardarBeneficiario = false;
+    this.beneficiarioAGuardar = null;
+  }
+
+  /** Confirma y ejecuta el guardado del beneficiario. */
+  confirmarGuardarBeneficiario(): void {
+    const ref = this.beneficiarioAGuardar;
+    this.cerrarConfirmacionGuardarBeneficiario();
+    if (ref) this.guardarBeneficiario(ref.b, ref.index);
+  }
+
+  /** Guarda los cambios del beneficiario (cuando tiene sección editable, aunque haya cambiado el tipo de documento). */
   guardarBeneficiario(b: BeneficiarioBundle, index: number): void {
-    if (!this.puedeEditarBeneficiarioCE_PPT(b)) return;
+    if (!this.beneficioPuedeEditar(index)) return;
     const ben = b.beneficiario;
     const p = b.persona;
     if (!p) return;
@@ -781,11 +804,17 @@ getRequestDetails(request_details: number) {
 
   /**
    * True si el trabajador tiene tipo de documento CE o PPT; en ese caso se permiten editar
-   * tipo documento, número documento, nombres, apellidos, fechas y género, y se muestra el botón Guardar cambios.
+   * tipo documento, número documento, nombres, apellidos, fechas y género.
    */
   get puedeEditarDatosTrabajadorCE_PPT(): boolean {
     const tipo = (this.afiliationRequestDetails?.trabajador?.persona?.tipo_documento ?? '').toString().trim().toUpperCase();
     return tipo === 'CE' || tipo === 'PPT';
+  }
+
+  /** True si al cargar el trabajador tenía CE o PPT; la sección sigue editable aunque se cambie el tipo de documento. */
+  private trabajadorEditablePorCarga = false;
+  get trabajadorPuedeEditar(): boolean {
+    return this.trabajadorEditablePorCarga;
   }
 
   /** True si existe al menos un beneficiario con parentesco "Cónyuge". El campo Estado civil queda editable para poder cambiar la opción. */
@@ -808,15 +837,18 @@ getRequestDetails(request_details: number) {
     return estadoCivil.toLowerCase().includes('soltero');
   }
 
-  /** Guarda snapshot de los datos editables del afiliado para detectar cambios. */
+  /** Guarda snapshot de los datos editables del afiliado y marca si la sección trabajador es editable (CE/PPT al cargar). */
   guardarSnapshotDatosTrabajador(): void {
     const d = this.afiliationRequestDetails;
     const p = d?.trabajador?.persona;
     const t = d?.trabajador?.trabajador;
     if (!p) {
       this.snapshotDatosTrabajador = null;
+      this.trabajadorEditablePorCarga = false;
       return;
     }
+    const tipo = (p.tipo_documento ?? '').toString().trim().toUpperCase();
+    this.trabajadorEditablePorCarga = tipo === 'CE' || tipo === 'PPT';
     const norm = (v: string | Date | null | undefined): string | null => {
       if (v == null) return null;
       if (v instanceof Date) return v.toISOString().split('T')[0] ?? null;
@@ -840,7 +872,7 @@ getRequestDetails(request_details: number) {
   /** True si hay cambios en algún campo editable respecto al snapshot (solo cuando el botón Guardar está visible). */
   get hayCambiosEnDatosTrabajador(): boolean {
     if (!this.snapshotDatosTrabajador) return false;
-    if (!this.puedeEditarDatosTrabajadorCE_PPT && !this.mostrarEstadoCivilEditable) return false;
+    if (!this.trabajadorPuedeEditar && !this.mostrarEstadoCivilEditable) return false;
     const d = this.afiliationRequestDetails;
     const p = d?.trabajador?.persona;
     const t = d?.trabajador?.trabajador;
@@ -852,7 +884,7 @@ getRequestDetails(request_details: number) {
       return s === '' ? null : s;
     };
     const s = this.snapshotDatosTrabajador;
-    if (this.puedeEditarDatosTrabajadorCE_PPT) {
+    if (this.trabajadorPuedeEditar) {
       if ((p.tipo_documento ?? '').toString().trim() !== s.tipo_documento) return true;
       if ((p.numero_documento ?? '').toString().trim() !== s.numero_documento) return true;
       if ((p.primer_apellido ?? '').toString().trim() !== s.primer_apellido) return true;
@@ -873,9 +905,9 @@ getRequestDetails(request_details: number) {
     return false;
   }
 
-  /** True si debe mostrarse el campo de descripción (cuando valoración es "No"). */
+  /** True si debe mostrarse el campo de descripción (cuando valoración es "NO"). */
   showDescripcionValoracion(valoracion: string): boolean {
-    return valoracion === 'no';
+    return (valoracion ?? '').toString().trim().toUpperCase() === 'NO';
   }
 
   /** Abre previsualización o descarga del adjunto (ruta_archivo como URL/key). */
@@ -883,28 +915,225 @@ getRequestDetails(request_details: number) {
     this.getPreSignedUrlToDownload(adj.ruta_archivo, adj.nombre_archivo, isDownload);
   }
 
+  /** Abre el diálogo de confirmación para validar el adjunto. */
+  openConfirmacionValidarAdjunto(item: AdjuntoConValoracion): void {
+    if (!item?.adjunto?.id) return;
+    const valoracion = (item.valoracion ?? '').toString().trim().toUpperCase();
+    if (!valoracion || !['SI', 'NO', 'NA'].includes(valoracion)) {
+      this.messageService.add({ severity: 'warn', summary: 'Valoración requerida', detail: 'Seleccione una valoración (Sí, No o No aplica) antes de validar.' });
+      return;
+    }
+    if (valoracion === 'NO') {
+      const desc = (item.descripcion ?? '').toString().trim();
+      if (!desc) {
+        this.messageService.add({ severity: 'warn', summary: 'Descripción requerida', detail: 'Cuando la valoración es No, debe indicar la descripción u observación.' });
+        return;
+      }
+    }
+    this.adjuntoAValidar = item;
+    this.visibleConfirmarValidarAdjunto = true;
+  }
+
+  /** Cierra el diálogo de confirmación de validación sin guardar. */
+  cerrarConfirmacionValidarAdjunto(): void {
+    this.visibleConfirmarValidarAdjunto = false;
+    this.adjuntoAValidar = null;
+  }
+
+  /** Abre el modal para subir adjuntos adicionales (trabajador o beneficiario por índice). */
+  openModalAdjuntosAdicionales(para: 'trabajador' | number): void {
+    this.adjuntosAdicionalesPara = para;
+    this.archivosAdjuntosAdicionales = [];
+    this.visibleModalAdjuntosAdicionales = true;
+  }
+
+  /** Cierra el modal de adjuntos adicionales. */
+  closeModalAdjuntosAdicionales(): void {
+    this.visibleModalAdjuntosAdicionales = false;
+    this.archivosAdjuntosAdicionales = [];
+    const input = this.fileInputAdjuntosAdicionalesRef?.nativeElement;
+    if (input) input.value = '';
+  }
+
+  /** Título del modal según si es trabajador o beneficiario. */
+  getTituloModalAdjuntosAdicionales(): string {
+    if (this.adjuntosAdicionalesPara === 'trabajador') return 'Subir adjuntos adicionales - Trabajador';
+    const d = this.afiliationRequestDetails;
+    const b = d?.beneficiarios?.[this.adjuntosAdicionalesPara];
+    const nombre = b ? this.getNombreBeneficiario(b) : `Beneficiario ${(this.adjuntosAdicionalesPara as number) + 1}`;
+    return `Subir adjuntos adicionales - ${nombre}`;
+  }
+
+  /** Al seleccionar archivos en el input del modal. */
+  onFileSelectedAdjuntosAdicionales(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input?.files;
+    this.archivosAdjuntosAdicionales = files ? Array.from(files) : [];
+  }
+
+  /** Sube los archivos seleccionados y los agrega a la lista de adjuntos del trabajador o beneficiario. */
+  subirAdjuntosAdicionales(): void {
+    if (this.archivosAdjuntosAdicionales.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Archivos requeridos', detail: 'Seleccione al menos un archivo.' });
+      return;
+    }
+    const d = this.afiliationRequestDetails;
+    if (!d?.solicitud?.id) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No hay solicitud cargada.' });
+      return;
+    }
+    const idPersona =
+      this.adjuntosAdicionalesPara === 'trabajador'
+        ? d.trabajador?.persona?.id
+        : d.beneficiarios?.[this.adjuntosAdicionalesPara as number]?.persona?.id;
+    if (!idPersona) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontró la persona.' });
+      return;
+    }
+    const formData = new FormData();
+    formData.append('id_solicitud', String(d.solicitud.id));
+    formData.append('id_persona', String(idPersona));
+    this.archivosAdjuntosAdicionales.forEach((file) => formData.append('archivos', file));
+    this.subiendoAdjuntosAdicionales = true;
+    this.userService.uploadAdjuntosAfiliacion(formData).subscribe({
+      next: (res) => {
+        this.subiendoAdjuntosAdicionales = false;
+        const list = Array.isArray(res?.data) ? res.data : res?.data ? [res.data] : [];
+        if (res?.code === 200 && list.length > 0) {
+          const nuevos = list.map((a: Adjunto) => ({
+            adjunto: a,
+            valoracion: '' as ValoracionAdjunto | '',
+            descripcion: '',
+          }));
+          if (this.adjuntosAdicionalesPara === 'trabajador') {
+            this.trabajadorAdjuntosEstado.push(...nuevos);
+          } else {
+            const idx = this.adjuntosAdicionalesPara as number;
+            if (!this.beneficiariosAdjuntosEstado[idx]) this.beneficiariosAdjuntosEstado[idx] = [];
+            this.beneficiariosAdjuntosEstado[idx].push(...nuevos);
+          }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Adjuntos subidos',
+            detail: `Se agregaron ${list.length} archivo(s) correctamente.`,
+          });
+          this.closeModalAdjuntosAdicionales();
+        } else if (res?.code === 200) {
+          this.messageService.add({ severity: 'info', summary: 'Subida', detail: res?.message || 'Operación completada.' });
+          this.closeModalAdjuntosAdicionales();
+        } else {
+          this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: res?.message || 'No se pudieron subir los archivos.' });
+        }
+      },
+      error: () => {
+        this.subiendoAdjuntosAdicionales = false;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al subir los archivos.' });
+      },
+    });
+  }
+
+  /** Confirma y envía la validación del adjunto al servicio (actualiza estado_validacion y observacion_validacion en afiliacion_solicitud_adjunto). */
+  confirmarValidarAdjunto(): void {
+    const item = this.adjuntoAValidar;
+    if (!item?.adjunto?.id) {
+      this.cerrarConfirmacionValidarAdjunto();
+      return;
+    }
+    const valoracion = (item.valoracion ?? '').toString().trim().toUpperCase();
+    if (!['SI', 'NO', 'NA'].includes(valoracion)) {
+      this.cerrarConfirmacionValidarAdjunto();
+      return;
+    }
+    this.visibleConfirmarValidarAdjunto = false;
+    this.adjuntoAValidar = null;
+    this.validandoAdjuntoId = item.adjunto.id;
+    const payload = {
+      id: item.adjunto.id,
+      id_persona: item.adjunto.id_persona,
+      estado_validacion: valoracion,
+      observacion_validacion: valoracion === 'NO' ? (item.descripcion ?? '').toString().trim() || null : null,
+    };
+    this.userService.validarAdjuntoAfiliacion(payload).subscribe({
+      next: (res) => {
+        this.validandoAdjuntoId = null;
+        if (res?.code === 200) {
+          const idAdj = payload.id;
+          const estVal = payload.estado_validacion;
+          const obsVal = payload.observacion_validacion ?? null;
+          this.trabajadorAdjuntosEstado.forEach((x) => {
+            if (x.adjunto.id === idAdj) {
+              x.adjunto.estado_validacion = estVal;
+              x.adjunto.observacion_validacion = obsVal;
+            }
+          });
+          this.beneficiariosAdjuntosEstado.forEach((list) =>
+            list.forEach((x) => {
+              if (x.adjunto.id === idAdj) {
+                x.adjunto.estado_validacion = estVal;
+                x.adjunto.observacion_validacion = obsVal;
+              }
+            })
+          );
+          this.messageService.add({ severity: 'success', summary: 'Validado', detail: 'El adjunto se validó correctamente.' });
+        } else {
+          this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: res?.message || 'No se pudo validar el adjunto.' });
+        }
+      },
+      error: () => {
+        this.validandoAdjuntoId = null;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al validar el adjunto.' });
+      },
+    });
+  }
+
+  /** Abre el diálogo de confirmación para guardar los datos del trabajador. */
+  abrirConfirmacionGuardarTrabajador(): void {
+    if (this.guardandoDatosTrabajador || !this.hayCambiosEnDatosTrabajador) return;
+    this.visibleConfirmarGuardarTrabajador = true;
+  }
+
+  /** Cierra el diálogo de confirmación de guardar trabajador. */
+  cerrarConfirmacionGuardarTrabajador(): void {
+    this.visibleConfirmarGuardarTrabajador = false;
+  }
+
+  /** Confirma y ejecuta el guardado de los datos del afiliado (persona y/o estado civil). */
+  confirmarGuardarTrabajador(): void {
+    this.cerrarConfirmacionGuardarTrabajador();
+    this.guardarDatosTrabajadorCE_PPT();
+  }
+
   /** Guarda los cambios de datos del afiliado: persona (cuando CE/PPT) y/o estado civil (cuando alerta Soltero/Cónyuge). */
   guardarDatosTrabajadorCE_PPT(): void {
     const d = this.afiliationRequestDetails;
-    if (!d?.trabajador?.persona) return;
-    const puedeGuardarPersona = this.puedeEditarDatosTrabajadorCE_PPT;
+    if (!d?.trabajador?.persona) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'No hay datos del afiliado para guardar.' });
+      return;
+    }
+    const idSolicitud = d.solicitud?.id;
+    if (idSolicitud == null || idSolicitud === undefined) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'No se encontró el ID de la solicitud.' });
+      return;
+    }
+    const puedeGuardarPersona = this.trabajadorPuedeEditar;
     const puedeGuardarEstadoCivil = this.mostrarEstadoCivilEditable;
     if (!puedeGuardarPersona && !puedeGuardarEstadoCivil) return;
     this.guardandoDatosTrabajador = true;
     const persona = d.trabajador.persona;
+    const trim = (v: string | null | undefined) => (v != null ? String(v).trim() || null : null);
     const payload = {
       id_persona: persona.id,
-      id_solicitud: d.solicitud?.id,
-      tipo_documento: persona.tipo_documento,
-      numero_documento: persona.numero_documento,
-      primer_apellido: persona.primer_apellido,
-      segundo_apellido: persona.segundo_apellido ?? null,
-      primer_nombre: persona.primer_nombre,
-      segundo_nombre: persona.segundo_nombre ?? null,
-      fecha_expedicion_doc: persona.fecha_expedicion_doc ?? null,
-      fecha_nacimiento: persona.fecha_nacimiento ?? null,
-      genero: persona.genero ?? null,
-      ...(puedeGuardarEstadoCivil && d.trabajador.trabajador && { estado_civil: d.trabajador.trabajador.estado_civil ?? null }),
+      id_solicitud: idSolicitud,
+      tipo_documento: trim(persona.tipo_documento) ?? '',
+      numero_documento: trim(persona.numero_documento) ?? '',
+      primer_apellido: trim(persona.primer_apellido) ?? '',
+      segundo_apellido: trim(persona.segundo_apellido),
+      primer_nombre: trim(persona.primer_nombre) ?? '',
+      segundo_nombre: trim(persona.segundo_nombre),
+      fecha_expedicion_doc: trim(persona.fecha_expedicion_doc),
+      fecha_nacimiento: trim(persona.fecha_nacimiento),
+      genero: trim(persona.genero),
+      ...(puedeGuardarEstadoCivil && d.trabajador.trabajador && { estado_civil: trim(d.trabajador.trabajador.estado_civil) }),
     };
     this.userService.updatePersonaTrabajadorSolicitud(payload).subscribe({
       next: (res) => {

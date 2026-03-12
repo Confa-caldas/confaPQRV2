@@ -77,6 +77,7 @@ export enum EndPointRoute {
   TIPO_DOCUMENTO_PERSONA_LIST = 'db_afi/parametros_tipo_documento_persona',
   GENERO_LIST = 'db_afi/parametros_genero',
   ESTADO_CIVIL_LIST = 'db_afi/parametros_estado_civil',
+  PARENTESCO_LIST = 'db_afi/parametros_parentesco',
   QUALITY_DIMENSION_LIST = 'db/quality_dimensions',
   CATEGORIES_BY_MODALITY = 'categories/by',
   TIPOLOGIES_BY_CATEGORY = 'tipologies/by/category',
@@ -139,4 +140,6 @@ export enum EndPointRoute {
   NOVEDAD_CALIDAD_DATOS_DETALLE = 'novedad-afiliation/details',
   /** Actualizar datos de persona trabajador en solicitud de afiliación (CE/PPT) */
   REQUEST_AFILIATION_UPDATE_PERSONA = 'requests-afiliation/update-persona',
+  REQUEST_AFILIATION_VALIDAR_ADJUNTO = 'requests-afiliation/adjunto/validar',
+  REQUEST_AFILIATION_UPLOAD_ADJUNTO = 'requests-afiliation/adjunto/upload',
 }

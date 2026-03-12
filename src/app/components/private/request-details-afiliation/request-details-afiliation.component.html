@@ -314,7 +314,7 @@
             <div class="process-container-col">
               <label class="process-container-label">Tipo de documento</label>
               <p-dropdown
-                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                *ngIf="trabajadorPuedeEditar"
                 [options]="opcionesTipoDocumento"
                 [(ngModel)]="d.trabajador.persona.tipo_documento"
                 optionLabel="label"
@@ -323,82 +323,86 @@
                 appendTo="body"
                 [style]="{ width: '100%' }"
                 styleClass="data-field-dropdown" />
-              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.tipo_documento || '—' }}</div>
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.tipo_documento || '—' }}</div>
             </div>
             <div class="process-container-col">
               <label class="process-container-label">Número de documento</label>
               <input
-                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                *ngIf="trabajadorPuedeEditar"
                 type="text"
                 class="data-field-input"
                 [(ngModel)]="d.trabajador.persona.numero_documento"
                 placeholder="Número de documento" />
-              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.numero_documento || '—' }}</div>
-            </div>
-            <div class="process-container-col">
-              <label class="process-container-label">Primer nombre</label>
-              <input
-                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
-                type="text"
-                class="data-field-input"
-                [(ngModel)]="d.trabajador.persona.primer_nombre"
-                placeholder="Primer nombre" />
-              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.primer_nombre || '—' }}</div>
-            </div>
-            <div class="process-container-col">
-              <label class="process-container-label">Segundo nombre</label>
-              <input
-                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
-                type="text"
-                class="data-field-input"
-                [(ngModel)]="d.trabajador.persona.segundo_nombre"
-                placeholder="Segundo nombre" />
-              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.segundo_nombre || '—' }}</div>
-            </div>
-            <div class="process-container-col">
-              <label class="process-container-label">Primer apellido</label>
-              <input
-                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
-                type="text"
-                class="data-field-input"
-                [(ngModel)]="d.trabajador.persona.primer_apellido"
-                placeholder="Primer apellido" />
-              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.primer_apellido || '—' }}</div>
-            </div>
-            <div class="process-container-col">
-              <label class="process-container-label">Segundo apellido</label>
-              <input
-                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
-                type="text"
-                class="data-field-input"
-                [(ngModel)]="d.trabajador.persona.segundo_apellido"
-                placeholder="Segundo apellido" />
-              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.segundo_apellido || '—' }}</div>
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.numero_documento || '—' }}</div>
             </div>
             <div class="process-container-col">
               <label class="process-container-label">Fecha expedición del documento</label>
               <input
-                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                *ngIf="trabajadorPuedeEditar"
                 type="date"
                 class="data-field-input"
                 [ngModel]="d.trabajador.persona.fecha_expedicion_doc"
                 (ngModelChange)="d.trabajador.persona.fecha_expedicion_doc = $event || null" />
-              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.fecha_expedicion_doc || '—' }}</div>
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.fecha_expedicion_doc || '—' }}</div>
             </div>
+          </div>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Primer nombre</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.primer_nombre"
+                placeholder="Primer nombre" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.primer_nombre || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Segundo nombre</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.segundo_nombre"
+                placeholder="Segundo nombre" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.segundo_nombre || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Primer apellido</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.primer_apellido"
+                placeholder="Primer apellido" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.primer_apellido || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Segundo apellido</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.segundo_apellido"
+                placeholder="Segundo apellido" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.segundo_apellido || '—' }}</div>
+            </div>
+          </div>
+          <div class="process-container-row">
             <div class="process-container-col">
               <label class="process-container-label">Fecha de nacimiento</label>
               <input
-                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                *ngIf="trabajadorPuedeEditar"
                 type="date"
                 class="data-field-input"
                 [ngModel]="d.trabajador.persona.fecha_nacimiento"
                 (ngModelChange)="d.trabajador.persona.fecha_nacimiento = $event || null" />
-              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.fecha_nacimiento || '—' }}</div>
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.fecha_nacimiento || '—' }}</div>
             </div>
             <div class="process-container-col">
               <label class="process-container-label">Género</label>
               <p-dropdown
-                *ngIf="puedeEditarDatosTrabajadorCE_PPT"
+                *ngIf="trabajadorPuedeEditar"
                 [options]="opcionesGenero"
                 [(ngModel)]="d.trabajador.persona.genero"
                 optionLabel="label"
@@ -407,7 +411,7 @@
                 appendTo="body"
                 [style]="{ width: '100%' }"
                 styleClass="data-field-dropdown" />
-              <div *ngIf="!puedeEditarDatosTrabajadorCE_PPT" class="process-container-text">{{ d.trabajador.persona.genero || '—' }}</div>
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.genero || '—' }}</div>
             </div>
             <div class="process-container-col" [class.estado-civil-editable-col]="mostrarEstadoCivilEditable">
               <label class="process-container-label">Estado civil</label>
@@ -432,12 +436,12 @@
               </ng-template>
             </div>
           </div>
-          <div class="process-container-row tab-data-save-row" *ngIf="puedeEditarDatosTrabajadorCE_PPT || mostrarEstadoCivilEditable">
+          <div class="process-container-row tab-data-save-row" *ngIf="trabajadorPuedeEditar || mostrarEstadoCivilEditable">
             <div class="process-container-col">
               <p-button
                 label="Guardar cambios"
                 icon="pi pi-check"
-                (onClick)="guardarDatosTrabajadorCE_PPT()"
+                (onClick)="abrirConfirmacionGuardarTrabajador()"
                 [loading]="guardandoDatosTrabajador"
                 [disabled]="guardandoDatosTrabajador || !hayCambiosEnDatosTrabajador"
                 severity="primary"
@@ -500,6 +504,7 @@
                   <td>{{ item.adjunto.nombre_archivo }}</td>
                   <td>
                     <p-dropdown
+                      *ngIf="esAdjuntoPendienteValidacion(item)"
                       [options]="valoracionOpciones"
                       [(ngModel)]="item.valoracion"
                       placeholder="Seleccione"
@@ -507,28 +512,48 @@
                       [style]="{ width: '100%' }"
                       optionLabel="label"
                       optionValue="value" />
+                    <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ getLabelValoracionAdjunto(item) }}</div>
                   </td>
                   <td>
-                    <textarea
-                      *ngIf="showDescripcionValoracion(item.valoracion)"
-                      [(ngModel)]="item.descripcion"
-                      class="adjunto-descripcion-input"
-                      rows="2"
-                      placeholder="Indique el motivo o descripción"></textarea>
-                    <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                    <ng-container *ngIf="esAdjuntoPendienteValidacion(item)">
+                      <textarea
+                        *ngIf="showDescripcionValoracion(item.valoracion)"
+                        [(ngModel)]="item.descripcion"
+                        class="adjunto-descripcion-input"
+                        rows="2"
+                        placeholder="Indique el motivo o descripción"></textarea>
+                      <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                    </ng-container>
+                    <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
                   </td>
                   <td>
                     <div class="adjuntos-actions">
                       <p-button
                         icon="pi pi-eye"
+                        label="Previsualizar"
                         pTooltip="Previsualizar"
-                        [styleClass]="'p-button-text p-button-sm'"
+                        severity="secondary"
+                        [styleClass]="'adjunto-action-btn p-button-outlined'"
+                        [style]="{ 'border-radius': '6px' }"
                         (onClick)="openAdjunto(item.adjunto, false)"></p-button>
                       <p-button
                         icon="pi pi-download"
+                        label="Descargar"
                         pTooltip="Descargar"
-                        [styleClass]="'p-button-text p-button-sm'"
+                        severity="secondary"
+                        [styleClass]="'adjunto-action-btn p-button-outlined'"
+                        [style]="{ 'border-radius': '6px' }"
                         (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                      <p-button
+                        *ngIf="esAdjuntoPendienteValidacion(item)"
+                        label="Validar adjunto"
+                        icon="pi pi-check"
+                        [loading]="validandoAdjuntoId === item.adjunto.id"
+                        [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion"
+                        severity="success"
+                        [styleClass]="'adjunto-action-btn'"
+                        [style]="{ 'border-radius': '6px' }"
+                        (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
                     </div>
                   </td>
                 </tr>
@@ -538,6 +563,15 @@
         </div>
         <div class="adjuntos-section empty adjuntos-trabajador-block" *ngIf="getAdjuntosTrabajador().length === 0">
           <p class="adjuntos-empty-text">No hay archivos adjuntos para el trabajador de esta solicitud.</p>
+        </div>
+        <div class="adjuntos-upload-row">
+          <p-button
+            label="Subir adjuntos adicionales"
+            icon="pi pi-upload"
+            severity="success"
+            [styleClass]="'adjunto-action-btn'"
+            [style]="{ 'border-radius': '6px' }"
+            (onClick)="openModalAdjuntosAdicionales('trabajador')"></p-button>
         </div>
 
       </div>
@@ -560,7 +594,7 @@
                     <div class="process-container-col">
                       <label class="process-container-label">Parentesco</label>
                       <p-dropdown
-                        *ngIf="puedeEditarBeneficiarioCE_PPT(b)"
+                        *ngIf="beneficioPuedeEditar(iBenef)"
                         [options]="getOpcionesParentescoBeneficiario(b)"
                         [(ngModel)]="b.beneficiario.parentesco"
                         optionLabel="label"
@@ -569,12 +603,12 @@
                         appendTo="body"
                         [style]="{ width: '100%' }"
                         styleClass="data-field-dropdown" />
-                      <div *ngIf="!puedeEditarBeneficiarioCE_PPT(b)" class="process-container-text">{{ b.beneficiario.parentesco || '—' }}</div>
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.beneficiario.parentesco || '—' }}</div>
                     </div>
                     <div class="process-container-col">
                       <label class="process-container-label">Tipo de documento</label>
                       <p-dropdown
-                        *ngIf="puedeEditarBeneficiarioCE_PPT(b)"
+                        *ngIf="beneficioPuedeEditar(iBenef)"
                         [options]="opcionesTipoDocumento"
                         [(ngModel)]="b.persona.tipo_documento"
                         optionLabel="label"
@@ -583,30 +617,30 @@
                         appendTo="body"
                         [style]="{ width: '100%' }"
                         styleClass="data-field-dropdown" />
-                      <div *ngIf="!puedeEditarBeneficiarioCE_PPT(b)" class="process-container-text">{{ b.persona.tipo_documento || '—' }}</div>
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.tipo_documento || '—' }}</div>
                     </div>
                     <div class="process-container-col">
                       <label class="process-container-label">Número de documento</label>
                       <input
-                        *ngIf="puedeEditarBeneficiarioCE_PPT(b)"
+                        *ngIf="beneficioPuedeEditar(iBenef)"
                         type="text"
                         class="data-field-input"
                         [(ngModel)]="b.persona.numero_documento"
                         placeholder="Número de documento" />
-                      <div *ngIf="!puedeEditarBeneficiarioCE_PPT(b)" class="process-container-text">{{ b.persona.numero_documento || '—' }}</div>
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.numero_documento || '—' }}</div>
                     </div>
+                  </div>
+                  <div class="process-container-row">
                     <div class="process-container-col">
                       <label class="process-container-label">Primer nombre</label>
                       <input
-                        *ngIf="puedeEditarBeneficiarioCE_PPT(b)"
+                        *ngIf="beneficioPuedeEditar(iBenef)"
                         type="text"
                         class="data-field-input"
                         [(ngModel)]="b.persona.primer_nombre"
                         placeholder="Primer nombre" />
-                      <div *ngIf="!puedeEditarBeneficiarioCE_PPT(b)" class="process-container-text">{{ b.persona.primer_nombre || '—' }}</div>
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.primer_nombre || '—' }}</div>
                     </div>
-                  </div>
-                  <div class="process-container-row">
                     <div class="process-container-col">
                       <label class="process-container-label">Segundo nombre</label>
                       <div class="process-container-text">{{ b.persona.segundo_nombre || '—' }}</div>
@@ -619,6 +653,8 @@
                       <label class="process-container-label">Segundo apellido</label>
                       <div class="process-container-text">{{ b.persona.segundo_apellido || '—' }}</div>
                     </div>
+                  </div>
+                  <div class="process-container-row">
                     <div class="process-container-col">
                       <label class="process-container-label">Fecha de nacimiento (dd/mm/aaaa)</label>
                       <div class="process-container-text">{{ formatFechaDDMMYYYY(b.persona.fecha_nacimiento) }}</div>
@@ -629,7 +665,7 @@
                     </div>
                   </div>
                   <!-- Dirección beneficiario: Si/No si es misma del trabajador; si No, campo requerido -->
-                  <div class="process-container-row" *ngIf="puedeEditarBeneficiarioCE_PPT(b)">
+                  <div class="process-container-row" *ngIf="beneficioPuedeEditar(iBenef)">
                     <div class="process-container-col process-container-col-description">
                       <label class="process-container-label">La dirección corresponde a la misma del trabajador</label>
                       <p-dropdown
@@ -643,13 +679,13 @@
                         styleClass="data-field-dropdown" />
                     </div>
                   </div>
-                  <div class="process-container-row" *ngIf="puedeEditarBeneficiarioCE_PPT(b) && direccionCorrespondeTrabajadorEsSi(b)">
+                  <div class="process-container-row" *ngIf="beneficioPuedeEditar(iBenef) && direccionCorrespondeTrabajadorEsSi(b)">
                     <div class="process-container-col process-container-col-description">
                       <label class="process-container-label">Dirección (del trabajador)</label>
                       <div class="process-container-text">{{ getDireccionTrabajador() || '—' }}</div>
                     </div>
                   </div>
-                  <div class="process-container-row" *ngIf="puedeEditarBeneficiarioCE_PPT(b) && direccionCorrespondeTrabajadorEsNo(b)">
+                  <div class="process-container-row" *ngIf="beneficioPuedeEditar(iBenef) && direccionCorrespondeTrabajadorEsNo(b)">
                     <div class="process-container-col process-container-col-description">
                       <label class="process-container-label">Dirección del beneficiario <span class="required-asterisk">*</span></label>
                       <input
@@ -657,24 +693,24 @@
                         class="data-field-input"
                         [(ngModel)]="b.persona.direccion"
                         placeholder="Ingrese la dirección"
-                        [class.ng-invalid]="!direccionBeneficiarioRequeridaValida(b)" />
-                      <small *ngIf="!direccionBeneficiarioRequeridaValida(b)" class="error-message">La dirección es requerida cuando no corresponde a la del trabajador.</small>
+                        [class.ng-invalid]="!direccionBeneficiarioRequeridaValida(b, iBenef)" />
+                      <small *ngIf="!direccionBeneficiarioRequeridaValida(b, iBenef)" class="error-message">La dirección es requerida cuando no corresponde a la del trabajador.</small>
                     </div>
                   </div>
-                  <div class="process-container-row tab-data-save-row" *ngIf="puedeEditarBeneficiarioCE_PPT(b)">
+                  <div class="process-container-row tab-data-save-row" *ngIf="beneficioPuedeEditar(iBenef)">
                     <div class="process-container-col">
                       <p-button
                         label="Guardar cambios"
                         icon="pi pi-check"
-                        (onClick)="guardarBeneficiario(b, iBenef)"
+                        (onClick)="abrirConfirmacionGuardarBeneficiario(b, iBenef)"
                         [loading]="guardandoBeneficiarioIndex === iBenef"
-                        [disabled]="guardandoBeneficiarioIndex === iBenef || !hayCambiosBeneficiario(iBenef) || !direccionBeneficiarioRequeridaValida(b)"
+                        [disabled]="guardandoBeneficiarioIndex === iBenef || !hayCambiosBeneficiario(iBenef) || !direccionBeneficiarioRequeridaValida(b, iBenef)"
                         severity="primary"
                         [style]="{ 'border-radius': '6px' }" />
                     </div>
                   </div>
-                  <!-- Campos solo lectura cuando no es CE/PPT -->
-                  <ng-container *ngIf="!puedeEditarBeneficiarioCE_PPT(b)">
+                  <!-- Campos solo lectura cuando no tiene sección editable (no era CE/PPT al cargar) -->
+                  <ng-container *ngIf="!beneficioPuedeEditar(iBenef)">
                     <div class="process-container-row">
                       <div class="process-container-col">
                         <label class="process-container-label">Nuevo beneficiario</label>
@@ -722,6 +758,7 @@
                         <td>{{ item.adjunto.nombre_archivo }}</td>
                         <td>
                           <p-dropdown
+                            *ngIf="esAdjuntoPendienteValidacion(item)"
                             [options]="valoracionOpciones"
                             [(ngModel)]="item.valoracion"
                             placeholder="Seleccione"
@@ -729,28 +766,48 @@
                             [style]="{ width: '100%' }"
                             optionLabel="label"
                             optionValue="value" />
+                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ getLabelValoracionAdjunto(item) }}</div>
                         </td>
                         <td>
-                          <textarea
-                            *ngIf="showDescripcionValoracion(item.valoracion)"
-                            [(ngModel)]="item.descripcion"
-                            class="adjunto-descripcion-input"
-                            rows="2"
-                            placeholder="Indique el motivo o descripción"></textarea>
-                          <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                          <ng-container *ngIf="esAdjuntoPendienteValidacion(item)">
+                            <textarea
+                              *ngIf="showDescripcionValoracion(item.valoracion)"
+                              [(ngModel)]="item.descripcion"
+                              class="adjunto-descripcion-input"
+                              rows="2"
+                              placeholder="Indique el motivo o descripción"></textarea>
+                            <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                          </ng-container>
+                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
                         </td>
                         <td>
                           <div class="adjuntos-actions">
                             <p-button
                               icon="pi pi-eye"
+                              label="Previsualizar"
                               pTooltip="Previsualizar"
-                              [styleClass]="'p-button-text p-button-sm'"
+                              severity="secondary"
+                              [styleClass]="'adjunto-action-btn p-button-outlined'"
+                              [style]="{ 'border-radius': '6px' }"
                               (onClick)="openAdjunto(item.adjunto, false)"></p-button>
                             <p-button
                               icon="pi pi-download"
+                              label="Descargar"
                               pTooltip="Descargar"
-                              [styleClass]="'p-button-text p-button-sm'"
+                              severity="secondary"
+                              [styleClass]="'adjunto-action-btn p-button-outlined'"
+                              [style]="{ 'border-radius': '6px' }"
                               (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                            <p-button
+                              *ngIf="esAdjuntoPendienteValidacion(item)"
+                              label="Validar adjunto"
+                              icon="pi pi-check"
+                              [loading]="validandoAdjuntoId === item.adjunto.id"
+                              [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion"
+                              severity="success"
+                              [styleClass]="'adjunto-action-btn'"
+                              [style]="{ 'border-radius': '6px' }"
+                              (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
                           </div>
                         </td>
                       </tr>
@@ -760,6 +817,15 @@
               </div>
               <div class="adjuntos-section empty benef-adjuntos" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">
                 <p class="adjuntos-empty-text">No hay archivos adjuntos para {{ getNombreBeneficiario(b) }}.</p>
+              </div>
+              <div class="adjuntos-upload-row">
+                <p-button
+                  label="Subir adjuntos adicionales"
+                  icon="pi pi-upload"
+                  severity="success"
+                  [styleClass]="'adjunto-action-btn'"
+                  [style]="{ 'border-radius': '6px' }"
+                  (onClick)="openModalAdjuntosAdicionales(iBenef)"></p-button>
               </div>
             </div>
           </div>
@@ -772,130 +838,7 @@
 
       </div>
     </p-tabPanel>
-
-  </p-tabView>
-</ng-container>
-
-    </p-tabPanel>
-
-    <p-tabPanel header="Adjuntos" headerStyleClass="p-tabview-nav-link-2 ">
-      <div class="p-tab-view">
-        <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
-          <p-tabPanel header="Adjuntos trabajador" headerStyleClass="p-tabview-nav-link-sub">
-            <div class="adjuntos-section" *ngIf="getAdjuntosTrabajador().length > 0">
-              <p class="adjuntos-tab-intro">Archivos adjuntos del trabajador. Valoración: Sí / No / No aplica. Si selecciona No, indique la descripción.</p>
-              <div class="adjuntos-table-wrapper">
-                <p-table
-                  [value]="getAdjuntosTrabajador()"
-                  [tableStyle]="{ 'min-width': '40rem' }"
-                  styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
-                  <ng-template pTemplate="header">
-                    <tr>
-                      <th style="width: 28%">Archivo</th>
-                      <th style="width: 18%">Valoración</th>
-                      <th style="width: 36%">Descripción (si aplica)</th>
-                      <th style="width: 18%">Acciones</th>
-                    </tr>
-                  </ng-template>
-                  <ng-template pTemplate="body" let-item>
-                    <tr>
-                      <td>{{ item.adjunto.nombre_archivo }}</td>
-                      <td>
-                        <p-dropdown
-                          [options]="valoracionOpciones"
-                          [(ngModel)]="item.valoracion"
-                          placeholder="Seleccione"
-                          appendTo="body"
-                          [style]="{ width: '100%' }"
-                          optionLabel="label"
-                          optionValue="value" />
-                      </td>
-                      <td>
-                        <textarea
-                          *ngIf="showDescripcionValoracion(item.valoracion)"
-                          [(ngModel)]="item.descripcion"
-                          class="adjunto-descripcion-input"
-                          rows="2"
-                          placeholder="Indique el motivo o descripción"></textarea>
-                        <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
-                      </td>
-                      <td>
-                        <div class="adjuntos-actions">
-                          <p-button icon="pi pi-eye" pTooltip="Previsualizar" [styleClass]="'p-button-text p-button-sm'" (onClick)="openAdjunto(item.adjunto, false)"></p-button>
-                          <p-button icon="pi pi-download" pTooltip="Descargar" [styleClass]="'p-button-text p-button-sm'" (onClick)="openAdjunto(item.adjunto, true)"></p-button>
-                        </div>
-                      </td>
-                    </tr>
-                  </ng-template>
-                </p-table>
-              </div>
-            </div>
-            <p class="adjuntos-empty-text" *ngIf="getAdjuntosTrabajador().length === 0">No hay archivos adjuntos del trabajador.</p>
-          </p-tabPanel>
-          <p-tabPanel header="Adjuntos beneficiarios" headerStyleClass="p-tabview-nav-link-sub">
-            <p class="adjuntos-tab-intro">Archivos adjuntos por beneficiario. En la pestaña Beneficiarios puede ver y valorar los adjuntos de cada uno.</p>
-            <div class="benef-adjuntos-resumen" *ngIf="afiliationRequestDetails?.beneficiarios?.length">
-              <div class="adjuntos-section benef-adjuntos" *ngFor="let b of afiliationRequestDetails.beneficiarios; let iBenef = index">
-                <h4 class="adjuntos-section-title">Archivos adjuntos de {{ getNombreBeneficiario(b) }} ({{ b.persona.tipo_documento }} {{ b.persona.numero_documento }})</h4>
-                <div class="adjuntos-table-wrapper" *ngIf="getAdjuntosBeneficiario(iBenef).length > 0">
-                  <p-table
-                    [value]="getAdjuntosBeneficiario(iBenef)"
-                    [tableStyle]="{ 'min-width': '40rem' }"
-                    styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
-                    <ng-template pTemplate="header">
-                      <tr>
-                        <th style="width: 28%">Archivo</th>
-                        <th style="width: 18%">Valoración</th>
-                        <th style="width: 36%">Descripción (si aplica)</th>
-                        <th style="width: 18%">Acciones</th>
-                      </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-item>
-                      <tr>
-                        <td>{{ item.adjunto.nombre_archivo }}</td>
-                        <td>
-                          <p-dropdown
-                            [options]="valoracionOpciones"
-                            [(ngModel)]="item.valoracion"
-                            placeholder="Seleccione"
-                            appendTo="body"
-                            [style]="{ width: '100%' }"
-                            optionLabel="label"
-                            optionValue="value" />
-                        </td>
-                        <td>
-                          <textarea
-                            *ngIf="showDescripcionValoracion(item.valoracion)"
-                            [(ngModel)]="item.descripcion"
-                            class="adjunto-descripcion-input"
-                            rows="2"
-                            placeholder="Indique el motivo o descripción"></textarea>
-                          <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
-                        </td>
-                        <td>
-                          <div class="adjuntos-actions">
-                            <p-button icon="pi pi-eye" pTooltip="Previsualizar" [styleClass]="'p-button-text p-button-sm'" (onClick)="openAdjunto(item.adjunto, false)"></p-button>
-                            <p-button icon="pi pi-download" pTooltip="Descargar" [styleClass]="'p-button-text p-button-sm'" (onClick)="openAdjunto(item.adjunto, true)"></p-button>
-                          </div>
-                        </td>
-                      </tr>
-                    </ng-template>
-                  </p-table>
-                </div>
-                <p class="adjuntos-empty-text" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">Sin archivos adjuntos.</p>
-              </div>
-            </div>
-            <p class="adjuntos-empty-text" *ngIf="!afiliationRequestDetails?.beneficiarios?.length">No hay beneficiarios en esta solicitud.</p>
-          </p-tabPanel>
-          <p-tabPanel header="Adjuntos Responsable" headerStyleClass="p-tabview-nav-link-sub">
-            <p class="adjuntos-empty-text">Archivos cargados por el responsable de la gestión. (En desarrollo)</p>
-          </p-tabPanel>
-        </p-tabView>
-      </div>
-    </p-tabPanel>
-    <p-tabPanel header="Tramitar Soliciutd" headerStyleClass="p-tabview-nav-link-4">
-      
-    </p-tabPanel>
+    <!-- ===================== HISTORICO GESTION ===================== -->
     <p-tabPanel header="Histórico Gestión" headerStyleClass="p-tabview-nav-link-3">
       <div class="process-container">
           <p-table
@@ -944,6 +887,140 @@
             [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
         </div>
     </p-tabPanel>
+
+  </p-tabView>
+</ng-container>
+
+    </p-tabPanel>
+
+    <p-tabPanel header="Adjuntos" headerStyleClass="p-tabview-nav-link-2 ">
+      <div class="p-tab-view">
+        <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
+          <p-tabPanel header="Adjuntos trabajador" headerStyleClass="p-tabview-nav-link-sub">
+            <div class="adjuntos-section" *ngIf="getAdjuntosTrabajador().length > 0">
+              <p class="adjuntos-tab-intro">Archivos adjuntos del trabajador. Valoración: Sí / No / No aplica. Si selecciona No, indique la descripción.</p>
+              <div class="adjuntos-table-wrapper">
+                <p-table
+                  [value]="getAdjuntosTrabajador()"
+                  [tableStyle]="{ 'min-width': '40rem' }"
+                  styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th style="width: 28%">Archivo</th>
+                      <th style="width: 18%">Valoración</th>
+                      <th style="width: 36%">Descripción (si aplica)</th>
+                      <th style="width: 18%">Acciones</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-item>
+                    <tr>
+                      <td>{{ item.adjunto.nombre_archivo }}</td>
+                      <td>
+                        <p-dropdown
+                          *ngIf="esAdjuntoPendienteValidacion(item)"
+                          [options]="valoracionOpciones"
+                          [(ngModel)]="item.valoracion"
+                          placeholder="Seleccione"
+                          appendTo="body"
+                          [style]="{ width: '100%' }"
+                          optionLabel="label"
+                          optionValue="value" />
+                        <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ getLabelValoracionAdjunto(item) }}</div>
+                      </td>
+                      <td>
+                        <ng-container *ngIf="esAdjuntoPendienteValidacion(item)">
+                          <textarea
+                            *ngIf="showDescripcionValoracion(item.valoracion)"
+                            [(ngModel)]="item.descripcion"
+                            class="adjunto-descripcion-input"
+                            rows="2"
+                            placeholder="Indique el motivo o descripción"></textarea>
+                          <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                        </ng-container>
+                        <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
+                      </td>
+                      <td>
+                        <div class="adjuntos-actions">
+                          <p-button icon="pi pi-eye" label="Previsualizar" pTooltip="Previsualizar" severity="secondary" [styleClass]="'adjunto-action-btn p-button-outlined'" [style]="{ 'border-radius': '6px' }" (onClick)="openAdjunto(item.adjunto, false)"></p-button>
+                          <p-button icon="pi pi-download" label="Descargar" pTooltip="Descargar" severity="secondary" [styleClass]="'adjunto-action-btn p-button-outlined'" [style]="{ 'border-radius': '6px' }" (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                          <p-button *ngIf="esAdjuntoPendienteValidacion(item)" label="Validar adjunto" icon="pi pi-check" [loading]="validandoAdjuntoId === item.adjunto.id" [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion" severity="success" [styleClass]="'adjunto-action-btn'" [style]="{ 'border-radius': '6px' }" (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            </div>
+            <p class="adjuntos-empty-text" *ngIf="getAdjuntosTrabajador().length === 0">No hay archivos adjuntos del trabajador.</p>
+          </p-tabPanel>
+          <p-tabPanel header="Adjuntos beneficiarios" headerStyleClass="p-tabview-nav-link-sub">
+            <p class="adjuntos-tab-intro">Archivos adjuntos por beneficiario. En la pestaña Beneficiarios puede ver y valorar los adjuntos de cada uno.</p>
+            <div class="benef-adjuntos-resumen" *ngIf="afiliationRequestDetails?.beneficiarios?.length">
+              <div class="adjuntos-section benef-adjuntos" *ngFor="let b of afiliationRequestDetails.beneficiarios; let iBenef = index">
+                <h4 class="adjuntos-section-title">Archivos adjuntos de {{ getNombreBeneficiario(b) }} ({{ b.persona.tipo_documento }} {{ b.persona.numero_documento }})</h4>
+                <div class="adjuntos-table-wrapper" *ngIf="getAdjuntosBeneficiario(iBenef).length > 0">
+                  <p-table
+                    [value]="getAdjuntosBeneficiario(iBenef)"
+                    [tableStyle]="{ 'min-width': '40rem' }"
+                    styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th style="width: 28%">Archivo</th>
+                        <th style="width: 18%">Valoración</th>
+                        <th style="width: 36%">Descripción (si aplica)</th>
+                        <th style="width: 18%">Acciones</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item>
+                      <tr>
+                        <td>{{ item.adjunto.nombre_archivo }}</td>
+                        <td>
+                          <p-dropdown
+                            *ngIf="esAdjuntoPendienteValidacion(item)"
+                            [options]="valoracionOpciones"
+                            [(ngModel)]="item.valoracion"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            optionLabel="label"
+                            optionValue="value" />
+                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ getLabelValoracionAdjunto(item) }}</div>
+                        </td>
+                        <td>
+                          <ng-container *ngIf="esAdjuntoPendienteValidacion(item)">
+                            <textarea
+                              *ngIf="showDescripcionValoracion(item.valoracion)"
+                              [(ngModel)]="item.descripcion"
+                              class="adjunto-descripcion-input"
+                              rows="2"
+                              placeholder="Indique el motivo o descripción"></textarea>
+                            <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                          </ng-container>
+                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
+                        </td>
+                        <td>
+                          <div class="adjuntos-actions">
+                            <p-button icon="pi pi-eye" label="Previsualizar" pTooltip="Previsualizar" severity="secondary" [styleClass]="'adjunto-action-btn p-button-outlined'" [style]="{ 'border-radius': '6px' }" (onClick)="openAdjunto(item.adjunto, false)"></p-button>
+                            <p-button icon="pi pi-download" label="Descargar" pTooltip="Descargar" severity="secondary" [styleClass]="'adjunto-action-btn p-button-outlined'" [style]="{ 'border-radius': '6px' }" (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                            <p-button *ngIf="esAdjuntoPendienteValidacion(item)" label="Validar adjunto" icon="pi pi-check" [loading]="validandoAdjuntoId === item.adjunto.id" [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion" severity="success" [styleClass]="'adjunto-action-btn'" [style]="{ 'border-radius': '6px' }" (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
+                          </div>
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+                <p class="adjuntos-empty-text" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">Sin archivos adjuntos.</p>
+              </div>
+            </div>
+            <p class="adjuntos-empty-text" *ngIf="!afiliationRequestDetails?.beneficiarios?.length">No hay beneficiarios en esta solicitud.</p>
+          </p-tabPanel>
+          <p-tabPanel header="Adjuntos Responsable" headerStyleClass="p-tabview-nav-link-sub">
+            <p class="adjuntos-empty-text">Archivos cargados por el responsable de la gestión. (En desarrollo)</p>
+          </p-tabPanel>
+        </p-tabView>
+      </div>
+    </p-tabPanel>
+    
     </p-tabView>
   </div>
 
@@ -961,6 +1038,147 @@
   </p-dialog>
 }
 <p-toast></p-toast>
+
+<!-- Modal subir adjuntos adicionales -->
+<p-dialog
+  [header]="getTituloModalAdjuntosAdicionales()"
+  [(visible)]="visibleModalAdjuntosAdicionales"
+  [modal]="true"
+  [style]="{ width: '440px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="closeModalAdjuntosAdicionales()">
+  <div class="dialog-content">
+    <div class="form-group">
+      <label>Seleccionar archivo(s)</label>
+      <div class="custom-file-upload">
+        <input
+          type="file"
+          #fileInputAdjuntosAdicionales
+          multiple
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+          (change)="onFileSelectedAdjuntosAdicionales($event)" />
+        <label class="upload-label" (click)="fileInputAdjuntosAdicionales.click()">
+          Elegir archivos <i class="pi pi-upload"></i>
+        </label>
+      </div>
+      <p class="adjuntos-adicionales-count" *ngIf="archivosAdjuntosAdicionales.length > 0">
+        {{ archivosAdjuntosAdicionales.length }} archivo(s) seleccionado(s).
+      </p>
+    </div>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Subir"
+        icon="pi pi-upload"
+        severity="success"
+        [loading]="subiendoAdjuntosAdicionales"
+        [disabled]="subiendoAdjuntosAdicionales || archivosAdjuntosAdicionales.length === 0"
+        (onClick)="subirAdjuntosAdicionales()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        [disabled]="subiendoAdjuntosAdicionales"
+        (onClick)="closeModalAdjuntosAdicionales()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmación guardar datos del trabajador -->
+<p-dialog
+  header="Confirmar guardar cambios"
+  [(visible)]="visibleConfirmarGuardarTrabajador"
+  [modal]="true"
+  [style]="{ width: '420px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarConfirmacionGuardarTrabajador()">
+  <div class="dialog-content">
+    <p class="confirmation-text">
+      ¿Está seguro de guardar los cambios en los datos del afiliado?
+    </p>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Sí, guardar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="confirmarGuardarTrabajador()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="cerrarConfirmacionGuardarTrabajador()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmación guardar datos del beneficiario -->
+<p-dialog
+  header="Confirmar guardar cambios"
+  [(visible)]="visibleConfirmarGuardarBeneficiario"
+  [modal]="true"
+  [style]="{ width: '420px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarConfirmacionGuardarBeneficiario()">
+  <div class="dialog-content">
+    <p class="confirmation-text" *ngIf="beneficiarioAGuardar">
+      ¿Está seguro de guardar los cambios en los datos del beneficiario <strong>{{ getNombreBeneficiario(beneficiarioAGuardar.b) }}</strong>?
+    </p>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Sí, guardar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="confirmarGuardarBeneficiario()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="cerrarConfirmacionGuardarBeneficiario()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmación validar adjunto -->
+<p-dialog
+  header="Confirmar validación"
+  [(visible)]="visibleConfirmarValidarAdjunto"
+  [modal]="true"
+  [style]="{ width: '420px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarConfirmacionValidarAdjunto()">
+  <div class="dialog-content">
+    <p class="confirmation-text" *ngIf="adjuntoAValidar">
+      ¿Está seguro de validar el adjunto <strong>{{ adjuntoAValidar.adjunto.nombre_archivo }}</strong> con la valoración seleccionada?
+    </p>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Sí, validar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="confirmarValidarAdjunto()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="cerrarConfirmacionValidarAdjunto()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
 
 <p-dialog
   header="Previsualización del Documento"
@@ -1453,48 +1671,4 @@
   <div class="dialog-buttons">
     <button type="button" class="btn btn-cancel" (click)="closeDialogHistory()">Cerrar</button>
   </div>
-</p-dialog>
-
-<!-- Dar prioridad solicitud -->
-<p-dialog
-  header="Darle prioridad al radicado"
-  [(visible)]="isVisibleSolicitudPrioridad"
-  [modal]="true"
-  [style]="{ width: '80vw' }"
-  [contentStyle]="{ padding: '1em' }"
-  [responsive]="true"
-  [styleClass]="'custom-dialog'"
-  [closable]="false">
-  <!-- Encabezado personalizado -->
-  <ng-template pTemplate="header">
-    <div class="dialog-header">
-      <span id="dialog-title">Priorización del la solicitud</span>
-    </div>
-  </ng-template>
-
-  <!-- Formulario -->
-  <form [formGroup]="esPrioridadForm" (ngSubmit)="onSubmitPriority()">
-    <!-- Agregar correo -->
-    <div class="form-group"></div>
-
-    <!-- Mensaje -->
-    <br />
-    <div class="form-group">
-      <label for="message">Mensaje</label>
-      <textarea
-        id="message"
-        formControlName="message"
-        placeholder="Mensaje de priorización"
-        rows="4"
-        class="form-control"
-        required>
-      </textarea>
-    </div>
-
-    <!-- Botones -->
-    <div class="dialog-buttons">
-      <button type="submit" class="btn btn-yes">Guardar</button>
-      <button type="button" class="btn btn-cancel" (click)="closeDialogPriority()">Cancelar</button>
-    </div>
-  </form>
 </p-dialog>

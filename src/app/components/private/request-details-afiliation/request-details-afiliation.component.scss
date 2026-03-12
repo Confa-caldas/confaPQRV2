@@ -167,7 +167,17 @@ p-timeline { width: 70%; }
 .info-value { font-weight: 600; font-size: 13px; text-align: right; }
 .status-pill { display: inline-block; padding: 6px 10px; border-radius: 6px; background: #f4c542; font-weight: 700; font-size: 12px; }
 
-.tab-data-view { padding: 1.25rem 1.5rem 1.5rem; max-width: 1100px; }
+:host ::ng-deep .p-tabview .p-tabview-panels { width: 100%; }
+:host ::ng-deep .p-tabview .p-tabview-panel .p-tabview-panel-content {
+  width: 100%; box-sizing: border-box; overflow-x: auto;
+}
+
+.tab-data-view {
+  padding: 1.25rem 1.5rem 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 .tab-data-section-title {
   font-size: 0.8rem; font-weight: 700; color: #2c3e50; letter-spacing: 0.04em; margin: 0 0 1rem 0;
   text-transform: uppercase; padding-bottom: 0.35rem; border-bottom: 1px solid #e2e6ea;
@@ -179,7 +189,26 @@ p-timeline { width: 70%; }
 .tab-data-section-subtitle:first-child { margin-top: 0; }
 .tab-data-view .process-container { margin-bottom: 0; }
 .tab-data-view .process-container-row {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem 1.5rem; margin: 0 0 1rem 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem 1.25rem;
+  margin: 0 0 1rem 0;
+}
+@media screen and (min-width: 576px) {
+  .tab-data-view .process-container-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 1.5rem;
+  }
+}
+@media screen and (min-width: 992px) {
+  .tab-data-view .process-container-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media screen and (min-width: 1200px) {
+  .tab-data-view .process-container-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 .tab-data-view .process-container-col {
   width: 100%; max-width: 100%; margin: 0; min-width: 0;
@@ -193,9 +222,11 @@ p-timeline { width: 70%; }
   font-size: 0.9rem; font-weight: 500; color: #212529; background: #f0f2f5; border: 1px solid #e2e6ea;
   border-radius: 6px; padding: 0.5rem 0.75rem; min-height: 38px; display: flex; align-items: center;
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+  word-break: break-word; overflow-wrap: break-word; min-width: 0;
 }
 .tab-data-view .process-container-text-area {
   min-height: 60px; align-items: flex-start; white-space: pre-line; line-height: 1.4;
+  word-break: break-word; overflow-wrap: break-word;
 }
 .data-field-input {
   font-size: 0.9rem; font-weight: 500; color: #212529; background: #f0f2f5; border: 1px solid #e2e6ea;
@@ -245,8 +276,65 @@ p-timeline { width: 70%; }
   width: 100%; min-height: 52px; padding: 0.4rem 0.5rem; font-size: 0.85rem; border: 1px solid #ced4da; border-radius: 6px; resize: vertical; box-sizing: border-box;
 }
 .adjunto-desc-sino { color: #6c757d; font-size: 0.9rem; }
-.adjuntos-actions { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+.adjuntos-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+:host ::ng-deep .adjuntos-actions {
+  .adjunto-action-btn.p-button {
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem 0.85rem;
+    min-height: 36px;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .adjunto-action-btn.p-button-outlined.p-button-secondary {
+    border: 1px solid #6c757d;
+    color: #495057;
+    background: #f8f9fa;
+    &:hover:not(:disabled) {
+      background: #e9ecef;
+      border-color: #5a6268;
+      color: #212529;
+    }
+    .p-button-icon { color: inherit; }
+  }
+  .adjunto-action-btn.p-button.p-button-success {
+    background: #a0bf1b;
+    border: 1px solid #a0bf1b;
+    color: #fff;
+    &:hover:not(:disabled) {
+      background: #94af18;
+      border-color: #94af18;
+      color: #fff;
+    }
+    &:disabled { opacity: 0.65; }
+    .p-button-icon { color: inherit; }
+  }
+}
 .adjuntos-empty-text { font-size: 0.9rem; color: #666; font-style: italic; margin: 0.5rem 0 0 0; }
+.adjuntos-upload-row {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+:host ::ng-deep .adjuntos-upload-row .adjunto-action-btn.p-button.p-button-success {
+  background: #a0bf1b;
+  border: 1px solid #a0bf1b;
+  color: #fff;
+  &:hover:not(:disabled) {
+    background: #94af18;
+    border-color: #94af18;
+    color: #fff;
+  }
+  .p-button-icon { color: inherit; }
+}
+.adjuntos-adicionales-count { font-size: 0.875rem; color: #495057; margin-top: 0.5rem; margin-bottom: 0; }
 .benef-adjuntos-resumen .adjuntos-section { margin-bottom: 1.5rem; }
 
 .estado-civil-editable-col {

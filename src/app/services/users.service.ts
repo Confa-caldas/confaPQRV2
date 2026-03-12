@@ -78,6 +78,8 @@ import {
   ParametroTipoDocumentoPersona,
   ParametroEstadoCivil,
   ParametroGenero,
+  ParametroParentesco,
+  Adjunto,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -135,7 +137,7 @@ export class Users {
   /** Actualiza datos de la persona trabajador en solicitud de afiliación (CE/PPT) y/o estado civil (alerta Soltero/Cónyuge). */
   updatePersonaTrabajadorSolicitud(payload: {
     id_persona: number;
-    id_solicitud?: number;
+    id_solicitud: number;
     tipo_documento: string;
     numero_documento: string;
     primer_apellido: string;
@@ -172,6 +174,27 @@ export class Users {
     return this.http.put<BodyResponse<unknown>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_UPDATE_PERSONA}`,
       payload
+    );
+  }
+
+  /** Valida un adjunto de solicitud de afiliación (actualiza estado_validacion, observacion_validacion, usuario que validó en afiliacion_solicitud_adjunto). */
+  validarAdjuntoAfiliacion(payload: {
+    id: number;
+    id_persona: number;
+    estado_validacion: string;
+    observacion_validacion?: string | null;
+  }) {
+    return this.http.put<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_VALIDAR_ADJUNTO}`,
+      payload
+    );
+  }
+
+  /** Sube uno o más adjuntos adicionales para una persona (trabajador o beneficiario) en solicitud de afiliación. FormData: id_solicitud, id_persona, archivos (file[]). */
+  uploadAdjuntosAfiliacion(formData: FormData) {
+    return this.http.post<BodyResponse<Adjunto[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_UPLOAD_ADJUNTO}`,
+      formData
     );
   }
 
@@ -464,6 +487,13 @@ export class Users {
   getEstadoCivilList() {
     return this.http.get<BodyResponse<ParametroEstadoCivil[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.ESTADO_CIVIL_LIST}`
+    );
+  }
+
+  /** Lista de parentescos (parametros_parentesco: id, parentesco, esta_activo). */
+  getParentescoList() {
+    return this.http.get<BodyResponse<ParametroParentesco[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PARENTESCO_LIST}`
     );
   }
 

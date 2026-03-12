@@ -421,6 +421,13 @@ export interface ParametroGenero {
   esta_activo: boolean;
 }
 
+/** Retorno tabla/función parentesco: id, parentesco, esta_activo */
+export interface ParametroParentesco {
+  id: number;
+  parentesco: string;
+  esta_activo: boolean;
+}
+
 export interface IsPqrCatalog {
   id: number;
   name: string;
@@ -1103,6 +1110,10 @@ export interface Adjunto {
   id_tipo_adjunto: number;
   fecha_modificacion: string | null;
   usuario_modificacion: string | null;
+  /** Estado de validación del adjunto: PENDIENTE | Validado (si/no/no_aplica). */
+  estado_validacion?: string | null;
+  /** Observación cuando la valoración es No. */
+  observacion_validacion?: string | null;
 }
 
 export interface TrabajadorInfo {
@@ -1160,4 +1171,12 @@ export interface BeneficiarioBundle {
   persona: Persona;
   adjuntos: Adjunto[];
   beneficiario: BeneficiarioInfo;
+}
+
+/** Valores válidos en BD: SI, NO, NA, PENDIENTE */
+export type ValoracionAdjunto = 'SI' | 'NO' | 'NA';
+export interface AdjuntoConValoracion {
+  adjunto: Adjunto;
+  valoracion: ValoracionAdjunto | '';
+  descripcion: string;
 }
