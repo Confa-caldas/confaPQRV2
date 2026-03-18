@@ -9,7 +9,7 @@ import {
 } from '../models/shared/body-response.inteface';
 import { EndPointRoute } from '../enums/routes.enum';
 import { map, catchError } from 'rxjs/operators';
-import { of, Observable } from 'rxjs';
+import { of, Observable, throwError } from 'rxjs';
 import { from } from 'rxjs';
 import {
   ApplicantTypeList,
@@ -195,6 +195,22 @@ export class Users {
     return this.http.post<BodyResponse<Adjunto[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_UPLOAD_ADJUNTO}`,
       formData
+    );
+  }
+
+  /** Obtiene URL firmada para previsualizar o descargar un adjunto de afiliación usando ruta_archivo. */
+  getAdjuntoAfiliacionUrl(ruta_archivo: string) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_ADJUNTO_URL}`,
+      { ruta_archivo }
+    );
+  }
+
+  /** Genera el expediente (PDF unificado de todos los adjuntos validados) y lo asocia al trabajador de la solicitud. Requiere id_solicitud e id_trabajador (id_persona del trabajador). */
+  generarExpedienteAfiliacion(id_solicitud: number, id_trabajador: number) {
+    return this.http.post<BodyResponse<Adjunto>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_GENERAR_EXPEDIENTE}`,
+      { id_solicitud, id_trabajador }
     );
   }
 
@@ -576,7 +592,14 @@ export class Users {
     );
   }
   downloadFileFromS3(preSignedUrl: string): Observable<Blob> {
-    return this.http.get(preSignedUrl, { responseType: 'blob' });
+    const url =
+      typeof preSignedUrl === 'string'
+        ? preSignedUrl
+        : (preSignedUrl as any)?.url ?? (preSignedUrl as any)?.signedUrl ?? (preSignedUrl as any)?.href ?? '';
+    if (!url || typeof url !== 'string') {
+      return throwError(() => new Error('URL de descarga no válida'));
+    }
+    return this.http.get(url, { responseType: 'blob' });
   }
 
   respuestaIaWs(requestDescription?: string): Observable<any> {

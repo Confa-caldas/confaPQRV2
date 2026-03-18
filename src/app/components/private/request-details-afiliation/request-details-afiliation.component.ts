@@ -221,6 +221,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   archivosAdjuntosAdicionales: File[] = [];
   /** En curso la subida de adjuntos adicionales. */
   subiendoAdjuntosAdicionales = false;
+  /** En curso la generación del expediente PDF. */
+  generandoExpediente = false;
   /** Por cada índice de beneficiario, true si al cargar tenía tipo doc CE o PPT (la sección editable se mantiene aunque cambie el selector). */
   private beneficioEditablePorIndice: boolean[] = [];
   /** Snapshots de datos editables por beneficiario (índice) para detectar cambios. */
@@ -606,6 +608,17 @@ getRequestDetails(request_details: number) {
     return this.beneficiariosAdjuntosEstado[index] ?? [];
   }
 
+  /** True si todos los adjuntos (trabajador y beneficiarios) están validados en 'SI'. Debe haber al menos un adjunto. */
+  get todosAdjuntosValidadosEnSi(): boolean {
+    const trabajador = this.trabajadorAdjuntosEstado ?? [];
+    const beneficiarios = this.beneficiariosAdjuntosEstado ?? [];
+    const todos = [...trabajador, ...beneficiarios.flat()];
+    if (todos.length === 0) return false;
+    return todos.every(
+      (item) => (item?.adjunto?.estado_validacion ?? '').toString().trim().toUpperCase() === 'SI'
+    );
+  }
+
   /** True si el adjunto está pendiente de validación (estado_validacion vacío o PENDIENTE). */
   esAdjuntoPendienteValidacion(item: AdjuntoConValoracion): boolean {
     const est = (item?.adjunto?.estado_validacion ?? '').toString().trim().toUpperCase();
@@ -910,9 +923,112 @@ getRequestDetails(request_details: number) {
     return (valoracion ?? '').toString().trim().toUpperCase() === 'NO';
   }
 
-  /** Abre previsualización o descarga del adjunto (ruta_archivo como URL/key). */
+  /** Abre previsualización o descarga del adjunto llamando al endpoint con ruta_archivo. */
   openAdjunto(adj: Adjunto, isDownload: boolean): void {
-    this.getPreSignedUrlToDownload(adj.ruta_archivo, adj.nombre_archivo, isDownload);
+    this.getPreSignedUrlAfiliacion(adj.ruta_archivo, adj.nombre_archivo, isDownload);
+  }
+
+  /** Obtiene URL firmada del endpoint de afiliación por ruta_archivo y abre previsualización o descarga en pantalla. */
+  getPreSignedUrlAfiliacion(ruta_archivo: string, nombre_archivo: string, isDownload: boolean): void {
+    const ruta = (ruta_archivo ?? '').toString().trim();
+    if (!ruta) {
+      this.messageService.add({ severity: 'warn', summary: 'Adjunto', detail: 'No hay ruta de archivo para este adjunto.' });
+      return;
+    }
+    this.userService.getAdjuntoAfiliacionUrl(ruta).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response?.code === 200 && response?.data) {
+          const data = response.data;
+          const urlString =
+            typeof data === 'string'
+              ? data
+              : (data as any)?.url ?? (data as any)?.signedUrl ?? (data as any)?.href ?? '';
+          if (!urlString || typeof urlString !== 'string') {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'La respuesta del servidor no contiene una URL válida.' });
+            return;
+          }
+          this.preSignedUrlDownload = urlString;
+          this.viewerType = this.getViewerType(nombre_archivo);
+          if (!isDownload) {
+            if (this.viewerType === 'pdf') {
+              this.isSpinnerVisible = true;
+              this.displayFileInTab(this.preSignedUrlDownload, nombre_archivo);
+            } else {
+              this.displayPreviewModal = true;
+            }
+          } else {
+            this.downloadFileS3(this.preSignedUrlDownload, nombre_archivo);
+          }
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo obtener la URL del adjunto.' });
+        }
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el archivo. Intente de nuevo.' });
+      },
+    });
+  }
+
+  /** Genera el expediente (PDF unificado de todos los adjuntos) y lo asocia al trabajador. Requiere que todos los adjuntos estén validados en 'Sí'. */
+  generarExpediente(): void {
+    const d = this.afiliationRequestDetails;
+    if (!d?.solicitud?.id) {
+      this.messageService.add({ severity: 'warn', summary: 'Expediente', detail: 'No hay solicitud cargada.' });
+      return;
+    }
+    const idTrabajador = d.trabajador?.persona?.id ?? d.trabajador?.trabajador?.id_persona;
+    if (idTrabajador == null || idTrabajador === undefined) {
+      this.messageService.add({ severity: 'warn', summary: 'Expediente', detail: 'No se pudo obtener el id del trabajador.' });
+      return;
+    }
+    const trabajador = this.trabajadorAdjuntosEstado ?? [];
+    const beneficiarios = this.beneficiariosAdjuntosEstado ?? [];
+    const todos = [...trabajador, ...beneficiarios.flat()];
+    if (todos.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Generar expediente',
+        detail: 'No hay adjuntos para generar el expediente.',
+      });
+      return;
+    }
+    if (!this.todosAdjuntosValidadosEnSi) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Generar expediente',
+        detail: 'No es posible generar el expediente. Todos los adjuntos (trabajador y beneficiarios) deben estar validados en "Sí".',
+      });
+      return;
+    }
+    this.generandoExpediente = true;
+    this.userService.generarExpedienteAfiliacion(d.solicitud.id, idTrabajador).subscribe({
+      next: (response) => {
+        if (response?.code === 200) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Expediente generado',
+            detail: 'El expediente se ha generado y asociado a la solicitud correctamente.',
+          });
+          this.getRequestDetails(this.request_id);
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: response?.message || 'No se pudo generar el expediente.',
+          });
+        }
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al generar el expediente. Intente de nuevo.',
+        });
+      },
+      complete: () => {
+        this.generandoExpediente = false;
+      },
+    });
   }
 
   /** Abre el diálogo de confirmación para validar el adjunto. */

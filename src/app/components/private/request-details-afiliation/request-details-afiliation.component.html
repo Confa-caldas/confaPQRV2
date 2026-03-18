@@ -226,6 +226,20 @@
             </div>
           </div>
         </div>
+        <div class="process-container-row tab-data-save-row" style="margin-top: 1rem;">
+          <div class="process-container-col">
+            <p-button
+              label="Generar expediente"
+              icon="pi pi-file-pdf"
+              severity="primary"
+              [styleClass]="'adjunto-action-btn'"
+              [style]="{ 'border-radius': '6px' }"
+              pTooltip="Genera un PDF con todos los adjuntos (trabajador y beneficiarios) validados en Sí. Todos deben estar validados en Sí."
+              [loading]="generandoExpediente"
+              [disabled]="generandoExpediente || !todosAdjuntosValidadosEnSi"
+              (onClick)="generarExpediente()"></p-button>
+          </div>
+        </div>
       </div>
     </p-tabPanel>
 

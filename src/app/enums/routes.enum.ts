@@ -142,4 +142,8 @@ export enum EndPointRoute {
   REQUEST_AFILIATION_UPDATE_PERSONA = 'requests-afiliation/update-persona',
   REQUEST_AFILIATION_VALIDAR_ADJUNTO = 'requests-afiliation/adjunto/validar',
   REQUEST_AFILIATION_UPLOAD_ADJUNTO = 'requests-afiliation/adjunto/upload',
+  /** Obtener URL firmada para previsualizar/descargar adjunto por ruta_archivo */
+  REQUEST_AFILIATION_ADJUNTO_URL = 'requests-afiliation/adjunto/url',
+  /** Generar PDF expediente (unir adjuntos trabajador + beneficiarios) y asociar a solicitud */
+  REQUEST_AFILIATION_GENERAR_EXPEDIENTE = 'requests-afiliation/expediente/generar',
 }
