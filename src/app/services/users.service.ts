@@ -79,7 +79,9 @@ import {
   ParametroEstadoCivil,
   ParametroGenero,
   ParametroParentesco,
+  ParametroMotivoRechazoAfiliacion,
   Adjunto,
+  ActualizarEstadoGestionAfiliacionPayload,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -211,6 +213,14 @@ export class Users {
     return this.http.post<BodyResponse<Adjunto>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_GENERAR_EXPEDIENTE}`,
       { id_solicitud, id_trabajador }
+    );
+  }
+
+  /** Actualiza el estado de gestión de la solicitud de afiliación (modal Gestionar estado). */
+  actualizarEstadoGestionSolicitudAfiliacion(payload: ActualizarEstadoGestionAfiliacionPayload) {
+    return this.http.put<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_ACTUALIZAR_ESTADO_GESTION}`,
+      payload
     );
   }
 
@@ -510,6 +520,13 @@ export class Users {
   getParentescoList() {
     return this.http.get<BodyResponse<ParametroParentesco[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.PARENTESCO_LIST}`
+    );
+  }
+
+  /** Lista de motivos de rechazo para gestión de estado de afiliado (solo catálogo desde BD). */
+  getMotivosRechazoAfiliacionList() {
+    return this.http.get<BodyResponse<ParametroMotivoRechazoAfiliacion[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.MOTIVOS_RECHAZO_AFILIACION_LIST}`
     );
   }
 

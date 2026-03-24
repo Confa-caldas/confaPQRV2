@@ -84,16 +84,22 @@
   </div>
 </form>
 
-<button
+<span
   *ngIf="selectedRequests.length > 0"
-  pButton
-  type="button"
-  label="Asignar seleccionadas"
-  icon="pi pi-users"
-  class="p-button-success"
-  (click)="assignSelectedRequests(selectedRequests)"
-  [disabled]="!selectedRequests || selectedRequests.length === 0">
-</button>
+  class="assign-bulk-tooltip-wrap"
+  [pTooltip]="mensajeTooltipAsignarInhabilitada"
+  [tooltipDisabled]="todasSeleccionadasPuedenAsignar()"
+  tooltipPosition="top"
+  tooltipStyleClass="tooltip-asignar-bloqueado">
+  <button
+    pButton
+    type="button"
+    label="Asignar seleccionadas"
+    icon="pi pi-users"
+    class="p-button-success assign-bulk-btn"
+    (click)="assignSelectedRequests(selectedRequests)"
+    [disabled]="!selectedRequests?.length || !todasSeleccionadasPuedenAsignar()"></button>
+</span>
 
 <div class="mt-auto">
   <p-table
@@ -170,13 +176,24 @@
         <td style="text-align: center">{{ requestList.assigned_user }}</td>
         <td>
           <div *ngIf="requestList.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'">
-            <button class="custom-button" (click)="assignRequest(requestList)">
-              {{
-                requestList.assigned_user?.trim()
-                  ? 'Reasignar'
-                  : 'Asignar'
-              }}
-            </button>
+            <span
+              class="assign-btn-tooltip-wrap"
+              [pTooltip]="mensajeTooltipAsignarInhabilitada"
+              [tooltipDisabled]="puedeActivarAsignar(requestList)"
+              tooltipPosition="top"
+              tooltipStyleClass="tooltip-asignar-bloqueado">
+              <button
+                class="custom-button"
+                type="button"
+                [disabled]="!puedeActivarAsignar(requestList)"
+                (click)="assignRequest(requestList)">
+                {{
+                  requestList.assigned_user?.trim()
+                    ? 'Reasignar'
+                    : 'Asignar'
+                }}
+              </button>
+            </span>
           </div>
         </td>
       </tr>

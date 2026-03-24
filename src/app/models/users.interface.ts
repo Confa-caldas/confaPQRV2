@@ -60,7 +60,38 @@ export interface RequestsListAfiliation {
   user_name_completed: string;
   mensaje_reasignacion: string;
   total_count: number;
+  /** Si alguno es "Si", Asignar queda inhabilitado. */
+  pendiente_direccion?: string | null;
+  pendiente_activar_empresa?: string | null;
+  novedad_restrictiva?: string | null;
 }
+
+/**
+ * Devuelve true si el botón Asignar puede estar activo.
+ * Asignar se inhabilita si cualquiera de los tres indicadores es "Si".
+ */
+export function afiliacionIndicadoresPermitenAsignar(row: {
+  pendiente_direccion?: string | null;
+  pendiente_activar_empresa?: string | null;
+  novedad_restrictiva?: string | null;
+}): boolean {
+  const normSi = (v: string | null | undefined) =>
+    (v ?? '')
+      .toString()
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') === 'si';
+  const algunoEsSi =
+    normSi(row.pendiente_direccion) ||
+    normSi(row.pendiente_activar_empresa) ||
+    normSi(row.novedad_restrictiva);
+  return !algunoEsSi;
+}
+
+/** Texto del tooltip cuando Asignar está inhabilitado por indicadores. */
+export const MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA =
+  'No puede asignar mientras pendiente dirección, pendiente activar empresa o novedad restrictiva esté en Sí.';
 
 export interface NovedadList {
   novedad_id: number;
@@ -425,6 +456,13 @@ export interface ParametroGenero {
 export interface ParametroParentesco {
   id: number;
   parentesco: string;
+  esta_activo: boolean;
+}
+
+/** Motivos de rechazo para gestión de estado de afiliación (parametros_motivo_rechazo_afiliacion o equivalente). */
+export interface ParametroMotivoRechazoAfiliacion {
+  id: number;
+  motivo_rechazo: string;
   esta_activo: boolean;
 }
 
@@ -1051,6 +1089,22 @@ export interface Solicitud {
   motivo_excluido_masiva: string | null;
   fecha_asignacion_gestion: string | null;
   fecha_recepcion_documentos: string | null;
+  /** Si alguno es "Si", Asignar queda inhabilitado en detalle. */
+  pendiente_direccion?: string | null;
+  pendiente_activar_empresa?: string | null;
+  novedad_restrictiva?: string | null;
+}
+
+/**
+ * Actualizar estado desde el modal "Gestionar estado de afiliado".
+ * El backend debe aceptar el mismo contrato (PUT).
+ */
+export interface ActualizarEstadoGestionAfiliacionPayload {
+  id_solicitud: number;
+  /** Valor del dropdown: 'Pendiente afiliación rpa' | 'Procesado' | 'Rechazado'. */
+  estado_afiliado: string;
+  /** Id del catálogo de motivos de rechazo; enviar cuando estado_afiliado es Rechazado. */
+  id_motivo_rechazo?: number | null;
 }
 
 export interface Empresa {

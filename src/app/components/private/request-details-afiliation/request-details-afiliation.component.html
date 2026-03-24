@@ -147,34 +147,151 @@
   <p-toast />
   <br />
 
+  <!--
   <div
     *ngIf="afiliationRequestDetails.solicitud.id_estado_solicitud === 1"
     style="text-align: right; margin-right: 10px">
     <p-menu #menu [model]="items" [popup]="true"></p-menu>
     <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
   </div>
+  -->
 
   <div class="process-container-row-generals">
-    <div class="container-button">
+    <div class="container-button container-button--actions">
       <p-button
-        *ngIf="afiliationRequestDetails.solicitud.id_estado_solicitud === 1"
-        [label]="
-          afiliationRequestDetails.solicitud.usuario_gestion === null ||
-          afiliationRequestDetails.solicitud.usuario_gestion === ''
-            ? 'Asignar'
-            : 'Reasignar'
-        "
-        (click)="assignRequestAfiliation(afiliationRequestDetails)"
+        label="Gestionar estado"
+        icon="pi pi-cog"
+        (click)="abrirModalGestionarEstado()"
         [style]="{ 'border-radius': '10px' }"></p-button>
+      <span
+        *ngIf="afiliationRequestDetails.solicitud.id_estado_solicitud === 1"
+        class="assign-afiliacion-tooltip-wrap"
+        [pTooltip]="mensajeTooltipAsignarInhabilitada"
+        [tooltipDisabled]="puedeActivarBotonAsignarAfiliacion()"
+        tooltipPosition="top"
+        tooltipStyleClass="tooltip-asignar-bloqueado">
+        <p-button
+          [label]="
+            afiliationRequestDetails.solicitud.usuario_gestion === null ||
+            afiliationRequestDetails.solicitud.usuario_gestion === ''
+              ? 'Asignar'
+              : 'Reasignar'
+          "
+          [disabled]="!puedeActivarBotonAsignarAfiliacion()"
+          (click)="assignRequestAfiliation(afiliationRequestDetails)"
+          [style]="{ 'border-radius': '10px' }"></p-button>
+      </span>
     </div>
   </div>
 
-  <div class="p-tabview">
-    <p-tabView class="p-tabview-nav">
-      <p-tabPanel header="Radicación" headerStyleClass="p-tabview-nav-link-1 ">
-    <ng-container *ngIf="afiliationRequestDetails as d">
+  <p-dialog
+    [(visible)]="visibleGestionarEstadoModal"
+    [modal]="true"
+    [style]="{ width: 'min(520px, 96vw)' }"
+    [closable]="true"
+    [styleClass]="'gestionar-estado-dialog-modal'"
+    (onHide)="cerrarModalGestionarEstado()">
+    <ng-template pTemplate="headless">
+      <div class="modal-content gestionar-estado-modal-content">
+        <div class="login-form-header gestionar-estado-login-bar">
+          <div class="login-form-header__item login-form-header__item_1"></div>
+          <div class="login-form-header__item login-form-header__item_2"></div>
+          <div class="login-form-header__item login-form-header__item_3"></div>
+          <div class="login-form-header__item login-form-header__item_4"></div>
+          <div class="login-form-header__item login-form-header__item_5"></div>
+          <div class="login-form-header__item login-form-header__item_6"></div>
+        </div>
 
-  <p-tabView>
+        <div class="row my-4 px-5">
+          <div class="col-12 text-center gestionar-estado-modal-title">
+            Gestionar estado de afiliado
+          </div>
+        </div>
+
+        <div class="gestionar-estado-modal-body px-5 pb-4">
+          <p class="gestionar-estado-section-title">Restricciones</p>
+          <div class="gestionar-estado-tags">
+            <p-tag [value]="textoTagNovedadRestrictiva()" [severity]="severidadTagNovedadRestrictiva()"></p-tag>
+            <p-tag [value]="textoTagPendienteDireccion()" [severity]="severidadTagPendienteDireccion()"></p-tag>
+            <p-tag
+              [value]="textoTagPendienteActivarEmpresa()"
+              [severity]="severidadTagPendienteActivarEmpresa()"></p-tag>
+          </div>
+
+          <form [formGroup]="gestionarEstadoAfiliadoForm" class="gestionar-estado-form gestionar-estado-form--modal">
+            <div class="gestionar-estado-field multi">
+              <label class="label" for="estadoAfiliadoDd">Estado afiliación <span class="req">*</span></label>
+              <p-dropdown
+                id="estadoAfiliadoDd"
+                formControlName="estadoAfiliado"
+                [options]="estadoAfiliadoOpciones"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione estado"
+                [showClear]="true"
+                class="selector gestionar-estado-dropdown-wrap"
+                styleClass="gestionar-estado-dropdown"
+                [style]="{ height: '40px', width: '100%' }"
+                appendTo="body"></p-dropdown>
+              <small
+                *ngIf="
+                  gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.invalid &&
+                  gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.touched
+                "
+                class="gestionar-estado-error error-label">
+                Estado es obligatorio.
+              </small>
+            </div>
+
+            <div class="gestionar-estado-field multi" *ngIf="mostrarMotivoRechazoGestion">
+              <label class="label" for="motivoRechazoDd">Motivo de rechazo <span class="req">*</span></label>
+              <p-dropdown
+                id="motivoRechazoDd"
+                formControlName="motivoRechazo"
+                [options]="motivoRechazoOpciones"
+                optionLabel="label"
+                optionValue="value"
+                [placeholder]="cargandoMotivosRechazo ? 'Cargando motivos...' : 'Seleccione motivo'"
+                [loading]="cargandoMotivosRechazo"
+                [disabled]="cargandoMotivosRechazo"
+                [showClear]="true"
+                class="selector gestionar-estado-dropdown-wrap"
+                styleClass="gestionar-estado-dropdown"
+                [style]="{ height: '40px', width: '100%' }"
+                appendTo="body"></p-dropdown>
+              <small
+                *ngIf="
+                  gestionarEstadoAfiliadoForm.get('motivoRechazo')?.invalid &&
+                  gestionarEstadoAfiliadoForm.get('motivoRechazo')?.touched
+                "
+                class="gestionar-estado-error error-label">
+                Motivo es obligatorio cuando el estado es Rechazado.
+              </small>
+            </div>
+          </form>
+        </div>
+
+        <div class="row my-4 px-5 pb-4">
+          <div class="col-12 d-flex justify-content-evenly flex-wrap gap-3 gestionar-estado-modal-actions">
+            <p-button
+              label="Cancelar"
+              severity="secondary"
+              [disabled]="guardandoEstadoGestionSolicitud"
+              (onClick)="cerrarModalGestionarEstado()"></p-button>
+            <p-button
+              label="Guardar"
+              [loading]="guardandoEstadoGestionSolicitud"
+              [disabled]="guardandoEstadoGestionSolicitud"
+              (onClick)="guardarGestionarEstadoAfiliado()"></p-button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <ng-container *ngIf="afiliationRequestDetails as d">
+    <div class="p-tabview request-details-tabview">
+      <p-tabView class="p-tabview-nav">
 
     <!-- ===================== SOLICITUD ===================== -->
     <p-tabPanel header="Solicitud" headerStyleClass="p-tabview-nav-link-1 ">
@@ -224,20 +341,6 @@
               <label class="process-container-label">Comentarios o notas</label>
               <div class="process-container-text process-container-text-area" [ngStyle]="{ 'white-space': 'pre-line' }">{{ d.solicitud.observaciones || '—' }}</div>
             </div>
-          </div>
-        </div>
-        <div class="process-container-row tab-data-save-row" style="margin-top: 1rem;">
-          <div class="process-container-col">
-            <p-button
-              label="Generar expediente"
-              icon="pi pi-file-pdf"
-              severity="primary"
-              [styleClass]="'adjunto-action-btn'"
-              [style]="{ 'border-radius': '6px' }"
-              pTooltip="Genera un PDF con todos los adjuntos (trabajador y beneficiarios) validados en Sí. Todos deben estar validados en Sí."
-              [loading]="generandoExpediente"
-              [disabled]="generandoExpediente || !todosAdjuntosValidadosEnSi"
-              (onClick)="generarExpediente()"></p-button>
           </div>
         </div>
       </div>
@@ -588,6 +691,22 @@
             (onClick)="openModalAdjuntosAdicionales('trabajador')"></p-button>
         </div>
 
+        <div class="expediente-generacion-block">
+          <h3 class="tab-data-section-title expediente-generacion-title">Generación del expediente</h3>
+          <div class="expediente-generacion-actions">
+            <p-button
+              label="Generar expediente"
+              icon="pi pi-file-pdf"
+              severity="primary"
+              [styleClass]="'adjunto-action-btn'"
+              [style]="{ 'border-radius': '6px' }"
+              pTooltip="Genera un PDF con todos los adjuntos (trabajador y beneficiarios) validados en Sí. Todos deben estar validados en Sí."
+              [loading]="generandoExpediente"
+              [disabled]="generandoExpediente || !todosAdjuntosValidadosEnSi"
+              (onClick)="generarExpediente()"></p-button>
+          </div>
+        </div>
+
       </div>
     </p-tabPanel>
 
@@ -852,9 +971,25 @@
 
       </div>
     </p-tabPanel>
+
+    <!-- ===================== NOVEDADES ===================== -->
+    <p-tabPanel header="Novedades" headerStyleClass="p-tabview-nav-link-1">
+      <div class="tab-data-view">
+        <h3 class="tab-data-section-title">Novedades Previa a Afiliación</h3>
+        <div class="process-container novedades-tab-section">
+          <p-message severity="info" styleClass="novedades-empty-msg" text="No hay novedades previas a afiliación registradas para esta solicitud."></p-message>
+        </div>
+
+        <h3 class="tab-data-section-title">Novedades por Calidad de Datos (Registraduría)</h3>
+        <div class="process-container novedades-tab-section">
+          <p-message severity="info" styleClass="novedades-empty-msg" text="No hay novedades por calidad de datos (Registraduría) para esta solicitud."></p-message>
+        </div>
+      </div>
+    </p-tabPanel>
+
     <!-- ===================== HISTORICO GESTION ===================== -->
-    <p-tabPanel header="Histórico Gestión" headerStyleClass="p-tabview-nav-link-3">
-      <div class="process-container">
+    <p-tabPanel header="Histórico Gestión" headerStyleClass="p-tabview-nav-link-2">
+      <div class="tab-data-view">
           <p-table
             [value]="requestHistoric"
             [scrollable]="true"
@@ -902,141 +1037,9 @@
         </div>
     </p-tabPanel>
 
-  </p-tabView>
-</ng-container>
-
-    </p-tabPanel>
-
-    <p-tabPanel header="Adjuntos" headerStyleClass="p-tabview-nav-link-2 ">
-      <div class="p-tab-view">
-        <p-tabView class="p-tabview-nav-tabs" [style]="{ 'margin-top': '25px' }">
-          <p-tabPanel header="Adjuntos trabajador" headerStyleClass="p-tabview-nav-link-sub">
-            <div class="adjuntos-section" *ngIf="getAdjuntosTrabajador().length > 0">
-              <p class="adjuntos-tab-intro">Archivos adjuntos del trabajador. Valoración: Sí / No / No aplica. Si selecciona No, indique la descripción.</p>
-              <div class="adjuntos-table-wrapper">
-                <p-table
-                  [value]="getAdjuntosTrabajador()"
-                  [tableStyle]="{ 'min-width': '40rem' }"
-                  styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
-                  <ng-template pTemplate="header">
-                    <tr>
-                      <th style="width: 28%">Archivo</th>
-                      <th style="width: 18%">Valoración</th>
-                      <th style="width: 36%">Descripción (si aplica)</th>
-                      <th style="width: 18%">Acciones</th>
-                    </tr>
-                  </ng-template>
-                  <ng-template pTemplate="body" let-item>
-                    <tr>
-                      <td>{{ item.adjunto.nombre_archivo }}</td>
-                      <td>
-                        <p-dropdown
-                          *ngIf="esAdjuntoPendienteValidacion(item)"
-                          [options]="valoracionOpciones"
-                          [(ngModel)]="item.valoracion"
-                          placeholder="Seleccione"
-                          appendTo="body"
-                          [style]="{ width: '100%' }"
-                          optionLabel="label"
-                          optionValue="value" />
-                        <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ getLabelValoracionAdjunto(item) }}</div>
-                      </td>
-                      <td>
-                        <ng-container *ngIf="esAdjuntoPendienteValidacion(item)">
-                          <textarea
-                            *ngIf="showDescripcionValoracion(item.valoracion)"
-                            [(ngModel)]="item.descripcion"
-                            class="adjunto-descripcion-input"
-                            rows="2"
-                            placeholder="Indique el motivo o descripción"></textarea>
-                          <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
-                        </ng-container>
-                        <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
-                      </td>
-                      <td>
-                        <div class="adjuntos-actions">
-                          <p-button icon="pi pi-eye" label="Previsualizar" pTooltip="Previsualizar" severity="secondary" [styleClass]="'adjunto-action-btn p-button-outlined'" [style]="{ 'border-radius': '6px' }" (onClick)="openAdjunto(item.adjunto, false)"></p-button>
-                          <p-button icon="pi pi-download" label="Descargar" pTooltip="Descargar" severity="secondary" [styleClass]="'adjunto-action-btn p-button-outlined'" [style]="{ 'border-radius': '6px' }" (onClick)="openAdjunto(item.adjunto, true)"></p-button>
-                          <p-button *ngIf="esAdjuntoPendienteValidacion(item)" label="Validar adjunto" icon="pi pi-check" [loading]="validandoAdjuntoId === item.adjunto.id" [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion" severity="success" [styleClass]="'adjunto-action-btn'" [style]="{ 'border-radius': '6px' }" (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
-                        </div>
-                      </td>
-                    </tr>
-                  </ng-template>
-                </p-table>
-              </div>
-            </div>
-            <p class="adjuntos-empty-text" *ngIf="getAdjuntosTrabajador().length === 0">No hay archivos adjuntos del trabajador.</p>
-          </p-tabPanel>
-          <p-tabPanel header="Adjuntos beneficiarios" headerStyleClass="p-tabview-nav-link-sub">
-            <p class="adjuntos-tab-intro">Archivos adjuntos por beneficiario. En la pestaña Beneficiarios puede ver y valorar los adjuntos de cada uno.</p>
-            <div class="benef-adjuntos-resumen" *ngIf="afiliationRequestDetails?.beneficiarios?.length">
-              <div class="adjuntos-section benef-adjuntos" *ngFor="let b of afiliationRequestDetails.beneficiarios; let iBenef = index">
-                <h4 class="adjuntos-section-title">Archivos adjuntos de {{ getNombreBeneficiario(b) }} ({{ b.persona.tipo_documento }} {{ b.persona.numero_documento }})</h4>
-                <div class="adjuntos-table-wrapper" *ngIf="getAdjuntosBeneficiario(iBenef).length > 0">
-                  <p-table
-                    [value]="getAdjuntosBeneficiario(iBenef)"
-                    [tableStyle]="{ 'min-width': '40rem' }"
-                    styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
-                    <ng-template pTemplate="header">
-                      <tr>
-                        <th style="width: 28%">Archivo</th>
-                        <th style="width: 18%">Valoración</th>
-                        <th style="width: 36%">Descripción (si aplica)</th>
-                        <th style="width: 18%">Acciones</th>
-                      </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-item>
-                      <tr>
-                        <td>{{ item.adjunto.nombre_archivo }}</td>
-                        <td>
-                          <p-dropdown
-                            *ngIf="esAdjuntoPendienteValidacion(item)"
-                            [options]="valoracionOpciones"
-                            [(ngModel)]="item.valoracion"
-                            placeholder="Seleccione"
-                            appendTo="body"
-                            [style]="{ width: '100%' }"
-                            optionLabel="label"
-                            optionValue="value" />
-                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ getLabelValoracionAdjunto(item) }}</div>
-                        </td>
-                        <td>
-                          <ng-container *ngIf="esAdjuntoPendienteValidacion(item)">
-                            <textarea
-                              *ngIf="showDescripcionValoracion(item.valoracion)"
-                              [(ngModel)]="item.descripcion"
-                              class="adjunto-descripcion-input"
-                              rows="2"
-                              placeholder="Indique el motivo o descripción"></textarea>
-                            <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
-                          </ng-container>
-                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
-                        </td>
-                        <td>
-                          <div class="adjuntos-actions">
-                            <p-button icon="pi pi-eye" label="Previsualizar" pTooltip="Previsualizar" severity="secondary" [styleClass]="'adjunto-action-btn p-button-outlined'" [style]="{ 'border-radius': '6px' }" (onClick)="openAdjunto(item.adjunto, false)"></p-button>
-                            <p-button icon="pi pi-download" label="Descargar" pTooltip="Descargar" severity="secondary" [styleClass]="'adjunto-action-btn p-button-outlined'" [style]="{ 'border-radius': '6px' }" (onClick)="openAdjunto(item.adjunto, true)"></p-button>
-                            <p-button *ngIf="esAdjuntoPendienteValidacion(item)" label="Validar adjunto" icon="pi pi-check" [loading]="validandoAdjuntoId === item.adjunto.id" [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion" severity="success" [styleClass]="'adjunto-action-btn'" [style]="{ 'border-radius': '6px' }" (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
-                          </div>
-                        </td>
-                      </tr>
-                    </ng-template>
-                  </p-table>
-                </div>
-                <p class="adjuntos-empty-text" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">Sin archivos adjuntos.</p>
-              </div>
-            </div>
-            <p class="adjuntos-empty-text" *ngIf="!afiliationRequestDetails?.beneficiarios?.length">No hay beneficiarios en esta solicitud.</p>
-          </p-tabPanel>
-          <p-tabPanel header="Adjuntos Responsable" headerStyleClass="p-tabview-nav-link-sub">
-            <p class="adjuntos-empty-text">Archivos cargados por el responsable de la gestión. (En desarrollo)</p>
-          </p-tabPanel>
-        </p-tabView>
-      </div>
-    </p-tabPanel>
-    
-    </p-tabView>
-  </div>
+      </p-tabView>
+    </div>
+  </ng-container>
 
   <p-dialog
     header="{{ dialogHeader }}"

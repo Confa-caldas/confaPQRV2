@@ -25,9 +25,13 @@ import {
   BeneficiarioBundle,
   AdjuntoConValoracion,
   ValoracionAdjunto,
+  afiliacionIndicadoresPermitenAsignar,
+  MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA,
+  ActualizarEstadoGestionAfiliacionPayload,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { SessionStorageItems } from '../../../enums/session-storage-items.enum';
 import { HttpClient } from '@angular/common/http';
@@ -59,6 +63,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   requestList: RequestsList[] = [];
   requestDetails?: RequestsDetails;
   afiliationRequestDetails?: AfiliacionRequestDetailsData;
+  readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
   requestHistoric: RequestHistoric[] = [];
   requestHistoricAttach: RequestHistoric[] = [];
   ingredient!: string;
@@ -250,6 +255,27 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   trabajadorAdjuntosEstado: AdjuntoConValoracion[] = [];
   beneficiariosAdjuntosEstado: AdjuntoConValoracion[][] = [];
 
+  // --- Modal: Gestionar estado de afiliado ---
+  visibleGestionarEstadoModal = false;
+  gestionarEstadoAfiliadoForm!: FormGroup;
+  private gestionarEstadoAfiliadoSub?: Subscription;
+
+  readonly ESTADO_AFILIADO_PENDIENTE_RPA = 'Pendiente afiliación rpa';
+  readonly ESTADO_AFILIADO_PROCESADO = 'Procesado';
+  readonly ESTADO_AFILIADO_RECHAZADO = 'Rechazado';
+
+  estadoAfiliadoOpciones: { label: string; value: string }[] = [
+    { label: 'Pendiente afiliación rpa', value: 'Pendiente afiliación rpa' },
+    { label: 'Procesado', value: 'Procesado' },
+    { label: 'Rechazado', value: 'Rechazado' },
+  ];
+
+  /** Opciones del dropdown motivo de rechazo (cargadas desde BD). */
+  motivoRechazoOpciones: { label: string; value: string }[] = [];
+  cargandoMotivosRechazo = false;
+  /** Guardado en curso: actualizar estado gestión solicitud. */
+  guardandoEstadoGestionSolicitud = false;
+
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
@@ -277,6 +303,11 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
     this.esPrioridadForm = this.fb.group({
       message: ['', Validators.required],
+    });
+
+    this.gestionarEstadoAfiliadoForm = this.fb.group({
+      estadoAfiliado: [null, Validators.required],
+      motivoRechazo: [null as string | null],
     });
   }
 
@@ -318,6 +349,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     // Util.getImageDataUrl('assets/imagenes/footer.png').then(
     //   imagenConfaFooter => (this.imgPdf1 = imagenConfaFooter)
     // );
+
+    this.initGestionarEstadoAfiliadoListeners();
 
     this.items = [
       {
@@ -414,6 +447,247 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
   showSuccessMessage(state: string, title: string, message: string) {
     this.messageService.add({ severity: state, summary: title, detail: message });
+  }
+
+  /** Escucha `estadoAfiliado`: motivo de rechazo solo con validación si es Rechazado. */
+  private initGestionarEstadoAfiliadoListeners(): void {
+    if (this.gestionarEstadoAfiliadoSub) {
+      return;
+    }
+    const estadoCtrl = this.gestionarEstadoAfiliadoForm.get('estadoAfiliado');
+    const motivoCtrl = this.gestionarEstadoAfiliadoForm.get('motivoRechazo');
+    if (!estadoCtrl || !motivoCtrl) {
+      return;
+    }
+    this.gestionarEstadoAfiliadoSub = estadoCtrl.valueChanges.subscribe((val: string | null) => {
+      if (val === this.ESTADO_AFILIADO_RECHAZADO) {
+        motivoCtrl.setValidators([Validators.required]);
+      } else {
+        motivoCtrl.clearValidators();
+        motivoCtrl.setValue(null, { emitEvent: false });
+      }
+      motivoCtrl.updateValueAndValidity({ emitEvent: false });
+    });
+  }
+
+  get mostrarMotivoRechazoGestion(): boolean {
+    return (
+      this.gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.value === this.ESTADO_AFILIADO_RECHAZADO
+    );
+  }
+
+  abrirModalGestionarEstado(): void {
+    this.gestionarEstadoAfiliadoForm.reset({
+      estadoAfiliado: null,
+      motivoRechazo: null,
+    });
+    this.gestionarEstadoAfiliadoForm.get('motivoRechazo')?.clearValidators();
+    this.gestionarEstadoAfiliadoForm.get('motivoRechazo')?.updateValueAndValidity({ emitEvent: false });
+    this.visibleGestionarEstadoModal = true;
+    this.cargarMotivosRechazoAfiliacion();
+  }
+
+  /** Carga catálogo de motivos de rechazo desde el servicio (BD). */
+  cargarMotivosRechazoAfiliacion(): void {
+    this.cargandoMotivosRechazo = true;
+    this.userService.getMotivosRechazoAfiliacionList().subscribe({
+      next: (res) => {
+        if (res.code === 200 && Array.isArray(res.data)) {
+          this.motivoRechazoOpciones = res.data
+            .filter((m) => {
+              const a = m.esta_activo as boolean | number | undefined;
+              if (a === false || a === 0) return false;
+              return true;
+            })
+            .map((m) => ({
+              label: (m.motivo_rechazo ?? '').trim() || `Motivo #${m.id}`,
+              value: String(m.id),
+            }));
+        } else {
+          this.motivoRechazoOpciones = [];
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Motivos de rechazo',
+            detail: res.message || 'No se pudieron cargar los motivos de rechazo.',
+          });
+        }
+      },
+      error: (err) => {
+        console.error('getMotivosRechazoAfiliacionList', err);
+        this.motivoRechazoOpciones = [];
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los motivos de rechazo. Intente de nuevo.',
+        });
+      },
+      complete: () => {
+        this.cargandoMotivosRechazo = false;
+      },
+    });
+  }
+
+  cerrarModalGestionarEstado(): void {
+    this.visibleGestionarEstadoModal = false;
+  }
+
+  /**
+   * Motivos que impiden pasar a "Pendiente afiliación rpa": revisiones de archivos pendientes
+   * y/o indicadores de solicitud en "Si" (novedad restrictiva, pendiente dirección, pendiente activar empresa).
+   */
+  private obtenerMotivosBloqueoPendienteAfiliacionRpa(): string[] {
+    const motivos: string[] = [];
+    const trabajador = this.trabajadorAdjuntosEstado ?? [];
+    const beneficiarios = this.beneficiariosAdjuntosEstado ?? [];
+    const todosAdj = [...trabajador, ...beneficiarios.flat()];
+    const pendientesArchivo = todosAdj.filter((item) => this.esAdjuntoPendienteValidacion(item));
+    if (pendientesArchivo.length > 0) {
+      motivos.push(
+        'Revisiones de archivos: hay adjuntos sin validar o con validación pendiente.'
+      );
+    }
+
+    const s = this.afiliationRequestDetails?.solicitud;
+    if (s && this.solicitudIndicadorEsSi(s.novedad_restrictiva)) {
+      motivos.push('Novedad restrictiva');
+    }
+    if (s && this.solicitudIndicadorEsSi(s.pendiente_direccion)) {
+      motivos.push('Pendiente dirección');
+    }
+    if (s && this.solicitudIndicadorEsSi(s.pendiente_activar_empresa)) {
+      motivos.push('Pendiente activar empresa');
+    }
+    return motivos;
+  }
+
+  guardarGestionarEstadoAfiliado(): void {
+    const estado = this.gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.value;
+
+    if (estado === this.ESTADO_AFILIADO_PENDIENTE_RPA) {
+      const motivosBloqueo = this.obtenerMotivosBloqueoPendienteAfiliacionRpa();
+      if (motivosBloqueo.length > 0) {
+        const detail = [
+          'No es posible cambiar al estado Pendiente afiliación RPA hasta resolver lo siguiente:',
+          '',
+          ...motivosBloqueo.map((m) => `• ${m}`),
+        ].join('\n');
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No permitido',
+          detail,
+        });
+        return;
+      }
+    }
+
+    if (this.gestionarEstadoAfiliadoForm.invalid) {
+      this.gestionarEstadoAfiliadoForm.markAllAsTouched();
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Complete los campos obligatorios.',
+      });
+      return;
+    }
+
+    const idSolicitud = this.afiliationRequestDetails?.solicitud?.id;
+    if (idSolicitud == null) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No hay solicitud cargada.',
+      });
+      return;
+    }
+
+    const raw = this.gestionarEstadoAfiliadoForm.getRawValue();
+    const estadoAfiliado = raw.estadoAfiliado as string;
+    const payload: ActualizarEstadoGestionAfiliacionPayload = {
+      id_solicitud: idSolicitud,
+      estado_afiliado: estadoAfiliado,
+    };
+    if (estadoAfiliado === this.ESTADO_AFILIADO_RECHAZADO && raw.motivoRechazo != null && raw.motivoRechazo !== '') {
+      const idMotivo = Number(raw.motivoRechazo);
+      if (!Number.isNaN(idMotivo)) {
+        payload.id_motivo_rechazo = idMotivo;
+      }
+    }
+
+    this.guardandoEstadoGestionSolicitud = true;
+    this.userService.actualizarEstadoGestionSolicitudAfiliacion(payload).subscribe({
+      next: (res) => {
+        this.guardandoEstadoGestionSolicitud = false;
+        if (res.code !== 200) {
+          this.showSuccessMessage(
+            'error',
+            'No se pudo actualizar',
+            res.message || 'Operación fallida.'
+          );
+          return;
+        }
+        this.showSuccessMessage(
+          'success',
+          'Estado actualizado',
+          res.message || 'El estado de la solicitud se actualizó correctamente.'
+        );
+        this.cerrarModalGestionarEstado();
+        this.getRequestDetails(this.request_id);
+      },
+      error: (err) => {
+        this.guardandoEstadoGestionSolicitud = false;
+        console.error('actualizarEstadoGestionSolicitudAfiliacion', err);
+        this.showSuccessMessage(
+          'error',
+          'Error',
+          'No se pudo actualizar el estado. Intente de nuevo.'
+        );
+      },
+    });
+  }
+
+  /** Normaliza valor de indicador (Si/SÍ/sí) como en el resto de afiliaciones. */
+  private solicitudIndicadorEsSi(val: string | null | undefined): boolean {
+    return (
+      (val ?? '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') === 'si'
+    );
+  }
+
+  /** p-tag: datos desde solicitud.novedad_restrictiva */
+  textoTagNovedadRestrictiva(): string {
+    const v = this.afiliationRequestDetails?.solicitud?.novedad_restrictiva;
+    return this.solicitudIndicadorEsSi(v) ? 'Novedad restrictiva: sí' : 'Novedad restrictiva: no';
+  }
+
+  severidadTagNovedadRestrictiva(): 'success' | 'warning' | 'danger' {
+    const v = this.afiliationRequestDetails?.solicitud?.novedad_restrictiva;
+    return this.solicitudIndicadorEsSi(v) ? 'danger' : 'success';
+  }
+
+  textoTagPendienteDireccion(): string {
+    const v = this.afiliationRequestDetails?.solicitud?.pendiente_direccion;
+    return this.solicitudIndicadorEsSi(v) ? 'Pendiente dirección: sí' : 'Pendiente dirección: no';
+  }
+
+  severidadTagPendienteDireccion(): 'success' | 'warning' | 'danger' {
+    const v = this.afiliationRequestDetails?.solicitud?.pendiente_direccion;
+    return this.solicitudIndicadorEsSi(v) ? 'warning' : 'success';
+  }
+
+  textoTagPendienteActivarEmpresa(): string {
+    const v = this.afiliationRequestDetails?.solicitud?.pendiente_activar_empresa;
+    return this.solicitudIndicadorEsSi(v)
+      ? 'Pendiente activar empresa: sí'
+      : 'Pendiente activar empresa: no';
+  }
+
+  severidadTagPendienteActivarEmpresa(): 'success' | 'warning' | 'danger' {
+    const v = this.afiliationRequestDetails?.solicitud?.pendiente_activar_empresa;
+    return this.solicitudIndicadorEsSi(v) ? 'warning' : 'success';
   }
 
   showProcessTab(): boolean {
@@ -1473,7 +1747,23 @@ get empresaDocumento(): string {
     this.request_details = request_details;
   }
 
+  /** Asignar/Reasignar inhabilitado si algún indicador (pendiente dirección, activar empresa, novedad restrictiva) es "Si". */
+  puedeActivarBotonAsignarAfiliacion(): boolean {
+    const s = this.afiliationRequestDetails?.solicitud;
+    if (!s) return false;
+    return afiliacionIndicadoresPermitenAsignar(s);
+  }
+
   assignRequestAfiliation(request_details: AfiliacionRequestDetailsData) {
+    if (!afiliacionIndicadoresPermitenAsignar(request_details.solicitud)) {
+      this.showSuccessMessage(
+        'warn',
+        'Asignación no disponible',
+        'No puede asignar mientras pendiente dirección, pendiente activar empresa o novedad restrictiva esté en Sí.'
+      );
+      return;
+    }
+
     if (request_details.solicitud.usuario_gestion == null || request_details.solicitud.usuario_gestion == '') {
       this.message = 'Asignar responsable al requerimiento';
       this.buttonmsg = 'Asignar';

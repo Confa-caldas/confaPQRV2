@@ -21,7 +21,8 @@ import { TimelineModule } from 'primeng/timeline';
 import { AccordionModule } from 'primeng/accordion';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
- 
+import { TagModule } from 'primeng/tag';
+
 @NgModule({
   declarations: [RequestDetailsAfiliationComponent],
   imports: [
@@ -46,6 +47,7 @@ import { TooltipModule } from 'primeng/tooltip';
     AccordionModule,
     MessageModule,
     TooltipModule,
+    TagModule,
   ],
   exports: [RequestDetailsAfiliationComponent],
 })

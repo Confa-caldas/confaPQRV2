@@ -10,7 +10,9 @@ import {
   RequestsList,
   RequestsListAfiliation,
   UserList,
-  RequestStatusAfiliationList
+  RequestStatusAfiliationList,
+  afiliacionIndicadoresPermitenAsignar,
+  MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -65,6 +67,8 @@ export class SearchRequestAfiPendingComponent implements OnInit {
 
   isBulkAssign: boolean = false; // Saber si es masivo o no
   selectedRequests: RequestsListAfiliation[] = []; // Solicitudes seleccionadas con checkbox
+  /** Tooltip cuando Asignar está inhabilitado (indicadores). */
+  readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
   @ViewChild('dt') table!: Table;
 
   constructor(
@@ -314,8 +318,29 @@ export class SearchRequestAfiPendingComponent implements OnInit {
     });
   }
 
+  /** Asignar activo solo si ninguno de los tres indicadores es "Si". */
+  puedeActivarAsignar(row: RequestsListAfiliation): boolean {
+    return afiliacionIndicadoresPermitenAsignar(row);
+  }
+
+  todasSeleccionadasPuedenAsignar(): boolean {
+    return (
+      this.selectedRequests.length > 0 &&
+      this.selectedRequests.every((r) => afiliacionIndicadoresPermitenAsignar(r))
+    );
+  }
+
   assignRequest(request_details: RequestsListAfiliation) {
     this.isBulkAssign = false;
+
+    if (!afiliacionIndicadoresPermitenAsignar(request_details)) {
+      this.showSuccessMessage(
+        'warn',
+        'Asignación no disponible',
+        'No puede asignar mientras pendiente dirección, pendiente activar empresa o novedad restrictiva esté en Sí.'
+      );
+      return;
+    }
 
     if (request_details.assigned_user == null || request_details.assigned_user == '') {
       this.message = 'Asignar responsable de solicitud';
@@ -467,6 +492,16 @@ export class SearchRequestAfiPendingComponent implements OnInit {
 
   assignSelectedRequests(requests: RequestsListAfiliation[]) {
     if (!requests || requests.length === 0) return;
+
+    const noCumplen = requests.filter((r) => !afiliacionIndicadoresPermitenAsignar(r));
+    if (noCumplen.length > 0) {
+      this.showSuccessMessage(
+        'warn',
+        'Asignación no disponible',
+        'No puede asignar en lote si alguna solicitud tiene pendiente dirección, pendiente activar empresa o novedad restrictiva en Sí.'
+      );
+      return;
+    }
 
     this.isBulkAssign = true;
     this.selectedRequests = requests;

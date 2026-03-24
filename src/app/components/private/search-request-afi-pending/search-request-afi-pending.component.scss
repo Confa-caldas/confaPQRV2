@@ -126,9 +126,32 @@ tr:nth-child(10) .circle {
   padding: 8px 12px !important;
 }
 
+/* .tooltip-asignar-bloqueado tiene mayor especificidad en _button.scss (amarillo + rojo) */
+
 ::ng-deep .p-tooltip .p-tooltip-text {
   background-color: transparent !important; /* Elimina el fondo interno */
   color: inherit !important;
   padding: 0 !important;
   border: none !important;
+}
+
+/* Envoltorio para tooltip sobre botón deshabilitado (el hover cae en el span) */
+.assign-btn-tooltip-wrap {
+  display: inline-block;
+  width: 100%;
+}
+
+.assign-bulk-tooltip-wrap {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Botón masivo verde → gris al inhabilitar */
+::ng-deep .assign-bulk-tooltip-wrap .assign-bulk-btn.p-button:disabled,
+::ng-deep .assign-bulk-tooltip-wrap .assign-bulk-btn.p-button.p-disabled {
+  background: #9e9e9e !important;
+  border-color: #757575 !important;
+  color: #f5f5f5 !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
 }

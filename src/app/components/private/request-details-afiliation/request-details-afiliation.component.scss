@@ -13,7 +13,28 @@
 .container-button {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   margin-top: 10px;
+
+  &--actions {
+    justify-content: flex-end;
+  }
+}
+
+.assign-afiliacion-tooltip-wrap {
+  display: inline-block;
+}
+
+/* Asignar/Reasignar en gris cuando está inhabilitado */
+:host ::ng-deep .assign-afiliacion-tooltip-wrap .p-button:disabled,
+:host ::ng-deep .assign-afiliacion-tooltip-wrap .p-button.p-disabled {
+  background: #9e9e9e !important;
+  border-color: #757575 !important;
+  color: #f5f5f5 !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
 }
 
 td {
@@ -166,6 +187,46 @@ p-timeline { width: 70%; }
 .info-label { color: #7a7a7a; font-size: 12px; }
 .info-value { font-weight: 600; font-size: 13px; text-align: right; }
 .status-pill { display: inline-block; padding: 6px 10px; border-radius: 6px; background: #f4c542; font-weight: 700; font-size: 12px; }
+
+/* Pestañas: el layout global (_tabs.scss) fija .p-tabview-nav-content a 600px y li { flex: 1 }, con 6 tabs el texto se recorta. */
+:host ::ng-deep .request-details-tabview .p-tabview-nav-container {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 0;
+}
+:host ::ng-deep .request-details-tabview .p-tabview-nav-content {
+  width: 100% !important;
+  max-width: 100%;
+  height: auto !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+:host ::ng-deep .request-details-tabview .p-tabview-nav li {
+  flex: 0 0 auto;
+}
+:host ::ng-deep .request-details-tabview .p-tabview-nav .p-tabview-nav-link {
+  white-space: nowrap;
+}
+
+/* Menos espacio entre fila de tabs y contenido (_tabs.scss usa margin:35px en nav y padding en panels) */
+:host ::ng-deep .request-details-tabview.p-tabview {
+  margin: 0;
+}
+:host ::ng-deep .request-details-tabview .p-tabview-nav {
+  margin: 0 !important;
+}
+:host ::ng-deep .request-details-tabview .p-tabview-panels {
+  width: 100%;
+  padding: 0 0 1rem 0 !important;
+  margin-top: 0 !important;
+}
+:host ::ng-deep .request-details-tabview .p-tabview-panel .p-tabview-panel-content {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  padding: 0 !important;
+}
 
 :host ::ng-deep .p-tabview .p-tabview-panels { width: 100%; }
 :host ::ng-deep .p-tabview .p-tabview-panel .p-tabview-panel-content {
@@ -323,6 +384,31 @@ p-timeline { width: 70%; }
   padding-left: 1rem;
   padding-right: 1rem;
 }
+.tab-data-view .expediente-generacion-block {
+  margin-top: 2rem;
+  padding: 1.25rem 1rem 1.35rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8fafb;
+}
+.tab-data-view .expediente-generacion-title {
+  margin: 0 0 1rem 0;
+}
+.tab-data-view .novedades-tab-section {
+  margin-bottom: 1.75rem;
+}
+.tab-data-view .novedades-tab-section:last-of-type {
+  margin-bottom: 0;
+}
+:host ::ng-deep .novedades-empty-msg.p-message {
+  width: 100%;
+  max-width: 100%;
+}
+.expediente-generacion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
 :host ::ng-deep .adjuntos-upload-row .adjunto-action-btn.p-button.p-button-success {
   background: #a0bf1b;
   border: 1px solid #a0bf1b;
@@ -361,4 +447,189 @@ p-timeline { width: 70%; }
     color: #212529;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
   }
+}
+
+/* --- Modal Gestionar estado: mismo patrón visual que modal-assign (barra colores, título, botones) --- */
+:host ::ng-deep .gestionar-estado-dialog-modal.p-dialog {
+  border-radius: 0 !important;
+  overflow: hidden;
+}
+
+:host ::ng-deep .gestionar-estado-dialog-modal .p-dialog-header {
+  border-radius: 0 !important;
+}
+
+:host ::ng-deep .gestionar-estado-dialog-modal .p-dialog-content {
+  padding: 0 !important;
+  overflow: hidden;
+  border-radius: 0 !important;
+}
+
+.gestionar-estado-modal-content.modal-content {
+  background-color: $color-white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Barra superior (mismos tonos que referencia / login modales) */
+.gestionar-estado-modal-content .login-form-header {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+
+  .login-form-header__item {
+    flex: 1;
+    height: 20px;
+    min-width: 0;
+  }
+
+  .login-form-header__item_1 { background-color: #009cde; }
+  .login-form-header__item_2 { background-color: #99bc00; }
+  .login-form-header__item_3 { background-color: #ffc200; }
+  .login-form-header__item_4 { background-color: #ff8200; }
+  .login-form-header__item_5 { background-color: #e4007b; }
+  .login-form-header__item_6 { background-color: #e30613; }
+}
+
+.gestionar-estado-modal-title {
+  font-size: 1rem;
+  color: $color-text-black;
+  font-family: $font-light;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.gestionar-estado-modal-body {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gestionar-estado-section-title {
+  margin: 0 0 0.35rem 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.gestionar-estado-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.gestionar-estado-form--modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.gestionar-estado-form--modal .multi {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gestionar-estado-dropdown-wrap {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Etiquetas como modal-assign-selector */
+.gestionar-estado-modal-body .label {
+  color: $color-text-black;
+  font-family: $font-light;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.gestionar-estado-field .req {
+  color: #c62828;
+}
+
+.gestionar-estado-error.error-label {
+  color: $color-red;
+  font-size: small;
+  margin-top: 4px;
+}
+
+:host ::ng-deep .gestionar-estado-modal-content .gestionar-estado-dropdown.p-dropdown {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+
+  .p-dropdown-label,
+  .p-inputtext {
+    border: 1px solid #d0d0d0 !important;
+    border-radius: 0 !important;
+    min-height: 40px;
+    font-size: 0.9rem;
+    color: $color-text-black;
+    background: $color-white !important;
+  }
+
+  .p-dropdown-trigger {
+    color: #009cde !important;
+    width: 2.5rem;
+  }
+
+  &:not(.p-disabled):hover {
+    .p-dropdown-label,
+    .p-inputtext {
+      border-color: #b8b8b8 !important;
+    }
+  }
+}
+
+/* Botones: Cancelar gris / Guardar verde claro y texto blanco en negrita (como Asignar) */
+:host ::ng-deep .gestionar-estado-modal-actions {
+  .p-button.p-button-secondary {
+    background: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #fff !important;
+    font-weight: 700;
+    min-width: 8rem;
+    padding: 0.65rem 1.25rem;
+
+    &:hover:not(:disabled) {
+      background: #5a6268 !important;
+      border-color: #5a6268 !important;
+      color: #fff !important;
+    }
+  }
+
+  .p-button:not(.p-button-secondary):not(.p-button-text) {
+    background: #c5d86a !important;
+    border: 1px solid #b8cc5c !important;
+    color: #fff !important;
+    font-weight: 700;
+    min-width: 8rem;
+    padding: 0.65rem 1.25rem;
+
+    &:hover:not(:disabled) {
+      background: #b8cc5c !important;
+      border-color: #a8bc50 !important;
+      color: #fff !important;
+    }
+
+    .p-button-loading-icon {
+      color: #fff !important;
+    }
+  }
+}
+
+/* Mensajes de validación (Pendiente RPA) con varias líneas en p-toast */
+:host ::ng-deep .p-toast-message-text {
+  white-space: pre-line;
 }

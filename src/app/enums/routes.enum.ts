@@ -78,6 +78,8 @@ export enum EndPointRoute {
   GENERO_LIST = 'db_afi/parametros_genero',
   ESTADO_CIVIL_LIST = 'db_afi/parametros_estado_civil',
   PARENTESCO_LIST = 'db_afi/parametros_parentesco',
+  /** Catálogo motivos de rechazo (gestión estado afiliado). */
+  MOTIVOS_RECHAZO_AFILIACION_LIST = 'db_afi/parametros_motivo_rechazo_afiliacion',
   QUALITY_DIMENSION_LIST = 'db/quality_dimensions',
   CATEGORIES_BY_MODALITY = 'categories/by',
   TIPOLOGIES_BY_CATEGORY = 'tipologies/by/category',
@@ -146,4 +148,6 @@ export enum EndPointRoute {
   REQUEST_AFILIATION_ADJUNTO_URL = 'requests-afiliation/adjunto/url',
   /** Generar PDF expediente (unir adjuntos trabajador + beneficiarios) y asociar a solicitud */
   REQUEST_AFILIATION_GENERAR_EXPEDIENTE = 'requests-afiliation/expediente/generar',
+  /** Actualizar estado de gestión de la solicitud (modal Gestionar estado: Pendiente RPA / Procesado / Rechazado). */
+  REQUEST_AFILIATION_ACTUALIZAR_ESTADO_GESTION = 'requests-afiliation/solicitud/actualizar-estado-gestion',
 }
