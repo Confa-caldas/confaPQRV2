@@ -104,6 +104,7 @@ export enum EndPointRoute {
   REQUEST_REPORT_ALL = 'requests/report/filter/all',
   REQUEST_BY_FILTER = 'requests/filter',
   REQUEST_AFILIATION_BY_FILTER = 'requests-afiliation/filter',
+  REQUEST_MASSIVE_BY_FILTER = 'requests-massive/filter',
   NOVEDAD_BY_FILTER = 'novedad-afiliation/filter',
   REFRESH_TOKEN = 'token/refresh',
   URL_SIGNER = 'url/signer',
@@ -140,6 +141,10 @@ export enum EndPointRoute {
   SIMILAR_REQUEST = 'request/get_similar',
   /** Detalle de novedad calidad de datos (por id_novedad o por id_solicitud) */
   NOVEDAD_CALIDAD_DATOS_DETALLE = 'novedad-afiliation/details',
+  /** Consulta datos de persona en tabla de novedades calidad de datos (por tipo y número de documento) */
+  NOVEDAD_CALIDAD_DATOS_CONSULTAR_PERSONA = 'novedad-afiliation/consultar-persona',
+  /** Guardar novedad calidad de datos (originales + valores nuevos o null por campo) */
+  NOVEDAD_CALIDAD_DATOS_GUARDAR = 'novedad-afiliation/guardar-novedad',
   /** Actualizar datos de persona trabajador en solicitud de afiliación (CE/PPT) */
   REQUEST_AFILIATION_UPDATE_PERSONA = 'requests-afiliation/update-persona',
   REQUEST_AFILIATION_VALIDAR_ADJUNTO = 'requests-afiliation/adjunto/validar',

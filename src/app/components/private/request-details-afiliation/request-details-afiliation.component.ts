@@ -257,6 +257,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
   // --- Modal: Gestionar estado de afiliado ---
   visibleGestionarEstadoModal = false;
+  /** Texto bajo el título del modal (Trabajador / Beneficiario N). */
+  gestionarEstadoContextoLabel = '';
   gestionarEstadoAfiliadoForm!: FormGroup;
   private gestionarEstadoAfiliadoSub?: Subscription;
 
@@ -476,7 +478,22 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     );
   }
 
-  abrirModalGestionarEstado(): void {
+  abrirModalGestionarEstado(
+    contexto: 'trabajador' | 'beneficiario' = 'trabajador',
+    indiceBeneficiario?: number
+  ): void {
+    if (contexto === 'trabajador') {
+      this.gestionarEstadoContextoLabel = 'Trabajador';
+    } else if (
+      indiceBeneficiario != null &&
+      this.afiliationRequestDetails?.beneficiarios?.[indiceBeneficiario]
+    ) {
+      const b = this.afiliationRequestDetails.beneficiarios[indiceBeneficiario];
+      this.gestionarEstadoContextoLabel = `Beneficiario ${indiceBeneficiario + 1}: ${this.getNombreBeneficiario(b)}`;
+    } else {
+      this.gestionarEstadoContextoLabel = '';
+    }
+
     this.gestionarEstadoAfiliadoForm.reset({
       estadoAfiliado: null,
       motivoRechazo: null,
@@ -529,6 +546,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
   cerrarModalGestionarEstado(): void {
     this.visibleGestionarEstadoModal = false;
+    this.gestionarEstadoContextoLabel = '';
   }
 
   /**

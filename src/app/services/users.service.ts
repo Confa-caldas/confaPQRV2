@@ -72,6 +72,9 @@ import {
   RequestStatusAfiliationList,
   UserListAfiliation,
   NovedadCalidadDatosDetalle,
+  ConsultarPersonaNovedadPayload,
+  ConsultarPersonaNovedadRespuesta,
+  GuardarNovedadCalidadDatosPayload,
   FilterNovedad,
   NovedadList,
   NovedadStatusList,
@@ -82,6 +85,7 @@ import {
   ParametroMotivoRechazoAfiliacion,
   Adjunto,
   ActualizarEstadoGestionAfiliacionPayload,
+  FilterRequestsMassive,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -228,6 +232,23 @@ export class Users {
   getNovedadCalidadDatosDetalleById(idNovedad: number) {
     return this.http.get<BodyResponse<NovedadCalidadDatosDetalle>>(
       `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_DETALLE}/${idNovedad}`
+    );
+  }
+
+  /**
+   * Consulta información de persona asociada a novedades de calidad de datos (por documento).
+   * Sustituye la consulta al WS de subsidios; el backend debe exponer la ruta en API_PUBLIC.
+   */
+  consultarPersonaNovedadCalidadDatos(payload: ConsultarPersonaNovedadPayload) {
+    return this.http.post<
+      BodyResponse<ConsultarPersonaNovedadRespuesta | ConsultarPersonaNovedadRespuesta[] | null>
+    >(`${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_CONSULTAR_PERSONA}`, payload);
+  }
+
+  guardarNovedadCalidadDatos(payload: GuardarNovedadCalidadDatosPayload) {
+    return this.http.post<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_GUARDAR}`,
+      payload
     );
   }
 
@@ -590,6 +611,12 @@ export class Users {
       payload
     );
   }
+  getRequestMassiveListByFilter(payload: FilterRequestsMassive) {
+    return this.http.post<BodyResponse<RequestsList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_MASSIVE_BY_FILTER}`,
+      payload
+    );
+  }
   getRequestAfiliationListByFilter(payload: FilterRequestsAfiliation) {
     return this.http.post<BodyResponse<RequestsListAfiliation[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_BY_FILTER}`,
@@ -722,8 +749,14 @@ export class Users {
   //   return this.http.post(urlSubsidios, payload, { headers }); // Envía la petición con headers
   // }
 
-  respuestaInfoAfiliacion(cedula: string): Observable<any> {
-    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarAfiliadoDoc/${cedula}/1`;
+  /**
+   * Consulta datos del afiliado en subsidios WS.
+   * @param cedula Número de documento
+   * @param tipoDocumentoCodigo Código del tipo de documento en el WS (p. ej. 1 cédula extranjería, 2 PPT)
+   */
+  respuestaInfoAfiliacion(cedula: string, tipoDocumentoCodigo: number | string = 1): Observable<any> {
+    const codigo = tipoDocumentoCodigo ?? 1;
+    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarAfiliadoDoc/${encodeURIComponent(cedula)}/${codigo}`;
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
     });

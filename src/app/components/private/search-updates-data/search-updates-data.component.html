@@ -4,7 +4,7 @@
   </div>
   <div class="col-2 text-end">
     <p-button
-      label="Consultar persona"
+      label="Crear nueva novedad"
       icon="pi pi-user"
       (onClick)="openModalSearchPerson()"
       [style]="{ 'border-radius': '6px' }"></p-button>
@@ -13,9 +13,7 @@
 
 <app-modal-search-person-data
   [visible]="visibleModalSearchPerson"
-  [datosPersona]="datosPersonaModal"
-  (consultar)="onConsultarPersonData($event)"
-  (guardarNovedad)="onGuardarNovedad($event)"
+  (guardarNovedad)="onGuardarNovedad()"
   (cerrar)="closeModalSearchPerson()"></app-modal-search-person-data>
   
 <form [formGroup]="formGroup" (keydown.enter)="initPaginador()" (keydown.escape)="cleanForm()">

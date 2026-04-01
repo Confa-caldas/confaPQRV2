@@ -7,8 +7,8 @@
 (keydown.escape)="cleanForm()">
   <div class="position-relative">
     <div class="card flex justify-content-center absolute-center">
-      <div class="filters-row">
-        <div class="filters-col">
+      <div class="filters-grid">
+        <div class="filters-cell">
           <input
             pInputText
             class="filters-input"
@@ -16,7 +16,7 @@
             placeholder="Número de radicado"
             formControlName="filing_number" />
         </div>
-        <div class="filters-col">
+        <div class="filters-cell">
           <p-calendar
             formControlName="dates_range"
             selectionMode="range"
@@ -24,18 +24,18 @@
             [style]="{ 'align-items': 'center', 'border-radius': '5px' }"
             [iconDisplay]="'input'"
             [showIcon]="true"
-            placeholder="Rango de fechas "
+            placeholder="Rango de fechas"
             class="calendar"></p-calendar>
         </div>
-        <div class="filters-col">
+        <div class="filters-cell">
           <input
             pInputText
             pKeyFilter="text"
             class="filters-input"
-            placeholder=" Número de documento empresa"
+            placeholder="Número de documento empresa"
             formControlName="doc_id_emp" />
         </div>
-        <div class="filters-col">
+        <div class="filters-cell">
           <p-multiSelect
             formControlName="request_status_id"
             [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
@@ -44,13 +44,11 @@
             optionValue="request_status_id"
             placeholder="Tipo de estado"></p-multiSelect>
         </div>
-        <div>
+        <div class="filters-cell filters-actions">
           <p-button
             icon="pi pi-trash"
             [styleClass]="'btn-icon-info'"
             (click)="cleanForm()"></p-button>
-        </div>
-        <div>
           <p-button
             icon="pi pi-search"
             [styleClass]="'btn-icon-info'"
@@ -67,12 +65,12 @@
   type="button"
   label="Asignar seleccionadas"
   icon="pi pi-users"
-  class="p-button-success"
+  class="p-button-success assign-bulk-btn"
   (click)="assignSelectedRequests(selectedRequests)"
   [disabled]="!selectedRequests || selectedRequests.length === 0">
 </button>
 
-<div class="mt-auto">
+<div class="mai-table-wrap mt-auto">
   <p-table
     #dt
     [value]="requestList"
@@ -82,7 +80,7 @@
     [loading]="loading"
     [paginator]="false"
     currentPageReportTemplate="{first} de {totalRecords}"
-    [tableStyle]="{ 'min-width': '60rem' }"
+    [tableStyle]="{ 'min-width': '50rem' }"
     [scrollable]="true"
     scrollHeight="500px"
     [virtualScroll]="false"
@@ -90,81 +88,54 @@
     [(selection)]="selectedRequests"
     [exportHeader]="'customExportHeader'">
     <ng-template pTemplate="header">
-      <tr [style]="{ height: '50px' }">
-        <th style="width: 5%">
+      <tr class="mai-table-header-row">
+        <th style="width: 3rem">
           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
         </th>
-        <th style="width: 5%"></th>
-        <th style="width: 5%"></th>
-        <th pSortableColumn="filing_number" style="min-width: 7rem">
-          Radicado<p-sortIcon field="filing_number"></p-sortIcon>
+        <th style="width: 3rem" class="mai-col-accion"></th>
+        <th pSortableColumn="filing_number" style="min-width: 9rem">
+          Número de solicitud<p-sortIcon field="filing_number"></p-sortIcon>
         </th>
         <th pSortableColumn="filing_date" style="min-width: 8rem">
-          Fecha<p-sortIcon field="filing_date"></p-sortIcon>
+          Fecha de solicitud<p-sortIcon field="filing_date"></p-sortIcon>
         </th>
-        <th pSortableColumn="applicant_type_name" style="min-width: 15rem">
-          Tipo de solicitante<p-sortIcon field="applicant_type_name"></p-sortIcon>
+        <th pSortableColumn="doc_id" style="min-width: 11rem">
+          Número de documento empresa<p-sortIcon field="doc_id"></p-sortIcon>
         </th>
-        <th pSortableColumn="doc_id" style="min-width: 10rem">
-          Número de documento<p-sortIcon style="margin: 0 5px" field="doc_id"></p-sortIcon>
+        <th pSortableColumn="applicant_name" style="min-width: 14rem">
+          Nombre empresa<p-sortIcon field="applicant_name"></p-sortIcon>
         </th>
-        <th pSortableColumn="applicant_name" style="min-width: 15rem">
-          Nombre empresa/Solicitante<p-sortIcon field="applicant_name"></p-sortIcon>
+        <th pSortableColumn="status_name" style="min-width: 10rem">
+          Estado solicitud<p-sortIcon field="status_name"></p-sortIcon>
         </th>
-        <th pSortableColumn="request_type_name" style="min-width: 12rem">
-          Tipo de solicitud<p-sortIcon field="request_type_name"></p-sortIcon>
-        </th>
-        <th pSortableColumn="status_name" style="min-width: 11rem">
-          Estado<p-sortIcon field="status_name"></p-sortIcon>
-        </th>
-        <th pSortableColumn="request_days" style="min-width: 10rem">
-          Días solicitud<p-sortIcon field="request_days"></p-sortIcon>
-        </th>
-        <th pSortableColumn="assigned_user" style="min-width: 15rem">
-          Responsable<p-sortIcon field="assigned_user"></p-sortIcon>
-        </th>
-        <th style="width: 10%"></th>
+        <th style="width: 10rem" class="mai-col-asignar"></th>
       </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-requestList>
-      <tr >
+    <ng-template pTemplate="body" let-row>
+      <tr>
         <td>
-          <p-tableCheckbox [value]="requestList" *ngIf="requestList.status_name === 'Radicada' && PERFIL !== 'CONSULTANTE'"></p-tableCheckbox>
+          <p-tableCheckbox
+            [value]="row"
+            *ngIf="row.status_name === 'Radicada' && PERFIL !== 'CONSULTANTE'"></p-tableCheckbox>
         </td>
         <td>
           <p-button
             icon="pi pi-eye"
             [styleClass]="'btn-icon-info'"
-            (click)="redirectDetails(requestList.request_id)"></p-button>
+            (click)="redirectDetails(row.request_id)"
+            pTooltip="Visualizar detalle"
+            tooltipPosition="top"></p-button>
         </td>
+        <td style="text-align: center">{{ row.filing_number }}</td>
+        <td style="text-align: center">{{ row.filing_date_date | date: 'dd/MM/yyyy' }}</td>
+        <td style="text-align: center">{{ row.doc_id || '—' }}</td>
+        <td style="text-align: center">{{ row.applicant_name || '—' }}</td>
+        <td style="text-align: center">{{ row.status_name || '—' }}</td>
         <td>
-          <i
-            *ngIf="requestList.priority_level === 1 || requestList.priority_level === 2"
-            class="pi pi-exclamation-triangle custom-tooltip"
-            [style.color]="requestList.priority_level === 1 ? 'orange' : 'red'"
-            style="font-size: 1.2rem"
-            pTooltip="{{ requestList.message_priority }}"
-            tooltipPosition="top">
-          </i>
-        </td>
-        <td style="text-align: center">{{ requestList.filing_number }}</td>
-        <td>{{ requestList.filing_date_date | date }}</td>
-        <td>{{ requestList.applicant_type_name }}</td>
-        <td>{{ requestList.doc_id }}</td>
-        <td>{{ requestList.applicant_name }}</td>
-        <td>{{ requestList.request_type_name }}</td>
-        <td style="text-align: center">{{ requestList.status_name }}</td>
-        <td>
-          <div class="circle" [style.background-color]="getColor(requestList.request_days)"></div>
-          <div style="margin-left: 19px">{{ requestList.request_days }} día(s) hábiles</div>
-        </td>
-        <td>{{ requestList.user_name_completed }}</td>
-
-        <td>
-          <div *ngIf="requestList.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'">
-            <button class="custom-button" (click)="assignRequest(requestList)">
+          <div *ngIf="row.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'">
+            <button class="custom-button" type="button" (click)="assignRequest(row)">
               {{
-                requestList.assigned_user === null || requestList.assigned_user === ''
+                row.assigned_user === null || row.assigned_user === ''
                   ? 'Asignar'
                   : 'Reasignar'
               }}
@@ -174,12 +145,6 @@
       </tr>
     </ng-template>
   </p-table>
-  <!-- <p-paginator
-    (onPageChange)="onPageChange($event)"
-    [first]="first"
-    [rows]="rows"
-    [totalRecords]="totalRows"
-    [rowsPerPageOptions]="[10, 20, 30]"></p-paginator> -->
   <p-paginator
     (onPageChange)="onPageChange($event)"
     [first]="first"

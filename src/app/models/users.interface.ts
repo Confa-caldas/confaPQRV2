@@ -530,6 +530,56 @@ export interface FilterNovedad {
   page?: number;
   page_size?: number;
 }
+
+/** Payload para consultar persona en novedades calidad de datos (backend: tabla gestor.novedad_calidad_datos_detalle o vista asociada). */
+export interface ConsultarPersonaNovedadPayload {
+  tipo_documento: string;
+  numero_documento: string;
+}
+
+/** Respuesta de consultar persona (campos planos según API). */
+export interface ConsultarPersonaNovedadRespuesta {
+  id_persona: number;
+  id_solicitud: number;
+  numero_radicado: string;
+  tipo_documento: string;
+  numero_documento: string;
+  primer_nombre: string | null;
+  segundo_nombre: string | null;
+  primer_apellido: string | null;
+  segundo_apellido: string | null;
+  fecha_expedicion_doc: string | null;
+  fecha_nacimiento: string | null;
+}
+
+/** Copia de los datos cargados al consultar (solo campos de persona). */
+export interface NovedadCalidadDatosOriginalesPayload {
+  tipo_documento: string;
+  numero_documento: string;
+  primer_nombre: string;
+  segundo_nombre: string;
+  primer_apellido: string;
+  segundo_apellido: string;
+  fecha_expedicion_doc: string | null;
+  fecha_nacimiento: string | null;
+}
+
+/**
+ * Guardar novedad: incluye ids, snapshot original y, por campo,
+ * el valor nuevo si cambió o null si no hubo cambio.
+ */
+export interface GuardarNovedadCalidadDatosPayload {
+  id_solicitud: number;
+  id_persona: number;
+  numero_radicado: string;
+  datos_originales: NovedadCalidadDatosOriginalesPayload;
+  primer_nombre: string | null;
+  segundo_nombre: string | null;
+  primer_apellido: string | null;
+  segundo_apellido: string | null;
+  fecha_expedicion_doc: string | null;
+  fecha_nacimiento: string | null;
+}
 export interface RequestReportList {
   request_id: number;
   filing_number: number;

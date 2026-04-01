@@ -24,7 +24,6 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { PaginatorState } from 'primeng/paginator';
 import { forkJoin } from 'rxjs';
 import { Table } from 'primeng/table';
-import { DatosPersonaModal } from '../../shared/modal-search-person-data/modal-search-person-data.component';
 
 @Component({
   selector: 'app-search-updates-data',
@@ -72,7 +71,6 @@ export class SearchUpdatesDataComponent implements OnInit {
   @ViewChild('dt') table!: Table;
 
   visibleModalSearchPerson = false;
-  datosPersonaModal: DatosPersonaModal | null = null;
 
   constructor(
     private userService: Users,
@@ -462,12 +460,12 @@ export class SearchUpdatesDataComponent implements OnInit {
   }
 
   @HostListener('document:keydown.enter', ['$event'])
-  onEnterKeyPressed(event: KeyboardEvent): void {
+  onEnterKeyPressed(event: Event): void {
     const activeElement = document.activeElement;
     const isOverlayOpen =
       document.querySelector('.p-overlay-visible') || document.querySelector('.cdk-overlay-pane');
 
-    // ✅ Verifica si hay algún valor en los filtros
+    // Verifica si hay algún valor en los filtros
     const hasActiveFilters = Object.values(this.formGroup.value).some(
       (value) =>
         value !== null &&
@@ -475,7 +473,7 @@ export class SearchUpdatesDataComponent implements OnInit {
         !(Array.isArray(value) && value.length === 0)
     );
 
-    // ✅ Solo ejecuta si no hay overlays abiertos y hay al menos un filtro activo
+    // Solo ejecuta si no hay overlays abiertos y hay al menos un filtro activo
     if (!isOverlayOpen && hasActiveFilters) {
       event.preventDefault(); // evitar comportamiento por defecto
       this.initPaginador();
@@ -483,7 +481,7 @@ export class SearchUpdatesDataComponent implements OnInit {
   }
 
   @HostListener('document:keydown.escape', ['$event'])
-  onEscapeKeyPressed(event: KeyboardEvent): void {
+  onEscapeKeyPressed(event: Event): void {
     const isOverlayOpen =
       document.querySelector('.p-overlay-visible') || document.querySelector('.cdk-overlay-pane');
 
@@ -495,45 +493,15 @@ export class SearchUpdatesDataComponent implements OnInit {
   }
 
   openModalSearchPerson(): void {
-    this.datosPersonaModal = null;
     this.visibleModalSearchPerson = true;
-  }
-
-  onConsultarPersonData(event: { tipoDocumento: string; numeroDocumento: string }): void {
-    this.userService.respuestaInfoAfiliacion(event.numeroDocumento).subscribe({
-      next: (res: any) => {
-        const data = res?.persona ?? res?.data ?? res;
-        this.datosPersonaModal = {
-          primerNombre: data.primer_nombre ?? data.primerNombre ?? '',
-          segundoNombre: data.segundo_nombre ?? data.segundoNombre ?? '',
-          primerApellido: data.primer_apellido ?? data.primerApellido ?? '',
-          segundoApellido: data.segundo_apellido ?? data.segundoApellido ?? '',
-          fechaExpedicionDoc: data.fecha_expedicion_doc ?? data.fechaExpedicionDoc ?? null,
-          fechaNacimiento: data.fecha_nacimiento ?? data.fechaNacimiento ?? null,
-        };
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se encontraron datos para el documento consultado.',
-        });
-      },
-    });
   }
 
   closeModalSearchPerson(): void {
     this.visibleModalSearchPerson = false;
-    this.datosPersonaModal = null;
   }
 
-  onGuardarNovedad(datos: DatosPersonaModal): void {
-    // TODO: llamar al servicio para guardar la novedad con los datos del formulario
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Novedad guardada',
-      detail: 'Los datos se han registrado correctamente.',
-    });
+  onGuardarNovedad(): void {
     this.closeModalSearchPerson();
+    this.initPaginador();
   }
 }

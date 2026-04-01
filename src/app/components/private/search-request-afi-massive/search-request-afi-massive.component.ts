@@ -132,7 +132,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     }
 
     this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
-    this.searhRequests();
+    this.searhMassiveRequests();
     this.getRequestStatusList();
     this.loading = false;
   }
@@ -165,7 +165,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     this.page = Number(event.page) + 1 || 0;
 
     sessionStorage.getItem('filtrosBusqueda');
-    this.searhRequests();
+    this.searhMassiveRequests();
   }
   cleanForm() {
     sessionStorage.removeItem('filtrosBusqueda');
@@ -175,17 +175,17 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     this.rows = 10;
     this.formGroup.reset();
     this.requestList = [];
-    this.searhRequests();
+    this.searhMassiveRequests();
   }
 
   initPaginador() {
     this.first = 0;
     this.page = 1;
     this.rows = 10;
-    this.searhRequests();
+    this.searhMassiveRequests();
   }
 
-  searhRequests() {
+  searhMassiveRequests() {
     const filtrosGuardados = sessionStorage.getItem('filtrosBusqueda');
     let filtros = filtrosGuardados ? JSON.parse(filtrosGuardados) : {};
 
@@ -221,7 +221,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
       page_size: this.rows,
     };
 
-    this.getRequestListByFilter(payload);
+    this.getRequestMassiveListByFilter(payload);
   }
   convertDates(dateString: string) {
     const date = new Date(dateString);
@@ -231,8 +231,8 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     const formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
   }
-  getRequestListByFilter(payload: FilterRequestsMassive) {
-    this.userService.getRequestListByFilter(payload).subscribe({
+  getRequestMassiveListByFilter(payload: FilterRequestsMassive) {
+    this.userService.getRequestMassiveListByFilter(payload).subscribe({
       next: (response: BodyResponse<RequestsList[]>) => {
         if (response.code === 200) {
           this.requestList = response.data;
@@ -443,7 +443,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   }
 
   @HostListener('document:keydown.enter', ['$event'])
-  onEnterKeyPressed(event: KeyboardEvent): void {
+  onEnterKeyPressed(event: Event): void {
     const activeElement = document.activeElement;
     const isOverlayOpen =
       document.querySelector('.p-overlay-visible') || document.querySelector('.cdk-overlay-pane');
@@ -464,7 +464,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   }
 
   @HostListener('document:keydown.escape', ['$event'])
-  onEscapeKeyPressed(event: KeyboardEvent): void {
+  onEscapeKeyPressed(event: Event): void {
     const isOverlayOpen =
       document.querySelector('.p-overlay-visible') || document.querySelector('.cdk-overlay-pane');
 
