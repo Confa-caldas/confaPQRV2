@@ -918,7 +918,8 @@ export interface EntityAccountTypeList {
   entity_name?: string;
   account_type_id: number;
   account_type_name?: string;
-  length: number;
+  min_length: number;
+  max_length: number;
   observation: string;
   is_active?: number | boolean;
   created_by?: string;

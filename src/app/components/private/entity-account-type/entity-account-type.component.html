@@ -25,8 +25,9 @@
           </th>
           <th style="width: 15%">Nombre de entidad</th>
           <th style="width: 15%">Tipo de cuenta</th>
-          <th style="width: 10%">Longitud de cuenta</th>
-          <th style="width: 35%">Observación</th>
+          <th style="width: 8%">Longitud mín.</th>
+          <th style="width: 8%">Longitud máx.</th>
+          <th style="width: 29%">Observación</th>
           <th style="width: 15%">Estado</th>
           <th style="width: 5%"></th>
         </tr>
@@ -36,7 +37,8 @@
           <td [ngStyle]="{ 'text-align': 'center' }">{{ entityAccountTypeList.entity_account_type_id }}</td>
           <td>{{ entityAccountTypeList.entity_name }}</td>
           <td>{{ entityAccountTypeList.account_type_name }}</td>
-          <td>{{ entityAccountTypeList.length }}</td>
+          <td>{{ entityAccountTypeList.min_length }}</td>
+          <td>{{ entityAccountTypeList.max_length }}</td>
           <td>{{ entityAccountTypeList.observation }}</td>
           <td class="d-flex">
             <p-inputSwitch

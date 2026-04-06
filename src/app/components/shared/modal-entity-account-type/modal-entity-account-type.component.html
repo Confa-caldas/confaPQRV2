@@ -59,26 +59,56 @@
               placeholder="Seleccione una opción"></p-dropdown>
           </div>
           <div class="col-12">
-            <label> Longitud </label>
+            <label> Longitud mínima </label>
             <input
               [readonly]="read_only"
-              formControlName="length"
+              formControlName="min_length"
               pInputText
               pKeyFilter="int"
-              placeholder="Escriba la longitud" />
+              placeholder="Ej. 5" />
             <label class="invalid">
               {{
-                formGroup.get('length')?.hasError('required') &&
-                formGroup.get('length')?.touched
+                formGroup.get('min_length')?.hasError('required') &&
+                formGroup.get('min_length')?.touched
                   ? 'Campo requerido'
                   : ''
               }}{{
-                formGroup.get('length')?.hasError('pattern') &&
-                formGroup.get('length')?.touched
-                  ? 'Ingrese solo números entre el 1 y 20'
+                formGroup.get('min_length')?.hasError('pattern') &&
+                formGroup.get('min_length')?.touched
+                  ? 'Ingrese solo números entre 1 y 20'
                   : ''
               }}</label
             >
+          </div>
+          <div class="col-12">
+            <label> Longitud máxima </label>
+            <input
+              [readonly]="read_only"
+              formControlName="max_length"
+              pInputText
+              pKeyFilter="int"
+              placeholder="Ej. 12" />
+            <label class="invalid">
+              {{
+                formGroup.get('max_length')?.hasError('required') &&
+                formGroup.get('max_length')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}{{
+                formGroup.get('max_length')?.hasError('pattern') &&
+                formGroup.get('max_length')?.touched
+                  ? 'Ingrese solo números entre 1 y 20'
+                  : ''
+              }}</label
+            >
+          </div>
+          <div
+            class="col-12"
+            *ngIf="
+              formGroup.hasError('minMaxLengthOrder') &&
+              (formGroup.get('min_length')?.touched || formGroup.get('max_length')?.touched)
+            ">
+            <label class="invalid">La longitud mínima no puede ser mayor que la máxima</label>
           </div>
           <div class="col-12">
             <label> Observación </label>
