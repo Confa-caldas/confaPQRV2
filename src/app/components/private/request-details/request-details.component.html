@@ -153,7 +153,7 @@
       class="container-button"
       *ngIf="
         requestDetails &&
-        requestDetails.status_name !== 'Cerrada' && requestDetails.priority_level !== 2
+        requestDetails.status_name !== 'Cerrada' && requestDetails.priority_level !== 2 && PERFIL === 'USUARIO INTERNO'
       ">
       <p-menu #menu [model]="itemsGenerals" [popup]="true"></p-menu>
       <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
@@ -389,9 +389,117 @@
               </p-table>
               <p-paginator
                 (onPageChange)="onPageChangeApplicantAttachments($event)"
-                [first]="firstApplicantAttachments"
-                [rows]="rowsApplicantAttachments"
-                [totalRecords]="totalRowsApplicantAttachments"
+                [first]="firstApplicantAdditionalAttachments"
+                [rows]="rowsApplicantAdditionalAttachments"
+                [totalRecords]="totalRowsApplicantAdditionalAttachments"
+                [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+            </p-tabPanel>
+            <p-tabPanel header="Documentos pendientes" headerStyleClass="p-tabview-nav-link-sub">
+              <p-button
+                *ngIf="
+                  requestApplicantAdditionalAttachmentsList && requestApplicantAdditionalAttachmentsList.length > 0
+                "
+                label="Descargar .zip"
+                icon="pi pi-download"
+                (click)="downloadAttachmentsAdditionalAsZip()"
+                class="p-button-sm p-button-primary custom-zip-button">
+              </p-button>
+
+              <!-- Botón para abrir el visor -->
+              <p-button
+                *ngIf="
+                    requestApplicantAdditionalAttachmentsList && requestApplicantAdditionalAttachmentsList.length > 0
+                  "
+                type="button"
+                icon="pi pi-images"
+                label="Ver adjuntos"
+                (click)="openPreviewCarouselAdditional()"
+                class="p-button-sm p-button-primary custom-carrusel-button">
+                </p-button>
+
+              <p-table
+                [value]="requestApplicantAdditionalAttachmentsList"
+                [scrollable]="true"
+                scrollHeight="400px"
+                selectionMode="single"
+                [paginator]="false"
+                [rows]="5"
+                [showCurrentPageReport]="true"
+                [tableStyle]="{ 'min-width': '52rem' }">
+                <ng-template pTemplate="header">
+                  <tr style="height: 60px">
+                    <th style="width: 30%">Archivo</th>
+                    <th pSortableColumn="updated_date" style="width: 20%">
+                      Fecha de adjunto<p-sortIcon field="updated_date"></p-sortIcon>
+                    </th>
+                    <th style="width: 20%">Formato</th>
+                    <th style="width: 20%">Peso</th>
+                    <th style="width: 10%">Previsualizar</th>
+                    <th style="width: 10%">Descargar</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-requestApplicantAdditionalAttachmentsList>
+                  <tr>
+                    <td [ngStyle]="{ 'text-align': 'center' }">
+                      <span
+                        style="color: #0d6efd; text-decoration: underline; cursor: pointer"
+                        (click)="
+                          getPreSignedUrlToDownload(
+                            requestApplicantAdditionalAttachmentsList.url,
+                            requestApplicantAdditionalAttachmentsList.file_name,
+                            false
+                          )
+                        ">
+                        {{ requestApplicantAdditionalAttachmentsList.file_name }}
+                      </span>
+                    </td>
+                    <td [ngStyle]="{ 'text-align': 'center' }">
+                      {{ requestApplicantAdditionalAttachmentsList.file_date }}
+                    </td>
+                    <td [ngStyle]="{ 'text-align': 'center' }">
+                      {{ requestApplicantAdditionalAttachmentsList.file_ext }}
+                    </td>
+                    <td [ngStyle]="{ 'text-align': 'center' }">
+                      {{ requestApplicantAdditionalAttachmentsList.file_size }}
+                    </td>
+                    <td [ngStyle]="{ 'text-align': 'center' }">
+                      <p-button
+                        *ngIf="
+                          handleBtn(
+                            requestApplicantAdditionalAttachmentsList.file_size,
+                            requestApplicantAdditionalAttachmentsList.file_ext
+                          )
+                        "
+                        icon="pi pi-eye"
+                        [styleClass]="'btn-icon-info'"
+                        (click)="
+                          getPreSignedUrlToDownload(
+                            requestApplicantAdditionalAttachmentsList.url,
+                            requestApplicantAdditionalAttachmentsList.file_name,
+                            false
+                          )
+                        "></p-button>
+                    </td>
+                    <td>
+                      <p-button
+                        icon="pi pi-download"
+                        [styleClass]="'btn-icon-info'"
+                        (click)="
+                          getPreSignedUrlToDownload(
+                            requestApplicantAdditionalAttachmentsList.url,
+                            requestApplicantAdditionalAttachmentsList.file_name,
+                            true
+                          )
+                        "></p-button>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+              <p-paginator
+                (onPageChange)="onPageChangeApplicantAdditionalAttachments($event)"
+                [first]="firstApplicantAdditionalAttachments"
+                [rows]="rowsApplicantAdditionalAttachments"
+                [totalRecords]="totalRowsApplicantAdditionalAttachments"
                 [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
             </p-tabPanel>
             <p-tabPanel header="Adjunto de responsable" headerStyleClass="p-tabview-nav-link-sub">
@@ -863,6 +971,64 @@
                 <li class="process-container-text"></li>
               </div>
             </div>
+
+            <!-- Información Grupo Familiar: por cada grupo se muestran las personas a cargo (mismo formato que Información Afiliado) -->
+            <div class="container-row" style="margin-top: 24px" *ngIf="tieneInfoGrupoFamiliar">
+              <label class="container-label" style="font-size: 15px">Información Grupo Familiar</label>
+            </div>
+            <div *ngFor="let grupo of listaGruposFamiliares" class="process-container" style="margin-top: 16px">
+              <div class="container-row">
+                <label class="container-label" style="font-size: 15px">Grupo familiar {{ grupo.numGrupo }}</label>
+              </div>
+              <div class="process-container" *ngFor="let ben of grupo.personasACargo; let i = index" style="margin-top: 12px">
+                <div class="container-row">
+                  <label class="container-label" style="font-size: 14px">Persona a cargo {{ i + 1 }}</label>
+                </div>
+                <div class="process-container-row">
+                  <div class="process-container-col">
+                    <label class="process-container-label"> Tipo documento </label>
+                    <li class="process-container-text">{{ ben.tipoDoc ?? '-' }}</li>
+                  </div>
+                  <div class="process-container-col">
+                    <label class="process-container-label"> Número documento </label>
+                    <li class="process-container-text">{{ ben.documento ?? '-' }}</li>
+                  </div>
+                  <div class="process-container-col">
+                    <label class="process-container-label"> Nombre </label>
+                    <li class="process-container-text">{{ ben.nombre ?? '-' }}</li>
+                  </div>
+                  <div class="process-container-col">
+                    <label class="process-container-label"> Edad </label>
+                    <li class="process-container-text">{{ ben.edad ?? '-' }}</li>
+                  </div>
+                </div>
+                <div class="process-container-row">
+                  <div class="process-container-col">
+                    <label class="process-container-label"> Fecha de nacimiento </label>
+                    <li class="process-container-text">{{ ben.fechaNacimiento ?? '-' }}</li>
+                  </div>
+                  <div class="process-container-col">
+                    <label class="process-container-label"> Estado </label>
+                    <li class="process-container-text">{{ estadoBeneficiarioDisplay(ben.estadoBeneficiario) }}</li>
+                  </div>
+                  <div class="process-container-col">
+                    <label class="process-container-label"> Parentesco </label>
+                    <li class="process-container-text">{{ ben.parentesco ?? '-' }}</li>
+                  </div>
+                  <div class="process-container-col">
+                    <label class="process-container-label"> Estado escolaridad </label>
+                    <li class="process-container-text">{{ ben.estadoEscolaridad ?? '-' }}</li>
+                  </div>
+                </div>
+                <div class="process-container-row" *ngIf="ben.estadoEscolaridad">
+                  <div class="process-container-col">
+                    <label class="process-container-label"> Discapacidad </label>
+                    <li class="process-container-text">{{ ben.discapacidad ?? '-' }}</li>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <br />
           </div>
           <!-- Si NO existe afiliado, muestra este bloque -->

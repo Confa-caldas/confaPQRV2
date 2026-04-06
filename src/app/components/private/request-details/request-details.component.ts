@@ -22,6 +22,7 @@ import {
   SimilarRequest,
   Empresa,
   AdditionalDocsRequest,
+  GrupoFamiliar,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -94,6 +95,7 @@ export class RequestDetailsComponent implements OnInit {
   base64File: string = '';
   requestAssignedAttachmentsList: RequestAttachmentsList[] = [];
   requestApplicantAttachmentsList: RequestAttachmentsList[] = [];
+  requestApplicantAdditionalAttachmentsList: RequestAttachmentsList[] = [];
   errorMensajeFile!: string;
   errorRepeatFile!: boolean;
 
@@ -111,6 +113,12 @@ export class RequestDetailsComponent implements OnInit {
   pageApplicantAttachments: number = 1;
   rowsApplicantAttachments: number = 10;
   totalRowsApplicantAttachments: number = 0;
+
+  firstApplicantAdditionalAttachments: number = 0;
+  pageApplicantAdditionalAttachments: number = 1;
+  rowsApplicantAdditionalAttachments: number = 10;
+  totalRowsApplicantAdditionalAttachments: number = 0;
+
   preSignedUrl: string = '';
   preSignedUrlDownload: string = '';
   selectedFile: File | null = null;
@@ -144,6 +152,7 @@ export class RequestDetailsComponent implements OnInit {
   // fechaEntrega: string = this.formatDate(new Date());
   afiliado?: Afiliado | null = null;;
   consultaRealizadaAfiliado = false;
+  infoGrupoFamiliar: any = null; // Respuesta de consultarInfoGrupoFamiliar
   empresa?: Empresa | null = null;;
   consultaRealizadaEmpresa = false;
   imgPdf1: string = '';
@@ -191,6 +200,7 @@ export class RequestDetailsComponent implements OnInit {
 
   // Lista de URLs crudas (las que ya usas en la tabla)
 attachments: string[] = [];
+attachmentsAdditional: string[] = [];
 currentName = '';
 viewerType2: PreviewKind = 'other';
 
@@ -252,6 +262,7 @@ loadingFile = false;
     //this.getRequestDetails(this.request_id);
     this.initPaginadorHistoric();
     this.getRequestApplicantAttachments(this.request_id);
+    this.getRequestApplicantAdditionalAttachments(this.request_id);
     this.getRequestAssignedAttachments(this.request_id);
 
     //validar si esta cerrada
@@ -385,6 +396,14 @@ loadingFile = false;
     this.pageApplicantAttachments = Number(eventApplicantAttachments.page) + 1 || 0;
     this.getRequestApplicantAttachments(this.request_id);
   }
+
+  onPageChangeApplicantAdditionalAttachments(eventApplicantAdditionalAttachments: PaginatorState) {
+    this.firstApplicantAdditionalAttachments = eventApplicantAdditionalAttachments.first || 0;
+    this.rowsApplicantAdditionalAttachments = eventApplicantAdditionalAttachments.rows || 0;
+    this.pageApplicantAdditionalAttachments = Number(eventApplicantAdditionalAttachments.page) + 1 || 0;
+    this.getRequestApplicantAdditionalAttachments(this.request_id);
+  }
+
   cleanFormApplicantAttachments() {
     this.firstApplicantAttachments = 0;
     this.pageApplicantAttachments = 1;
@@ -594,6 +613,30 @@ calcularDiferenciaFechas(
         if (response.code === 200) {
           this.requestApplicantAttachmentsList = response.data;
           this.totalRowsApplicantAttachments = Number(response.message);
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  getRequestApplicantAdditionalAttachments(request_id: number) {
+    const payload: Pagination = {
+      request_id: request_id,
+      page: this.pageApplicantAdditionalAttachments,
+      page_size: this.rowsApplicantAdditionalAttachments,
+    };
+    this.userService.getRequestAttachments(payload, 'additional').subscribe({
+      next: (response: BodyResponse<RequestAttachmentsList[]>) => {
+        if (response.code === 200) {
+          this.requestApplicantAdditionalAttachmentsList = response.data;
+          this.totalRowsApplicantAdditionalAttachments = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -1724,6 +1767,7 @@ calcularDiferenciaFechas(
 
   consultarWs(cedula: string) {
   this.consultaRealizadaAfiliado = true;
+  this.infoGrupoFamiliar = null;
 
   this.userService.respuestaInfoAfiliacion(cedula).subscribe(
     response => {
@@ -1743,12 +1787,29 @@ calcularDiferenciaFechas(
           sexo: data.sexo || '',
           estadoCivil: data.estcivil || '',
           email: data.email || '',
-          empresa: data.empresa.razonSocial || '',
+          empresa: data.empresa?.razonSocial || '',
           tipoTrabajador: data.tipotr || '',
           fechaAfiliacion: data.fechaafi || '',
           fechaIngreso: data.fechaing || '',
 
         };
+
+        // Llamar a consultarInfoGrupoFamiliar con documento y tipo_doc de la respuesta
+        const documento = data.documento ?? '';
+        const tipoDoc = data.tipodoc ?? '1';
+        if (documento) {
+          this.userService.consultarInfoGrupoFamiliar(documento, String(tipoDoc)).subscribe(
+            resGrupo => {
+              if (resGrupo.status === 200 && resGrupo.body != null) {
+                this.infoGrupoFamiliar = typeof resGrupo.body === 'string' ? JSON.parse(resGrupo.body) : resGrupo.body;
+              }
+            },
+            errGrupo => {
+              console.warn('Error al consultar grupo familiar:', errGrupo);
+              this.infoGrupoFamiliar = null;
+            }
+          );
+        }
       } else {
         console.warn('El servicio no devolvió status 200 o body vacío', response);
         this.afiliado = null;
@@ -1761,7 +1822,31 @@ calcularDiferenciaFechas(
   );
 }
 
-consultarEmpresaWs(cedula: string) {
+  /**
+   * Lista de grupos familiares (respuesta del servicio: array de GrupoFamiliar).
+   * Cada grupo tiene documentoTrabajdor, tipoDocTrabajdor, numGrupo y personasACargo.
+   */
+  get listaGruposFamiliares(): GrupoFamiliar[] {
+    if (!this.infoGrupoFamiliar) return [];
+    if (Array.isArray(this.infoGrupoFamiliar)) return this.infoGrupoFamiliar;
+    if (this.infoGrupoFamiliar && typeof this.infoGrupoFamiliar === 'object' && this.infoGrupoFamiliar.personasACargo) {
+      return [{ ...this.infoGrupoFamiliar, personasACargo: Array.isArray(this.infoGrupoFamiliar.personasACargo) ? this.infoGrupoFamiliar.personasACargo : [] }];
+    }
+    return [];
+  }
+
+  /** Indica si hay datos del segundo servicio (grupo familiar) para mostrar */
+  get tieneInfoGrupoFamiliar(): boolean {
+    return this.listaGruposFamiliares.length > 0;
+  }
+
+  /** Estado del beneficiario para mostrar (A = ACTIVO, I = INACTIVO) */
+  estadoBeneficiarioDisplay(estado: string | undefined): string {
+    if (!estado) return '-';
+    return estado === 'A' ? 'ACTIVO' : estado === 'I' ? 'INACTIVO' : estado;
+  }
+
+  consultarEmpresaWs(cedula: string) {
   this.consultaRealizadaEmpresa = true;
 
   this.userService.respuestaInfoEmpresa(cedula).subscribe(
@@ -2398,6 +2483,29 @@ consultarEmpresaWs(document: string) {
       console.error('Error al descargar archivos:', error);
     }
   }
+
+  async downloadAttachmentsAdditionalAsZip() {
+    const zip = new JSZip();
+    const filingNumber = this.requestDetails?.filing_number || 'radicado';
+    const attachments = this.requestApplicantAdditionalAttachmentsList;
+    const zipFolder = zip.folder(filingNumber.toString());
+  
+    try {
+      await Promise.all(attachments.map(async (attachment) => {
+        const presignedUrl = await this.getPreSignedUrlToDownloadPromise(attachment.url, attachment.file_name, false); // obtenemos la URL
+        const fileBlob = await this.downloadFileBlob(presignedUrl); // descargamos el blob
+        zipFolder?.file(attachment.file_name, fileBlob); // agregamos al zip
+      }));
+  
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(zipBlob);
+      downloadLink.download = `${filingNumber}_archivos.zip`;
+      downloadLink.click();
+    } catch (error) {
+      console.error('Error al descargar archivos:', error);
+    }
+  }
   
   async downloadFileBlob(url: string): Promise<Blob> {
     const response = await fetch(url);
@@ -2539,6 +2647,7 @@ onSubmitAdditional(): void {
   const payload: AdditionalDocsRequest = {
     request_id: requestId,
     user_action: this.user,
+    request_status: 2,
   };
 
   this.userService.registerAdditionalDocsRequest(payload).subscribe({
@@ -2764,6 +2873,156 @@ openCurrentInNewTab(): void {
   // Abre el archivo actual en una nueva pestaña
   window.open(this.preSignedUrlDownload, '_blank', 'noopener');
 }
+
+
+//////////////// Preview Carousel Additional ///////////////////////////////
+async openPreviewCarouselAdditional(): Promise<void> {
+
+  this.buildAttachmentsFromListAdditional();
+
+  if (!this.attachments.length) {
+    this.showSuccessMessage('info', 'Información', 'No hay adjuntos para mostrar');
+    return;
+  }
+
+  this.currentIndex = 0;
+  await this.loadCurrentAttachmentAdditional();
+
+  // 👇 Aquí abrimos el p-dialog correcto (del carrusel)
+  this.isPreviewCarouselVisible = true;
+}
+
+private async getPreSignedAdditional(storedUrl: string): Promise<string> {
+  const payload = { url: storedUrl };
+  const resp = await firstValueFrom(
+    this.userService.getUrlSigned(payload, 'download')
+  ) as BodyResponse<string>;
+
+  if (resp.code !== 200 || !resp.data) {
+    throw new Error('No hubo URL prefirmada');
+  }
+  return resp.data;
+}
+
+private extractFileNameAdditional(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const fileName = pathname.split('/').pop();
+    return decodeURIComponent(fileName || 'archivo');
+  } catch {
+    const segments = url.split('?')[0].split('#')[0].split('/');
+    return decodeURIComponent(segments.pop() || 'archivo');
+  }
+}
+
+async prevAttachmentAdditional(): Promise<void> {
+  if (this.currentIndex > 0) {
+    this.currentIndex--;
+    await this.loadCurrentAttachment();
+  }
+}
+
+async nextAttachmentAdditional(): Promise<void> {
+  if (this.currentIndex < this.attachments.length - 1) {
+    this.currentIndex++;
+    await this.loadCurrentAttachment();
+  }
+}
+
+private async loadCurrentAttachmentAdditional(): Promise<void> {
+  this.loadingFile = true;
+  const originalUrl = this.attachments[this.currentIndex];
+  this.currentName = this.extractFileNameAdditional(originalUrl);
+
+  try {
+    const signedUrl = await this.getPreSignedAdditional(originalUrl);
+    this.preSignedUrlDownload = signedUrl;
+    this.viewerType = this.getViewerType(this.currentName);
+  } catch (e) {
+    console.error('[preview-carousel] error cargando adjunto', e);
+    this.viewerType2 = 'other';
+  } finally {
+    this.loadingFile = false;
+  }
+}
+
+openCurrentInNewTabAdditional(): void {
+  if (!this.preSignedUrlDownload) return;
+
+  // Abre el archivo actual en una nueva pestaña
+  window.open(this.preSignedUrlDownload, '_blank', 'noopener');
+}
+
+///////////////////////////////////
+private buildAttachmentsFromListAdditional(): void {
+  if (!this.requestApplicantAdditionalAttachmentsList || this.requestApplicantAdditionalAttachmentsList.length === 0) {
+    this.attachments = [];
+    return;
+  }
+
+  const urls: string[] = [];
+
+  for (const row of this.requestApplicantAdditionalAttachmentsList) {
+    urls.push(...this.extractUrlsFromRowGenericAdditional(row));
+  }
+
+  // quitamos duplicados y vacíos
+  this.attachments = Array.from(new Set(urls.filter(u => !!u)));
+}
+
+private extractUrlsFromRowGenericAdditional(row: any): string[] {
+  if (!row) return [];
+
+  const candidateUrls: string[] = [];
+
+  // 1. Campos típicos de URL directa
+  const simpleProps = ['url', 'source_route', 'file_url', 'attachment_url'];
+
+  for (const prop of simpleProps) {
+    if (row[prop] && typeof row[prop] === 'string') {
+      candidateUrls.push(row[prop]);
+    }
+  }
+
+  // 2. Campos típicos que traen arrays o cadenas con varias URLs
+  const multiProps = ['applicant_attachments', 'assigned_attachments', 'attachments'];
+
+  for (const prop of multiProps) {
+    const raw = row[prop];
+
+    // Si ya es array: lo agregamos tal cual
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        if (typeof item === 'string') {
+          candidateUrls.push(this.cleanUrlString(item));
+        }
+      }
+    }
+
+    // Si es string tipo "{url1,url2}" o "url1,url2"
+    if (typeof raw === 'string' && raw.trim()) {
+      const stripped = raw.trim().replace(/^\{|\}$/g, '');
+      if (stripped) {
+        const parts = stripped.split(/\s*,\s*/);
+        for (const part of parts) {
+          candidateUrls.push(this.cleanUrlString(part));
+        }
+      }
+    }
+  }
+
+  return candidateUrls;
+}
+
+private cleanUrlStringAdditional(value: string): string {
+  if (!value) return '';
+  // Si viene con peso al final tipo "...@115.87KB" lo cortamos
+  const [urlPart] = value.split('@');
+  return urlPart.trim();
+}
+//////////////////////////////////////////////////////////////////////////
+
+
 
 
 }
