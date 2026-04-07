@@ -298,10 +298,6 @@
         <div class="process-container">
           <div class="process-container-row">
             <div class="process-container-col">
-              <label class="process-container-label">ID solicitud</label>
-              <div class="process-container-text">{{ d.solicitud.id }}</div>
-            </div>
-            <div class="process-container-col">
               <label class="process-container-label">Número de radicado</label>
               <div class="process-container-text">{{ d.solicitud.numero_radicado }}</div>
             </div>
@@ -584,10 +580,6 @@
         <h3 class="tab-data-section-title">Datos laborales</h3>
           <div class="process-container-row">
             <div class="process-container-col">
-              <label class="process-container-label">Zona</label>
-              <div class="process-container-text">{{ d.trabajador.trabajador.zona || '—' }}</div>
-            </div>
-            <div class="process-container-col">
               <label class="process-container-label">Salario mensual</label>
               <div class="process-container-text">{{ d.trabajador.trabajador.salario_mensual | number:'1.0-0' }}</div>
             </div>
@@ -597,10 +589,14 @@
             </div>
           </div>
         <h3 class="tab-data-section-title">Domicilio</h3>
-          <div class="process-container-row">
-            <div class="process-container-col-description">
+          <div class="process-container-row domicilio-data-row">
+            <div class="process-container-col process-container-col-domicilio-direccion">
               <label class="process-container-label">Dirección</label>
               <div class="process-container-text process-container-text-area">{{ d.trabajador.persona.direccion || '—' }}</div>
+            </div>
+            <div class="process-container-col process-container-col-domicilio-zona">
+              <label class="process-container-label">Zona</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.zona || '—' }}</div>
             </div>
           </div>
         </div>
@@ -693,7 +689,7 @@
             severity="success"
             [styleClass]="'adjunto-action-btn'"
             [style]="{ 'border-radius': '6px' }"
-            (onClick)="openModalAdjuntosAdicionales('trabajador')"></p-button>
+            (onClick)="abrirModalAdjuntos(d.trabajador.persona.id, idParentescoTitular)"></p-button>
         </div>
 
         <div class="expediente-generacion-block">
@@ -971,7 +967,7 @@
                   severity="success"
                   [styleClass]="'adjunto-action-btn'"
                   [style]="{ 'border-radius': '6px' }"
-                  (onClick)="openModalAdjuntosAdicionales(iBenef)"></p-button>
+                  (onClick)="abrirModalAdjuntos(b.persona.id, getIdParentescoBeneficiario(b))"></p-button>
               </div>
             </div>
           </div>
@@ -1074,36 +1070,60 @@
   [header]="getTituloModalAdjuntosAdicionales()"
   [(visible)]="visibleModalAdjuntosAdicionales"
   [modal]="true"
-  [style]="{ width: '440px', 'border-radius': '12px' }"
+  [style]="{ width: '480px', 'max-width': '95vw', 'border-radius': '12px' }"
   [contentStyle]="{ padding: '1.25rem' }"
   [closable]="true"
   [styleClass]="'custom-dialog'"
   (onHide)="closeModalAdjuntosAdicionales()">
   <div class="dialog-content">
-    <div class="form-group">
-      <label>Seleccionar archivo(s)</label>
-      <div class="custom-file-upload">
-        <input
-          type="file"
-          #fileInputAdjuntosAdicionales
-          multiple
-          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
-          (change)="onFileSelectedAdjuntosAdicionales($event)" />
-        <label class="upload-label" (click)="fileInputAdjuntosAdicionales.click()">
-          Elegir archivos <i class="pi pi-upload"></i>
-        </label>
+    <form [formGroup]="adjuntoForm" class="adjuntos-adicionales-form">
+      <div class="form-group">
+        <label class="process-container-label" for="tipoAdjuntoAdicional">Tipo de documento</label>
+        <p-dropdown
+          inputId="tipoAdjuntoAdicional"
+          formControlName="id_tipo_adjunto"
+          [options]="listaTiposAdjunto"
+          optionLabel="nombre_documento"
+          optionValue="id"
+          placeholder="Seleccione tipo"
+          appendTo="body"
+          [loading]="cargandoCatalogoAdjuntosPorParentesco"
+          [disabled]="cargandoCatalogoAdjuntosPorParentesco || listaTiposAdjunto.length === 0"
+          (onChange)="onTipoDocumentoChange($event)"
+          [style]="{ width: '100%' }"
+          styleClass="w-full"></p-dropdown>
+        <small *ngIf="listaTiposAdjunto.length === 0 && !cargandoCatalogoAdjuntosPorParentesco" class="adjuntos-adicionales-hint">
+          No hay tipos de adjunto para este parentesco.
+        </small>
       </div>
-      <p class="adjuntos-adicionales-count" *ngIf="archivosAdjuntosAdicionales.length > 0">
-        {{ archivosAdjuntosAdicionales.length }} archivo(s) seleccionado(s).
-      </p>
-    </div>
+
+      <div class="form-group" *ngIf="adjuntoForm.get('id_tipo_adjunto')?.value">
+        <label class="process-container-label">Archivo</label>
+        <div class="custom-file-upload">
+          <input
+            type="file"
+            #fileInputAdjuntosAdicionales
+            [attr.accept]="formatosPermitidosActuales || null"
+            (change)="onFileSelectedAdjuntosAdicionales($event)" />
+          <label class="upload-label" (click)="fileInputAdjuntosAdicionales.click()">
+            Elegir archivo <i class="pi pi-upload"></i>
+          </label>
+        </div>
+        <small class="adjuntos-adicionales-formatos">
+          Formatos permitidos: {{ formatosPermitidosActuales || '—' }}
+        </small>
+        <p class="adjuntos-adicionales-count" *ngIf="archivoSeleccionado">
+          {{ archivoSeleccionado.name }}
+        </p>
+      </div>
+    </form>
     <div class="dialog-buttons" style="margin-top: 1rem;">
       <p-button
         label="Subir"
         icon="pi pi-upload"
         severity="success"
         [loading]="subiendoAdjuntosAdicionales"
-        [disabled]="subiendoAdjuntosAdicionales || archivosAdjuntosAdicionales.length === 0"
+        [disabled]="subiendoAdjuntosAdicionales || adjuntoForm.invalid || !archivoSeleccionado"
         (onClick)="subirAdjuntosAdicionales()"
         [style]="{ 'border-radius': '6px' }"></p-button>
       <p-button

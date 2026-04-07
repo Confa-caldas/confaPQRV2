@@ -52,6 +52,12 @@ export interface RequestsListAfiliation {
   name_trabajador: string;
   documents_beneficiarios: string;
   names_beneficiarios: string;
+  /** Listados de afiliación: tipo y número de documento (si el backend los envía). */
+  type_doc_id_tr?: string | null;
+  type_doc_bn_tr?: string | null;
+  doc_id_tr?: string | null;
+  doc_id_bn?: string | null;
+  status_name?: string | null;
   id_empresa: string | number;
   name_empresa: string;
   request_status: number;
@@ -457,6 +463,26 @@ export interface ParametroParentesco {
   id: number;
   parentesco: string;
   esta_activo: boolean;
+}
+
+/** Ítem devuelto por GET adjuntos-por-parentesco (tipos de documento dinámicos). */
+export interface AdjuntoTipoPorParentesco {
+  id: number;
+  nombre_documento: string;
+  formatos_permitidos?: string | null;
+}
+
+/** Respuesta típica de POST generar-url (pre-signed S3 + fila adjunto ya persistida). */
+/** Paso 1 — generar-url: URL de subida S3 y clave del objeto (sin fila definitiva en BD). */
+export interface PresignAdjuntoAdicionalData {
+  url_presignada?: string;
+  s3_key?: string;
+  s3Key?: string;
+  /** Alias por si el backend usa otros nombres */
+  url?: string;
+  upload_url?: string;
+  presigned_url?: string;
+  presignedUrl?: string;
 }
 
 /** Motivos de rechazo para gestión de estado de afiliación (parametros_motivo_rechazo_afiliacion o equivalente). */

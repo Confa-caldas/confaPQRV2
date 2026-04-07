@@ -155,4 +155,10 @@ export enum EndPointRoute {
   REQUEST_AFILIATION_GENERAR_EXPEDIENTE = 'requests-afiliation/expediente/generar',
   /** Actualizar estado de gestión de la solicitud (modal Gestionar estado: Pendiente RPA / Procesado / Rechazado). */
   REQUEST_AFILIATION_ACTUALIZAR_ESTADO_GESTION = 'requests-afiliation/solicitud/actualizar-estado-gestion',
+  /** Tipos de adjunto permitidos por parentesco (query: id_parentesco). */
+  ADJUNTOS_POR_PARENTESCO = 'parametros/adjuntos-por-parentesco',
+  /** POST paso 1: URL pre-firmada S3 + s3_key (sin confirmar en BD). */
+  ADJUNTOS_ADICIONALES_GENERAR_URL = 'requests-afiliation-adjuntos/adicionales/generar-url',
+  /** POST paso 3: persiste adjunto en BD tras subida exitosa a S3. */
+  ADJUNTOS_ADICIONALES_CONFIRMAR = 'requests-afiliation-adjuntos/adicionales/confirmar',
 }

@@ -117,19 +117,18 @@ tr:nth-child(10) .circle {
   --circle-color: var(--color-11);
 }
 
-::ng-deep .p-tooltip {
-  background-color: #fff !important; /* Fondo blanco */
-  color: #000 !important; /* Texto negro */
-  border-radius: 12px !important; /* Bordes redondeados */
-  border: 1px solid #ccc !important; /* Borde gris */
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2) !important; /* Sombra */
+/* Tooltips neutros (no pisan .tooltip-asignar-bloqueado definido en _button.scss) */
+:host ::ng-deep .p-tooltip:not(.tooltip-asignar-bloqueado) {
+  background-color: $color-white !important;
+  color: $color-text-black !important;
+  border-radius: 5px !important;
+  border: 1px solid $color-platinum !important;
+  box-shadow: 0 2px 10px $color-shadow !important;
   padding: 8px 12px !important;
 }
 
-/* .tooltip-asignar-bloqueado tiene mayor especificidad en _button.scss (amarillo + rojo) */
-
-::ng-deep .p-tooltip .p-tooltip-text {
-  background-color: transparent !important; /* Elimina el fondo interno */
+:host ::ng-deep .p-tooltip:not(.tooltip-asignar-bloqueado) .p-tooltip-text {
+  background-color: transparent !important;
   color: inherit !important;
   padding: 0 !important;
   border: none !important;

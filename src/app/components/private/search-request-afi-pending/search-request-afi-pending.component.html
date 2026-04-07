@@ -106,6 +106,7 @@
     #dt
     [value]="requestList"
     dataKey="request_id"
+    [rowSelectable]="esFilaSeleccionableParaAsignar"
     [rows]="10"
     [showCurrentPageReport]="true"
     [loading]="loading"
@@ -121,35 +122,43 @@
     <ng-template pTemplate="header">
       <tr [style]="{ height: '50px' }">
         <th style="width: 5%">
-          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          <span
+            class="assign-btn-tooltip-wrap"
+            [pTooltip]="mensajeTooltipAsignarInhabilitada"
+            [tooltipDisabled]="hayFilasSeleccionablesParaAsignar()"
+            tooltipPosition="top"
+            tooltipStyleClass="tooltip-asignar-bloqueado">
+            <p-tableHeaderCheckbox
+              [disabled]="!hayFilasSeleccionablesParaAsignar()"></p-tableHeaderCheckbox>
+          </span>
         </th>
         <th style="width: 5%"></th>
         <th pSortableColumn="filing_number" style="min-width: 7rem">
-          Radicado<p-sortIcon field="filing_number"></p-sortIcon>
+          Número de radicado<p-sortIcon field="filing_number"></p-sortIcon>
         </th>
         <th pSortableColumn="filing_date" style="min-width: 8rem">
-          Fecha<p-sortIcon field="filing_date"></p-sortIcon>
+          Fecha de solicitud<p-sortIcon field="filing_date"></p-sortIcon>
         </th>
-        <th pSortableColumn="type_doc_id_tr" style="min-width: 15rem">
-          Tipo de documento trabajador<p-sortIcon field="type_doc_id_tr"></p-sortIcon>
+        <th pSortableColumn="type_doc_id_tr" style="min-width: 12rem">
+          Tipo documento trabajador<p-sortIcon field="type_doc_id_tr"></p-sortIcon>
         </th>
-        <th pSortableColumn="doc_id_tr" style="min-width: 10rem">
-          Documento trabajador<p-sortIcon style="margin: 0 5px" field="doc_id_tr"></p-sortIcon>
+        <th pSortableColumn="doc_id_tr" style="min-width: 11rem">
+          Número documento trabajador<p-sortIcon field="doc_id_tr"></p-sortIcon>
         </th>
-        <th pSortableColumn="type_doc_bn_tr" style="min-width: 15rem">
-          Tipo de documento beneficiario<p-sortIcon field="type_doc_bn_tr"></p-sortIcon>
+        <th pSortableColumn="type_doc_bn_tr" style="min-width: 12rem">
+          Tipo documento beneficiario<p-sortIcon field="type_doc_bn_tr"></p-sortIcon>
         </th>
-        <th pSortableColumn="doc_id_bn" style="min-width: 12rem">
-          Documento beneficiario<p-sortIcon field="doc_id_bn"></p-sortIcon>
+        <th pSortableColumn="doc_id_bn" style="min-width: 11rem">
+          Número documento beneficiario<p-sortIcon field="doc_id_bn"></p-sortIcon>
         </th>
-        <th pSortableColumn="name_emp" style="min-width: 12rem">
-          Nombre empresa<p-sortIcon field="name_emp"></p-sortIcon>
+        <th pSortableColumn="name_empresa" style="min-width: 12rem">
+          Nombre empresa<p-sortIcon field="name_empresa"></p-sortIcon>
         </th>
         <th pSortableColumn="status_name" style="min-width: 11rem">
-          Estado<p-sortIcon field="status_name"></p-sortIcon>
+          Estado solicitud<p-sortIcon field="status_name"></p-sortIcon>
         </th>
         <th pSortableColumn="assigned_user" style="min-width: 15rem">
-          Responsable<p-sortIcon field="assigned_user"></p-sortIcon>
+          Responsable solicitud<p-sortIcon field="assigned_user"></p-sortIcon>
         </th>
         <th style="width: 10%"></th>
       </tr>
@@ -157,7 +166,17 @@
     <ng-template pTemplate="body" let-requestList>
       <tr >
         <td>
-          <p-tableCheckbox [value]="requestList" *ngIf="requestList.request_status === 1"></p-tableCheckbox>
+          <span
+            *ngIf="requestList.request_status === 1"
+            class="assign-btn-tooltip-wrap"
+            [pTooltip]="mensajeTooltipAsignarInhabilitada"
+            [tooltipDisabled]="puedeActivarAsignar(requestList)"
+            tooltipPosition="top"
+            tooltipStyleClass="tooltip-asignar-bloqueado">
+            <p-tableCheckbox
+              [value]="requestList"
+              [disabled]="!puedeActivarAsignar(requestList)"></p-tableCheckbox>
+          </span>
         </td>
         <td>
           <p-button
@@ -167,12 +186,12 @@
         </td>
         <td style="text-align: center">{{ requestList.filing_number }}</td>
         <td style="text-align: center">{{ requestList.filing_date | date }}</td>
-        <td style="text-align: center">{{ requestList.doc_trabajador }}</td>
-        <td style="text-align: center">{{ requestList.name_trabajador }}</td>
-        <td style="text-align: center">{{ requestList.documents_beneficiarios }}</td>
-        <td style="text-align: center">{{ requestList.names_beneficiarios }}</td>
+        <td style="text-align: center">{{ requestList.tipo_doc_trabajador || '—' }}</td>
+        <td style="text-align: center">{{ requestList.doc_id_tr || requestList.doc_trabajador || '—' }}</td>
+        <td style="text-align: center">{{ requestList.tipos_doc_beneficiarios || '—' }}</td>
+        <td style="text-align: center">{{ requestList.doc_id_bn || requestList.documents_beneficiarios || '—' }}</td>
         <td style="text-align: center">{{ requestList.name_empresa }}</td>
-        <td style="text-align: center">{{ requestList.cod_estatus }}</td>
+        <td style="text-align: center">{{ requestList.status_name || requestList.cod_estatus }}</td>
         <td style="text-align: center">{{ requestList.assigned_user }}</td>
         <td>
           <div *ngIf="requestList.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'">

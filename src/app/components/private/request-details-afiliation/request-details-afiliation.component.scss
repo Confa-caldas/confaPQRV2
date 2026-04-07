@@ -93,6 +93,14 @@ td {
 
 .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
 .form-group label { font-weight: 600; display: block; margin-bottom: 5px; }
+
+.adjuntos-adicionales-formatos,
+.adjuntos-adicionales-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
 label { font-weight: bold; margin-bottom: 0.5em; color: #555; }
 
 .custom-textarea {
@@ -275,6 +283,25 @@ p-timeline { width: 70%; }
   width: 100%; max-width: 100%; margin: 0; min-width: 0;
 }
 .tab-data-view .process-container-col-description { grid-column: 1 / -1; }
+
+/* Domicilio: dirección + zona en una fila; la dirección toma el resto del ancho */
+.tab-data-view .process-container-row.domicilio-data-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+@media screen and (min-width: 576px) {
+  .tab-data-view .process-container-row.domicilio-data-row {
+    grid-template-columns: minmax(0, 1fr) minmax(7rem, 14rem);
+  }
+}
+.tab-data-view .process-container-col-domicilio-direccion,
+.tab-data-view .process-container-col-domicilio-zona {
+  min-width: 0;
+}
+.tab-data-view .process-container-col-domicilio-zona .process-container-text {
+  min-height: 38px;
+}
 .tab-data-view .process-container-col.estado-civil-editable-col { grid-column: 1 / -1; max-width: 360px; }
 .tab-data-view .process-container-label {
   font-size: 0.75rem; color: #6c757d; font-weight: 500; border-bottom: none; margin-bottom: 0.3rem; display: block;

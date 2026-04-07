@@ -22,7 +22,10 @@ import {
   SimilarRequest,
   AfiliacionRequestDetailsData,
   Adjunto,
+  AdjuntoTipoPorParentesco,
+  PresignAdjuntoAdicionalData,
   BeneficiarioBundle,
+  ParametroParentesco,
   AdjuntoConValoracion,
   ValoracionAdjunto,
   afiliacionIndicadoresPermitenAsignar,
@@ -222,8 +225,20 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   visibleModalAdjuntosAdicionales = false;
   /** Para quién se suben: 'trabajador' o índice del beneficiario. */
   adjuntosAdicionalesPara: 'trabajador' | number = 'trabajador';
-  /** Archivos seleccionados para subir. */
+  /** Archivos seleccionados para subir (compatibilidad con flujo anterior). */
   archivosAdjuntosAdicionales: File[] = [];
+  /** Archivo único seleccionado en el modal (reactive form + tipo adjunto). */
+  archivoSeleccionado: File | null = null;
+  /** Formulario del modal: tipo de adjunto obligatorio. */
+  adjuntoForm: FormGroup;
+  /** Catálogo de tipos según parentesco (respuesta del GET). */
+  listaTiposAdjunto: AdjuntoTipoPorParentesco[] = [];
+  /** Valor para [accept] del input file y texto informativo. */
+  formatosPermitidosActuales = '';
+  /** Parentescos con id (misma fuente que getParentescoList). */
+  catalogoParentesco: ParametroParentesco[] = [];
+  /** Carga del catálogo adjuntos-por-parentesco. */
+  cargandoCatalogoAdjuntosPorParentesco = false;
   /** En curso la subida de adjuntos adicionales. */
   subiendoAdjuntosAdicionales = false;
   /** En curso la generación del expediente PDF. */
@@ -311,6 +326,16 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       estadoAfiliado: [null, Validators.required],
       motivoRechazo: [null as string | null],
     });
+
+    this.adjuntoForm = this.fb.group({
+      id_tipo_adjunto: [null as number | null, Validators.required],
+    });
+  }
+
+  /** Id de parentesco "Titular" en catálogo (para trabajador). */
+  get idParentescoTitular(): number {
+    const t = this.catalogoParentesco.find(p => /^titular$/i.test((p.parentesco ?? '').trim()));
+    return t?.id ?? 0;
   }
 
   ngOnInit() {
@@ -814,8 +839,9 @@ loading = false;
     this.userService.getParentescoList().subscribe({
       next: (res) => {
         if (res?.code === 200 && Array.isArray(res.data)) {
-          let opciones = res.data
-            .filter((t) => t.esta_activo !== false)
+          const activos = res.data.filter((t) => t.esta_activo !== false);
+          this.catalogoParentesco = activos;
+          let opciones = activos
             .map((t) => ({ label: t.parentesco ?? '', value: t.parentesco ?? '' }))
             .filter((o) => o.value !== '' || o.label !== '');
           valoresActuales.forEach((v) => {
@@ -825,13 +851,39 @@ loading = false;
           });
           this.opcionesParentesco = opciones;
         } else {
+          this.catalogoParentesco = [];
           this.opcionesParentesco = valoresActuales.length ? valoresActuales.map((v) => ({ label: v, value: v })) : [];
         }
       },
       error: () => {
+        this.catalogoParentesco = [];
         this.opcionesParentesco = valoresActuales.length ? valoresActuales.map((v) => ({ label: v, value: v })) : [];
       },
     });
+  }
+
+  /** Resuelve id_parentesco del catálogo a partir del texto de parentesco del beneficiario. */
+  getIdParentescoBeneficiario(b: BeneficiarioBundle | undefined): number {
+    const name = (b?.beneficiario?.parentesco ?? '').toString().trim();
+    if (!name) return 0;
+    const row = this.catalogoParentesco.find(
+      p => (p.parentesco ?? '').trim().toLowerCase() === name.toLowerCase()
+    );
+    return row?.id ?? 0;
+  }
+
+  /** Normaliza extensiones para el atributo accept del input file. */
+  private normalizarAcceptFormatos(raw: string | null | undefined): string {
+    if (!raw?.trim()) return '';
+    return raw
+      .split(/[,;]\s*/)
+      .map(x => {
+        const t = x.trim().toLowerCase();
+        if (!t) return '';
+        return t.startsWith('.') ? t : `.${t}`;
+      })
+      .filter(Boolean)
+      .join(',');
   }
 
 getRequestDetails(request_details: number) {
@@ -1348,17 +1400,90 @@ getRequestDetails(request_details: number) {
     this.adjuntoAValidar = null;
   }
 
-  /** Abre el modal para subir adjuntos adicionales (trabajador o beneficiario por índice). */
-  openModalAdjuntosAdicionales(para: 'trabajador' | number): void {
-    this.adjuntosAdicionalesPara = para;
-    this.archivosAdjuntosAdicionales = [];
+  /**
+   * Abre el modal, limpia el formulario y carga tipos de adjunto según parentesco.
+   * @param idPersona id de persona (trabajador o beneficiario)
+   * @param idParentesco id del catálogo parametros_parentesco
+   */
+  abrirModalAdjuntos(idPersona: number, idParentesco: number): void {
+    const d = this.afiliationRequestDetails;
+    if (!d) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Datos',
+        detail: 'No hay información de la solicitud cargada.',
+      });
+      return;
+    }
+    if (!idPersona || !idParentesco) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Parentesco',
+        detail:
+          'No se pudo determinar la persona o el parentesco para cargar los tipos de adjunto. Verifique el catálogo de parentescos.',
+      });
+      return;
+    }
+
+    if (d.trabajador?.persona?.id === idPersona) {
+      this.adjuntosAdicionalesPara = 'trabajador';
+    } else {
+      const idx = d.beneficiarios?.findIndex(b => b.persona.id === idPersona) ?? -1;
+      this.adjuntosAdicionalesPara = idx >= 0 ? idx : 'trabajador';
+    }
+
     this.visibleModalAdjuntosAdicionales = true;
+    this.adjuntoForm.reset();
+    this.formatosPermitidosActuales = '';
+    this.archivoSeleccionado = null;
+    this.archivosAdjuntosAdicionales = [];
+    this.listaTiposAdjunto = [];
+    const input = this.fileInputAdjuntosAdicionalesRef?.nativeElement;
+    if (input) input.value = '';
+
+    this.cargandoCatalogoAdjuntosPorParentesco = true;
+    this.userService.obtenerAdjuntosPorParentesco(idParentesco).subscribe({
+      next: res => {
+        this.cargandoCatalogoAdjuntosPorParentesco = false;
+        if (res?.code === 200 && Array.isArray(res.data)) {
+          this.listaTiposAdjunto = res.data;
+        } else {
+          this.listaTiposAdjunto = [];
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Catálogo',
+            detail: res?.message || 'No se obtuvieron tipos de adjunto para este parentesco.',
+          });
+        }
+      },
+      error: () => {
+        this.cargandoCatalogoAdjuntosPorParentesco = false;
+        this.listaTiposAdjunto = [];
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cargar el catálogo de adjuntos por parentesco.',
+        });
+      },
+    });
+  }
+
+  /** Al cambiar el tipo de documento: actualiza formatos permitidos para el input file. */
+  onTipoDocumentoChange(event: { value?: number | null }): void {
+    const id = event?.value;
+    const row = this.listaTiposAdjunto.find(t => Number(t.id) === Number(id));
+    this.formatosPermitidosActuales = this.normalizarAcceptFormatos(row?.formatos_permitidos ?? '');
   }
 
   /** Cierra el modal de adjuntos adicionales. */
   closeModalAdjuntosAdicionales(): void {
     this.visibleModalAdjuntosAdicionales = false;
     this.archivosAdjuntosAdicionales = [];
+    this.archivoSeleccionado = null;
+    this.adjuntoForm.reset();
+    this.listaTiposAdjunto = [];
+    this.formatosPermitidosActuales = '';
+    this.cargandoCatalogoAdjuntosPorParentesco = false;
     const input = this.fileInputAdjuntosAdicionalesRef?.nativeElement;
     if (input) input.value = '';
   }
@@ -1372,17 +1497,27 @@ getRequestDetails(request_details: number) {
     return `Subir adjuntos adicionales - ${nombre}`;
   }
 
-  /** Al seleccionar archivos en el input del modal. */
+  /** Al seleccionar archivo en el input del modal. */
   onFileSelectedAdjuntosAdicionales(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const files = input?.files;
-    this.archivosAdjuntosAdicionales = files ? Array.from(files) : [];
+    const file = input?.files?.[0] ?? null;
+    this.archivoSeleccionado = file;
+    this.archivosAdjuntosAdicionales = file ? [file] : [];
   }
 
   /** Sube los archivos seleccionados y los agrega a la lista de adjuntos del trabajador o beneficiario. */
-  subirAdjuntosAdicionales(): void {
-    if (this.archivosAdjuntosAdicionales.length === 0) {
-      this.messageService.add({ severity: 'warn', summary: 'Archivos requeridos', detail: 'Seleccione al menos un archivo.' });
+  async subirAdjuntosAdicionales(): Promise<void> {
+    this.adjuntoForm.markAllAsTouched();
+    if (this.adjuntoForm.invalid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Tipo de adjunto',
+        detail: 'Seleccione el tipo de documento.',
+      });
+      return;
+    }
+    if (!this.archivoSeleccionado) {
+      this.messageService.add({ severity: 'warn', summary: 'Archivo requerido', detail: 'Seleccione un archivo.' });
       return;
     }
     const d = this.afiliationRequestDetails;
@@ -1398,46 +1533,89 @@ getRequestDetails(request_details: number) {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se encontró la persona.' });
       return;
     }
-    const formData = new FormData();
-    formData.append('id_solicitud', String(d.solicitud.id));
-    formData.append('id_persona', String(idPersona));
-    this.archivosAdjuntosAdicionales.forEach((file) => formData.append('archivos', file));
-    this.subiendoAdjuntosAdicionales = true;
-    this.userService.uploadAdjuntosAfiliacion(formData).subscribe({
-      next: (res) => {
-        this.subiendoAdjuntosAdicionales = false;
-        const list = Array.isArray(res?.data) ? res.data : res?.data ? [res.data] : [];
-        if (res?.code === 200 && list.length > 0) {
-          const nuevos = list.map((a: Adjunto) => ({
-            adjunto: a,
-            valoracion: '' as ValoracionAdjunto | '',
-            descripcion: '',
-          }));
-          if (this.adjuntosAdicionalesPara === 'trabajador') {
-            this.trabajadorAdjuntosEstado.push(...nuevos);
-          } else {
-            const idx = this.adjuntosAdicionalesPara as number;
-            if (!this.beneficiariosAdjuntosEstado[idx]) this.beneficiariosAdjuntosEstado[idx] = [];
-            this.beneficiariosAdjuntosEstado[idx].push(...nuevos);
-          }
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Adjuntos subidos',
-            detail: `Se agregaron ${list.length} archivo(s) correctamente.`,
-          });
-          this.closeModalAdjuntosAdicionales();
-        } else if (res?.code === 200) {
-          this.messageService.add({ severity: 'info', summary: 'Subida', detail: res?.message || 'Operación completada.' });
-          this.closeModalAdjuntosAdicionales();
-        } else {
-          this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: res?.message || 'No se pudieron subir los archivos.' });
-        }
-      },
-      error: () => {
-        this.subiendoAdjuntosAdicionales = false;
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al subir los archivos.' });
-      },
-    });
+
+    const file = this.archivoSeleccionado;
+    const contentType = (file.type ?? '').trim() || 'application/octet-stream';
+
+    /** Paso 1: solo datos mínimos para firmar la URL en S3. */
+    const payloadGenerarUrl: Record<string, unknown> = {
+      id_persona: idPersona,
+      nombre_archivo: file.name,
+      content_type: contentType,
+    };
+
+    try {
+      this.subiendoAdjuntosAdicionales = true;
+
+      const resPaso1 = await lastValueFrom(this.userService.obtenerUrlPresignadaS3(payloadGenerarUrl));
+      if (resPaso1?.code !== 200 || !resPaso1.data) {
+        throw new Error(resPaso1?.message || 'No se pudo obtener la URL de carga.');
+      }
+      const data1 = resPaso1.data as PresignAdjuntoAdicionalData;
+      const urlPresignada =
+        data1.url_presignada ??
+        data1.url ??
+        data1.upload_url ??
+        data1.presigned_url ??
+        data1.presignedUrl ??
+        '';
+      const s3Key = (data1.s3_key ?? data1.s3Key ?? '').trim();
+      if (!urlPresignada.trim() || !s3Key) {
+        throw new Error('La respuesta no incluye url_presignada o s3_key.');
+      }
+
+      await lastValueFrom(this.userService.subirArchivoAS3(urlPresignada, file));
+
+      const payloadConfirmacion: Record<string, unknown> = {
+        id_persona: idPersona,
+        nombre_archivo: file.name,
+        content_type: contentType,
+        tamanio_bytes: file.size,
+        s3_key: s3Key,
+      };
+      const idTipo = this.adjuntoForm.get('id_tipo_adjunto')?.value;
+      if (idTipo != null && idTipo !== '') {
+        payloadConfirmacion['id_tipo_adjunto'] = idTipo;
+      }
+
+      const resPaso3 = await lastValueFrom(this.userService.confirmarAdjuntoS3(payloadConfirmacion));
+      if (resPaso3?.code !== 200 || !resPaso3.data) {
+        throw new Error(resPaso3?.message || 'No se pudo confirmar el adjunto.');
+      }
+      const adjuntoGuardado = resPaso3.data as Adjunto;
+      if (!adjuntoGuardado?.id) {
+        throw new Error('La confirmación no devolvió un adjunto válido.');
+      }
+
+      const nuevos = [
+        {
+          adjunto: adjuntoGuardado,
+          valoracion: '' as ValoracionAdjunto | '',
+          descripcion: '',
+        },
+      ];
+      if (this.adjuntosAdicionalesPara === 'trabajador') {
+        this.trabajadorAdjuntosEstado.push(...nuevos);
+      } else {
+        const idx = this.adjuntosAdicionalesPara as number;
+        if (!this.beneficiariosAdjuntosEstado[idx]) this.beneficiariosAdjuntosEstado[idx] = [];
+        this.beneficiariosAdjuntosEstado[idx].push(...nuevos);
+      }
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Adjuntos subidos',
+        detail: 'Se agregó el archivo correctamente.',
+      });
+      this.closeModalAdjuntosAdicionales();
+      this.subiendoAdjuntosAdicionales = false;
+    } catch (_error: unknown) {
+      this.subiendoAdjuntosAdicionales = false;
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Error al subir los archivos.',
+      });
+    }
   }
 
   /** Confirma y envía la validación del adjunto al servicio (actualiza estado_validacion y observacion_validacion en afiliacion_solicitud_adjunto). */

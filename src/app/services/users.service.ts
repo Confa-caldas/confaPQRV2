@@ -84,6 +84,8 @@ import {
   ParametroParentesco,
   ParametroMotivoRechazoAfiliacion,
   Adjunto,
+  AdjuntoTipoPorParentesco,
+  PresignAdjuntoAdicionalData,
   ActualizarEstadoGestionAfiliacionPayload,
   FilterRequestsMassive,
 } from '../models/users.interface';
@@ -541,6 +543,42 @@ export class Users {
   getParentescoList() {
     return this.http.get<BodyResponse<ParametroParentesco[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.PARENTESCO_LIST}`
+    );
+  }
+
+  /** Tipos de adjunto según parentesco (Cambiado a POST para integración con AWS). */
+  obtenerAdjuntosPorParentesco(idParentesco: number) {
+    // Creamos el payload que nuestra Lambda de Python está esperando leer del 'body'
+    const payload = { 
+      id_parentesco: idParentesco 
+    };
+
+    return this.http.post<BodyResponse<AdjuntoTipoPorParentesco[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ADJUNTOS_POR_PARENTESCO}`,
+      payload
+    );
+  }
+
+  /** Paso 1: solicita URL pre-firmada y s3_key (POST generar-url). */
+  obtenerUrlPresignadaS3(payload: Record<string, unknown>) {
+    return this.http.post<BodyResponse<PresignAdjuntoAdicionalData>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ADJUNTOS_ADICIONALES_GENERAR_URL}`,
+      payload
+    );
+  }
+
+  /** Paso 2: PUT directo a S3; body = archivo, header Content-Type = tipo del file. */
+  subirArchivoAS3(url: string, file: File) {
+    return this.http.put(url, file, {
+      headers: { 'Content-Type': file.type },
+    });
+  }
+
+  /** Paso 3: confirma en BD el adjunto asociado a la clave S3 subida. */
+  confirmarAdjuntoS3(payload: Record<string, unknown>) {
+    return this.http.post<BodyResponse<Adjunto>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ADJUNTOS_ADICIONALES_CONFIRMAR}`,
+      payload
     );
   }
 
