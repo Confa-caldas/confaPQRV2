@@ -607,14 +607,14 @@
           <div class="adjuntos-table-wrapper">
             <p-table
               [value]="getAdjuntosTrabajador()"
-              [tableStyle]="{ 'min-width': '40rem' }"
+              [tableStyle]="{ 'min-width': '44rem' }"
               styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
               <ng-template pTemplate="header">
                 <tr>
-                  <th style="width: 28%">Archivo</th>
-                  <th style="width: 18%">Valoración</th>
-                  <th style="width: 36%">Descripción (si aplica)</th>
-                  <th style="width: 18%">Acciones</th>
+                  <th style="width: 26%">Archivo</th>
+                  <th style="width: 16%">Valoración</th>
+                  <th style="width: 34%">Descripción (si aplica)</th>
+                  <th class="adjuntos-col-acciones">Acciones</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-item>
@@ -648,29 +648,33 @@
                     <div class="adjuntos-actions">
                       <p-button
                         icon="pi pi-eye"
-                        label="Previsualizar"
                         pTooltip="Previsualizar"
+                        tooltipPosition="top"
                         severity="secondary"
-                        [styleClass]="'adjunto-action-btn p-button-outlined'"
+                        [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only p-button-outlined'"
                         [style]="{ 'border-radius': '6px' }"
-                        (onClick)="openAdjunto(item.adjunto, false)"></p-button>
+                        [attr.aria-label]="'Previsualizar adjunto'"
+                        (onClick)="abrirAdjunto(item.adjunto)"></p-button>
                       <p-button
                         icon="pi pi-download"
-                        label="Descargar"
                         pTooltip="Descargar"
+                        tooltipPosition="top"
                         severity="secondary"
-                        [styleClass]="'adjunto-action-btn p-button-outlined'"
+                        [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only p-button-outlined'"
                         [style]="{ 'border-radius': '6px' }"
-                        (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                        [attr.aria-label]="'Descargar adjunto'"
+                        (onClick)="descargarAdjunto(item.adjunto)"></p-button>
                       <p-button
                         *ngIf="esAdjuntoPendienteValidacion(item)"
-                        label="Validar adjunto"
                         icon="pi pi-check"
+                        pTooltip="Validar adjunto"
+                        tooltipPosition="top"
                         [loading]="validandoAdjuntoId === item.adjunto.id"
                         [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion"
                         severity="success"
-                        [styleClass]="'adjunto-action-btn'"
+                        [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only'"
                         [style]="{ 'border-radius': '6px' }"
+                        [attr.aria-label]="'Validar adjunto'"
                         (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
                     </div>
                   </td>
@@ -682,7 +686,7 @@
         <div class="adjuntos-section empty adjuntos-trabajador-block" *ngIf="getAdjuntosTrabajador().length === 0">
           <p class="adjuntos-empty-text">No hay archivos adjuntos para el trabajador de esta solicitud.</p>
         </div>
-        <div class="adjuntos-upload-row">
+        <div class="adjuntos-upload-row" *ngIf="!d.solicitud.expediente">
           <p-button
             label="Subir adjuntos adicionales"
             icon="pi pi-upload"
@@ -694,14 +698,46 @@
 
         <div class="expediente-generacion-block">
           <h3 class="tab-data-section-title expediente-generacion-title">Generación del expediente</h3>
+          <p-message
+            *ngIf="hayAdjuntosSinValidarTrabajadorOBeneficiarios"
+            severity="warn"
+            styleClass="expediente-adjuntos-pendientes-msg"
+            [text]="'No es posible generar el expediente hasta que todos los adjuntos del trabajador y de los beneficiarios estén validados en «Sí».'" />
+          <div *ngIf="d.solicitud.expediente as exp" class="expediente-unificado-card">
+            <div class="expediente-unificado-msg-inner">
+              <span class="expediente-unificado-filename"><strong>Expediente unificado:</strong> {{ exp.nombre_archivo }}</span>
+              <div class="expediente-unificado-actions">
+                <p-button
+                  icon="pi pi-eye"
+                  severity="secondary"
+                  [outlined]="true"
+                  [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only'"
+                  [style]="{ 'border-radius': '6px' }"
+                  pTooltip="Previsualizar"
+                  tooltipPosition="top"
+                  [attr.aria-label]="'Previsualizar expediente'"
+                  (onClick)="previsualizarAdjunto(exp)"></p-button>
+                <p-button
+                  icon="pi pi-download"
+                  severity="secondary"
+                  [outlined]="true"
+                  [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only'"
+                  [style]="{ 'border-radius': '6px' }"
+                  pTooltip="Descargar"
+                  tooltipPosition="top"
+                  [attr.aria-label]="'Descargar expediente'"
+                  (onClick)="descargarAdjunto(exp)"></p-button>
+              </div>
+            </div>
+          </div>
           <div class="expediente-generacion-actions">
             <p-button
-              label="Generar expediente"
+              [label]="d.solicitud.expediente ? 'Regenerar expediente' : 'Generar expediente'"
               icon="pi pi-file-pdf"
               severity="primary"
               [styleClass]="'adjunto-action-btn'"
               [style]="{ 'border-radius': '6px' }"
-              pTooltip="Genera un PDF con todos los adjuntos (trabajador y beneficiarios) validados en Sí. Todos deben estar validados en Sí."
+              [pTooltip]="d.solicitud.expediente ? 'Vuelve a generar el PDF unificado con los adjuntos actuales (todos validados en Sí). Tras regenerar podrá subir archivos nuevos si lo necesita.' : 'Genera un PDF con todos los adjuntos (trabajador y beneficiarios) validados en Sí. Todos deben estar validados en Sí.'"
               [loading]="generandoExpediente"
               [disabled]="generandoExpediente || !todosAdjuntosValidadosEnSi"
               (onClick)="generarExpediente()"></p-button>
@@ -885,14 +921,14 @@
                 <div class="adjuntos-table-wrapper">
                   <p-table
                     [value]="getAdjuntosBeneficiario(iBenef)"
-                    [tableStyle]="{ 'min-width': '40rem' }"
+                    [tableStyle]="{ 'min-width': '44rem' }"
                     styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
                     <ng-template pTemplate="header">
                       <tr>
-                        <th style="width: 28%">Archivo</th>
-                        <th style="width: 18%">Valoración</th>
-                        <th style="width: 36%">Descripción (si aplica)</th>
-                        <th style="width: 18%">Acciones</th>
+                        <th style="width: 26%">Archivo</th>
+                        <th style="width: 16%">Valoración</th>
+                        <th style="width: 34%">Descripción (si aplica)</th>
+                        <th class="adjuntos-col-acciones">Acciones</th>
                       </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-item>
@@ -926,29 +962,33 @@
                           <div class="adjuntos-actions">
                             <p-button
                               icon="pi pi-eye"
-                              label="Previsualizar"
                               pTooltip="Previsualizar"
+                              tooltipPosition="top"
                               severity="secondary"
-                              [styleClass]="'adjunto-action-btn p-button-outlined'"
+                              [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only p-button-outlined'"
                               [style]="{ 'border-radius': '6px' }"
-                              (onClick)="openAdjunto(item.adjunto, false)"></p-button>
+                              [attr.aria-label]="'Previsualizar adjunto'"
+                              (onClick)="abrirAdjunto(item.adjunto)"></p-button>
                             <p-button
                               icon="pi pi-download"
-                              label="Descargar"
                               pTooltip="Descargar"
+                              tooltipPosition="top"
                               severity="secondary"
-                              [styleClass]="'adjunto-action-btn p-button-outlined'"
+                              [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only p-button-outlined'"
                               [style]="{ 'border-radius': '6px' }"
-                              (onClick)="openAdjunto(item.adjunto, true)"></p-button>
+                              [attr.aria-label]="'Descargar adjunto'"
+                              (onClick)="descargarAdjunto(item.adjunto)"></p-button>
                             <p-button
                               *ngIf="esAdjuntoPendienteValidacion(item)"
-                              label="Validar adjunto"
                               icon="pi pi-check"
+                              pTooltip="Validar adjunto"
+                              tooltipPosition="top"
                               [loading]="validandoAdjuntoId === item.adjunto.id"
                               [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion"
                               severity="success"
-                              [styleClass]="'adjunto-action-btn'"
+                              [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only'"
                               [style]="{ 'border-radius': '6px' }"
+                              [attr.aria-label]="'Validar adjunto'"
                               (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
                           </div>
                         </td>
@@ -960,7 +1000,7 @@
               <div class="adjuntos-section empty benef-adjuntos" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">
                 <p class="adjuntos-empty-text">No hay archivos adjuntos para {{ getNombreBeneficiario(b) }}.</p>
               </div>
-              <div class="adjuntos-upload-row">
+              <div class="adjuntos-upload-row" *ngIf="!d.solicitud.expediente">
                 <p-button
                   label="Subir adjuntos adicionales"
                   icon="pi pi-upload"
@@ -981,17 +1021,54 @@
       </div>
     </p-tabPanel>
 
-    <!-- ===================== NOVEDADES ===================== -->
-    <p-tabPanel header="Novedades" headerStyleClass="p-tabview-nav-link-1">
+    <!-- ===================== NOVEDADES (visibilidad por integrantes: trabajador/beneficiario.novedades.calidad_datos) ===================== -->
+    <p-tabPanel
+      *ngIf="tieneNovedadesDeCalidad()"
+      header="Novedades"
+      headerStyleClass="p-tabview-nav-link-1">
       <div class="tab-data-view">
-        <h3 class="tab-data-section-title">Novedades Previa a Afiliación</h3>
-        <div class="process-container novedades-tab-section">
-          <p-message severity="info" styleClass="novedades-empty-msg" text="No hay novedades previas a afiliación registradas para esta solicitud."></p-message>
-        </div>
-
-        <h3 class="tab-data-section-title">Novedades por Calidad de Datos (Registraduría)</h3>
-        <div class="process-container novedades-tab-section">
-          <p-message severity="info" styleClass="novedades-empty-msg" text="No hay novedades por calidad de datos (Registraduría) para esta solicitud."></p-message>
+        <h3 class="tab-data-section-title">Novedades por calidad de datos (Registraduría)</h3>
+        <div class="novedades-calidad-root">
+          <div class="novedad-calidad-registro" *ngFor="let entrada of novedadesAMostrar">
+            <div class="novedad-calidad-registro-titulo">
+              <span class="novedad-calidad-nombre">{{ entrada.nombrePersona }}</span>
+              <span class="novedad-calidad-rol">({{ etiquetaRolNovedadCalidad(entrada.rol) }})</span>
+            </div>
+            <div class="novedad-calidad-registro-header">
+              <span class="novedad-calidad-estado-label">Estado</span>
+              <p-tag
+                [value]="textoEstadoNovedadCalidad(entrada.estadoId)"
+                [severity]="severidadEstadoNovedadCalidad(entrada.estadoId)"></p-tag>
+              <span class="novedad-calidad-fecha-reg" *ngIf="entrada.fechaRegistro">
+                Registro: {{ entrada.fechaRegistro }}
+              </span>
+            </div>
+            <p-table
+              *ngIf="entrada.filas.length > 0"
+              [value]="entrada.filas"
+              styleClass="p-datatable-sm p-datatable-striped novedades-calidad-tabla"
+              [tableStyle]="{ 'min-width': '100%' }">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 18%">Campo</th>
+                  <th style="width: 27%">Registraduría</th>
+                  <th style="width: 27%">Genesys</th>
+                  <th style="width: 28%">Novedad</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-fila>
+                <tr>
+                  <td class="novedad-col-campo">{{ fila.campoLabel }}</td>
+                  <td class="novedad-col-reg">{{ fila.registraduria }}</td>
+                  <td class="novedad-col-genesys">{{ fila.genesys }}</td>
+                  <td class="novedad-col-novedad">{{ fila.novedad }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+            <p *ngIf="entrada.filas.length === 0" class="novedades-calidad-sin-filas">
+              No hay llaves en <strong>diferencias</strong> para armar filas comparativas en esta novedad.
+            </p>
+          </div>
         </div>
       </div>
     </p-tabPanel>
@@ -1231,6 +1308,23 @@
 </p-dialog>
 
 <p-dialog
+  header="Previsualización"
+  [(visible)]="displayModal"
+  [modal]="true"
+  [style]="{ width: 'min(95vw, 900px)' }"
+  [breakpoints]="{ '960px': '90vw', '640px': '98vw' }"
+  [contentStyle]="{ padding: '0.75rem' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarModalPrevisualizacionImagen()">
+  <img
+    *ngIf="urlImagenPreview"
+    [src]="urlImagenPreview"
+    alt="Vista previa del adjunto"
+    style="width: 100%; height: auto; max-height: 80vh; object-fit: contain; display: block" />
+</p-dialog>
+
+<p-dialog
   header="Previsualización del Documento"
   [(visible)]="displayPreviewModal"
   [modal]="true"
@@ -1272,14 +1366,14 @@
   [message]="message"
   (setRta)="closeDialog($event)"></app-modal-dinamic>
 
-<app-modal-assign-selector
+<app-modal-assign-afiliation-selector
   *ngIf="visibleDialogInput"
   [visible]="visibleDialogInput"
   [message]="message"
   [buttonmsg]="buttonmsg"
   [parameter]="parameter"
   (setRta)="closeDialogInput($event)"
-  (setRtaParameter)="setParameter($event)"></app-modal-assign-selector>
+  (setRtaParameter)="setParameter($event)"></app-modal-assign-afiliation-selector>
 
 <app-modal-alert
   *ngIf="visibleDialogAlert"

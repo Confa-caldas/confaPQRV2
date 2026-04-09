@@ -21,6 +21,7 @@ import {
   historyRequest,
   SimilarRequest,
   AfiliacionRequestDetailsData,
+  NovedadCalidadDatosIntegrante,
   Adjunto,
   AdjuntoTipoPorParentesco,
   PresignAdjuntoAdicionalData,
@@ -47,7 +48,22 @@ import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import JSZip from 'jszip';
 
+interface NovedadCalidadFilaVista {
+  campoLabel: string;
+  registraduria: string;
+  genesys: string;
+  novedad: string;
+}
 
+/** Una novedad de calidad lista para la UI (nombre, rol y filas desde `diferencias`). */
+interface NovedadCalidadEntradaUIM {
+  nombrePersona: string;
+  rol: 'trabajador' | 'beneficiario';
+  item: NovedadCalidadDatosIntegrante;
+  filas: NovedadCalidadFilaVista[];
+  estadoId: number;
+  fechaRegistro: string | null;
+}
 
 @Component({
   selector: 'app-request-details-afiliation',
@@ -61,6 +77,9 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   @ViewChild('fileInputAdjuntosAdicionales') fileInputAdjuntosAdicionalesRef?: ElementRef<HTMLInputElement>;
 
   displayPreviewModal: boolean = false;
+  /** Modal PrimeNG para previsualizar adjuntos de afiliación tipo imagen (tabla trabajador/beneficiario). */
+  displayModal = false;
+  urlImagenPreview = '';
   viewerType: 'google' | 'office' | 'image' | 'pdf' = 'google';
 
   requestList: RequestsList[] = [];
@@ -963,6 +982,17 @@ getRequestDetails(request_details: number) {
     );
   }
 
+  /**
+   * True si existe al menos un adjunto del trabajador o de algún beneficiario aún sin validar
+   * (estado vacío o PENDIENTE). Usado para mostrar el aviso de expediente solo en ese caso.
+   */
+  get hayAdjuntosSinValidarTrabajadorOBeneficiarios(): boolean {
+    const trabajador = this.trabajadorAdjuntosEstado ?? [];
+    const beneficiarios = this.beneficiariosAdjuntosEstado ?? [];
+    const todos = [...trabajador, ...beneficiarios.flat()];
+    return todos.some((item) => this.esAdjuntoPendienteValidacion(item));
+  }
+
   /** True si el adjunto está pendiente de validación (estado_validacion vacío o PENDIENTE). */
   esAdjuntoPendienteValidacion(item: AdjuntoConValoracion): boolean {
     const est = (item?.adjunto?.estado_validacion ?? '').toString().trim().toUpperCase();
@@ -986,6 +1016,155 @@ getRequestDetails(request_details: number) {
       .filter(Boolean)
       .join(' ')
       .trim() || 'Beneficiario';
+  }
+
+  /**
+   * Muestra la pestaña Novedades si hay registros en `trabajador.novedades.calidad_datos`
+   * o en `beneficiario.novedades.calidad_datos` de algún beneficiario (no usa `data.novedades` raíz).
+   */
+  tieneNovedadesDeCalidad(): boolean {
+    const d = this.afiliationRequestDetails;
+    if (!d) return false;
+    const trab = d.trabajador?.novedades?.calidad_datos;
+    if (Array.isArray(trab) && trab.length > 0) return true;
+    for (const b of d.beneficiarios ?? []) {
+      if (this.getCalidadDatosBeneficiario(b).length > 0) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Novedades de calidad en un solo arreglo (trabajador + beneficiarios), con `nombrePersona` y `rol`.
+   */
+  get novedadesAMostrar(): NovedadCalidadEntradaUIM[] {
+    const d = this.afiliationRequestDetails;
+    if (!d) return [];
+    const out: NovedadCalidadEntradaUIM[] = [];
+    const cdTrab = d.trabajador?.novedades?.calidad_datos;
+    if (Array.isArray(cdTrab)) {
+      const nombre = this.trabajadorNombreCompleto || 'Trabajador';
+      for (const item of cdTrab) {
+        out.push(this.consolidarEntradaNovedadCalidad(item, nombre, 'trabajador'));
+      }
+    }
+    for (const b of d.beneficiarios ?? []) {
+      const list = this.getCalidadDatosBeneficiario(b);
+      const nombre = this.getNombreBeneficiario(b);
+      for (const item of list) {
+        out.push(this.consolidarEntradaNovedadCalidad(item, nombre, 'beneficiario'));
+      }
+    }
+    return out;
+  }
+
+  /** Etiquetas de campo para columnas (prefijo antes de _reg / _genesys / _novedad). */
+  readonly etiquetasCampoCalidadNovedad: Record<string, string> = {
+    primer_nombre: 'Primer Nombre',
+    segundo_nombre: 'Segundo Nombre',
+    primer_apellido: 'Primer Apellido',
+    segundo_apellido: 'Segundo Apellido',
+    fecha_nacimiento: 'Fecha de Nacimiento',
+    fecha_expedicion: 'Fecha de Expedición',
+    tipo_documento: 'Tipo de documento',
+    numero_documento: 'Número de documento',
+  };
+
+  textoEstadoNovedadCalidad(estadoId: number): string {
+    if (estadoId === 1) return 'Pendiente';
+    if (estadoId === 2) return 'Procesado';
+    return estadoId > 0 ? `Estado ${estadoId}` : '—';
+  }
+
+  severidadEstadoNovedadCalidad(estadoId: number): 'success' | 'warning' | 'secondary' {
+    if (estadoId === 1) return 'warning';
+    if (estadoId === 2) return 'success';
+    return 'secondary';
+  }
+
+  etiquetaRolNovedadCalidad(rol: 'trabajador' | 'beneficiario'): string {
+    return rol === 'trabajador' ? 'Trabajador' : 'Beneficiario';
+  }
+
+  private getCalidadDatosBeneficiario(b: BeneficiarioBundle): NovedadCalidadDatosIntegrante[] {
+    const desdeBeneficiario = b.beneficiario?.novedades?.calidad_datos;
+    const desdeBundle = b.novedades?.calidad_datos;
+    const raw = Array.isArray(desdeBeneficiario) && desdeBeneficiario.length > 0 ? desdeBeneficiario : desdeBundle;
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  private consolidarEntradaNovedadCalidad(
+    item: NovedadCalidadDatosIntegrante,
+    nombrePersona: string,
+    rol: 'trabajador' | 'beneficiario'
+  ): NovedadCalidadEntradaUIM {
+    const rawEst = item.estado ?? item.id_estado;
+    const estadoNum = rawEst != null ? Number(rawEst) : 0;
+    const estadoId = Number.isFinite(estadoNum) ? estadoNum : 0;
+    const fechaRegRaw =
+      item.fecha_hora_registro != null ? String(item.fecha_hora_registro).trim() : '';
+    return {
+      nombrePersona,
+      rol,
+      item,
+      filas: this.construirFilasDesdeDiferencias(item),
+      estadoId,
+      fechaRegistro: this.extraerSoloFechaRegistroNovedad(fechaRegRaw),
+    };
+  }
+
+  private construirFilasDesdeDiferencias(item: NovedadCalidadDatosIntegrante): NovedadCalidadFilaVista[] {
+    const rec = item as Record<string, unknown>;
+    const diff = item.diferencias ?? {};
+    const keys = Object.keys(diff)
+      .filter((k) => k.toLowerCase().endsWith('_novedad'))
+      .filter((k) => {
+        const base = this.baseCampoDesdeClaveNovedad(k).toLowerCase();
+        return base !== 'id';
+      });
+    keys.sort((a, b) =>
+      this.etiquetaCampoCalidadNovedad(this.baseCampoDesdeClaveNovedad(a)).localeCompare(
+        this.etiquetaCampoCalidadNovedad(this.baseCampoDesdeClaveNovedad(b)),
+        'es'
+      )
+    );
+    return keys.map((novKey) => {
+      const base = this.baseCampoDesdeClaveNovedad(novKey);
+      const regKey = `${base}_reg`;
+      const genKey = `${base}_genesys`;
+      return {
+        campoLabel: this.etiquetaCampoCalidadNovedad(base),
+        registraduria: this.celdaCalidadNovedad(rec[regKey]),
+        genesys: this.celdaCalidadNovedad(rec[genKey]),
+        novedad: this.celdaCalidadNovedad(rec[novKey]),
+      };
+    });
+  }
+
+  private baseCampoDesdeClaveNovedad(novKey: string): string {
+    return novKey.replace(/_novedad$/i, '');
+  }
+
+  private etiquetaCampoCalidadNovedad(base: string): string {
+    const fija = this.etiquetasCampoCalidadNovedad[base];
+    if (fija) return fija;
+    return base
+      .split('_')
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  private celdaCalidadNovedad(value: unknown): string {
+    if (value === null || value === undefined) return '—';
+    const s = String(value).trim();
+    return s === '' ? '—' : s;
+  }
+
+  /** Deja solo la parte fecha (yyyy-MM-dd) de un timestamp ISO del backend. */
+  private extraerSoloFechaRegistroNovedad(valor: string): string | null {
+    if (!valor) return null;
+    const m = valor.match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : null;
   }
 
   /** Opciones de parentesco para un beneficiario; incluye el valor actual si no está en la lista. */
@@ -1267,62 +1446,206 @@ getRequestDetails(request_details: number) {
     return (valoracion ?? '').toString().trim().toUpperCase() === 'NO';
   }
 
-  /** Abre previsualización o descarga del adjunto llamando al endpoint con ruta_archivo. */
-  openAdjunto(adj: Adjunto, isDownload: boolean): void {
-    this.getPreSignedUrlAfiliacion(adj.ruta_archivo, adj.nombre_archivo, isDownload);
+  /** True si la ruta guardada ya es una URL http(s) (registros antiguos). */
+  private esRutaAbsolutaHttp(ruta: string): boolean {
+    return /^https?:\/\//i.test((ruta ?? '').trim());
   }
 
-  /** Obtiene URL firmada del endpoint de afiliación por ruta_archivo y abre previsualización o descarga en pantalla. */
-  getPreSignedUrlAfiliacion(ruta_archivo: string, nombre_archivo: string, isDownload: boolean): void {
-    const ruta = (ruta_archivo ?? '').toString().trim();
+  /** Normaliza el cuerpo de la Lambda (string u objeto con url / signedUrl / href). */
+  private extraerUrlDesdeRespuestaAdjunto(data: unknown): string {
+    if (typeof data === 'string') {
+      return data.trim();
+    }
+    if (data && typeof data === 'object') {
+      const o = data as Record<string, unknown>;
+      const u = o['url'] ?? o['signedUrl'] ?? o['href'] ?? o['presignedUrl'];
+      if (typeof u === 'string') {
+        return u.trim();
+      }
+    }
+    return '';
+  }
+
+  /** Descarga silenciosa: enlace temporal sin nueva pestaña ni ventana. */
+  private dispararDescargaPorEnlace(url: string, nombreArchivo: string): void {
+    const a = document.createElement('a');
+    a.href = url;
+    a.setAttribute('download', nombreArchivo || 'archivo');
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  private nombreOCaminoParaTipo(adjunto: Adjunto | { ruta_archivo?: string | null; nombre_archivo?: string | null }): string {
+    const a = adjunto as Adjunto;
+    return ((a.nombre_archivo ?? adjunto.ruta_archivo) ?? '').toString().toLowerCase();
+  }
+
+  private esAdjuntoImagen(adjunto: Adjunto | { content_type?: string | null; ruta_archivo?: string | null; nombre_archivo?: string | null }): boolean {
+    const ct = ((adjunto as Adjunto).content_type ?? '').toString().toLowerCase();
+    if (ct.startsWith('image/')) {
+      return true;
+    }
+    return /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(this.nombreOCaminoParaTipo(adjunto));
+  }
+
+  private esAdjuntoPdf(adjunto: Adjunto | { content_type?: string | null; ruta_archivo?: string | null; nombre_archivo?: string | null }): boolean {
+    const ct = ((adjunto as Adjunto).content_type ?? '').toString().toLowerCase();
+    if (ct === 'application/pdf' || ct.includes('pdf')) {
+      return true;
+    }
+    return /\.pdf$/i.test(this.nombreOCaminoParaTipo(adjunto));
+  }
+
+  /** Popup centrado para PDF (no pestaña del navegador). */
+  private abrirPdfEnVentanaEmergente(url: string): void {
+    const w = 800;
+    const h = 900;
+    const left = Math.round((window.screen.availWidth - w) / 2);
+    const top = Math.round((window.screen.availHeight - h) / 2);
+    const features = [
+      `width=${w}`,
+      `height=${h}`,
+      `left=${left}`,
+      `top=${top}`,
+      'menubar=no',
+      'toolbar=no',
+      'location=no',
+      'status=no',
+      'resizable=yes',
+      'scrollbars=yes',
+    ].join(',');
+    window.open(url, 'adjuntoPdfPreview', features);
+  }
+
+  private aplicarPrevisualizacionAdjunto(url: string, adjunto: Adjunto | { content_type?: string | null; ruta_archivo?: string | null; nombre_archivo?: string | null }): void {
+    if (this.esAdjuntoImagen(adjunto)) {
+      this.urlImagenPreview = url;
+      this.displayModal = true;
+      return;
+    }
+    if (this.esAdjuntoPdf(adjunto)) {
+      this.abrirPdfEnVentanaEmergente(url);
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  cerrarModalPrevisualizacionImagen(): void {
+    this.displayModal = false;
+    this.urlImagenPreview = '';
+  }
+
+  /**
+   * Previsualización según tipo: imagen en p-dialog, PDF en ventana emergente, resto en nueva pestaña.
+   * Solo `ruta_archivo` en el POST (sin nombre_descarga). Rutas http(s) antiguas sin API.
+   */
+  /** Alias explícito para el expediente unificado y adjuntos (misma lógica que abrirAdjunto). */
+  previsualizarAdjunto(adjunto: Adjunto | { ruta_archivo?: string | null; content_type?: string | null; nombre_archivo?: string | null }): void {
+    this.abrirAdjunto(adjunto);
+  }
+
+  abrirAdjunto(adjunto: Adjunto | { ruta_archivo?: string | null; content_type?: string | null; nombre_archivo?: string | null }): void {
+    const ruta = (adjunto?.ruta_archivo ?? '').toString().trim();
     if (!ruta) {
-      this.messageService.add({ severity: 'warn', summary: 'Adjunto', detail: 'No hay ruta de archivo para este adjunto.' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Adjunto',
+        detail: 'No hay ruta de archivo para este adjunto.',
+      });
+      return;
+    }
+    if (this.esRutaAbsolutaHttp(ruta)) {
+      this.aplicarPrevisualizacionAdjunto(ruta, adjunto);
       return;
     }
     this.userService.getAdjuntoAfiliacionUrl(ruta).subscribe({
       next: (response: BodyResponse<string>) => {
-        if (response?.code === 200 && response?.data) {
-          const data = response.data;
-          const urlString =
-            typeof data === 'string'
-              ? data
-              : (data as any)?.url ?? (data as any)?.signedUrl ?? (data as any)?.href ?? '';
-          if (!urlString || typeof urlString !== 'string') {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'La respuesta del servidor no contiene una URL válida.' });
-            return;
-          }
-          this.preSignedUrlDownload = urlString;
-          this.viewerType = this.getViewerType(nombre_archivo);
-          if (!isDownload) {
-            if (this.viewerType === 'pdf') {
-              this.isSpinnerVisible = true;
-              this.displayFileInTab(this.preSignedUrlDownload, nombre_archivo);
-            } else {
-              this.displayPreviewModal = true;
-            }
-          } else {
-            this.downloadFileS3(this.preSignedUrlDownload, nombre_archivo);
-          }
-        } else {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo obtener la URL del adjunto.' });
+        if (response?.code !== 200 || response?.data == null) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: response?.message || 'No se pudo obtener la URL del adjunto.',
+          });
+          return;
         }
+        const url = this.extraerUrlDesdeRespuestaAdjunto(response.data);
+        if (!url) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'La respuesta del servidor no contiene una URL válida.',
+          });
+          return;
+        }
+        this.aplicarPrevisualizacionAdjunto(url, adjunto);
       },
       error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el archivo. Intente de nuevo.' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al obtener el archivo. Intente de nuevo.',
+        });
       },
     });
   }
 
-  /** Genera el expediente (PDF unificado de todos los adjuntos) y lo asocia al trabajador. Requiere que todos los adjuntos estén validados en 'Sí'. */
+  /**
+   * Descarga con nombre: envía `nombre_descarga` para Content-Disposition attachment.
+   * URLs absolutas antiguas: enlace temporal sin pasar por la Lambda.
+   */
+  descargarAdjunto(adjunto: Adjunto | { ruta_archivo?: string | null; nombre_archivo?: string | null }): void {
+    const ruta = (adjunto?.ruta_archivo ?? '').toString().trim();
+    const nombreDescarga = ((adjunto as Adjunto)?.nombre_archivo ?? '').toString().trim() || 'archivo';
+    if (!ruta) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Adjunto',
+        detail: 'No hay ruta de archivo para este adjunto.',
+      });
+      return;
+    }
+    if (this.esRutaAbsolutaHttp(ruta)) {
+      this.dispararDescargaPorEnlace(ruta, nombreDescarga);
+      return;
+    }
+    this.userService.getAdjuntoAfiliacionUrl(ruta, nombreDescarga).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response?.code !== 200 || response?.data == null) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: response?.message || 'No se pudo obtener la URL del adjunto.',
+          });
+          return;
+        }
+        const url = this.extraerUrlDesdeRespuestaAdjunto(response.data);
+        if (!url) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'La respuesta del servidor no contiene una URL válida.',
+          });
+          return;
+        }
+        this.dispararDescargaPorEnlace(url, nombreDescarga);
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al obtener el archivo. Intente de nuevo.',
+        });
+      },
+    });
+  }
+
+  /** Genera o regenera el expediente (PDF unificado). Envía id_solicitud al backend; al éxito refresca el detalle. */
   generarExpediente(): void {
     const d = this.afiliationRequestDetails;
     if (!d?.solicitud?.id) {
       this.messageService.add({ severity: 'warn', summary: 'Expediente', detail: 'No hay solicitud cargada.' });
-      return;
-    }
-    const idTrabajador = d.trabajador?.persona?.id ?? d.trabajador?.trabajador?.id_persona;
-    if (idTrabajador == null || idTrabajador === undefined) {
-      this.messageService.add({ severity: 'warn', summary: 'Expediente', detail: 'No se pudo obtener el id del trabajador.' });
       return;
     }
     const trabajador = this.trabajadorAdjuntosEstado ?? [];
@@ -1345,7 +1668,7 @@ getRequestDetails(request_details: number) {
       return;
     }
     this.generandoExpediente = true;
-    this.userService.generarExpedienteAfiliacion(d.solicitud.id, idTrabajador).subscribe({
+    this.userService.generarExpedienteAfiliacion(d.solicitud.id).subscribe({
       next: (response) => {
         if (response?.code === 200) {
           this.messageService.add({
@@ -1412,6 +1735,15 @@ getRequestDetails(request_details: number) {
         severity: 'warn',
         summary: 'Datos',
         detail: 'No hay información de la solicitud cargada.',
+      });
+      return;
+    }
+    if (d.solicitud?.expediente) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Expediente unificado',
+        detail:
+          'No puede subir adjuntos mientras exista un expediente generado. Regenere el expediente después de los cambios si necesita incluir archivos nuevos.',
       });
       return;
     }

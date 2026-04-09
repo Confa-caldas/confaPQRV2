@@ -206,19 +206,27 @@ export class Users {
     );
   }
 
-  /** Obtiene URL firmada para previsualizar o descargar un adjunto de afiliación usando ruta_archivo. */
-  getAdjuntoAfiliacionUrl(ruta_archivo: string) {
+  /**
+   * URL firmada de lectura (Lambda dual).
+   * Body: { ruta_archivo, nombre_descarga? } — sin nombre_descarga → inline; con nombre_descarga → attachment.
+   */
+  getAdjuntoAfiliacionUrl(ruta_archivo: string, nombre_descarga?: string | null) {
+    const body: { ruta_archivo: string; nombre_descarga?: string } = { ruta_archivo };
+    const nd = nombre_descarga != null ? String(nombre_descarga).trim() : '';
+    if (nd !== '') {
+      body.nombre_descarga = nd;
+    }
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_ADJUNTO_URL}`,
-      { ruta_archivo }
+      body
     );
   }
 
-  /** Genera el expediente (PDF unificado de todos los adjuntos validados) y lo asocia al trabajador de la solicitud. Requiere id_solicitud e id_trabajador (id_persona del trabajador). */
-  generarExpedienteAfiliacion(id_solicitud: number, id_trabajador: number) {
+  /** Genera o regenera el expediente (PDF unificado). Body: { id_solicitud }. */
+  generarExpedienteAfiliacion(id_solicitud: number) {
     return this.http.post<BodyResponse<Adjunto>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_GENERAR_EXPEDIENTE}`,
-      { id_solicitud, id_trabajador }
+      { id_solicitud }
     );
   }
 

@@ -152,7 +152,7 @@ export enum EndPointRoute {
   /** Obtener URL firmada para previsualizar/descargar adjunto por ruta_archivo */
   REQUEST_AFILIATION_ADJUNTO_URL = 'requests-afiliation/adjunto/url',
   /** Generar PDF expediente (unir adjuntos trabajador + beneficiarios) y asociar a solicitud */
-  REQUEST_AFILIATION_GENERAR_EXPEDIENTE = 'requests-afiliation/expediente/generar',
+  REQUEST_AFILIATION_GENERAR_EXPEDIENTE = 'requests-afiliation-adjuntos/expediente/generar',
   /** Actualizar estado de gestión de la solicitud (modal Gestionar estado: Pendiente RPA / Procesado / Rechazado). */
   REQUEST_AFILIATION_ACTUALIZAR_ESTADO_GESTION = 'requests-afiliation/solicitud/actualizar-estado-gestion',
   /** Tipos de adjunto permitidos por parentesco (query: id_parentesco). */

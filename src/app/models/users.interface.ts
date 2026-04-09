@@ -1135,6 +1135,16 @@ export interface NovedadCalidadDatosDetalle {
   usuario_proceso: string | null;
 }
 
+/** Novedad de calidad por integrante; `diferencias` indica qué campos comparar (llaves `*_novedad`). */
+export type NovedadCalidadDatosIntegrante = Partial<NovedadCalidadDatosDetalle> & {
+  id_estado?: number;
+  diferencias?: Record<string, unknown>;
+};
+
+export interface IntegranteNovedades {
+  calidad_datos?: NovedadCalidadDatosIntegrante[] | null;
+}
+
 // --------- RESPUESTA data ---------
 export interface AfiliacionRequestDetailsData {
   solicitud: Solicitud;
@@ -1169,6 +1179,15 @@ export interface Solicitud {
   pendiente_direccion?: string | null;
   pendiente_activar_empresa?: string | null;
   novedad_restrictiva?: string | null;
+  /** PDF expediente unificado ya generado; incluye rutas para previsualizar/descargar. */
+  expediente?: ExpedienteUnificadoSolicitud | null;
+}
+
+/** Metadatos del expediente unificado devueltos en getRequestDetails (solicitud.expediente). */
+export interface ExpedienteUnificadoSolicitud {
+  nombre_archivo: string;
+  ruta_archivo: string;
+  content_type?: string | null;
 }
 
 /**
@@ -1289,18 +1308,22 @@ export interface BeneficiarioInfo {
   requiere_adjunto_registro_civil: string | null;
   direccion_corresponde_trabajador: string | null;
   requiere_adjunto_documento_soporte: string | null;
+  novedades?: IntegranteNovedades | null;
 }
 
 export interface TrabajadorBundle {
   persona: Persona;
   adjuntos: Adjunto[];
   trabajador: TrabajadorInfo;
+  novedades?: IntegranteNovedades | null;
 }
 
 export interface BeneficiarioBundle {
   persona: Persona;
   adjuntos: Adjunto[];
   beneficiario: BeneficiarioInfo;
+  /** Si el backend envía novedades a nivel de bundle en lugar de dentro de `beneficiario`. */
+  novedades?: IntegranteNovedades | null;
 }
 
 /** Valores válidos en BD: SI, NO, NA, PENDIENTE */
