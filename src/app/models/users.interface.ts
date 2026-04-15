@@ -1270,6 +1270,16 @@ export interface ExpedienteUnificadoSolicitud {
 }
 
 /**
+ * Resultado de `afiliaciones.validar_requisitos_gestion_persona(persona_id_)` vía API.
+ * `errores` puede venir como arreglo de strings o JSON parseable.
+ */
+export interface ValidarRequisitosGestionPersonaData {
+  es_valido: boolean;
+  mensaje_general?: string | null;
+  errores?: unknown;
+}
+
+/**
  * Actualizar estado desde el modal "Gestionar estado de afiliado".
  * El backend debe aceptar el mismo contrato (PUT).
  */

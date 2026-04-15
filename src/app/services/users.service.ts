@@ -89,6 +89,7 @@ import {
   ActualizarEstadoGestionAfiliacionPayload,
   FilterRequestsMassive,
   RequestsMassiveAfiliationListItem,
+  ValidarRequisitosGestionPersonaData,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -236,6 +237,14 @@ export class Users {
     return this.http.put<BodyResponse<unknown>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_ACTUALIZAR_ESTADO_GESTION}`,
       payload
+    );
+  }
+
+  /** Valida requisitos de gestión por persona antes de abrir el modal «Gestionar estado». */
+  validarRequisitosGestionPersona(personaId: number) {
+    return this.http.post<BodyResponse<ValidarRequisitosGestionPersonaData>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_VALIDAR_REQUISITOS_GESTION_PERSONA}`,
+      { persona_id: personaId }
     );
   }
 

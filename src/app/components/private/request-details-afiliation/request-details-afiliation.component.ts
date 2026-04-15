@@ -361,6 +361,18 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   /** Guardado en curso: actualizar estado gestión solicitud. */
   guardandoEstadoGestionSolicitud = false;
 
+  /** Spinner en «Gestionar estado» mientras corre la validación por persona (`t` o `b-índice`). */
+  gestionarEstadoValidacionCargaKey: string | null = null;
+  private readonly validacionRequisitosGestionCache = new Map<
+    number,
+    { valido: boolean; errores: string[] }
+  >();
+
+  /** Modal de bloqueo cuando `es_valido` es false. */
+  visibleModalBloqueoRequisitosGestion = false;
+  bloqueoRequisitosGestionTitulo = '';
+  bloqueoRequisitosGestionLista: string[] = [];
+
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
@@ -567,7 +579,169 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     );
   }
 
-  abrirModalGestionarEstado(
+  cargaValidacionRequisitosGestion(
+    contexto: 'trabajador' | 'beneficiario',
+    indiceBeneficiario?: number
+  ): boolean {
+    const key = contexto === 'trabajador' ? 't' : `b-${indiceBeneficiario ?? -1}`;
+    return this.gestionarEstadoValidacionCargaKey === key;
+  }
+
+  muestraIconoAlertaRequisitosGestion(
+    contexto: 'trabajador' | 'beneficiario',
+    indiceBeneficiario?: number
+  ): boolean {
+    const id = this.obtenerPersonaIdParaGestionEstado(contexto, indiceBeneficiario);
+    if (id == null) {
+      return false;
+    }
+    const c = this.validacionRequisitosGestionCache.get(id);
+    return c != null && !c.valido && (c.errores?.length ?? 0) > 0;
+  }
+
+  /** Clic en «Gestionar estado»: valida requisitos por `persona_id` antes de abrir el modal. */
+  onClicGestionarEstado(
+    contexto: 'trabajador' | 'beneficiario' = 'trabajador',
+    indiceBeneficiario?: number
+  ): void {
+    const personaId = this.obtenerPersonaIdParaGestionEstado(contexto, indiceBeneficiario);
+    const nombre = this.nombrePersonaParaMensajeGestionEstado(contexto, indiceBeneficiario);
+    if (personaId == null || !Number.isFinite(personaId)) {
+      this.showSuccessMessage(
+        'warn',
+        'Datos incompletos',
+        'No se encontró el identificador de la persona para validar requisitos.'
+      );
+      return;
+    }
+    const key = contexto === 'trabajador' ? 't' : `b-${indiceBeneficiario ?? -1}`;
+    this.gestionarEstadoValidacionCargaKey = key;
+    this.userService
+      .validarRequisitosGestionPersona(personaId)
+      .pipe(finalize(() => (this.gestionarEstadoValidacionCargaKey = null)))
+      .subscribe({
+        next: (res) => {
+          if (res.code !== 200 || res.data == null) {
+            this.showSuccessMessage(
+              'error',
+              'Validación',
+              res.message || 'No se pudo validar los requisitos de gestión.'
+            );
+            return;
+          }
+          const d = res.data;
+          const erroresParseados = this.parseErroresValidacionRequisitosGestion(d.errores);
+          const desdeMensaje =
+            d.mensaje_general != null && String(d.mensaje_general).trim() !== ''
+              ? [String(d.mensaje_general).trim()]
+              : [];
+          const lista =
+            erroresParseados.length > 0
+              ? erroresParseados
+              : desdeMensaje.length > 0
+                ? desdeMensaje
+                : ['No cumple los requisitos para gestionar el estado.'];
+
+          if (!d.es_valido) {
+            this.validacionRequisitosGestionCache.set(personaId, { valido: false, errores: lista });
+            this.mostrarModalBloqueoRequisitosGestion(nombre, lista);
+            return;
+          }
+          this.validacionRequisitosGestionCache.set(personaId, { valido: true, errores: [] });
+          this.abrirModalGestionarEstado(contexto, indiceBeneficiario);
+        },
+        error: (err) => {
+          console.error('validarRequisitosGestionPersona', err);
+          this.showSuccessMessage(
+            'error',
+            'Error',
+            'No se pudo validar los requisitos. Intente de nuevo.'
+          );
+        },
+      });
+  }
+
+  mostrarModalBloqueoRequisitosGestion(nombrePersona: string, errores: string[]): void {
+    this.bloqueoRequisitosGestionTitulo = `No se puede gestionar a ${nombrePersona} por los siguientes motivos:`;
+    this.bloqueoRequisitosGestionLista = [...errores];
+    this.visibleModalBloqueoRequisitosGestion = true;
+  }
+
+  cerrarModalBloqueoRequisitosGestion(): void {
+    this.visibleModalBloqueoRequisitosGestion = false;
+    this.bloqueoRequisitosGestionTitulo = '';
+    this.bloqueoRequisitosGestionLista = [];
+  }
+
+  private obtenerPersonaIdParaGestionEstado(
+    contexto: 'trabajador' | 'beneficiario',
+    indiceBeneficiario?: number
+  ): number | null {
+    const d = this.afiliationRequestDetails;
+    if (!d) {
+      return null;
+    }
+    if (contexto === 'trabajador') {
+      const id = d.trabajador?.persona?.id;
+      return id != null ? Number(id) : null;
+    }
+    if (
+      indiceBeneficiario != null &&
+      d.beneficiarios?.[indiceBeneficiario]?.persona?.id != null
+    ) {
+      return Number(d.beneficiarios[indiceBeneficiario].persona!.id);
+    }
+    return null;
+  }
+
+  private nombrePersonaParaMensajeGestionEstado(
+    contexto: 'trabajador' | 'beneficiario',
+    indiceBeneficiario?: number
+  ): string {
+    if (contexto === 'trabajador') {
+      const n = this.trabajadorNombreCompleto.trim();
+      return n !== '' ? n : 'la persona titular';
+    }
+    const b =
+      indiceBeneficiario != null
+        ? this.afiliationRequestDetails?.beneficiarios?.[indiceBeneficiario]
+        : undefined;
+    return b ? this.getNombreBeneficiario(b) : 'el beneficiario';
+  }
+
+  private parseErroresValidacionRequisitosGestion(raw: unknown): string[] {
+    if (raw == null) {
+      return [];
+    }
+    if (Array.isArray(raw)) {
+      return raw
+        .map((item) => {
+          if (typeof item === 'string') {
+            return item.trim();
+          }
+          if (item != null && typeof item === 'object' && 'mensaje' in item) {
+            return String((item as { mensaje?: unknown }).mensaje ?? '').trim();
+          }
+          return String(item).trim();
+        })
+        .filter((s) => s.length > 0);
+    }
+    if (typeof raw === 'string') {
+      const t = raw.trim();
+      if (!t) {
+        return [];
+      }
+      try {
+        const parsed = JSON.parse(t) as unknown;
+        return this.parseErroresValidacionRequisitosGestion(parsed);
+      } catch {
+        return [t];
+      }
+    }
+    return [];
+  }
+
+  private abrirModalGestionarEstado(
     contexto: 'trabajador' | 'beneficiario' = 'trabajador',
     indiceBeneficiario?: number
   ): void {
@@ -963,6 +1137,7 @@ getRequestDetails(request_details: number) {
       }
 
       this.afiliationRequestDetails = response.data;
+      this.validacionRequisitosGestionCache.clear();
       this.guardarSnapshotDatosTrabajador();
       this.guardarSnapshotBeneficiarios();
       this.initAdjuntosValoracion();

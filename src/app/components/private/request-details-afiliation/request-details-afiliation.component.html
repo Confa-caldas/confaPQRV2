@@ -235,7 +235,7 @@
                 [showClear]="true"
                 class="selector gestionar-estado-dropdown-wrap"
                 styleClass="gestionar-estado-dropdown"
-                [style]="{ height: '40px', width: '100%' }"
+                [style]="{ width: '100%' }"
                 appendTo="body"></p-dropdown>
               <small
                 *ngIf="
@@ -261,7 +261,7 @@
                 [showClear]="true"
                 class="selector gestionar-estado-dropdown-wrap"
                 styleClass="gestionar-estado-dropdown"
-                [style]="{ height: '40px', width: '100%' }"
+                [style]="{ width: '100%' }"
                 appendTo="body"></p-dropdown>
               <small
                 *ngIf="
@@ -290,6 +290,33 @@
           </div>
         </div>
       </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog
+    [(visible)]="visibleModalBloqueoRequisitosGestion"
+    header="Requisitos de gestión"
+    [modal]="true"
+    [closable]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: 'min(34rem, 94vw)' }"
+    styleClass="custom-dialog bloqueo-requisitos-gestion-dialog"
+    (onHide)="cerrarModalBloqueoRequisitosGestion()">
+    <div class="bloqueo-requisitos-gestion-body">
+      <p class="bloqueo-requisitos-gestion-intro mb-3">{{ bloqueoRequisitosGestionTitulo }}</p>
+      <ul class="bloqueo-requisitos-gestion-lista mb-0 ps-3">
+        <li *ngFor="let item of bloqueoRequisitosGestionLista">{{ item }}</li>
+      </ul>
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Entendido"
+        icon="pi pi-check"
+        iconPos="left"
+        severity="secondary"
+        styleClass="bloqueo-requisitos-entendido-btn"
+        (onClick)="cerrarModalBloqueoRequisitosGestion()"></p-button>
     </ng-template>
   </p-dialog>
 
@@ -432,11 +459,21 @@
               tooltipPosition="top"
               (onClick)="abrirResumenIntegranteAfiliacionWs('trabajador')"
               [style]="{ 'border-radius': '10px' }"></p-button>
-            <p-button
-              label="Gestionar estado"
-              icon="pi pi-cog"
-              (click)="abrirModalGestionarEstado('trabajador')"
-              [style]="{ 'border-radius': '10px' }"></p-button>
+            <span class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
+              <p-button
+                label="Gestionar estado"
+                icon="pi pi-cog"
+                [loading]="cargaValidacionRequisitosGestion('trabajador')"
+                [disabled]="cargaValidacionRequisitosGestion('trabajador')"
+                (onClick)="onClicGestionarEstado('trabajador')"
+                [style]="{ 'border-radius': '10px' }"></p-button>
+              <i
+                class="pi pi-exclamation-circle gestionar-estado-requisitos-alerta"
+                *ngIf="muestraIconoAlertaRequisitosGestion('trabajador')"
+                pTooltip="La última validación indicó requisitos pendientes; corrija antes de gestionar el estado."
+                tooltipPosition="top"
+                aria-hidden="true"></i>
+            </span>
           </div>
         </div>
         <div class="process-container">
@@ -783,12 +820,22 @@
                     tooltipPosition="top"
                     (onClick)="abrirResumenIntegranteAfiliacionWs('beneficiario', iBenef)"
                     [style]="{ 'border-radius': '10px' }"></p-button>
-                  <p-button
-                    label="Gestionar estado"
-                    icon="pi pi-cog"
-                    styleClass="p-button-sm benef-gestionar-estado-btn"
-                    (click)="abrirModalGestionarEstado('beneficiario', iBenef)"
-                    [style]="{ 'border-radius': '10px' }"></p-button>
+                  <span class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
+                    <p-button
+                      label="Gestionar estado"
+                      icon="pi pi-cog"
+                      styleClass="p-button-sm benef-gestionar-estado-btn"
+                      [loading]="cargaValidacionRequisitosGestion('beneficiario', iBenef)"
+                      [disabled]="cargaValidacionRequisitosGestion('beneficiario', iBenef)"
+                      (onClick)="onClicGestionarEstado('beneficiario', iBenef)"
+                      [style]="{ 'border-radius': '10px' }"></p-button>
+                    <i
+                      class="pi pi-exclamation-circle gestionar-estado-requisitos-alerta"
+                      *ngIf="muestraIconoAlertaRequisitosGestion('beneficiario', iBenef)"
+                      pTooltip="La última validación indicó requisitos pendientes; corrija antes de gestionar el estado."
+                      tooltipPosition="top"
+                      aria-hidden="true"></i>
+                  </span>
                 </div>
               </div>
               <div class="benef-card-body">

@@ -845,35 +845,6 @@ label { font-weight: bold; margin-bottom: 0.5em; color: #555; }
   margin-top: 4px;
 }
 
-:host ::ng-deep .gestionar-estado-modal-content .gestionar-estado-dropdown.p-dropdown {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0;
-  box-sizing: border-box;
-
-  .p-dropdown-label,
-  .p-inputtext {
-    border: 1px solid #d0d0d0 !important;
-    border-radius: 0 !important;
-    min-height: 40px;
-    font-size: 0.9rem;
-    color: $color-text-black;
-    background: $color-white !important;
-  }
-
-  .p-dropdown-trigger {
-    color: #009cde !important;
-    width: 2.5rem;
-  }
-
-  &:not(.p-disabled):hover {
-    .p-dropdown-label,
-    .p-inputtext {
-      border-color: #b8b8b8 !important;
-    }
-  }
-}
-
 :host ::ng-deep .gestionar-estado-modal-actions {
   .p-button.p-button-secondary {
     background: #6c757d !important;
@@ -912,4 +883,11 @@ label { font-weight: bold; margin-bottom: 0.5em; color: #555; }
 
 :host ::ng-deep .p-toast-message-text {
   white-space: pre-line;
+}
+
+.gestionar-estado-acciones .gestionar-estado-requisitos-alerta {
+  color: #f59e0b;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: help;
 }
