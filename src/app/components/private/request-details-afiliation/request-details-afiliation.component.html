@@ -33,7 +33,7 @@
             <span class="info-label">Estado actual</span>
             <!-- si tienes currentState calculado, úsalo; si no, muestra el id -->
             <span class="status-pill">
-              {{ currentState || 'Estado #' + d.solicitud.id_estado_solicitud }}
+              {{ currentState || d.solicitud.estado_codigo }}
             </span>
           </div>
         </div>
@@ -112,32 +112,38 @@
 
     <!-- Timeline debajo, como lo tenías -->
     <div class="timeline-container">
-      <p-timeline [value]="events" layout="horizontal" align="bottom">
-        <ng-template pTemplate="content" let-event let-i="index">
-          <div class="timeline-event-state">
-            {{ event.state }}
+      <p-timeline
+        [value]="events"
+        layout="horizontal"
+        styleClass="afi-estados-timeline"
+        [style.--timeline-steps]="events.length > 0 ? events.length : 1">
+        <!-- Texto arriba del marcador (slot opposite) evita column-reverse y alinea iconos -->
+        <ng-template pTemplate="opposite" let-event>
+          <div class="timeline-event-header">
+            <div class="timeline-event-state">
+              {{ event.state }}
+            </div>
+            <div class="timeline-event-label">
+              <span *ngIf="isValidDate(event.label); else noDate">
+                {{ event.label | date: 'shortDate' }}
+              </span>
+              <ng-template #noDate>
+                <span *ngIf="event.label && event.label !== '—'">{{ event.label }}</span>
+              </ng-template>
+            </div>
           </div>
-          <div class="timeline-event-label">
-            <span *ngIf="isValidDate(event.label); else noDate">
-              {{ event.label | date: 'shortDate' }}
-            </span>
-            <ng-template #noDate>{{ event.label }}</ng-template>
-          </div>
+        </ng-template>
+        <ng-template pTemplate="content" let-event>
+          <div class="timeline-event-content-spacer" aria-hidden="true"></div>
         </ng-template>
         <ng-template pTemplate="marker" let-event let-i="index">
           <span
             class="timeline-marker"
             [ngClass]="{
-              'active-marker': currentState === event.stateShow,
+              'active-marker': idEstadoSolicitudActual === event.idEstado,
               'previous-marker': i <= currentIndex
             }">
-            <i
-              class="pi"
-              [ngClass]="{
-                'pi-check': event.state === 'Cerrada',
-                'pi-cog': event.state === 'Gestión',
-                'pi-ticket': event.state === 'Radicada'
-              }"></i>
+            <i [ngClass]="iconoTimelineClase(event)"></i>
           </span>
         </ng-template>
       </p-timeline>
@@ -318,7 +324,7 @@
           <div class="process-container-row">
             <div class="process-container-col">
               <label class="process-container-label">Estado</label>
-              <div class="process-container-text">{{ currentState || 'Estado #' + d.solicitud.id_estado_solicitud }}</div>
+              <div class="process-container-text">{{ currentState || d.solicitud.estado_codigo }}</div>
             </div>
             <div class="process-container-col">
               <label class="process-container-label">Usuario asignado</label>
@@ -417,11 +423,21 @@
       <div class="tab-data-view">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2 tab-data-title-actions">
           <h3 class="tab-data-section-title mb-0">Datos del afiliado</h3>
-          <p-button
-            label="Gestionar estado"
-            icon="pi pi-cog"
-            (click)="abrirModalGestionarEstado('trabajador')"
-            [style]="{ 'border-radius': '10px' }"></p-button>
+          <div class="d-flex flex-wrap gap-2 align-items-center tab-data-header-actions">
+            <p-button
+              label="Ver Datos adicionales"
+              icon="pi pi-list"
+              styleClass="p-button-sm btn-ver-datos-adicionales"
+              pTooltip="Muestra datos adicionales del trabajador recibidos del servicio de detalle"
+              tooltipPosition="top"
+              (onClick)="abrirResumenIntegranteAfiliacionWs('trabajador')"
+              [style]="{ 'border-radius': '10px' }"></p-button>
+            <p-button
+              label="Gestionar estado"
+              icon="pi pi-cog"
+              (click)="abrirModalGestionarEstado('trabajador')"
+              [style]="{ 'border-radius': '10px' }"></p-button>
+          </div>
         </div>
         <div class="process-container">
           <div class="process-container-row">
@@ -758,12 +774,22 @@
                   <span class="benef-card-title">Beneficiario {{ iBenef + 1 }}: {{ getNombreBeneficiario(b) }}</span>
                   <span class="benef-card-meta">{{ b.persona.tipo_documento }} {{ b.persona.numero_documento }} · {{ b.beneficiario.parentesco || '—' }}</span>
                 </div>
-                <p-button
-                  label="Gestionar estado"
-                  icon="pi pi-cog"
-                  styleClass="p-button-sm benef-gestionar-estado-btn"
-                  (click)="abrirModalGestionarEstado('beneficiario', iBenef)"
-                  [style]="{ 'border-radius': '10px' }"></p-button>
+                <div class="d-flex flex-wrap gap-2 align-items-center benef-card-header-actions">
+                  <p-button
+                    label="Ver Datos adicionales"
+                    icon="pi pi-list"
+                    styleClass="p-button-sm btn-ver-datos-adicionales"
+                    pTooltip="Muestra datos adicionales del beneficiario recibidos del servicio de detalle"
+                    tooltipPosition="top"
+                    (onClick)="abrirResumenIntegranteAfiliacionWs('beneficiario', iBenef)"
+                    [style]="{ 'border-radius': '10px' }"></p-button>
+                  <p-button
+                    label="Gestionar estado"
+                    icon="pi pi-cog"
+                    styleClass="p-button-sm benef-gestionar-estado-btn"
+                    (click)="abrirModalGestionarEstado('beneficiario', iBenef)"
+                    [style]="{ 'border-radius': '10px' }"></p-button>
+                </div>
               </div>
               <div class="benef-card-body">
                 <h4 class="tab-data-section-subtitle">Datos del beneficiario</h4>
@@ -1075,52 +1101,85 @@
 
     <!-- ===================== HISTORICO GESTION ===================== -->
     <p-tabPanel header="Histórico Gestión" headerStyleClass="p-tabview-nav-link-2">
-      <div class="tab-data-view">
-          <p-table
-            [value]="requestHistoric"
-            [scrollable]="true"
-            scrollHeight="400px"
-            selectionMode="single"
-            [paginator]="false"
-            [rows]="5"
-            [showCurrentPageReport]="true"
-            [tableStyle]="{ 'min-width': '50rem' }">
-            <ng-template pTemplate="header">
-              <tr>
-                <th pSortableColumn="updated_date" style="width: 10%">
-                  Fecha<p-sortIcon field="updated_date"></p-sortIcon>
-                </th>
-                <th style="width: 15%">Hora</th>
-                <th style="width: 20%">Usuario</th>
-                <th style="width: 20%">Responsable de solicitud</th>
-                <th style="width: 15%">Estado de solicitud</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-requestHistoric>
-              <tr>
-                <td [ngStyle]="{ 'text-align': 'center' }">{{ requestHistoric.updated_date }}</td>
-                <td [ngStyle]="{ 'text-align': 'center' }">
-                  {{ requestHistoric.updated_time.split('.')[0] }}
-                </td>
-                <td [ngStyle]="{ 'text-align': 'center' }">
-                  {{ requestHistoric.updated_by }}
-                </td>
-                <td [ngStyle]="{ 'text-align': 'center' }">
-                  {{ requestHistoric.user_name_completed }}
-                </td>
-                <td [ngStyle]="{ 'text-align': 'center' }">
-                  {{ requestHistoric.status_name }}
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-          <p-paginator
-            (onPageChange)="onPageChangeHistoric($event)"
-            [first]="firstHistoric"
-            [rows]="rowsHistoric"
-            [totalRecords]="totalRowsHistoric"
-            [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
-        </div>
+      <div class="tab-data-view historial-gestion-tab">
+        <p-table
+          [value]="requestHistoric"
+          [loading]="cargandoHistorialGestion"
+          [scrollable]="true"
+          scrollHeight="420px"
+          styleClass="p-datatable-sm historial-gestion-table"
+          responsiveLayout="stack"
+          [paginator]="false"
+          [tableStyle]="{ 'min-width': '40rem' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col" style="min-width: 9.5rem">Fecha / hora</th>
+              <th scope="col" style="min-width: 6rem">Estado</th>
+              <th scope="col" style="min-width: 8rem">Responsable asignado</th>
+              <th scope="col" style="min-width: 14rem">Observaciones / detalle</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+            <tr>
+              <td>
+                <span class="p-column-title">Fecha / hora</span>
+                <span class="historial-celda-valor">{{ historialFechaHoraMostrar(row) }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Estado</span>
+                <span class="historial-celda-valor">{{ estadoHistorialCodigo(row) || '—' }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Responsable asignado</span>
+                <span class="historial-celda-valor">{{
+                  row.responsable_asignado || row.user_name_completed || '—'
+                }}</span>
+              </td>
+              <td class="historial-td-obs">
+                <span class="p-column-title">Observaciones / detalle</span>
+                <div class="historial-obs-wrap">
+                  <ng-container *ngIf="row.detalle_observacion?.trim(); else sinObsTpl">
+                    <div
+                      class="historial-obs-texto"
+                      [class.historial-obs-texto--collapsed]="
+                        observacionHistorialLarga(row) && !isHistorialObsExpandido(rowIndex)
+                      ">
+                      {{ row.detalle_observacion }}
+                    </div>
+                    <button
+                      *ngIf="observacionHistorialLarga(row)"
+                      type="button"
+                      class="historial-obs-toggle"
+                      (click)="toggleHistorialObs(rowIndex)">
+                      {{ isHistorialObsExpandido(rowIndex) ? 'Ver menos' : 'Ver más' }}
+                    </button>
+                  </ng-container>
+                  <ng-template #sinObsTpl>
+                    <span class="historial-sin-obs">Sin observaciones</span>
+                  </ng-template>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4" class="historial-empty">
+                <ng-container *ngIf="!cargandoHistorialGestion">
+                  No hay registros disponibles en el histórico de gestión.
+                </ng-container>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <p-paginator
+          (onPageChange)="onPageChangeHistoric($event)"
+          [first]="firstHistoric"
+          [rows]="rowsHistoric"
+          [totalRecords]="totalRowsHistoric"
+          [rowsPerPageOptions]="[10, 20, 30]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"></p-paginator>
+      </div>
     </p-tabPanel>
 
       </p-tabView>
@@ -1138,6 +1197,26 @@
     <p class="mb-5" [ngStyle]="{ 'white-space': 'pre-line' }">
       {{ dialogContent }}
     </p>
+  </p-dialog>
+
+  <p-dialog
+    [header]="resumenDatosWsTitulo"
+    [(visible)]="visibleResumenDatosWs"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: 'min(1320px, 98vw)' }"
+    [contentStyle]="{ padding: '0.75rem 1rem 1rem' }"
+    [styleClass]="'custom-dialog resumen-ws-dialog'"
+    (onHide)="resumenDatosWsFilas = []">
+    <div class="info-list resumen-ws-info-list" *ngIf="resumenDatosWsFilas.length > 0; else resumenWsVacio">
+      <div class="info-row" *ngFor="let fila of resumenDatosWsFilas">
+        <span class="info-label" [attr.title]="fila.clave">{{ fila.etiqueta }}</span>
+        <span class="info-value">{{ fila.valor }}</span>
+      </div>
+    </div>
+    <ng-template #resumenWsVacio>
+      <p class="resumen-ws-sin-datos">sin información</p>
+    </ng-template>
   </p-dialog>
 }
 <p-toast></p-toast>

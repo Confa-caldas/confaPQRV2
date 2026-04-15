@@ -174,6 +174,33 @@ export interface RequestHistoric {
   user_name_completed: string;
   answer_request: string;
 }
+
+/** Fila histórico gestión afiliaciones (respuesta lambda paginada). */
+export interface AfiliationSolicitudHistoriaGestionRow {
+  log_id?: number;
+  fecha?: string | null;
+  hora?: string | null;
+  tipo_accion?: string | null;
+  ejecutado_por?: string | null;
+  responsable_asignado?: string | null;
+  estado_nombre?: string | null;
+  /** Código de estado (lambda puede enviar `estado_code`). */
+  estado_code?: string | null;
+  estado_codigo?: string | null;
+  detalle_observacion?: string | null;
+  total_count?: number;
+  /** Legacy / otros formatos */
+  fecha_hora?: string | null;
+  evento?: string | null;
+  request_id?: number;
+  updated_date?: string | null;
+  updated_time?: string | null;
+  updated_by?: string | null;
+  status_name?: string | null;
+  user_name_completed?: string | null;
+  answer_request?: string | null;
+}
+
 export interface AssignUserRequest {
   request_id: number;
   filing_number?: number;
@@ -408,10 +435,21 @@ export interface RequestStatusList {
   is_active: number;
 }
 export interface RequestStatusAfiliationList {
+  /** Si el API devuelve `id` (mismo valor que `request_status_id` en listados / multiselect). */
+  id?: number;
+  /** Alias de `id` en BD (parametros_estado_solicitud). */
   request_status_id: number;
+  /** Código corto del estado (p. ej. columna `codigo`). */
   status_name: string;
+  /** Descripción legible (p. ej. columna `descripcion`). */
   status_description: string;
   is_active: boolean;
+  /** Orden de visualización en timeline (`orden` en BD). */
+  orden?: number | null;
+  /** Si el API devuelve `codigo` aparte de `status_name`. */
+  codigo?: string | null;
+  /** Si el API devuelve `descripcion` aparte de `status_description`. */
+  descripcion?: string | null;
 }
 export interface NovedadStatusList {
   novedad_status_id: number;
@@ -524,10 +562,54 @@ export interface FilterRequestsMassive {
   page?: number;
   page_size?: number;
 }
+
+/** Fila del listado de solicitudes de afiliación provenientes de carga masiva. */
+export interface RequestsMassiveAfiliationListItem {
+  request_id: number;
+  filing_number?: string | number | null;
+  filing_date?: string;
+  filing_date_date?: Date;
+  filing_time?: string;
+  tipo_doc_trabajador?: string | null;
+  doc_trabajador?: string | null;
+  name_trabajador?: string | null;
+  tipos_doc_beneficiarios?: string | null;
+  documents_beneficiarios?: string | null;
+  names_beneficiarios?: string | null;
+  type_doc_id_tr?: string | null;
+  type_doc_bn_tr?: string | null;
+  doc_id_tr?: string | null;
+  doc_id_bn?: string | null;
+  id_empresa?: number | string | null;
+  /** Documento tributario / identificación de la empresa (si el API lo envía). */
+  doc_empresa?: string | null;
+  doc_id_empresa?: string | null;
+  name_empresa?: string | null;
+  request_status: number;
+  cod_estatus?: string | null;
+  assigned_user?: string | null;
+  user_name_completed?: string | null;
+  mensaje_reasignacion?: string | null;
+  total_count?: number;
+  pendiente_direccion?: string | null;
+  pendiente_activar_empresa?: string | null;
+  novedad_restrictiva?: string | null;
+  id_masiva?: number | null;
+  nombre_archivo_masiva?: string | null;
+  fecha_carga_masiva?: string | null;
+  numero_solicitud_masiva?: string | null;
+  /** Respuestas antiguas del mismo endpoint. */
+  doc_id?: string | null;
+  applicant_name?: string | null;
+  status_name?: string | null;
+  request_days?: number;
+}
+
 export interface FilterRequestsAfiliation {
   i_date: string | null;
   f_date: string | null;
-  filing_number?: number | null;
+  /** Radicado: el backend suele compararlo como texto (mismo criterio que búsqueda pendientes). */
+  filing_number?: number | string | null;
   doc_id_tr?: string | null;
   doc_id_bn?: string | null;
   applicant_name_emp?: string | null;
@@ -536,16 +618,11 @@ export interface FilterRequestsAfiliation {
   page?: number;
   page_size?: number;
 }
-export interface FilterRequestsAfiliationAssigned {
-  filing_number?: number | null;
-  i_date: string | null;
-  f_date: string | null;
-  doc_id_trabajador?: string | null;
-  name_empresa?: string | null;
-  request_status_id?: number | number[] | null;
-  page?: number;
-  page_size?: number;
-}
+/**
+ * Filtros del listado de afiliaciones asignadas al usuario.
+ * Mismo contrato que {@link FilterRequestsAfiliation} (alineado con búsqueda pendientes / asignadas).
+ */
+export type FilterRequestsAfiliationAssigned = FilterRequestsAfiliation;
 export interface FilterNovedad {
   i_date: string | null;
   f_date: string | null;
@@ -1098,6 +1175,7 @@ export interface BodyResponse<T> {
   code: number;
   message: string;
   data: T;
+  total_count?: number;
 }
 
 // --------- NOVEDAD CALIDAD DE DATOS (gestor.novedad_calidad_datos_detalle) ---------
@@ -1161,6 +1239,7 @@ export interface Solicitud {
   transaccion: string;
   observaciones: string | null;
   fecha_creacion: string;
+  estado_codigo: string;
   excluido_masiva: boolean;
   fecha_solicitud: string;
   numero_radicado: string;

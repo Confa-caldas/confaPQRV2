@@ -40,7 +40,7 @@ export enum EndPointRoute {
   USERS_LIST_AFILIACIONES = 'db_afi/usuario',
   USER_LIST_PAGINATION = 'db/pagination/users',
   ALL_REQUESTS_BY_ASSIGNED_USER = 'request/byassigned',
-  ALL_REQUESTS_BY_ASSIGNED_USER_AFILIATION = 'requests-afiliation/byassigned',
+  ALL_REQUESTS_BY_ASSIGNED_USER_AFILIATION = 'requests-afiliation/asignada',
   REQUEST_DETAILS = 'request/details',
   REQUEST_DETAILS_AFILIATION = 'requests-afiliation/details',
   REQUEST_ATTACHMENTS_LIST = 'request/attachments/list',

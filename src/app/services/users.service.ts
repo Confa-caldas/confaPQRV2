@@ -88,6 +88,7 @@ import {
   PresignAdjuntoAdicionalData,
   ActualizarEstadoGestionAfiliacionPayload,
   FilterRequestsMassive,
+  RequestsMassiveAfiliationListItem,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -268,8 +269,12 @@ export class Users {
       payload
     );
   }
-  getRequestHistoricAfiliation(payload: Pagination) {
-    return this.http.post<BodyResponse<RequestHistoric[]>>(
+  /**
+   * Lambda → PL `afiliaciones.obtener_solicitud_historia_pagination` (page, page_size).
+   * `BodyResponse.total_count` opcional; por defecto filas `RequestHistoric[]` (otros módulos).
+   */
+  getRequestHistoricAfiliation<T = RequestHistoric[]>(payload: Pagination) {
+    return this.http.post<BodyResponse<T>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION}`,
       payload
     );
@@ -658,7 +663,7 @@ export class Users {
     );
   }
   getRequestMassiveListByFilter(payload: FilterRequestsMassive) {
-    return this.http.post<BodyResponse<RequestsList[]>>(
+    return this.http.post<BodyResponse<RequestsMassiveAfiliationListItem[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_MASSIVE_BY_FILTER}`,
       payload
     );
@@ -894,12 +899,14 @@ export class Users {
     );
   }
 
+  /*
   getHistoryRequestAfiliation(payload: requestHistoryRequest) {
     return this.http.post<BodyResponse<historyRequest[]>>(
-      `${environment.API_PUBLIC}${EndPointRoute.GET_HISTORY_REQUEST_AFILIATION}`,
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION}`,
       payload
     );
   }
+  */
 
   getRequestPendingByToken(payload: Token) {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });

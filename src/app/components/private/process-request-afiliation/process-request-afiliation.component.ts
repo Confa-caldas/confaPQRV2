@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
@@ -11,9 +11,11 @@ import {
   RequestsReview,
   UserList,
   RequestAreaList,
-  FilterRequestsAfiliationAssigned,
+  FilterRequestsAfiliation,
   RequestStatusAfiliationList,
   RequestsListAfiliation,
+  afiliacionIndicadoresPermitenAsignar,
+  MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -23,6 +25,7 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { PaginatorState } from 'primeng/paginator';
 import { PageEvent } from '../../../models/shared/page-event.interface';
 import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { Table } from 'primeng/table';
 
 @Component({
@@ -36,13 +39,12 @@ export class ProcessRequestAfiliationComponent implements OnInit {
   requestListByAssignedAfiliation: RequestsListAfiliation[] = [];
   aplicantList: ApplicantTypeList[] = [];
   requestTypeList: RequestTypeList[] = [];
-  userList: UserList[] = [];
   requestAreaList: RequestAreaList[] = [];
   requestUserList: UserList[] = [];
   ingredient!: string;
   parameter = [''];
   request_details!: RequestsReview;
-  selectedRequests: RequestsList[] = [];
+  selectedRequests: RequestsListAfiliation[] = [];
   selectedRequestsAssigned: RequestsList[] = [];
   informative: boolean = false;
   filterForm: FormGroup<any> = new FormGroup<any>({});
@@ -73,7 +75,9 @@ export class ProcessRequestAfiliationComponent implements OnInit {
   pageAssigned: number = 1;
   rowsAssigned: number = 10;
   totalRowsAssigned: number = 0;
-  
+  loadingAssigned = false;
+  readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
+
   PERFIL!: string;
   isBulkAssign: boolean = false; // Saber si es masivo o no
   request_details_process!: RequestsListAfiliation;
@@ -94,25 +98,24 @@ export class ProcessRequestAfiliationComponent implements OnInit {
     this.filterFormAssigned = new FormGroup({
       filing_number: new FormControl<string | null>(null),
       dates_range: new FormControl<Date[] | null>(null),
-      doc_id_trabajador: new FormControl<string | null>(null),
-      name_empresa: new FormControl<string | null>(null),
-      request_status_id: new FormControl<number[]>([]),
+      doc_id_tr: new FormControl<string | null>(null),
+      doc_id_bn: new FormControl<string | null>(null),
+      applicant_name_emp: new FormControl<string | null>(null),
+      request_status_id: new FormControl<number[] | null>(null),
+    });
+
+    this.filterFormAssigned.get('request_status_id')?.valueChanges.subscribe(value => {
+      if (value?.length === 0) {
+        this.filterFormAssigned.get('request_status_id')?.setValue(null, { emitEvent: false });
+      }
     });
   }
 
   ngOnInit() {
     this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
     this.user = sessionStorage.getItem(SessionStorageItems.USER) || '';
-    this.searhRequestsAssignedUser();
     this.getRequestStatusList();
-  }
-
-  getColor(value: number): string {
-    if (value >= 0 && value < 4) {
-      return '#01b0ef';
-    } else {
-      return 'red';
-    }
+    this.searhRequestsAssignedUser();
   }
 
   onPageChangeAssigned(eventAssigned1: PageEvent) {
@@ -178,58 +181,92 @@ export class ProcessRequestAfiliationComponent implements OnInit {
   showSuccessMessage(state: string, title: string, message: string) {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
+
   searhRequestsAssignedUser() {
-    const payload: FilterRequestsAfiliationAssigned = {
-      i_date:
-        this.filterFormAssigned.controls['dates_range'].value == null
-          ? null
-          : this.convertDates(this.filterFormAssigned.controls['dates_range']?.value[0] || null),
-      f_date:
-        this.filterFormAssigned.controls['dates_range']?.value == null
-          ? null
-          : this.convertDates(this.filterFormAssigned.controls['dates_range']?.value[1] || null),
-      filing_number: this.filterFormAssigned.controls['filing_number'].value || null,
-      doc_id_trabajador: this.filterFormAssigned.controls['doc_id_trabajador'].value || null,
-      name_empresa: this.filterFormAssigned.controls['name_empresa'].value || null,
-      request_status_id: this.filterFormAssigned.controls['request_status_id'].value || null,
+    const c = this.filterFormAssigned.controls;
+    const dates = c['dates_range'].value;
+    const filingRaw = c['filing_number'].value;
+    const filingStr =
+      filingRaw != null && String(filingRaw).trim() !== '' ? String(filingRaw).trim() : '';
+    const payload: FilterRequestsAfiliation = {
+      i_date: dates == null || !dates[0] ? null : this.convertDates(String(dates[0])),
+      f_date: dates == null || !dates[1] ? null : this.convertDates(String(dates[1])),
+      filing_number: filingStr === '' ? null : filingStr,
+      doc_id_tr: (c['doc_id_tr'].value?.trim()?.length ?? 0) > 0 ? c['doc_id_tr'].value : null,
+      doc_id_bn: (c['doc_id_bn'].value?.trim()?.length ?? 0) > 0 ? c['doc_id_bn'].value : null,
+      applicant_name_emp:
+        (c['applicant_name_emp'].value?.trim()?.length ?? 0) > 0 ? c['applicant_name_emp'].value : null,
+      status_id: c['request_status_id'].value?.length ? c['request_status_id'].value : null,
+      assigned_user: this.user?.trim() ? this.user : null,
       page: this.pageAssigned,
       page_size: this.rowsAssigned,
     };
 
     this.getRequestListByAssignedUserByFilter(payload);
   }
-  getRequestListByAssignedUserByFilter(payload: FilterRequests) {
-    console.log(payload);
-    this.userService.getRequestListByAssignedUserAfiliation(this.user, payload).subscribe({
-      next: (response: BodyResponse<RequestsListAfiliation[]>) => {
-        if (response.code === 200) {
-          this.requestListByAssignedAfiliation = response.data;
-          /*
-          this.daysOption = Array.from(
-            new Set(this.requestListByAssignedAfiliation.map(item => item.request_days))
-          );
-          */
-          this.statusOptions = Array.from(
-            new Set(this.requestListByAssignedAfiliation.map(item => item.cod_estatus))
-          );
-          this.requestListByAssignedAfiliation = response.data.map(item => {
-            const transformedDate = formatDate(item.filing_date, 'MM/dd/yyyy', 'en-US');
-            return { ...item, filing_date: transformedDate };
-          });
-         
-          this.totalRowsAssigned = Number(response.message);
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
+
+  getRequestListByAssignedUserByFilter(payload: FilterRequestsAfiliation) {
+    this.loadingAssigned = true;
+    this.userService
+      .getRequestListByAssignedUserAfiliation(this.user, payload)
+      .pipe(finalize(() => (this.loadingAssigned = false)))
+      .subscribe({
+        next: (response: BodyResponse<RequestsListAfiliation[]>) => {
+          if (response.code === 200) {
+            this.requestListByAssignedAfiliation = response.data;
+            this.statusOptions = Array.from(
+              new Set(this.requestListByAssignedAfiliation.map(item => item.cod_estatus))
+            );
+            this.requestListByAssignedAfiliation = response.data.map(item => {
+              const transformedDate = formatDate(item.filing_date, 'MM/dd/yyyy', 'en-US');
+              return { ...item, filing_date: transformedDate };
+            });
+
+            this.totalRowsAssigned = Number(response.message);
+          } else {
+            this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+          }
+        },
+        error: (err: any) => {
+          console.log(err);
+        },
+        complete: () => {
+          console.log('La suscripción ha sido completada.');
+        },
+      });
   }
+
+  puedeActivarAsignar(row: RequestsListAfiliation): boolean {
+    return afiliacionIndicadoresPermitenAsignar(row);
+  }
+
+  /** Misma idea que pendientes: fila seleccionable solo si aplica asignar/reasignar. */
+  readonly esFilaSeleccionableParaAsignar = (ctx: {
+    data: RequestsListAfiliation;
+    index: number;
+  }): boolean => {
+    const r = ctx.data;
+    return (
+      this.PERFIL !== 'CONSULTANTE' &&
+      r.status_name !== 'Cerrada' &&
+      r.status_name !== 'Pendiente Usuario Externo' &&
+      this.puedeActivarAsignar(r)
+    );
+  };
+
+  hayFilasSeleccionablesParaAsignar(): boolean {
+    return this.requestListByAssignedAfiliation.some(r =>
+      this.esFilaSeleccionableParaAsignar({ data: r, index: 0 })
+    );
+  }
+
+  todasSeleccionadasPuedenAsignar(): boolean {
+    return (
+      this.selectedRequests.length > 0 &&
+      this.selectedRequests.every(r => this.puedeActivarAsignar(r))
+    );
+  }
+
   getRequestStatusList() {
     this.userService.getRequestAfiliationStatusList().subscribe({
       next: (response: BodyResponse<RequestStatusAfiliationList[]>) => {
@@ -251,16 +288,16 @@ export class ProcessRequestAfiliationComponent implements OnInit {
   redirectDetails(request_id: number) {
     localStorage.removeItem('route');
     localStorage.setItem('route', this.router.url);
-    this.router.navigate([RoutesApp.REQUEST_DETAILS, request_id]);
+    this.router.navigate([RoutesApp.REQUEST_DETAILS_AFILIATION, request_id]);
   }
 
   //Metodos para nuevos metodos en revision
-  assignStateReviewRequest(request_details: RequestsReview) {
+  assignStateReviewRequest(request_details: RequestsReview | RequestsListAfiliation) {
     console.log(request_details);
     this.buttonmsg = 'En Revisión';
     this.message = 'Cambiar estado a "En revisión"';
     this.visibleDialogInput = true;
-    this.request_details = request_details;
+    this.request_details = request_details as RequestsReview;
   }
   closeDialogInput(value: boolean) {
     this.visibleDialogInput = false;
@@ -293,47 +330,17 @@ export class ProcessRequestAfiliationComponent implements OnInit {
     }
   }
 
-  handleKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      event.preventDefault(); // Evita que se envíe el formulario
-      this.initPaginadorAssigned();
-    }
-    if (event.key === 'Escape') {
-      //this.cleanForm();
-    }
-  }
-
   activeTabIndex = 0; // 0 para "Asignadas", 1 para "Generales"
 
-@HostListener('document:keydown.enter', ['$event'])
-onEnterPressed(event: KeyboardEvent): void {
-  if (this.activeTabIndex === 0 && this.hasActiveFilters(this.filterFormAssigned)) {
+  onEnterFiltrosAsignadas(event: Event): void {
     event.preventDefault();
     this.initPaginadorAssigned();
-  } else if (this.activeTabIndex === 1 && this.hasActiveFilters(this.filterForm)) {
-    event.preventDefault();
-    //this.initPaginador();
   }
-}
 
-@HostListener('document:keydown.escape', ['$event'])
-onEscapePressed(event: KeyboardEvent): void {
-  if (this.activeTabIndex === 0) {
+  onEscapeFiltrosAsignadas(event: Event): void {
     event.preventDefault();
     this.cleanFormAssigned();
-  } else if (this.activeTabIndex === 1) {
-    event.preventDefault();
-    //this.cleanForm();
   }
-}
-
-private hasActiveFilters(formGroup: FormGroup): boolean {
-  return Object.values(formGroup.value).some(value => {
-    if (value === null || value === '') return false;
-    if (Array.isArray(value) && value.length === 0) return false;
-    return true;
-  });
-}
 
 assignRequest(request_details: RequestsListAfiliation) {
     this.isBulkAssign = false;
@@ -365,12 +372,12 @@ assignRequest(request_details: RequestsListAfiliation) {
         request.user_name_completed = inputValue.userNameCompleted;
         request.mensaje_reasignacion = inputValue.mensajeReasignacion;
         request.request_status = 3;
-  
-        return this.userService.assignUserToRequest(request);
+
+        return this.userService.assignUserToRequestAfiliation(request);
       });
-  
+
       forkJoin(requestsToAssign).subscribe({
-        next: (responses) => {
+        next: responses => {
           responses.forEach((response, index) => {
             const filingNumber = this.selectedRequests[index]?.filing_number || 'Desconocido';
             if (response.code === 200) {
@@ -380,15 +387,15 @@ assignRequest(request_details: RequestsListAfiliation) {
             }
           });
         },
-        error: (err) => {
+        error: err => {
           console.error('Error en asignación masiva:', err);
           this.showSuccessMessage('error', 'Error', 'Error durante la asignación masiva.');
         },
         complete: () => {
           this.selectedRequests = [];
-          this.table?.clear(); // Limpia visualmente la selección
-          this.visibleDialogInput = false;
-          this.ngOnInit(); // Refresca datos
+          this.table?.clear();
+          this.visibleAssignedInput = false;
+          this.ngOnInit();
         },
       });
   
@@ -432,12 +439,21 @@ assignRequest(request_details: RequestsListAfiliation) {
     }
   }
   
-  assignSelectedRequests(requests: RequestsList[]) {
-    if (!requests || requests.length === 0) return;
+  assignSelectedRequests(requests: RequestsListAfiliation[]) {
+    if (!requests || requests.length === 0) {
+      return;
+    }
+    const noCumplen = requests.filter(r => !this.puedeActivarAsignar(r));
+    if (noCumplen.length > 0) {
+      this.showSuccessMessage(
+        'warn',
+        'Asignación no disponible',
+        'No puede reasignar en lote si alguna solicitud tiene pendiente dirección, pendiente activar empresa o novedad restrictiva en Sí.'
+      );
+      return;
+    }
     this.isBulkAssign = true;
-
     this.selectedRequests = requests;
-
     this.message = 'Reasignar responsable a solicitudes seleccionadas';
     this.buttonmsg = 'Reasignar';
     this.visibleAssignedInput = true;

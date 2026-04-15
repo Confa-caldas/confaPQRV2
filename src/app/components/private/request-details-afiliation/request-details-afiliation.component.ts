@@ -6,6 +6,7 @@ import {
   ApplicantAttach,
   ApplicantAttachments,
   CharacterizationCreate,
+  AfiliationSolicitudHistoriaGestionRow,
   RequestHistoric,
   RequestsDetails,
   RequestsList,
@@ -26,12 +27,14 @@ import {
   AdjuntoTipoPorParentesco,
   PresignAdjuntoAdicionalData,
   BeneficiarioBundle,
+  TrabajadorBundle,
   ParametroParentesco,
   AdjuntoConValoracion,
   ValoracionAdjunto,
   afiliacionIndicadoresPermitenAsignar,
   MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA,
   ActualizarEstadoGestionAfiliacionPayload,
+  RequestStatusAfiliationList,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -44,7 +47,7 @@ import { v4 as uuidv4 } from 'uuid';
 //Esto es nuevo
 import { MenuModule } from 'primeng/menu';
 import { of, lastValueFrom, firstValueFrom, throwError } from 'rxjs';
-import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
+import { catchError, retryWhen, delay, take, tap, finalize } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import JSZip from 'jszip';
 
@@ -64,6 +67,40 @@ interface NovedadCalidadEntradaUIM {
   estadoId: number;
   fechaRegistro: string | null;
 }
+
+/** Una fila del resumen del WS (lista etiqueta / valor). */
+interface ResumenWsFila {
+  /** Ruta técnica (p. ej. persona.primer_nombre), útil en tooltip. */
+  clave: string;
+  etiqueta: string;
+  valor: string;
+}
+
+/** Campos que no deben mostrarse en el resumen WS (trabajador ni beneficiario). */
+/** Paso del p-timeline según catálogo de estados de solicitud de afiliación. */
+interface TimelineEstadoAfiliacionEvento {
+  idEstado: number;
+  /** Código del estado (visible en el timeline). */
+  state: string;
+  stateShow: string;
+  label: string;
+  /** Descripción solo para heurística de icono (no se muestra en UI). */
+  textoIcono?: string;
+}
+
+const CAMPOS_OMITIDOS_RESUMEN_WS = new Set<string>([
+  'id_usuario_creacion',
+  'fecha_creacion',
+  'fecha_modificacion',
+  'fecha_ultima_gestion',
+  'tipo_persona',
+  'usuario_modificacion',
+  'editado_por_backoffice',
+  'id_estado_gestion_persona',
+  'id_solicitud',
+  'snapshot_datos_originales',
+  'usuario_gestion',
+]);
 
 @Component({
   selector: 'app-request-details-afiliation',
@@ -86,7 +123,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   requestDetails?: RequestsDetails;
   afiliationRequestDetails?: AfiliacionRequestDetailsData;
   readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
-  requestHistoric: RequestHistoric[] = [];
+  requestHistoric: AfiliationSolicitudHistoriaGestionRow[] = [];
   requestHistoricAttach: RequestHistoric[] = [];
   ingredient!: string;
   visibleDialog = false;
@@ -130,6 +167,10 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   pageHistoric: number = 1;
   rowsHistoric: number = 10;
   totalRowsHistoric: number = 0;
+  /** Carga del histórico gestión (tabla paginada). */
+  cargandoHistorialGestion = false;
+  /** Filas cuyo texto de observación está expandido (índice en la página actual). */
+  private historialObsExpandidos = new Set<number>();
 
   firstAssignedAttachments: number = 0;
   pageAssignedAttachments: number = 1;
@@ -148,6 +189,10 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   isDialogVisible: boolean = false;
   dialogHeader: string = '';
   dialogContent: string = '';
+  /** Diálogo: lista organizada del trabajador o beneficiario (datos del detalle WS). */
+  visibleResumenDatosWs = false;
+  resumenDatosWsTitulo = '';
+  resumenDatosWsFilas: ResumenWsFila[] = [];
   isSpinnerVisible = false;
 
   dataLoaded: any; // Aquí está el dato previamente cargado
@@ -188,9 +233,13 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   errorMessage: string = '';
   currentState: string = '';
   currentIndex: number = 0;
+  /** Id del estado actual (`afiliacion_solicitud.id_estado_solicitud` / catálogo). */
+  idEstadoSolicitudActual: number | null = null;
+  /** Catálogo `parametros_estado_solicitud` vía API `db_afi/estado_solicitud`. */
+  catalogoEstadosSolicitudAfiliacion: RequestStatusAfiliationList[] = [];
 
   // Arreglo de eventos para la línea de tiempo
-  events: any[] = [];
+  events: TimelineEstadoAfiliacionEvento[] = [];
 
   historyData: Array<any> = [];
   isInitialized = false;
@@ -371,21 +420,15 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
     this.route.params.subscribe(params => {
       this.request_id = +params['id'];
+      this.requestHistoric = [];
+      this.events = [];
       this.getRequestDetails(this.request_id);
     });
-
-
-
-
-
-    this.initPaginadorHistoric();
     //this.getRequestApplicantAttachments(this.request_id);
     //this.getRequestAssignedAttachments(this.request_id);
 
     //validar si esta cerrada
     //this.getAnswerTemp(this.request_id);
-
-    this.getHistoryRequest(this.request_id);
 
     // //Neuvo pdf
     // Util.getImageDataUrl('assets/imagenes/encabezado.png').then(
@@ -429,17 +472,19 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   }
 
   onPageChangeHistoric(eventHistoric: PaginatorState) {
-    this.firstHistoric = eventHistoric.first || 0;
-    this.rowsHistoric = eventHistoric.rows || 0;
-    this.pageHistoric = Number(eventHistoric.page) + 1 || 0;
-    //this.getRequestHistoric(this.request_id);
+    this.firstHistoric = eventHistoric.first ?? 0;
+    this.rowsHistoric = eventHistoric.rows ?? this.rowsHistoric;
+    this.pageHistoric = (eventHistoric.page ?? 0) + 1;
+    this.getRequestHistoric(this.request_id);
   }
   cleanFormHistoric() {
     this.firstHistoric = 0;
     this.pageHistoric = 1;
     this.rowsHistoric = 10;
     this.requestHistoric = [];
-    //this.getRequestHistoric(this.request_id);
+    this.totalRowsHistoric = 0;
+    this.historialObsExpandidos.clear();
+    this.rebuildTimelineEstadosSolicitudAfiliacion([]);
   }
 
   initPaginadorHistoric() {
@@ -925,6 +970,10 @@ getRequestDetails(request_details: number) {
       this.loadGeneros();
       this.loadEstadoCivil();
       this.loadParentescos();
+      this.firstHistoric = 0;
+      this.pageHistoric = 1;
+      this.rebuildTimelineEstadosSolicitudAfiliacion([]);
+      this.getRequestHistoric(request_details);
     },
     error: (err) => {
       this.loading = false;
@@ -2094,6 +2143,210 @@ get empresaDocumento(): string {
   return `${e.tipo_documento} ${e.numero_documento}`;
 }
 
+  /** Muestra en modal el objeto del integrante (trabajador o beneficiario) serializado como en la respuesta del detalle. */
+  abrirResumenIntegranteAfiliacionWs(tipo: 'trabajador' | 'beneficiario', indiceBeneficiario?: number): void {
+    const d = this.afiliationRequestDetails;
+    if (!d) {
+      return;
+    }
+    if (tipo === 'trabajador') {
+      this.resumenDatosWsTitulo = 'Trabajador — resumen de datos del servicio';
+      this.resumenDatosWsFilas = this.construirFilasResumenWs(this.objetoResumenWsTrabajador(d.trabajador));
+      this.visibleResumenDatosWs = true;
+      return;
+    }
+    const idx = indiceBeneficiario ?? 0;
+    const ben = d.beneficiarios?.[idx];
+    if (!ben) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin datos',
+        detail: 'No se encontró información del beneficiario.',
+      });
+      return;
+    }
+    this.resumenDatosWsTitulo = `Beneficiario ${idx + 1} — resumen de datos del servicio`;
+    this.resumenDatosWsFilas = this.construirFilasResumenWs(this.objetoResumenWsBeneficiario(ben));
+    this.visibleResumenDatosWs = true;
+  }
+
+  /** Solo `persona` y `trabajador` (sin adjuntos ni novedades del bundle). */
+  private objetoResumenWsTrabajador(t: TrabajadorBundle): Record<string, unknown> {
+    return { persona: t.persona, trabajador: t.trabajador };
+  }
+
+  /** Solo `persona` y `beneficiario` sin `novedades`; sin adjuntos del bundle. */
+  private objetoResumenWsBeneficiario(b: BeneficiarioBundle): Record<string, unknown> {
+    const { novedades: _omitNovedades, ...beneficiarioSinNovedades } = b.beneficiario;
+    return { persona: b.persona, beneficiario: beneficiarioSinNovedades };
+  }
+
+  private textoSinInformacionResumenWs(): string {
+    return 'sin información';
+  }
+
+  private esValorVacioResumenWs(valor: unknown): boolean {
+    if (valor === null || valor === undefined) {
+      return true;
+    }
+    if (typeof valor === 'string' && valor.trim() === '') {
+      return true;
+    }
+    return false;
+  }
+
+  private formatearValorEscalarResumenWs(valor: unknown): string {
+    if (this.esValorVacioResumenWs(valor)) {
+      return this.textoSinInformacionResumenWs();
+    }
+    if (valor instanceof Date) {
+      return Number.isNaN(valor.getTime()) ? this.textoSinInformacionResumenWs() : valor.toISOString();
+    }
+    if (typeof valor === 'boolean') {
+      return valor ? 'Sí' : 'No';
+    }
+    if (typeof valor === 'number' && Number.isFinite(valor)) {
+      return String(valor);
+    }
+    return String(valor);
+  }
+
+  /** Último segmento de la ruta (`persona.primer_nombre` → `primer_nombre`), vacío si no aplica. */
+  private ultimoNombreCampoResumenWs(clave: string): string {
+    if (!clave || clave === '(raíz)' || clave === '(valor)') {
+      return '';
+    }
+    const segmentoFinal = clave.includes('.') ? clave.slice(clave.lastIndexOf('.') + 1) : clave;
+    return segmentoFinal.replace(/\[\d+\]$/, '');
+  }
+
+  /** Solo el nombre del campo para la etiqueta visible. */
+  private formatearEtiquetaVistaRuta(ruta: string): string {
+    const n = this.ultimoNombreCampoResumenWs(ruta);
+    return n === '' ? 'Dato' : n;
+  }
+
+  private debeOmitirCampoResumenWs(clave: string): boolean {
+    const n = this.ultimoNombreCampoResumenWs(clave);
+    return n !== '' && CAMPOS_OMITIDOS_RESUMEN_WS.has(n);
+  }
+
+  private pushFilaResumenWs(filas: ResumenWsFila[], clave: string, valor: unknown): void {
+    if (this.debeOmitirCampoResumenWs(clave)) {
+      return;
+    }
+    filas.push({
+      clave,
+      etiqueta: this.formatearEtiquetaVistaRuta(clave),
+      valor: this.formatearValorEscalarResumenWs(valor),
+    });
+  }
+
+  /**
+   * Aplana el objeto del WS en filas etiqueta/valor; objetos anidados se expanden con notación de ruta.
+   */
+  private construirFilasResumenWs(datos: unknown, prefijo = '', visitados: WeakSet<object> = new WeakSet()): ResumenWsFila[] {
+    const filas: ResumenWsFila[] = [];
+
+    if (this.esValorVacioResumenWs(datos) && prefijo === '') {
+      filas.push({
+        clave: '(raíz)',
+        etiqueta: 'Dato',
+        valor: this.textoSinInformacionResumenWs(),
+      });
+      return filas;
+    }
+
+    if (datos === null || datos === undefined) {
+      this.pushFilaResumenWs(filas, prefijo || '(valor)', datos);
+      return filas;
+    }
+
+    if (typeof datos === 'string' || typeof datos === 'number' || typeof datos === 'boolean') {
+      this.pushFilaResumenWs(filas, prefijo || 'Valor', datos);
+      return filas;
+    }
+
+    if (typeof datos === 'object' && datos instanceof Date) {
+      this.pushFilaResumenWs(filas, prefijo || 'Fecha', datos.toISOString());
+      return filas;
+    }
+
+    if (Array.isArray(datos)) {
+      const claveLista = prefijo || 'Lista';
+      if (datos.length === 0) {
+        if (!this.debeOmitirCampoResumenWs(claveLista)) {
+          this.pushFilaResumenWs(filas, claveLista, null);
+        }
+        return filas;
+      }
+      const todosEscalares = datos.every(
+        (item) =>
+          item === null ||
+          item === undefined ||
+          typeof item === 'string' ||
+          typeof item === 'number' ||
+          typeof item === 'boolean',
+      );
+      if (todosEscalares) {
+        if (this.debeOmitirCampoResumenWs(claveLista)) {
+          return filas;
+        }
+        const unidos = datos.map((item) => this.formatearValorEscalarResumenWs(item)).join(', ');
+        filas.push({
+          clave: claveLista,
+          etiqueta: this.formatearEtiquetaVistaRuta(claveLista),
+          valor: unidos || this.textoSinInformacionResumenWs(),
+        });
+        return filas;
+      }
+      datos.forEach((item, idx) => {
+        const sub = prefijo ? `${prefijo}[${idx + 1}]` : `[${idx + 1}]`;
+        filas.push(...this.construirFilasResumenWs(item, sub, visitados));
+      });
+      return filas;
+    }
+
+    if (typeof datos === 'object') {
+      const obj = datos as Record<string, unknown>;
+      if (visitados.has(obj)) {
+        if (!this.debeOmitirCampoResumenWs(prefijo)) {
+          filas.push({
+            clave: prefijo,
+            etiqueta: this.formatearEtiquetaVistaRuta(prefijo || 'Dato'),
+            valor: '[Referencia circular]',
+          });
+        }
+        return filas;
+      }
+      visitados.add(obj);
+
+      const keys = Object.keys(obj).sort((a, b) => a.localeCompare(b));
+      if (keys.length === 0) {
+        this.pushFilaResumenWs(filas, prefijo || 'Objeto', null);
+        return filas;
+      }
+      for (const k of keys) {
+        const path = prefijo ? `${prefijo}.${k}` : k;
+        if (this.debeOmitirCampoResumenWs(path)) {
+          continue;
+        }
+        const v = obj[k];
+        if (Array.isArray(v)) {
+          filas.push(...this.construirFilasResumenWs(v, path, visitados));
+        } else if (v !== null && typeof v === 'object' && !(v instanceof Date)) {
+          filas.push(...this.construirFilasResumenWs(v, path, visitados));
+        } else {
+          this.pushFilaResumenWs(filas, path, v);
+        }
+      }
+      return filas;
+    }
+
+    this.pushFilaResumenWs(filas, prefijo || 'Valor', datos);
+    return filas;
+  }
+
 
 
 
@@ -2174,90 +2427,230 @@ get empresaDocumento(): string {
     });
   }
   getRequestHistoric(request_id: number) {
+    this.cargandoHistorialGestion = true;
     const payload: Pagination = {
-      request_id: request_id,
+      request_id,
       page: this.pageHistoric,
       page_size: this.rowsHistoric,
     };
-    this.userService.getRequestHistoricAfiliation(payload).subscribe({
-      next: (response: BodyResponse<RequestHistoric[]>) => {
-        if (response.code === 200) {
-          this.requestHistoric = response.data;
+    this.userService
+      .getRequestHistoricAfiliation<AfiliationSolicitudHistoriaGestionRow[]>(payload)
+      .pipe(finalize(() => (this.cargandoHistorialGestion = false)))
+      .subscribe({
+        next: (response: BodyResponse<AfiliationSolicitudHistoriaGestionRow[]>) => {
+          if (response.code === 200) {
+            this.requestHistoric = Array.isArray(response.data) ? response.data : [];
+            this.historialObsExpandidos.clear();
+            this.fillStatesDetails(this.requestHistoric);
+            const rawTotal =
+              response.total_count !== undefined && response.total_count !== null
+                ? Number(response.total_count)
+                : NaN;
+            this.totalRowsHistoric = Number.isFinite(rawTotal)
+              ? rawTotal
+              : Number.isFinite(Number(response.message))
+                ? Number(response.message)
+                : 0;
+          } else {
+            this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+          }
+        },
+        error: (err: unknown) => {
+          console.log(err);
+        },
+      });
+  }
 
-          this.fillStatesDetails(this.requestHistoric);
-          this.totalRowsHistoric = Number(response.message);
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+  fillStatesDetails(request: AfiliationSolicitudHistoriaGestionRow[]): void {
+    this.rebuildTimelineEstadosSolicitudAfiliacion(request ?? []);
+  }
+
+  /** Fecha/hora ISO parseable por `Date` (`fecha`+`hora` lambda, legacy u otros). */
+  fechaHistorialIso(row: AfiliationSolicitudHistoriaGestionRow): string | null {
+    const fecha = row.fecha != null ? String(row.fecha).trim() : '';
+    const horaRaw = row.hora != null ? String(row.hora).trim() : '';
+    if (fecha && horaRaw) {
+      const hora = horaRaw.replace(/[-+]\d{2}(:\d{2})?$/, '');
+      return `${fecha}T${hora}`;
+    }
+    const fh = row.fecha_hora != null ? String(row.fecha_hora).trim() : '';
+    if (fh) {
+      return fh;
+    }
+    if (row.updated_date) {
+      const t = row.updated_time ? String(row.updated_time).split('.')[0] : '';
+      return t ? `${row.updated_date}T${t}` : String(row.updated_date).trim();
+    }
+    return null;
+  }
+
+  private readonly historialFechaHoraLegibleFmt = new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  });
+
+  /** Fecha y hora en formato legible (es-CO), p. ej. «25 de octubre de 2023, 2:30 p. m.». */
+  historialFechaHoraMostrar(row: AfiliationSolicitudHistoriaGestionRow): string {
+    const iso = this.fechaHistorialIso(row);
+    if (!iso) {
+      return '—';
+    }
+    const d = new Date(iso);
+    if (!Number.isNaN(d.getTime())) {
+      return this.historialFechaHoraLegibleFmt.format(d);
+    }
+    const fecha = row.fecha != null ? String(row.fecha).trim() : '';
+    const horaRaw = row.hora != null ? String(row.hora).trim() : '';
+    if (fecha && horaRaw) {
+      const horaCorta = horaRaw.replace(/[-+]\d{2}(:\d{2})?$/, '');
+      return `${fecha} · ${horaCorta}`;
+    }
+    return iso.trim() || '—';
+  }
+
+  estadoHistorialNombre(row: AfiliationSolicitudHistoriaGestionRow): string {
+    return (row.estado_nombre ?? row.status_name ?? '').trim();
+  }
+
+  estadoHistorialCodigo(row: AfiliationSolicitudHistoriaGestionRow): string {
+    return (row.estado_code ?? row.estado_codigo ?? '').trim();
+  }
+
+  textoDetalleObservacion(row: AfiliationSolicitudHistoriaGestionRow): string {
+    const v = row.detalle_observacion != null ? String(row.detalle_observacion).trim() : '';
+    return v || 'Sin observaciones';
+  }
+
+  observacionHistorialLarga(row: AfiliationSolicitudHistoriaGestionRow): boolean {
+    const v = row.detalle_observacion != null ? String(row.detalle_observacion).trim() : '';
+    return v.length > 140;
+  }
+
+  toggleHistorialObs(rowIndex: number): void {
+    if (this.historialObsExpandidos.has(rowIndex)) {
+      this.historialObsExpandidos.delete(rowIndex);
+    } else {
+      this.historialObsExpandidos.add(rowIndex);
+    }
+  }
+
+  isHistorialObsExpandido(rowIndex: number): boolean {
+    return this.historialObsExpandidos.has(rowIndex);
+  }
+
+  /** Id de fila del catálogo (API puede usar `request_status_id` o `id`). */
+  private idEstadoCatalogoFila(row: RequestStatusAfiliationList): number {
+    const ext = row as RequestStatusAfiliationList & { id?: number };
+    return ext.request_status_id ?? ext.id ?? 0;
+  }
+
+  /** Texto para comparar histórico con una fila del catálogo. */
+  private nombresEstadoParaCoincidencia(row: RequestStatusAfiliationList): string[] {
+    return [
+      row.codigo,
+      row.descripcion,
+      row.status_name,
+      row.status_description,
+    ]
+      .filter((v): v is string => v != null && String(v).trim() !== '')
+      .map(v => String(v).trim().toLowerCase());
+  }
+
+  /** Última fecha del histórico cuyo `status_name` coincide con el catálogo. */
+  private ultimaFechaHistoricoParaEstado(
+    historic: AfiliationSolicitudHistoriaGestionRow[],
+    row: RequestStatusAfiliationList,
+  ): string | null {
+    const set = new Set(this.nombresEstadoParaCoincidencia(row));
+    let best: string | null = null;
+    let bestTime = 0;
+    for (const h of historic) {
+      const sn = this.estadoHistorialNombre(h).trim().toLowerCase();
+      if (!sn || !set.has(sn)) {
+        continue;
+      }
+      const raw = this.fechaHistorialIso(h);
+      const t = raw ? new Date(raw).getTime() : NaN;
+      if (!Number.isNaN(t) && t >= bestTime) {
+        bestTime = t;
+        best = raw;
+      }
+    }
+    return best;
+  }
+
+  /** Carga catálogo de estados y arma el timeline ordenado por `orden`. */
+  private rebuildTimelineEstadosSolicitudAfiliacion(historic: AfiliationSolicitudHistoriaGestionRow[]): void {
+    const d = this.afiliationRequestDetails;
+    if (!d?.solicitud) {
+      this.events = [];
+      this.idEstadoSolicitudActual = null;
+      this.currentIndex = 0;
+      return;
+    }
+
+    const idActual = d.solicitud.id_estado_solicitud;
+    this.idEstadoSolicitudActual = idActual;
+
+    const aplicar = (rows: RequestStatusAfiliationList[]) => {
+      const activos = rows.filter(r => r.is_active !== false);
+      const ordenados = [...activos].sort(
+        (a, b) =>
+          (a.orden ?? this.idEstadoCatalogoFila(a)) - (b.orden ?? this.idEstadoCatalogoFila(b)),
+      );
+      const actualRow = ordenados.find(r => this.idEstadoCatalogoFila(r) === idActual);
+      this.currentState =
+        actualRow?.codigo ||
+        actualRow?.status_name ||
+        d.solicitud.estado_codigo ||
+        '';
+
+      this.events = ordenados.map(row => {
+        const idEstado = this.idEstadoCatalogoFila(row);
+        const fecha = this.ultimaFechaHistoricoParaEstado(historic, row);
+        const codigo = (row.codigo || row.status_name || '').trim() || '—';
+        return {
+          idEstado,
+          state: codigo,
+          stateShow: codigo,
+          label: fecha ?? '—',
+          textoIcono: row.descripcion || row.status_description || row.status_name,
+        };
+      });
+
+      const idx = this.events.findIndex(e => e.idEstado === idActual);
+      this.currentIndex = idx >= 0 ? idx : 0;
+    };
+
+    if (this.catalogoEstadosSolicitudAfiliacion.length > 0) {
+      aplicar(this.catalogoEstadosSolicitudAfiliacion);
+      return;
+    }
+
+    this.userService.getRequestAfiliationStatusList().subscribe({
+      next: (res) => {
+        if (res.code === 200 && Array.isArray(res.data)) {
+          this.catalogoEstadosSolicitudAfiliacion = res.data;
         }
+        aplicar(this.catalogoEstadosSolicitudAfiliacion);
       },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
+      error: () => {
+        this.events = [];
+        this.currentIndex = 0;
       },
     });
   }
 
-  fillStatesDetails(request: RequestHistoric[]): void {
-    if (request && request.length > 0) {
-      // Lista de estados que se deben agrupar
-      const estadosAgrupados = [
-        'Asignada',
-        'Reasignada',
-        'Asignada - En revisión',
-        'Reasignada - En revisión',
-        'Pendiente Usuario Externo',
-      ];
-
-      // Estados predeterminados
-      const estadosPredeterminados = ['Radicada', 'Gestión', 'Cerrada'];
-
-      // Objeto para almacenar los estados agrupados con la última fecha
-      const groupedStates = request.reduce(
-        (acc, item) => {
-          const state = item.status_name;
-
-          if (estadosAgrupados.includes(state)) {
-            // Si el estado está en la lista de agrupados, verificar la fecha más reciente
-            if (
-              !acc['Gestión'] ||
-              new Date(acc['Gestión'].updated_date) < new Date(item.updated_date)
-            ) {
-              acc['Gestión'] = { ...item, status_name: 'Gestión' }; // Cambiar nombre a 'Gestión'
-            }
-          } else {
-            // Si no está en la lista de agrupados, guardar cada estado individualmente
-            acc[`${state}-${item.updated_date}`] = item;
-          }
-          return acc;
-        },
-        {} as Record<string, RequestHistoric>
-      );
-
-      // Convertir el objeto agrupado en un arreglo de eventos
-      this.events = Object.values(groupedStates).map(item => ({
-        state: item.status_name,
-        label: item.updated_date || 'No tiene',
-        stateShow: item.status_name,
-      }));
-
-      // Asegurar que los estados predeterminados estén presentes
-      estadosPredeterminados.forEach(state => {
-        if (!this.events.some(event => event.state === state)) {
-          this.events.push({
-            state: state,
-            label: 'No tiene',
-            stateShow: state,
-          });
-        }
-      });
-
-      console.log(this.events, 'bu');
-      this.currentIndex = this.events.findIndex(event => event.stateShow === this.currentState);
-    } else {
-      console.log('No hay datos históricos disponibles.');
+  /** Icono del marcador según texto del estado. */
+  iconoTimelineClase(event: TimelineEstadoAfiliacionEvento): string {
+    const t = `${event.textoIcono || ''} ${event.state} ${event.stateShow}`.toLowerCase();
+    if (t.includes('cerr')) {
+      return 'pi pi-check';
     }
+    if (t.includes('radic')) {
+      return 'pi pi-ticket';
+    }
+    return 'pi pi-cog';
   }
 
   assignRequest(request_details: RequestsDetails) {
@@ -2880,9 +3273,11 @@ get empresaDocumento(): string {
 
   showModalReasignada(user_name: string) {
     this.dialogHeader = 'Descripción de la reasignación';
-    this.requestHistoric.forEach((request: RequestHistoric) => {
-      if (user_name === request.user_name_completed && request.status_name === 'Reasignada') {
-        this.dialogContent = request.answer_request;
+    this.requestHistoric.forEach(request => {
+      const responsable = request.responsable_asignado ?? request.user_name_completed ?? '';
+      const estado = request.estado_nombre ?? request.status_name ?? '';
+      if (user_name === responsable && estado === 'Reasignada') {
+        this.dialogContent = request.detalle_observacion ?? request.answer_request ?? '';
       }
     });
     this.isDialogVisible = true;
@@ -2890,9 +3285,11 @@ get empresaDocumento(): string {
 
   showModalReview(user_name: string, request_name: string) {
     this.dialogHeader = 'Descripción de la revisión';
-    this.requestHistoric.forEach((request: RequestHistoric) => {
-      if (user_name === request.user_name_completed && request.status_name === request_name) {
-        this.dialogContent = request.answer_request;
+    this.requestHistoric.forEach(request => {
+      const responsable = request.responsable_asignado ?? request.user_name_completed ?? '';
+      const estado = request.estado_nombre ?? request.status_name ?? '';
+      if (user_name === responsable && estado === request_name) {
+        this.dialogContent = request.detalle_observacion ?? request.answer_request ?? '';
       }
     });
     this.isDialogVisible = true;
@@ -3500,27 +3897,6 @@ get empresaDocumento(): string {
 
   closeDialogHistory(): void {
     this.visibleHistory = false;
-  }
-
-  getHistoryRequest(request_id: number) {
-    const payload: requestHistoryRequest = {
-      request_id: request_id,
-    };
-    this.userService.getHistoryRequest(payload).subscribe({
-      next: (response: BodyResponse<historyRequest[]>) => {
-        if (response.code === 200) {
-          this.historyData = response.data;
-        } else {
-          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-        }
-      },
-      error: (err: any) => {
-        console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
-      },
-    });
   }
 
   // Proceso para guardar automaticamente respuesta cuando cambia de pestaña

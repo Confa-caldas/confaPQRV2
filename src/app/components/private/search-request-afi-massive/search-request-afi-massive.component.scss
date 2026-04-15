@@ -1,12 +1,11 @@
 @import '../../../../assets/styles/abstracts/variables.scss';
 
-/* Grid de filtros: mismo criterio que search-request-afi-pending */
+/* Grid de filtros: misma distribución que search-request-afiliations / pendientes */
 .filters-grid {
   display: grid;
   gap: 1rem 1.25rem;
   width: 100%;
   align-items: center;
-  padding: 0.5rem 0;
 }
 
 .filters-cell {
@@ -53,8 +52,13 @@
 
 @media screen and (min-width: 768px) {
   .filters-grid {
-    grid-template-columns: repeat(4, 1fr) auto;
-    align-items: end;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .filters-cell.filters-actions {
+    grid-column: 4;
+    justify-self: end;
   }
 }
 
@@ -68,6 +72,11 @@
   .filters-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
+  }
+
+  .filters-cell.filters-actions {
+    grid-column: auto;
+    justify-self: stretch;
   }
 }
 
@@ -212,4 +221,40 @@ tr:nth-child(10) .circle {
   color: inherit !important;
   padding: 0 !important;
   border: none !important;
+}
+
+/* Alineado con search-request-afi-pending: tooltips de asignación */
+:host ::ng-deep .p-tooltip:not(.tooltip-asignar-bloqueado) {
+  background-color: $color-white !important;
+  color: $color-text-black !important;
+  border-radius: 5px !important;
+  border: 1px solid $color-platinum !important;
+  box-shadow: 0 2px 10px $color-shadow !important;
+  padding: 8px 12px !important;
+}
+
+:host ::ng-deep .p-tooltip:not(.tooltip-asignar-bloqueado) .p-tooltip-text {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.assign-btn-tooltip-wrap {
+  display: inline-block;
+  width: 100%;
+}
+
+.assign-bulk-tooltip-wrap {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+::ng-deep .assign-bulk-tooltip-wrap .assign-bulk-btn.p-button:disabled,
+::ng-deep .assign-bulk-tooltip-wrap .assign-bulk-btn.p-button.p-disabled {
+  background: #9e9e9e !important;
+  border-color: #757575 !important;
+  color: #f5f5f5 !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
 }

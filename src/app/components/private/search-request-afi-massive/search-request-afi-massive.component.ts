@@ -4,10 +4,13 @@ import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
 import {
   ApplicantTypeList,
+  afiliacionIndicadoresPermitenAsignar,
   FilterRequestsMassive,
-  RequestStatusList,
+  MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA,
+  RequestStatusAfiliationList,
   RequestTypeList,
-  RequestsList,
+  RequestsListAfiliation,
+  RequestsMassiveAfiliationListItem,
   UserList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
@@ -25,7 +28,16 @@ import { Table } from 'primeng/table';
   styleUrl: './search-request-afi-massive.component.scss',
 })
 export class SearchRequestAfiMassiveComponent implements OnInit {
-  requestList: RequestsList[] = [];
+  readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
+
+  /** Misma regla que pendientes: solo filas en estado 1 y sin indicadores bloqueantes. */
+  readonly esFilaSeleccionableParaAsignar = (ctx: {
+    data: RequestsMassiveAfiliationListItem;
+    index: number;
+  }): boolean =>
+    ctx.data.request_status === 1 && afiliacionIndicadoresPermitenAsignar(ctx.data);
+
+  requestList: RequestsMassiveAfiliationListItem[] = [];
   aplicantList: ApplicantTypeList[] = [];
   requestTypeList: RequestTypeList[] = [];
   userList: UserList[] = [];
@@ -38,8 +50,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   message2 = '';
   buttonmsg = '';
   parameter = [''];
-  request_details!: RequestsList;
-  //selectedRequests!: RequestsList[];
+  request_details!: RequestsListAfiliation;
   informative: boolean = false;
   severity = '';
   visibleDialogAlert = false;
@@ -50,7 +61,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   enableAssign: boolean = false;
   loading: boolean = true;
   PERFIL!: string;
-  statusList: RequestStatusList[] = [];
+  statusList: RequestStatusAfiliationList[] = [];
   formGroup: FormGroup<any> = new FormGroup<any>({});
   mensajeReasignacion: string = '';
   //paginador
@@ -62,7 +73,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   solicitudes: any[] = []; // tus datos
 
   isBulkAssign: boolean = false; // Saber si es masivo o no
-  selectedRequests: RequestsList[] = []; // Solicitudes seleccionadas con checkbox
+  selectedRequests: RequestsMassiveAfiliationListItem[] = [];
   @ViewChild('dt') table!: Table;
 
   constructor(
@@ -74,11 +85,11 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
       filing_number: new FormControl(null),
       dates_range: new FormControl(null),
       doc_id_emp: new FormControl(null),
-      request_status_id: new FormControl([1]),
+      request_status_id: new FormControl(null),
     });
 
     this.formGroup.get('request_status_id')?.valueChanges.subscribe(value => {
-      if (value.length === 0) {
+      if (value?.length === 0) {
         this.formGroup.get('request_status_id')?.setValue(null);
       }
     });
@@ -233,21 +244,36 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   }
   getRequestMassiveListByFilter(payload: FilterRequestsMassive) {
     this.userService.getRequestMassiveListByFilter(payload).subscribe({
-      next: (response: BodyResponse<RequestsList[]>) => {
+      next: (response: BodyResponse<RequestsMassiveAfiliationListItem[]>) => {
         if (response.code === 200) {
-          this.requestList = response.data;
-          console.log(this.requestList);
-          this.daysOption = Array.from(new Set(this.requestList.map(item => item.request_days)));
-          this.statusOptions = Array.from(new Set(this.requestList.map(item => item.status_name)));
-          this.requestList = response.data.map(item => {
-            const transformedDate = formatDate(item.filing_date, 'MM/dd/yyyy', 'en-US');
-            return { ...item, filing_date: transformedDate };
-          });
-          this.requestList.forEach(item => {
-            if (typeof item.filing_date === 'string') {
-              item.filing_date_date = new Date(item.filing_date);
+          const rows = response.data ?? [];
+          this.requestList = rows.map(item => {
+            const raw = item.filing_date;
+            if (raw == null || raw === '') {
+              return { ...item, filing_date: '', filing_date_date: undefined };
             }
+            const transformedDate = formatDate(raw, 'MM/dd/yyyy', 'en-US');
+            const d = new Date(transformedDate);
+            return {
+              ...item,
+              filing_date: transformedDate,
+              filing_date_date: Number.isNaN(d.getTime()) ? undefined : d,
+            };
           });
+          this.daysOption = Array.from(
+            new Set(
+              this.requestList
+                .map(item => item.request_days)
+                .filter((d): d is number => d != null && !Number.isNaN(Number(d)))
+            )
+          );
+          this.statusOptions = Array.from(
+            new Set(
+              this.requestList
+                .map(item => item.cod_estatus ?? item.status_name ?? '')
+                .filter(v => String(v).trim() !== '')
+            )
+          );
           this.totalRows = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
@@ -264,11 +290,17 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   showSuccessMessage(state: string, title: string, message: string) {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
+
+  /** Catálogo de estados de afiliación (mismo endpoint que búsqueda pendientes). */
   getRequestStatusList() {
-    this.userService.getRequestStatusList().subscribe({
-      next: (response: BodyResponse<RequestStatusList[]>) => {
+    this.userService.getRequestAfiliationStatusList().subscribe({
+      next: (response: BodyResponse<RequestStatusAfiliationList[]>) => {
         if (response.code === 200) {
-          this.statusList = response.data;
+          this.statusList = (response.data ?? []).map(row => ({
+            ...row,
+            id: row.id ?? row.request_status_id,
+            codigo: row.codigo ?? row.status_name ?? '',
+          }));
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -282,21 +314,121 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     });
   }
 
-  assignRequest(request_details: RequestsList) {
+  /** Documento de empresa: API nuevo o campos legacy (`doc_id`). */
+  displayDocEmpresa(row: RequestsMassiveAfiliationListItem): string {
+    const v =
+      row.doc_empresa ?? row.doc_id_empresa ?? row.doc_id ?? '';
+    const s = v != null ? String(v).trim() : '';
+    return s !== '' ? s : '—';
+  }
+
+  displayNombreEmpresa(row: RequestsMassiveAfiliationListItem): string {
+    const v = row.name_empresa ?? row.applicant_name ?? '';
+    const s = v != null ? String(v).trim() : '';
+    return s !== '' ? s : '—';
+  }
+
+  displayEstadoSolicitud(row: RequestsMassiveAfiliationListItem): string {
+    const v = row.cod_estatus ?? row.status_name ?? '';
+    const s = v != null ? String(v).trim() : '';
+    return s !== '' ? s : '—';
+  }
+
+  /** Botón Asignar/Reasignar: solo cuando el API marca pendiente de asignación (`request_status === 1`). */
+  esPendienteAsignacion(row: RequestsMassiveAfiliationListItem): boolean {
+    return row.request_status === 1;
+  }
+
+  puedeActivarAsignar(row: RequestsMassiveAfiliationListItem): boolean {
+    return afiliacionIndicadoresPermitenAsignar(row);
+  }
+
+  todasSeleccionadasPuedenAsignar(): boolean {
+    return (
+      this.selectedRequests.length > 0 &&
+      this.selectedRequests.every(
+        r => r.request_status === 1 && afiliacionIndicadoresPermitenAsignar(r)
+      )
+    );
+  }
+
+  hayFilasSeleccionablesParaAsignar(): boolean {
+    return this.requestList.some(
+      r => r.request_status === 1 && afiliacionIndicadoresPermitenAsignar(r)
+    );
+  }
+
+  /** Convierte fila del listado masivo al contrato de asignación de afiliación. */
+  private massiveRowToAfiliationRow(row: RequestsMassiveAfiliationListItem): RequestsListAfiliation {
+    const filingDate =
+      typeof row.filing_date === 'string' ? row.filing_date : String(row.filing_date ?? '');
+    return {
+      request_id: row.request_id,
+      filing_number: row.filing_number != null ? String(row.filing_number) : null,
+      filing_date: filingDate,
+      doc_trabajador: row.doc_trabajador ?? '',
+      name_trabajador: row.name_trabajador ?? '',
+      documents_beneficiarios: row.documents_beneficiarios ?? '',
+      names_beneficiarios: row.names_beneficiarios ?? '',
+      type_doc_id_tr: row.tipo_doc_trabajador ?? row.type_doc_id_tr ?? null,
+      type_doc_bn_tr: row.tipos_doc_beneficiarios ?? row.type_doc_bn_tr ?? null,
+      doc_id_tr: row.doc_trabajador ?? row.doc_id_tr ?? null,
+      doc_id_bn: row.documents_beneficiarios ?? row.doc_id_bn ?? null,
+      status_name: row.status_name ?? null,
+      id_empresa: row.id_empresa ?? '',
+      name_empresa: row.name_empresa ?? row.applicant_name ?? '',
+      request_status: row.request_status,
+      cod_estatus: row.cod_estatus ?? row.status_name ?? '',
+      assigned_user: row.assigned_user ?? null,
+      user_name_completed: row.user_name_completed ?? '',
+      mensaje_reasignacion: row.mensaje_reasignacion ?? '',
+      total_count: row.total_count ?? 0,
+      pendiente_direccion: row.pendiente_direccion,
+      pendiente_activar_empresa: row.pendiente_activar_empresa,
+      novedad_restrictiva: row.novedad_restrictiva,
+    };
+  }
+
+  filaCerrada(row: RequestsMassiveAfiliationListItem): boolean {
+    const cod = (row.cod_estatus || '').toLowerCase();
+    const name = (row.status_name || '').toLowerCase();
+    return cod.includes('cerrad') || name.includes('cerrad');
+  }
+
+  assignRequest(row: RequestsMassiveAfiliationListItem) {
     this.isBulkAssign = false;
 
-    if (request_details.assigned_user == null || request_details.assigned_user == '') {
+    if (!this.esPendienteAsignacion(row)) {
+      this.showSuccessMessage(
+        'warn',
+        'Acción no disponible',
+        'Solo puede asignar o reasignar solicitudes pendientes de asignación.'
+      );
+      return;
+    }
+
+    if (!afiliacionIndicadoresPermitenAsignar(row)) {
+      this.showSuccessMessage(
+        'warn',
+        'Asignación no disponible',
+        'No puede asignar mientras pendiente dirección, pendiente activar empresa o novedad restrictiva esté en Sí.'
+      );
+      return;
+    }
+
+    this.request_details = this.massiveRowToAfiliationRow(row);
+
+    if (this.request_details.assigned_user == null || this.request_details.assigned_user === '') {
       this.message = 'Asignar responsable de solicitud';
       this.buttonmsg = 'Asignar';
-      request_details.request_status = 2;
+      this.request_details.request_status = 2;
     } else {
       this.message = 'Reasignar responsable de solicitud';
       this.buttonmsg = 'Reasignar';
-      request_details.request_status = 3;
+      this.request_details.request_status = 3;
     }
     this.visibleDialogInput = true;
     this.parameter = ['Colaborador'];
-    this.request_details = request_details;
   }
 
   closeDialog(value: boolean) {
@@ -326,18 +458,22 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   
     if (this.isBulkAssign) {
       const requestsToAssign = this.selectedRequests.map(request => {
-        request.assigned_user = inputValue.userName;
-        request.user_name_completed = inputValue.userNameCompleted;
-        request.mensaje_reasignacion = inputValue.mensajeReasignacion;
-        request.request_status = 2;
-  
-        return this.userService.assignUserToRequest(request);
+        const afi = this.massiveRowToAfiliationRow(request);
+        afi.assigned_user = inputValue.userName;
+        afi.user_name_completed = inputValue.userNameCompleted;
+        afi.mensaje_reasignacion = inputValue.mensajeReasignacion;
+        afi.request_status = 2;
+
+        return this.userService.assignUserToRequestAfiliation(afi);
       });
   
       forkJoin(requestsToAssign).subscribe({
         next: (responses) => {
           responses.forEach((response, index) => {
-            const filingNumber = this.selectedRequests[index]?.filing_number || 'Desconocido';
+            const filingNumber =
+              this.selectedRequests[index]?.numero_solicitud_masiva ??
+              this.selectedRequests[index]?.filing_number ??
+              'Desconocido';
             if (response.code === 200) {
               this.showSuccessMessage('success', 'Éxito', `Asignado: ${filingNumber}`);
             } else {
@@ -372,8 +508,8 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
       this.request_details.user_name_completed = inputValue.userNameCompleted;
       this.request_details.mensaje_reasignacion = inputValue.mensajeReasignacion;
   
-      this.userService.assignUserToRequest(this.request_details).subscribe({
-        next: (response) => {
+      this.userService.assignUserToRequestAfiliation(this.request_details).subscribe({
+        next: (response: BodyResponse<unknown>) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Éxito', 'Asignación exitosa');
           } else {
@@ -413,7 +549,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
 
     localStorage.removeItem('route');
     localStorage.setItem('route', this.router.url);
-    this.router.navigate([RoutesApp.REQUEST_DETAILS, request_id]);
+    this.router.navigate([RoutesApp.REQUEST_DETAILS_AFILIATION, request_id]);
   }
 
   // redirectDetails(request_id: number) {
@@ -430,8 +566,18 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
     // this.miServicio.asignar(this.selectedSolicitudes).subscribe(...)
   }
 
-  assignSelectedRequests(requests: RequestsList[]) {
+  assignSelectedRequests(requests: RequestsMassiveAfiliationListItem[]) {
     if (!requests || requests.length === 0) return;
+
+    const noCumplen = requests.filter(r => !afiliacionIndicadoresPermitenAsignar(r));
+    if (noCumplen.length > 0) {
+      this.showSuccessMessage(
+        'warn',
+        'Asignación no disponible',
+        'No puede asignar en lote si alguna solicitud tiene pendiente dirección, pendiente activar empresa o novedad restrictiva en Sí.'
+      );
+      return;
+    }
 
     this.isBulkAssign = true;
     this.selectedRequests = requests;
