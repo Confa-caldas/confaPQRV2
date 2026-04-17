@@ -292,6 +292,125 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.GENDER,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/gender/gender.module').then(m => m.GenderModule),
+  },
+  {
+    path: RoutesApp.MARITAL_STATUS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/marital-status/marital-status.module').then(m => m.MaritalStatusModule),
+  },
+  {
+    path: RoutesApp.SYSTEM_VARIABLES,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/system-variables/system-variables.module').then(m => m.SystemVariablesModule),
+  },
+  {
+    path: RoutesApp.AFI_TEMPLATE_VALIDATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-template-validations/afiliation-template-validations.module').then(m => m.AfiliationTemplateValidationsModule),
+  },
+  {
+    path: RoutesApp.AFI_COMPANY_VALIDATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-company/afiliaton-company.module').then(m => m.AfiliationCompanyModule),
+  },
+  {
+    path: RoutesApp.DOCUMENT_TYPE_COMPANY,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/document-type/document-type.module').then(m => m.DocumentTypeModule),
+  },
+  {
+    path: RoutesApp.DOCUMENT_TYPE_PERSON,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/document-type-person/document-type-person.module').then(m => m.DocumentTypePersonModule),
+  },
+  {
+    path: RoutesApp.DEPARTMENT,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/department/department.module').then(m => m.DepartmentModule),
+  },
+  {
+    path: RoutesApp.MUNICIPALITY,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/municipality/municipality.module').then(m => m.MunicipalityModule),
+  },
+  {
+    path: RoutesApp.ATTACHMENT_TYPE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/attachment-type/attachment-type.module').then(m => m.AttachmentTypeModule),
+  },
+  {
+    path: RoutesApp.RELATIONSHIP,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/relationship/relationship.module').then(m => m.RelationshipModule),
+  },
+  {
+    path: RoutesApp.RESPONSIBLE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/responsible/responsible.module').then(m => m.ResponsibleModule),
+  },
+  {
+    path: RoutesApp.AFI_NOTIFICATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-notifications/afiliation-notifications.module').then(m => m.AfiliationNotificationsModule),
+  },
+  {
+    path: RoutesApp.AFI_CERTIFICATE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-certificate/afiliation-certificate.module').then(m => m.AfiliationCertificateModule),
+  },
+  {
+    path: RoutesApp.BANK,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/bank/bank.module').then(m => m.BankModule),
+  },
+  {
+    path: RoutesApp.ACCOUNT_TYPE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/account-type/account-type.module').then(m => m.AccountTypeModule),
+  },
+  {
+    path: RoutesApp.BANK_ACCOUNT_ASSOCIATE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/bank-account-association/bank-account-association.module').then(m => m.BankAccountAssociationModule),
+  },
+  {
     path: RoutesApp.MAIN_PAGE,
     canActivate: [sessionGuard],
     component: LayoutComponent,

@@ -1,0 +1,133 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Parametrizar empresa afiliación masiva</div>
+  </div>
+  <div class="col-2">
+    <p-button label="Crear nueva" (click)="createAfiTemplateValidation()"></p-button>
+  </div>
+</div>
+
+<div class="filter-bar mb-3">
+  <div class="filter-item filter-item--by">
+    <label class="filter-label">Buscar por</label>
+    <p-dropdown
+      [options]="searchByOptions"
+      [(ngModel)]="searchBy"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Seleccione"
+      styleClass="filter-control w-100">
+    </p-dropdown>
+  </div>
+
+  <div class="filter-item filter-item--text">
+    <label class="filter-label">Búsqueda</label>
+    <input
+      pInputText
+      [(ngModel)]="searchText"
+      placeholder="Digite NIT o nombre de empresa"
+      class="filter-control w-100" />
+  </div>
+
+  <div class="filter-actions">
+    <p-button
+      label="Buscar"
+      icon="pi pi-search"
+      styleClass="filter-btn"
+      (click)="applyServerFilter()">
+    </p-button>
+
+    <p-button
+      label="Limpiar"
+      icon="pi pi-times"
+      severity="secondary"
+      styleClass="filter-btn"
+      (click)="clearServerFilter()">
+    </p-button>
+  </div>
+</div>
+
+<div class="row mt-auto">
+  <div class="col-12">
+    <p-table
+      [value]="afiliationCompanyList"
+      [scrollable]="true"
+      scrollHeight="600px"
+      selectionMode="single"
+      [paginator]="false"
+      [rows]="20"
+      [showCurrentPageReport]="true"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      currentPageReportTemplate="{first} de {totalRecords}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id_empresa" style="width: 3%">
+            Código<p-sortIcon field="id_empresa"></p-sortIcon>
+          </th>
+          <th style="width: 5%">Documento</th>
+          <th style="width: 8%">Numero de documento</th>
+          <th style="width: 15%">Nombre empresa</th>
+          <th style="width: 20%">Razón social</th>
+          <th style="width: 8%">Estado afiliación</th>
+          <th style="width: 10%">Permite afiliaciones masivas</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-afiliationCompanyList>
+        <tr>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiliationCompanyList.id_empresa }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiliationCompanyList.tipo_documento }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiliationCompanyList.numero_documento }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiliationCompanyList.nombre_comercial }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiliationCompanyList.razon_social }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiliationCompanyList.estado_afiliacion }}</td>
+
+          <td [ngStyle]="{ 'text-align': 'center' }">
+            <div class="d-flex flex-column align-items-center gap-1">
+              <p-inputSwitch
+                [(ngModel)]="afiliationCompanyList.permite_afiliaciones_masivas"
+                (onChange)="inActiveAfiCompany(afiliationCompanyList)">
+              </p-inputSwitch>
+              <div [ngClass]="{ 'input-switch-label': afiliationCompanyList.permite_afiliaciones_masivas }">
+                {{ afiliationCompanyList.permite_afiliaciones_masivas ? 'Sí' : 'No' }}
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <p-paginator
+      (onPageChange)="onPageChange($event)"
+      [first]="first"
+      [rows]="rows"
+      [totalRecords]="totalRows"
+      [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+  </div>
+</div>
+<p-toast></p-toast>
+<app-modal-dinamic
+  *ngIf="visibleDialog"
+  [select]="true"
+  [visible]="visibleDialog"
+  [message]="message"
+  (setRta)="closeDialog($event)"></app-modal-dinamic>
+
+  <app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>
+
+  <app-modal-afi-company
+  *ngIf="visibleDialogCategory"
+  [select]="true"
+  [visible]="visibleDialogCategory"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [read_only]="read_only"
+  [AfiCompanyForm]="afiliationCompany_details"
+  (setRta)="closeDialogGender($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-afi-company>
+  

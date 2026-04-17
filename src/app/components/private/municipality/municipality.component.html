@@ -1,0 +1,102 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Parametrizar municipio</div>
+  </div>
+  <div class="col-2">
+    <p-button label="Crear nueva" (click)="createMunicipality()"></p-button>
+  </div>
+</div>
+<div class="row mt-auto">
+  <div class="col-12">
+    <p-table
+      [value]="municipalityList"
+      [scrollable]="true"
+      scrollHeight="600px"
+      selectionMode="single"
+      [paginator]="false"
+      [rows]="20"
+      [showCurrentPageReport]="true"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      currentPageReportTemplate="{first} de {totalRecords}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id" style="width: 3%">
+            Id<p-sortIcon field="id"></p-sortIcon>
+          </th>
+          <th style="width: 10%">Código municipio</th>
+          <th style="width: 20%; max-width: 50px">Nombre municipio</th>
+          <th style="width: 20%">Departamento</th>
+          <th style="width: 10%">Estado</th>
+          <th style="width: 3%"></th>
+          <th style="width: 3%"></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-municipalityList>
+        <tr>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ municipalityList.id }}</td>
+          <td>{{ municipalityList.codigo_municipio }}</td>
+          <td>{{ municipalityList.nombre_municipio }}</td>
+          <td>{{ municipalityList.nombre_departamento }}</td>
+
+          <td [ngStyle]="{ 'text-align': 'center' }">
+            <div class="d-flex flex-column align-items-center gap-1">
+              <p-inputSwitch
+                [(ngModel)]="municipalityList.esta_activo"
+                (onChange)="inActiveMunicipality(municipalityList)">
+              </p-inputSwitch>
+              <div [ngClass]="{ 'input-switch-label': municipalityList.esta_activo }">
+                {{ municipalityList.esta_activo ? 'Activo' : 'Inactivo' }}
+              </div>
+            </div>
+          </td>
+          <td [ngStyle]="{ 'text-align': 'center' }">
+            <p-button
+              icon="pi pi-pencil"
+              [styleClass]="'btn-icon-warning'"
+              (click)="editMunicipality(municipalityList)"></p-button>
+          </td>
+          <td [ngStyle]="{ 'text-align': 'center' }">
+            <p-button
+              icon="pi pi-eye"
+              [styleClass]="'btn-icon-info'"
+              (click)="displayMunicipality(municipalityList)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <p-paginator
+      (onPageChange)="onPageChange($event)"
+      [first]="first"
+      [rows]="rows"
+      [totalRecords]="totalRows"
+      [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+  </div>
+</div>
+<p-toast></p-toast>
+<app-modal-dinamic
+  *ngIf="visibleDialog"
+  [select]="true"
+  [visible]="visibleDialog"
+  [message]="message"
+  (setRta)="closeDialog($event)"></app-modal-dinamic>
+
+<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>
+
+<app-modal-municipality
+  *ngIf="visibleDialogCategory"
+  [select]="true"
+  [visible]="visibleDialogCategory"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [read_only]="read_only"
+  [municipalityForm]="municipality_details"
+  (setRta)="closeDialogMunicipality($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-municipality>
+

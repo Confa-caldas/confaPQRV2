@@ -1,0 +1,146 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">{{ message }}</div> 
+      </div>
+      <form [formGroup]="formGroup">
+        <div class="row my-4 px-5">       
+          <div class="col-12">
+            <input type="hidden" formControlName="id" />
+            
+            <label> *Nombre del campo</label>
+            <input
+              [readonly]="read_only"
+              formControlName="nombre_campo"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba el nombre del campo" />
+            <label class="invalid">
+              {{
+                formGroup.get('nombre_campo')?.hasError('required') &&
+                formGroup.get('nombre_campo')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('nombre_campo')?.hasError('pattern') &&
+                formGroup.get('nombre_campo')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+
+
+            <label> *Tipo de Dato</label>
+              <p-dropdown
+                [readonly]="read_only"
+                [options]="tipoDatoOptions"
+                formControlName="tipo_dato"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione un tipo">
+              </p-dropdown>
+
+            <label class="invalid">
+              {{
+                formGroup.get('tipo_dato')?.hasError('required') &&
+                formGroup.get('tipo_dato')?.touched? 'Campo requerido': ''
+              }}
+            </label>
+
+            <label> *Longitud máxima</label>
+            <input
+              [readonly]="read_only"
+              formControlName="longitud_maxima"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba la longitud máxima" />
+            <label class="invalid">
+              {{
+                formGroup.get('longitud_maxima')?.hasError('required') &&
+                formGroup.get('longitud_maxima')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('longitud_maxima')?.hasError('pattern') &&
+                formGroup.get('longitud_maxima')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+
+            <label> *Obligatorio</label>
+
+            <div class="radio-group">
+              <div class="p-field-radiobutton">
+                <p-radioButton
+                  inputId="reqSi"
+                  name="es_requerido"
+                  value="S"
+                  formControlName="es_requerido">
+                </p-radioButton>
+              <label for="reqSi">Sí</label>
+              </div>
+
+              <div class="p-field-radiobutton">
+                <p-radioButton
+                  inputId="reqNo"
+                  name="es_requerido"
+                  value="N"
+                  formControlName="es_requerido">
+                </p-radioButton>
+              <label for="reqNo">No</label>
+              </div>
+            </div>
+
+          <label> Descripción</label>
+            <input
+              [readonly]="read_only"
+              formControlName="descripcion"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba una descripción" />
+            <label class="invalid">
+              {{
+                formGroup.get('descripcion')?.hasError('pattern') &&
+                formGroup.get('descripcion')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+
+          </div>
+        </div>
+      </form>
+      <div *ngIf="read_only">
+        <div class="row my-4 px-5">
+          <div class="col-12 d-flex justify-content-evenly">
+            <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!read_only">
+        <div class="row my-4 px-5">
+          <div class="col-12 d-flex justify-content-evenly">
+            <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+            <p-button
+              [label]="buttonmsg"
+              [disabled]="formGroup.invalid"
+              (click)="closeDialog(true)"></p-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+

@@ -16,6 +16,23 @@ import { ModalReviewStateModule } from './modal-review-state/modal-review.state.
 import { MainNotificationModule } from './main-notification/main-notification.module';
 import { ModalAssignAfiliationSelectorModule } from './modal-assign-afiliation-selector/modal-assign-afiliation-selector.module';
 import { ModalSearchPersonDataModule } from './modal-search-person-data/modal-search-person-data.module';
+import { ModalGenderModule } from './modal-gender/modal-gender.module';
+import { ModalMaritalStatusModule } from './modal-marital-status/modal-marital-status.module';
+import { ModalSystemVariablesModule } from './modal-system-variable/modal-system-variable.module';
+import { ModalAfiTemplateValidationsModule } from './modal-afi-template-validations/modal-afi-template-validations.module';
+import { ModalAfiCompanyModule } from './modal-afi-company/modal-afi-company.module';
+import { ModalDocumentTypeModule } from './modal-document-type/modal-document-type.module';
+import { ModalDocumentTypePersonModule } from './modal-document-type-person/modal-document-type-persona.module';
+import { ModalDepartmentModule } from './modal-department/modal-department.module';
+import { ModalMunicipalityModule } from './modal-municipality/modal-municipality.module';
+import { ModalAttachmentTypeModule } from './modal-attachment-type/modal-attachment-type.module';
+import { ModalRelationshipModule } from './modal-relationship/modal-relationship.module';
+import { ModalResponsibleModule } from './modal-responsible/modal-responsible.module';
+import { ModalAfiliationNotificationModule } from './modal-afiliation-notification/modal-afiliation-notification.module';
+import { ModalAfiliationCertificateModule } from './modal-afiliation-certificate/modal-afiliation-certificate.module';
+import { ModalBankModule } from './modal-bank/modal-bank.module';
+import { ModalAccountTypeModule } from './modal-account-type/modal-account-type.module';
+import { ModalBankAccountAssociationModule } from './modal-bank-account-association/modal-bank-account-association.module';
 
 @NgModule({
   declarations: [
@@ -36,6 +53,23 @@ import { ModalSearchPersonDataModule } from './modal-search-person-data/modal-se
     ModalReviewStateModule,
     MainNotificationModule,
     ModalSearchPersonDataModule,
+    ModalGenderModule,
+    ModalMaritalStatusModule,
+    ModalSystemVariablesModule,
+    ModalAfiTemplateValidationsModule,
+    ModalAfiCompanyModule,
+    ModalDocumentTypeModule,
+    ModalDocumentTypePersonModule,
+    ModalDepartmentModule,
+    ModalMunicipalityModule,
+    ModalAttachmentTypeModule,
+    ModalRelationshipModule,
+    ModalResponsibleModule,
+    ModalAfiliationNotificationModule,
+    ModalAfiliationCertificateModule,
+    ModalBankModule,
+    ModalAccountTypeModule,
+    ModalBankAccountAssociationModule,
   ],
   exports: [
     ModalDinamicModule,
@@ -54,6 +88,23 @@ import { ModalSearchPersonDataModule } from './modal-search-person-data/modal-se
     MainNotificationModule,
     ModalAssignAfiliationSelectorModule,
     ModalSearchPersonDataModule,
+    ModalGenderModule,
+    ModalMaritalStatusModule,
+    ModalSystemVariablesModule,
+    ModalAfiTemplateValidationsModule,
+    ModalAfiCompanyModule,
+    ModalDocumentTypeModule,
+    ModalDocumentTypePersonModule,
+    ModalDepartmentModule,
+    ModalMunicipalityModule,
+    ModalAttachmentTypeModule,
+    ModalRelationshipModule,
+    ModalResponsibleModule,
+    ModalAfiliationNotificationModule,
+    ModalAfiliationCertificateModule,
+    ModalBankModule,
+    ModalAccountTypeModule,
+    ModalBankAccountAssociationModule
   ],
 })
 export class SharedModule {}
