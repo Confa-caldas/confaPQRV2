@@ -345,14 +345,18 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   gestionarEstadoAfiliadoForm!: FormGroup;
   private gestionarEstadoAfiliadoSub?: Subscription;
 
-  readonly ESTADO_AFILIADO_PENDIENTE_RPA = 'Pendiente afiliación rpa';
-  readonly ESTADO_AFILIADO_PROCESADO = 'Procesado';
-  readonly ESTADO_AFILIADO_RECHAZADO = 'Rechazado';
+  /** Ids `parametros_estado_solicitud.id` alineados con BD (mismo orden que `codigo`). */
+  readonly ID_ESTADO_SOLICITUD_PENDIENTE_AFILIACION_RPA = 1;
+  readonly ID_ESTADO_SOLICITUD_INCONSISTENCIAS_RPA = 2;
+  readonly ID_ESTADO_SOLICITUD_PROCESADO = 3;
+  readonly ID_ESTADO_SOLICITUD_RECHAZADO = 4;
 
-  estadoAfiliadoOpciones: { label: string; value: string }[] = [
-    { label: 'Pendiente afiliación rpa', value: 'Pendiente afiliación rpa' },
-    { label: 'Procesado', value: 'Procesado' },
-    { label: 'Rechazado', value: 'Rechazado' },
+  /** Dropdown: `value` = id BD; `label` = `codigo` legible. */
+  estadoAfiliadoOpciones: { label: string; value: number }[] = [
+    { label: 'Pendiente afiliación RPA', value: 1 },
+    { label: 'Inconsistencias RPA', value: 2 },
+    { label: 'Procesado', value: 3 },
+    { label: 'Rechazado', value: 4 },
   ];
 
   /** Opciones del dropdown motivo de rechazo (cargadas desde BD). */
@@ -363,6 +367,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
   /** Spinner en «Gestionar estado» mientras corre la validación por persona (`t` o `b-índice`). */
   gestionarEstadoValidacionCargaKey: string | null = null;
+  /** Persona cuyo estado se gestiona en el modal (se fija al abrir tras validar requisitos). */
+  gestionarEstadoPersonaId: number | null = null;
   private readonly validacionRequisitosGestionCache = new Map<
     number,
     { valido: boolean; errores: string[] }
@@ -403,7 +409,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     });
 
     this.gestionarEstadoAfiliadoForm = this.fb.group({
-      estadoAfiliado: [null, Validators.required],
+      estadoAfiliado: [null as number | null, Validators.required],
       motivoRechazo: [null as string | null],
     });
 
@@ -562,8 +568,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     if (!estadoCtrl || !motivoCtrl) {
       return;
     }
-    this.gestionarEstadoAfiliadoSub = estadoCtrl.valueChanges.subscribe((val: string | null) => {
-      if (val === this.ESTADO_AFILIADO_RECHAZADO) {
+    this.gestionarEstadoAfiliadoSub = estadoCtrl.valueChanges.subscribe((val: number | null) => {
+      if (val === this.ID_ESTADO_SOLICITUD_RECHAZADO) {
         motivoCtrl.setValidators([Validators.required]);
       } else {
         motivoCtrl.clearValidators();
@@ -574,9 +580,13 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   }
 
   get mostrarMotivoRechazoGestion(): boolean {
-    return (
-      this.gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.value === this.ESTADO_AFILIADO_RECHAZADO
-    );
+    return this.gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.value === this.ID_ESTADO_SOLICITUD_RECHAZADO;
+  }
+
+  /** `codigo` BD para el id de estado del modal (parametros_estado_solicitud). */
+  private codigoEstadoAfiliadoPorId(id: number): string {
+    const row = this.estadoAfiliadoOpciones.find((o) => o.value === id);
+    return row?.label?.trim() ?? '';
   }
 
   cargaValidacionRequisitosGestion(
@@ -745,6 +755,11 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     contexto: 'trabajador' | 'beneficiario' = 'trabajador',
     indiceBeneficiario?: number
   ): void {
+    this.gestionarEstadoPersonaId = this.obtenerPersonaIdParaGestionEstado(
+      contexto,
+      indiceBeneficiario
+    );
+
     if (contexto === 'trabajador') {
       this.gestionarEstadoContextoLabel = 'Trabajador';
     } else if (
@@ -810,57 +825,10 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   cerrarModalGestionarEstado(): void {
     this.visibleGestionarEstadoModal = false;
     this.gestionarEstadoContextoLabel = '';
-  }
-
-  /**
-   * Motivos que impiden pasar a "Pendiente afiliación rpa": revisiones de archivos pendientes
-   * y/o indicadores de solicitud en "Si" (novedad restrictiva, pendiente dirección, pendiente activar empresa).
-   */
-  private obtenerMotivosBloqueoPendienteAfiliacionRpa(): string[] {
-    const motivos: string[] = [];
-    const trabajador = this.trabajadorAdjuntosEstado ?? [];
-    const beneficiarios = this.beneficiariosAdjuntosEstado ?? [];
-    const todosAdj = [...trabajador, ...beneficiarios.flat()];
-    const pendientesArchivo = todosAdj.filter((item) => this.esAdjuntoPendienteValidacion(item));
-    if (pendientesArchivo.length > 0) {
-      motivos.push(
-        'Revisiones de archivos: hay adjuntos sin validar o con validación pendiente.'
-      );
-    }
-
-    const s = this.afiliationRequestDetails?.solicitud;
-    if (s && this.solicitudIndicadorEsSi(s.novedad_restrictiva)) {
-      motivos.push('Novedad restrictiva');
-    }
-    if (s && this.solicitudIndicadorEsSi(s.pendiente_direccion)) {
-      motivos.push('Pendiente dirección');
-    }
-    if (s && this.solicitudIndicadorEsSi(s.pendiente_activar_empresa)) {
-      motivos.push('Pendiente activar empresa');
-    }
-    return motivos;
+    this.gestionarEstadoPersonaId = null;
   }
 
   guardarGestionarEstadoAfiliado(): void {
-    const estado = this.gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.value;
-
-    if (estado === this.ESTADO_AFILIADO_PENDIENTE_RPA) {
-      const motivosBloqueo = this.obtenerMotivosBloqueoPendienteAfiliacionRpa();
-      if (motivosBloqueo.length > 0) {
-        const detail = [
-          'No es posible cambiar al estado Pendiente afiliación RPA hasta resolver lo siguiente:',
-          '',
-          ...motivosBloqueo.map((m) => `• ${m}`),
-        ].join('\n');
-        this.messageService.add({
-          severity: 'error',
-          summary: 'No permitido',
-          detail,
-        });
-        return;
-      }
-    }
-
     if (this.gestionarEstadoAfiliadoForm.invalid) {
       this.gestionarEstadoAfiliadoForm.markAllAsTouched();
       this.messageService.add({
@@ -872,6 +840,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     }
 
     const idSolicitud = this.afiliationRequestDetails?.solicitud?.id;
+    const personaId = this.gestionarEstadoPersonaId;
     if (idSolicitud == null) {
       this.messageService.add({
         severity: 'error',
@@ -880,14 +849,45 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       });
       return;
     }
+    if (personaId == null || !Number.isFinite(personaId)) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se identificó la persona para actualizar el estado. Cierre el modal e intente de nuevo.',
+      });
+      return;
+    }
 
     const raw = this.gestionarEstadoAfiliadoForm.getRawValue();
-    const estadoAfiliado = raw.estadoAfiliado as string;
+    const idEstadoSolicitud = Number(raw.estadoAfiliado);
+    if (!Number.isFinite(idEstadoSolicitud) || idEstadoSolicitud < 1) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Seleccione un estado de afiliación válido.',
+      });
+      return;
+    }
+    const estadoAfiliadoCodigo = this.codigoEstadoAfiliadoPorId(idEstadoSolicitud);
+    if (!estadoAfiliadoCodigo) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Estado seleccionado no reconocido.',
+      });
+      return;
+    }
     const payload: ActualizarEstadoGestionAfiliacionPayload = {
       id_solicitud: idSolicitud,
-      estado_afiliado: estadoAfiliado,
+      persona_id: personaId,
+      id_estado_solicitud: idEstadoSolicitud,
+      estado_afiliado: estadoAfiliadoCodigo,
     };
-    if (estadoAfiliado === this.ESTADO_AFILIADO_RECHAZADO && raw.motivoRechazo != null && raw.motivoRechazo !== '') {
+    if (
+      idEstadoSolicitud === this.ID_ESTADO_SOLICITUD_RECHAZADO &&
+      raw.motivoRechazo != null &&
+      raw.motivoRechazo !== ''
+    ) {
       const idMotivo = Number(raw.motivoRechazo);
       if (!Number.isNaN(idMotivo)) {
         payload.id_motivo_rechazo = idMotivo;

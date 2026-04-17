@@ -1281,13 +1281,18 @@ export interface ValidarRequisitosGestionPersonaData {
 
 /**
  * Actualizar estado desde el modal "Gestionar estado de afiliado".
+ * Requisitos por persona ya validados antes de abrir el modal (`validarRequisitosGestionPersona`).
  * El backend debe aceptar el mismo contrato (PUT).
  */
 export interface ActualizarEstadoGestionAfiliacionPayload {
   id_solicitud: number;
-  /** Valor del dropdown: 'Pendiente afiliación rpa' | 'Procesado' | 'Rechazado'. */
+  /** Persona (trabajador o beneficiario) cuyo estado de afiliación se actualiza. */
+  persona_id: number;
+  /** PK `parametros_estado_solicitud.id` del estado elegido. */
+  id_estado_solicitud: number;
+  /** `codigo` en BD (misma fila que `id_estado_solicitud`). */
   estado_afiliado: string;
-  /** Id del catálogo de motivos de rechazo; enviar cuando estado_afiliado es Rechazado. */
+  /** Id del catálogo de motivos de rechazo; enviar cuando el estado es Rechazado (`id_estado_solicitud` 4). */
   id_motivo_rechazo?: number | null;
 }
 
