@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build:devPruebasV2": "ng build --configuration=devPruebasV2",
+    "build:feature-gestorFormAfiliados": "ng build --configuration=devPruebasV2",
     "build:master": "ng build --configuration=master",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
