@@ -1,0 +1,1006 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+/* Ancho del p-card principal: paso 0 y flujos trabajador / beneficiario comparten la misma columna útil. */
+$cai-main-content-max: 1200px;
+
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Contenedor principal: ocupa el ancho del layout hasta 1200px (armonía con el resto del módulo). */
+.container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: $cai-main-content-max;
+  padding-left: 0;
+  padding-right: 0;
+  margin: 0 auto 50px;
+  box-sizing: border-box;
+
+  &-content {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+  }
+
+  &-card {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: min(520px, 100%);
+
+    &.cai-form-card {
+      max-width: 100%;
+    }
+
+    &_header {
+      text-align: center;
+      font-family: $font-bold;
+      font-size: clamp(1.25rem, 2vw, 1.5rem);
+      padding-top: 0.5rem;
+      color: $color-text-black;
+    }
+
+    &_text {
+      font-family: $font-light;
+      color: $color-text-black;
+      font-size: clamp(1rem, 1.5vw, 1.0625rem);
+      line-height: 1.55;
+      margin-left: clamp(1.25rem, 4vw, 2.5rem);
+      margin-right: clamp(1.25rem, 4vw, 2.5rem);
+    }
+  }
+
+  .card-form-banner-title {
+    font-size: clamp(1.35rem, 2.2vw, 1.65rem);
+    color: $color-tab-blue;
+    text-align: center;
+    font-weight: bolder;
+    margin: 0.5rem 0 1.25rem;
+    line-height: 1.3;
+  }
+
+  &-card-select {
+    font-family: $font-light;
+    color: $color-text-black;
+    font-size: 16px;
+    margin-left: 40px;
+    margin-right: 40px;
+    margin-top: 8px;
+  }
+
+  &-select {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 0.5rem 1.5rem;
+  }
+
+  &-select-item {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+
+  &-select-placeholder {
+    color: $color-text-black;
+    font-family: $font-light;
+    font-size: 10px;
+    margin: 10px 0 5px 15px;
+    border-radius: 20px;
+    text-align: left;
+    width: 100%;
+    max-width: 330px;
+    display: block;
+  }
+
+  &-select-options {
+    width: 100%;
+    max-width: 350px;
+    height: 40px;
+  }
+
+  &-select-invalid {
+    color: $color-red;
+    font-size: small;
+    margin-top: 5px;
+    margin-left: 15px;
+    display: block;
+    min-height: 1.25rem;
+  }
+
+  &-button {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+}
+
+/* Tarjetas de modalidad: proporción similar al ancho del contenido */
+.cai-modality-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+  margin: 0 0 clamp(1.5rem, 3vw, 2.5rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cai-modality-col {
+  flex: 1 1 clamp(280px, 42vw, 400px);
+  max-width: min(480px, 100%);
+  display: flex;
+  justify-content: center;
+}
+
+.cai-modality-card {
+  width: 100%;
+  max-width: min(460px, 100%);
+}
+
+.cai-modality-card__click {
+  cursor: pointer;
+  outline: none;
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px $color-tab-blue;
+    border-radius: 8px;
+  }
+}
+
+.cai-modality-card__icon-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.cai-modality-card__icon {
+  font-size: clamp(2.75rem, 5vw, 3.25rem);
+  color: $color-tab-blue;
+  line-height: 1;
+}
+
+.cai-link-continue {
+  color: #07c1ff;
+  font-family: $font-medium;
+  font-size: clamp(1.05rem, 2vw, 1.15rem);
+}
+
+.cai-card-header-inline {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 0.25rem 0;
+}
+
+.cai-form-card--muted {
+  opacity: 0.98;
+}
+
+::ng-deep .container-card.cai-form-card.p-card,
+::ng-deep .container-card.cai-modality-card.p-card {
+  border-radius: 14px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.07);
+}
+
+/* Misma anchura que `.cai-main-inner`: el host `p-card` es inline por defecto y encoge el formulario. */
+:host ::ng-deep p-card.container-card.cai-form-card {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:host ::ng-deep p-card.container-card.cai-form-card .p-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Columna única bajo `container-content` (selección de trámite + pasos siguientes). */
+.cai-main-inner {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.cai-form-card__body {
+  padding: clamp(1.35rem, 2.5vw, 1.85rem) clamp(1.5rem, 3vw, 2.5rem) clamp(1.5rem, 2.5vw, 2rem);
+  box-sizing: border-box;
+}
+
+.cai-form-card__body--text {
+  padding-top: 1rem;
+  padding-bottom: clamp(1.25rem, 2vw, 1.75rem);
+
+  .container-card_text {
+    margin-left: clamp(1rem, 3vw, 2rem);
+    margin-right: clamp(1rem, 3vw, 2rem);
+    text-align: left;
+    font-size: clamp(1rem, 1.4vw, 1.0625rem);
+    line-height: 1.55;
+  }
+}
+
+.cai-form-grid {
+  display: grid;
+  gap: clamp(1.1rem, 2vw, 1.5rem) clamp(1.35rem, 2.5vw, 2.25rem);
+  align-items: start;
+}
+
+.cai-form-grid--cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cai-form-field--grid-span-2 {
+  grid-column: 1 / -1;
+}
+
+.cai-form-grid--cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media screen and (max-width: 991px) {
+  .cai-form-grid--cols-2,
+  .cai-form-grid--cols-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cai-form-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cai-form-label {
+  color: $color-text-black;
+  font-family: $font-light;
+  font-size: clamp(0.8125rem, 1.2vw, 0.9375rem);
+  margin: 0 0 0.5rem 4px;
+  text-align: left;
+  letter-spacing: 0.01em;
+}
+
+.cai-form-field__errors {
+  min-height: 2.65rem;
+  margin-top: 0.45rem;
+  padding-left: 4px;
+}
+
+.cai-form-field__error {
+  color: $color-red;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  display: inline-block;
+}
+
+.cai-form-hint {
+  margin: 0.5rem 0 0;
+  padding-left: 2px;
+  font-family: $font-light;
+  font-size: 13px;
+  color: $color-auro-metal-saurus;
+  text-align: left;
+}
+
+.cai-form-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.65rem;
+  padding-top: clamp(1.35rem, 2.5vw, 1.75rem);
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.cai-form-actions--solo {
+  border-top: none;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.65rem;
+}
+
+/* Botones de acción principal: tamaño acorde a controles del formulario */
+::ng-deep .cai-form-actions .p-button,
+::ng-deep .cai-form-actions--solo .p-button {
+  min-width: min(300px, 100%);
+  width: min(360px, 100%);
+  border-radius: 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
+
+.cai-page-toolbar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+::ng-deep .cai-page-toolbar .p-button {
+  border-radius: 22px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9375rem;
+}
+
+.cai-empresa-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto clamp(1.25rem, 2vw, 1.75rem);
+  padding: clamp(1rem, 2vw, 1.2rem) clamp(1.25rem, 2.5vw, 1.75rem);
+  border-radius: 14px;
+  border: 1px solid rgba(0, 174, 239, 0.35);
+  background: linear-gradient(90deg, rgba(0, 174, 239, 0.1), rgba(0, 174, 239, 0.03));
+  box-sizing: border-box;
+}
+
+.cai-empresa-banner__icon {
+  font-size: clamp(1.5rem, 2.5vw, 1.85rem);
+  color: $color-tab-blue;
+  flex-shrink: 0;
+}
+
+.cai-empresa-banner__text {
+  font-family: $font-light;
+  font-size: clamp(0.95rem, 1.5vw, 1.0625rem);
+  color: $color-text-black;
+  text-align: left;
+  line-height: 1.45;
+}
+
+.cai-hint {
+  margin-top: 8px;
+  margin-left: 15px;
+  margin-right: 15px;
+  font-size: 14px !important;
+}
+
+/* p-card cabeceras PrimeNG */
+::ng-deep .p-card .p-card-body {
+  padding: 0 !important;
+}
+
+::ng-deep .p-card .p-card-title {
+  font-family: $font-bold;
+  font-size: clamp(1.2rem, 2vw, 1.45rem);
+  color: $color-text-black;
+  text-align: center;
+  margin: 0;
+  padding: clamp(0.65rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem) 0;
+  line-height: 1.25;
+}
+
+::ng-deep .p-card .p-card-subtitle {
+  text-align: center;
+  color: $color-auro-metal-saurus;
+  font-size: 14px;
+  padding: 0 16px 8px;
+}
+
+::ng-deep .cai-input-number.p-inputnumber {
+  width: 100%;
+  max-width: 350px;
+
+  .p-inputnumber-input {
+    width: 100%;
+    height: clamp(42px, 4.5vw, 48px);
+    border-radius: 22px;
+    font-size: clamp(0.9375rem, 1.3vw, 1rem);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    box-sizing: border-box;
+  }
+}
+
+::ng-deep .cai-input-number--full.p-inputnumber {
+  max-width: none;
+}
+
+.cai-input-plain {
+  height: clamp(42px, 4.5vw, 48px);
+  padding: 0 clamp(0.75rem, 2vw, 1rem);
+  border-radius: 22px;
+  box-sizing: border-box;
+  border: 1px solid #ced4da;
+  font-size: clamp(0.9375rem, 1.3vw, 1rem);
+}
+
+.cai-input-plain--full {
+  width: 100%;
+  max-width: none;
+}
+
+::ng-deep .p-dropdown-panel {
+  max-height: 500px;
+  border-radius: 16px;
+  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.16);
+}
+
+::ng-deep .container-select-options .p-dropdown {
+  width: 100%;
+  max-width: 350px;
+}
+
+::ng-deep .cai-form-field .p-dropdown,
+::ng-deep .cai-form-field .p-dropdown.p-component {
+  width: 100%;
+  max-width: none;
+}
+
+::ng-deep .cai-form-field .cai-form-control.p-dropdown {
+  width: 100%;
+  max-width: none;
+}
+
+/* Altura y tipografía alineadas con inputs del formulario */
+::ng-deep .cai-form-field .p-dropdown .p-dropdown-label,
+::ng-deep .cai-form-field .p-dropdown .p-inputtext {
+  line-height: 1.35;
+  font-size: clamp(0.9375rem, 1.3vw, 1rem);
+}
+
+::ng-deep .cai-form-field .p-dropdown.p-component {
+  min-height: clamp(42px, 4.5vw, 48px);
+}
+
+::ng-deep .cai-form-field .p-dropdown .p-dropdown-trigger {
+  width: 2.75rem;
+}
+
+@media screen and (max-width: 991px) {
+  .container {
+    width: 100%;
+    max-width: 100%;
+
+    &-content {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    &-card {
+      margin-left: auto;
+      margin-right: auto;
+      max-width: 100%;
+
+      &.cai-form-card {
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    &-card-select {
+      margin-left: 16px;
+      margin-right: 16px;
+    }
+
+    &-card_text {
+      margin-left: 20px;
+      margin-right: 20px;
+    }
+  }
+}
+
+/* —— Solicitud de afiliación (paso 4, acordeón) —— alineado con tab-data-view / detalle afiliación —— */
+.cai-solicitud-panel {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto 2rem;
+  padding: clamp(1rem, 2vw, 1.35rem) clamp(1rem, 2.5vw, 1.5rem) clamp(1.15rem, 2vw, 1.5rem);
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.cai-solicitud-title {
+  font-family: $font-bold;
+  font-size: clamp(1.2rem, 2vw, 1.45rem);
+  color: $color-tab-blue;
+  text-align: center;
+  margin: 0 auto 1.1rem;
+  max-width: 100%;
+}
+
+.cai-solicitud-tab {
+  padding: 0.15rem 0 0.35rem;
+  box-sizing: border-box;
+
+  @media screen and (min-width: 576px) {
+    padding: 0.25rem clamp(0.25rem, 1.2vw, 0.75rem) 0.5rem;
+  }
+}
+
+.cai-solicitud-panel .cai-subsection__title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2c3e50;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 1rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #e2e6ea;
+}
+
+.cai-solicitud-form {
+  max-width: 100%;
+  margin: 0 auto;
+
+  .cai-form-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+    font-family: $font-medium;
+    margin: 0 0 0.3rem;
+    letter-spacing: normal;
+    text-align: left;
+  }
+
+  .cai-input-plain {
+    height: auto;
+    min-height: 38px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #e2e6ea;
+    background: #fff;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #212529;
+
+    &::placeholder {
+      color: #6c757d;
+    }
+
+    &:focus {
+      border-color: rgba(0, 174, 239, 0.65);
+      box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.04),
+        0 0 0 0.15rem rgba(0, 174, 239, 0.12);
+      outline: none;
+    }
+  }
+
+  .cai-input-icon-wrap {
+    border-radius: 6px;
+    border-color: #e2e6ea;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus-within {
+      border-color: rgba(0, 174, 239, 0.65);
+      box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.04),
+        0 0 0 0.15rem rgba(0, 174, 239, 0.12);
+    }
+  }
+
+  .cai-input-with-icon {
+    min-height: 36px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #212529;
+    background: transparent;
+
+    &::placeholder {
+      color: #6c757d;
+    }
+  }
+}
+
+/* Acordeón paso 4: cabeceras blancas, borde suave, icono en círculo, chevron #00ADEF (ref. diseño) */
+$cai-acc-chevron: #00adef;
+$cai-acc-icon-active-bg: #e3f2fd;
+$cai-acc-icon-active-border: #bbdefb;
+$cai-acc-icon-active: #1565c0;
+$cai-acc-header-border: #e0e0e0;
+$cai-acc-muted-label: #8a8580;
+$cai-acc-muted-icon: #9e9e9e;
+
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-tab {
+  margin-bottom: 0.5rem;
+}
+
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-tab:last-child {
+  margin-bottom: 0;
+}
+
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-header .p-accordion-header-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid $cai-acc-header-border;
+  background: #ffffff;
+  /* Sobreescribe color blanco del tema global `.p-accordion-header-link` */
+  color: #333333;
+  padding: 0.8rem 1rem;
+  margin: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-header:not(.p-disabled):not(.p-highlight) .p-accordion-header-link:hover {
+  background: #fafafa;
+  border-color: #d5d5d5;
+}
+
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-header.p-highlight .p-accordion-header-link {
+  border-color: #c5ddeb;
+  border-bottom-color: transparent;
+  border-radius: 10px 10px 0 0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 173, 239, 0.1);
+}
+
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-header.p-highlight:not(.p-disabled) .p-accordion-header-link:hover {
+  background: #fafcff;
+}
+
+/* Chevron / icono de expansión PrimeNG */
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-header .p-accordion-header-link .p-accordionheader-toggle-icon,
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-header .p-accordion-header-link .p-accordion-toggle-icon {
+  color: $cai-acc-chevron !important;
+}
+
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-header .p-accordion-header-link svg {
+  color: $cai-acc-chevron;
+  fill: $cai-acc-chevron;
+}
+
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-header .p-accordion-header-link .p-icon,
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-header .p-accordion-header-link [class*='header-toggle'] {
+  color: $cai-acc-chevron !important;
+}
+
+::ng-deep .cai-solicitud-accordion.p-accordion .p-toggleable-content .p-accordion-content,
+::ng-deep .cai-solicitud-accordion.p-accordion .p-accordion-content {
+  border: 1px solid #c5ddeb;
+  border-top: none;
+  margin: 0;
+  border-radius: 0 0 10px 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.cai-acc-tab-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+  font-family: $font-medium;
+  text-align: left;
+}
+
+.cai-acc-tab-head__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid #c5c5c5;
+  background: #ffffff;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.cai-acc-tab-head__icon-wrap--muted {
+  border-color: #c5c5c5;
+  background: #ffffff;
+}
+
+.cai-acc-tab-head__icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+/* Colapsado: icono gris en círculo con borde gris (ref. pestañas inactivas) */
+.cai-acc-tab-head:not(.cai-acc-tab-head--muted) .cai-acc-tab-head__icon {
+  color: #757575;
+}
+
+.cai-acc-tab-head--muted .cai-acc-tab-head__icon {
+  color: $cai-acc-muted-icon;
+}
+
+.cai-acc-tab-head__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333333;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+
+.cai-acc-tab-head--muted .cai-acc-tab-head__label {
+  color: $cai-acc-muted-label;
+  font-weight: 600;
+}
+
+/* Pestaña principal expandida: círculo azul claro + icono oscuro (ref. “Información personal”) */
+::ng-deep .cai-solicitud-accordion .p-accordion-header.p-highlight .cai-acc-tab-head:not(.cai-acc-tab-head--muted) .cai-acc-tab-head__icon-wrap:not(.cai-acc-tab-head__icon-wrap--muted) {
+  background: $cai-acc-icon-active-bg;
+  border-color: $cai-acc-icon-active-border;
+}
+
+::ng-deep .cai-solicitud-accordion .p-accordion-header.p-highlight .cai-acc-tab-head:not(.cai-acc-tab-head--muted) .cai-acc-tab-head__icon {
+  color: $cai-acc-icon-active;
+}
+
+/* Pestañas “muted” expandidas: mantener estética gris suave */
+::ng-deep .cai-solicitud-accordion .p-accordion-header.p-highlight .cai-acc-tab-head--muted .cai-acc-tab-head__icon-wrap--muted {
+  background: #f5f5f5;
+  border-color: #bdbdbd;
+}
+
+.cai-acc-body {
+  padding: 0.25rem 0.5rem 1rem;
+}
+
+.cai-acc-intro {
+  font-family: $font-light;
+  color: $color-auro-metal-saurus;
+  font-size: 0.95rem;
+  margin: 0 0 1.25rem;
+  line-height: 1.45;
+}
+
+.cai-subsection {
+  margin-bottom: 0.5rem;
+}
+
+.cai-subsection__title {
+  font-family: $font-bold;
+  font-size: 1rem;
+  color: $color-text-black;
+  margin: 0 0 1rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.cai-subsection-sep {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin: 1.25rem 0;
+}
+
+.cai-form-field--full-row {
+  grid-column: 1 / -1;
+}
+
+.cai-field-hint {
+  margin: 0.35rem 0 0;
+  font-family: $font-light;
+  font-size: 0.8125rem;
+  color: $color-auro-metal-saurus;
+  line-height: 1.35;
+}
+
+.cai-input-icon-wrap {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid #ced4da;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.cai-input-icon-wrap__icon {
+  display: flex;
+  align-items: center;
+  padding: 0 0.65rem 0 0.85rem;
+  color: $color-auro-metal-saurus;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.cai-input-with-icon {
+  border: none !important;
+  border-radius: 0 !important;
+  flex: 1;
+  min-width: 0;
+}
+
+.cai-acc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.cai-acc-placeholder {
+  font-family: $font-light;
+  color: $color-auro-metal-saurus;
+  margin: 0.5rem 0 1rem;
+}
+
+.cai-global-actions {
+  max-width: 100%;
+  margin: 1.75rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: stretch;
+}
+
+/* Guardar solicitud + Regresar: misma anchura, forma píldora, estilo referencia maquetación */
+::ng-deep .cai-global-actions .cai-global-btn.p-button {
+  width: 100%;
+  max-width: 100%;
+  min-height: 48px;
+  margin: 0;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 1rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  box-sizing: border-box;
+}
+
+::ng-deep .cai-global-actions .cai-global-btn--primary.p-button {
+  background: #5dd5f5 !important;
+  border: 1px solid #4dcfef !important;
+  color: #ffffff !important;
+}
+
+::ng-deep .cai-global-actions .cai-global-btn--primary.p-button .p-button-label {
+  color: #ffffff !important;
+}
+
+::ng-deep .cai-global-actions .cai-global-btn--primary.p-button:not(:disabled):hover {
+  background: #4dd4f8 !important;
+  border-color: #3bc4e8 !important;
+  color: #ffffff !important;
+}
+
+::ng-deep .cai-global-actions .cai-global-btn--secondary.p-button.p-button-outlined {
+  background: #ffffff !important;
+  border: 1px solid #d8d8d8 !important;
+  color: #212529 !important;
+}
+
+::ng-deep .cai-global-actions .cai-global-btn--secondary.p-button .p-button-label {
+  color: #212529 !important;
+}
+
+::ng-deep .cai-global-actions .cai-global-btn--secondary.p-button:not(:disabled):hover {
+  background: #f8f9fa !important;
+  border-color: #c8c8c8 !important;
+  color: #212529 !important;
+}
+
+::ng-deep .cai-global-actions .cai-global-btn--secondary.p-button:not(:disabled):hover .p-button-label {
+  color: #212529 !important;
+}
+
+::ng-deep .cai-global-actions .cai-global-btn.p-button:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(93, 213, 245, 0.45);
+}
+
+::ng-deep .cai-global-actions .cai-global-btn--secondary.p-button:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0, 0, 0, 0.12);
+}
+
+::ng-deep .cai-solicitud-form .cai-solicitud-dropdown.p-dropdown {
+  border: 1px solid #e2e6ea;
+  border-radius: 6px;
+  min-height: 38px;
+  background: #fff;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+::ng-deep .cai-solicitud-form .cai-solicitud-dropdown.p-dropdown:not(.p-disabled).p-focus {
+  border-color: rgba(0, 174, 239, 0.65);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 0 0 0.15rem rgba(0, 174, 239, 0.12);
+}
+
+::ng-deep .cai-solicitud-form .cai-solicitud-dropdown .p-dropdown-label,
+::ng-deep .cai-solicitud-form .cai-solicitud-dropdown .p-dropdown-label.p-inputtext,
+::ng-deep .cai-solicitud-form .cai-solicitud-dropdown .p-inputtext {
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #212529;
+  min-height: 36px;
+  line-height: 1.35;
+  padding: 0.5rem 0.65rem;
+}
+
+::ng-deep .cai-solicitud-form .cai-solicitud-dropdown .p-dropdown-trigger {
+  width: 2.5rem;
+  border-radius: 0 6px 6px 0;
+}
+
+::ng-deep .cai-solicitud-form .cai-solicitud-calendar.p-calendar {
+  width: 100%;
+}
+
+::ng-deep .cai-solicitud-form .cai-solicitud-calendar .p-inputtext,
+::ng-deep .cai-solicitud-form .cai-solicitud-calendar-input.p-inputtext {
+  border-radius: 6px 0 0 6px;
+  border: 1px solid #e2e6ea;
+  background: #fff;
+  min-height: 38px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #212529;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  padding: 0.5rem 0.75rem;
+}
+
+::ng-deep .cai-solicitud-form .cai-solicitud-calendar .p-datepicker-trigger {
+  border-radius: 0 6px 6px 0;
+  border: 1px solid #e2e6ea;
+  border-left: none;
+  background: #f8f9fa;
+  color: #495057;
+  width: 2.5rem;
+}
+
+::ng-deep .cai-solicitud-form .cai-solicitud-calendar.p-calendar.p-calendar-w-btn .p-inputtext {
+  border-right: none;
+}
+
+::ng-deep .cai-solicitud-form input.p-inputtext:disabled,
+::ng-deep .cai-solicitud-form .p-dropdown.p-disabled,
+::ng-deep .cai-solicitud-form .p-calendar .p-inputtext:disabled {
+  background-color: #e9ecef !important;
+  color: #495057 !important;
+  opacity: 1;
+}
+
+.cai-subsection__title--inline {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.cai-json-preview-wrap {
+  margin-bottom: 0.75rem;
+}
+
+.cai-json-preview__idx {
+  font-weight: 600;
+  color: #495057;
+}
+
+.cai-json-preview {
+  margin: 0.25rem 0 0;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border: 1px solid #e2e6ea;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -265,6 +265,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.CREATE_AFFILIATION_INTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/create-afiliation-internal/create-afiliation-internal.module').then(
+        m => m.CreateAfiliationInternalModule
+      ),
+  },
+  {
     path: RoutesApp.REQUEST_DETAILS_AFILIATION + '/:id',
     canActivate: [sessionGuard],
     component: LayoutComponent,

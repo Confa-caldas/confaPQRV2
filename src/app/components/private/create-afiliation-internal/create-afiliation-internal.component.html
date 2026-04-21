@@ -1,0 +1,920 @@
+<p-toast position="top-right"></p-toast>
+
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Solicitud de afiliación interna</div>
+  </div>
+</div>
+
+<p-card class="container">
+  <div class="container-content">
+    <div class="cai-main-inner">
+    <!-- Paso 0: selección (misma jerarquía que create-request-internal) -->
+    <ng-container *ngIf="step === 0">
+      <br />
+      <h4 class="card-form-banner-title">Seleccione el tipo de trámite</h4>
+      <br />
+      <div [ngStyle]="{ 'text-align': 'left' }" class="container-card_text">
+        Elija si desea registrar la afiliación de un trabajador asociado a una empresa o la de un beneficiario a partir de un trabajador afiliado.
+      </div>
+      <br />
+      <div class="cai-modality-row">
+        <div class="cai-modality-col">
+          <p-card class="container-card cai-modality-card">
+            <div
+              class="cai-modality-card__click"
+              (click)="irTrabajador()"
+              role="button"
+              tabindex="0"
+              (keydown.enter)="irTrabajador()">
+              <br />
+              <div class="cai-modality-card__icon-wrap" aria-hidden="true">
+                <i class="pi pi-user-plus cai-modality-card__icon"></i>
+              </div>
+              <h3 class="container-card_header">Afiliación de trabajador</h3>
+              <p class="container-card_text" [ngStyle]="{ 'text-align': 'center' }">Con o sin beneficiario.</p>
+              <br />
+              <div class="container-button">
+                <span class="cai-link-continue">Continuar <i class="pi pi-angle-right" aria-hidden="true"></i></span>
+              </div>
+              <br />
+            </div>
+          </p-card>
+        </div>
+        <div class="cai-modality-col">
+          <p-card class="container-card cai-modality-card">
+            <div
+              class="cai-modality-card__click"
+              (click)="irBeneficiario()"
+              role="button"
+              tabindex="0"
+              (keydown.enter)="irBeneficiario()">
+              <br />
+              <div class="cai-modality-card__icon-wrap" aria-hidden="true">
+                <i class="pi pi-users cai-modality-card__icon"></i>
+              </div>
+              <h3 class="container-card_header">Afiliación de beneficiario</h3>
+              <p class="container-card_text" [ngStyle]="{ 'text-align': 'center' }">Consulta de trabajador afiliado y empresa.</p>
+              <br />
+              <div class="container-button">
+                <span class="cai-link-continue">Continuar <i class="pi pi-angle-right" aria-hidden="true"></i></span>
+              </div>
+              <br />
+            </div>
+          </p-card>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Paso 1: trabajador -->
+    <ng-container *ngIf="step === 1">
+      <div class="row g-0 mb-2 cai-page-toolbar">
+        <div class="col-12">
+          <p-button
+            type="button"
+            label="Volver"
+            icon="pi pi-arrow-left"
+            [outlined]="true"
+            (click)="volverSeleccion()"></p-button>
+        </div>
+      </div>
+
+      <p-card class="container-card cai-form-card" header="Consulta de empresa">
+        <form [formGroup]="consultaEmpresaForm" class="cai-form-card__body">
+          <div class="cai-form-grid cai-form-grid--cols-2">
+            <div class="cai-form-field">
+              <label class="cai-form-label" for="caiTipoDocEmp">Tipo de documento*</label>
+              <p-dropdown
+                inputId="caiTipoDocEmp"
+                formControlName="tipo_documento"
+                [options]="tiposDocumentoEmpresa"
+                optionLabel="tipo_documento"
+                optionValue="id"
+                placeholder="Seleccione tipo de documento"
+                [loading]="cargandoTiposDocumentoEmpresa"
+                [filter]="true"
+                filterPlaceholder="Buscar"
+                emptyMessage="Sin tipos de documento"
+                [style]="{ 'border-radius': '22px', width: '100%' }"
+                styleClass="cai-form-control"
+                [panelStyle]="{ 'max-height': 'none' }"></p-dropdown>
+              <div class="cai-form-field__errors" aria-live="polite">
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    consultaEmpresaForm.get('tipo_documento')?.invalid &&
+                    consultaEmpresaForm.get('tipo_documento')?.touched
+                  ">
+                  Seleccione un tipo de documento
+                </span>
+              </div>
+            </div>
+            <div class="cai-form-field">
+              <label class="cai-form-label" for="caiNumEmp">Número de documento*</label>
+              <input
+                id="caiNumEmp"
+                pInputText
+                type="text"
+                pKeyFilter="alphanum"
+                formControlName="numero_documento"
+                class="cai-input-plain cai-input-plain--full"
+                placeholder="Número de documento" />
+              <div class="cai-form-field__errors" aria-live="polite">
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    consultaEmpresaForm.get('numero_documento')?.errors?.['required'] &&
+                    consultaEmpresaForm.get('numero_documento')?.touched
+                  ">
+                  Ingrese el número de documento
+                </span>
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    consultaEmpresaForm.get('numero_documento')?.errors?.['pattern'] &&
+                    consultaEmpresaForm.get('numero_documento')?.touched
+                  ">
+                  Solo letras y números
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="cai-form-actions">
+            <p-button
+              type="button"
+              label="Consultar"
+              icon="pi pi-search"
+              [loading]="validandoEmpresa"
+              [disabled]="validandoEmpresa"
+              [style]="{ 'background-color': '#00aeef' }"
+              (click)="consultarEmpresa()"></p-button>
+          </div>
+        </form>
+      </p-card>
+    </ng-container>
+
+    <!-- Paso 2: identificación del trabajador (flujo trabajador, empresa ya validada) -->
+    <ng-container *ngIf="step === 2">
+      <div class="row g-0 mb-2 cai-page-toolbar">
+        <div class="col-12">
+          <p-button
+            type="button"
+            label="Regresar"
+            icon="pi pi-arrow-left"
+            [outlined]="true"
+            (click)="regresarAConsultaEmpresa()"></p-button>
+        </div>
+      </div>
+
+      <div class="cai-empresa-banner" role="status">
+        <i class="pi pi-building cai-empresa-banner__icon" aria-hidden="true"></i>
+        <span class="cai-empresa-banner__text">Empresa: <strong>{{ razonSocialEmpresa }}</strong></span>
+      </div>
+
+      <p-card class="container-card cai-form-card" header="Identificación del trabajador">
+        <form [formGroup]="identificacionTrabajadorForm" class="cai-form-card__body">
+          <div class="cai-form-grid cai-form-grid--cols-2">
+            <div class="cai-form-field">
+              <label class="cai-form-label" for="caiTipoDocTrId">Tipo de documento*</label>
+              <p-dropdown
+                inputId="caiTipoDocTrId"
+                formControlName="tipo_documento"
+                [options]="tiposDocumentoPersona"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione tipo de documento"
+                [loading]="cargandoTiposDocumentoPersona"
+                [filter]="true"
+                filterPlaceholder="Buscar"
+                emptyMessage="Sin tipos de documento"
+                [style]="{ 'border-radius': '22px', width: '100%' }"
+                styleClass="cai-form-control"
+                [panelStyle]="{ 'max-height': 'none' }"></p-dropdown>
+              <div class="cai-form-field__errors" aria-live="polite">
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    identificacionTrabajadorForm.get('tipo_documento')?.invalid &&
+                    identificacionTrabajadorForm.get('tipo_documento')?.touched
+                  ">
+                  Seleccione un tipo de documento
+                </span>
+              </div>
+            </div>
+            <div class="cai-form-field">
+              <label class="cai-form-label" for="caiNumTrId">Número de documento*</label>
+              <input
+                id="caiNumTrId"
+                pInputText
+                type="text"
+                pKeyFilter="alphanum"
+                formControlName="numero_documento"
+                class="cai-input-plain cai-input-plain--full"
+                placeholder="Número de documento" />
+              <div class="cai-form-field__errors" aria-live="polite">
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    identificacionTrabajadorForm.get('numero_documento')?.invalid &&
+                    identificacionTrabajadorForm.get('numero_documento')?.touched
+                  ">
+                  Solo letras y números
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="cai-form-actions">
+            <p-button
+              type="button"
+              label="Consultar"
+              icon="pi pi-search"
+              [loading]="validandoTrabajador"
+              [disabled]="validandoTrabajador"
+              [style]="{ 'background-color': '#00aeef' }"
+              (click)="consultarIdentificacionTrabajador()"></p-button>
+          </div>
+        </form>
+      </p-card>
+    </ng-container>
+
+    <!-- Paso 4: solicitud de afiliación (tras validar trabajador) -->
+    <ng-container *ngIf="step === 4">
+      <div class="row g-0 mb-2 cai-page-toolbar">
+        <div class="col-12">
+          <p-button
+            type="button"
+            label="Regresar"
+            icon="pi pi-arrow-left"
+            [outlined]="true"
+            (click)="regresarDesdeSolicitudTrabajador()"></p-button>
+        </div>
+      </div>
+
+      <div class="cai-empresa-banner" role="status">
+        <i class="pi pi-building cai-empresa-banner__icon" aria-hidden="true"></i>
+        <span class="cai-empresa-banner__text">Empresa: <strong>{{ razonSocialEmpresa }}</strong></span>
+      </div>
+
+      <div class="cai-solicitud-panel">
+        <h4 class="cai-solicitud-title">Solicitud de afiliación</h4>
+
+        <p-accordion [multiple]="true" [(activeIndex)]="accordionActiveIndex" styleClass="cai-solicitud-accordion">
+          <p-accordionTab>
+            <ng-template pTemplate="header">
+              <span class="cai-acc-tab-head">
+                <span class="cai-acc-tab-head__icon-wrap">
+                  <i class="pi pi-id-card cai-acc-tab-head__icon" aria-hidden="true"></i>
+                </span>
+                <span class="cai-acc-tab-head__label">Información personal</span>
+              </span>
+            </ng-template>
+            <div class="cai-acc-body cai-solicitud-tab">
+            <form [formGroup]="solicitudPersonalForm" class="cai-solicitud-form">
+              <p class="cai-acc-intro">
+                Datos personales del trabajador según la validación del servicio. Esta información no es editable.
+              </p>
+
+              <section class="cai-subsection">
+                <h5 class="cai-subsection__title">Datos del trabajador</h5>
+                <div class="cai-form-grid cai-form-grid--cols-2">
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolTipoDoc">Tipo de documento</label>
+                    <p-dropdown
+                      inputId="caiSolTipoDoc"
+                      formControlName="tipo_documento"
+                      [options]="tiposDocumentoPersona"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Tipo de documento"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolNumDoc">Número de documento</label>
+                    <input
+                      id="caiSolNumDoc"
+                      pInputText
+                      type="text"
+                      formControlName="numero_documento"
+                      class="cai-input-plain cai-input-plain--full" />
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolPn">Primer nombre *</label>
+                    <input
+                      id="caiSolPn"
+                      pInputText
+                      type="text"
+                      formControlName="primer_nombre"
+                      class="cai-input-plain cai-input-plain--full" />
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolSn">Segundo nombre (opcional)</label>
+                    <input
+                      id="caiSolSn"
+                      pInputText
+                      type="text"
+                      formControlName="segundo_nombre"
+                      class="cai-input-plain cai-input-plain--full" />
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolPa">Primer apellido *</label>
+                    <input
+                      id="caiSolPa"
+                      pInputText
+                      type="text"
+                      formControlName="primer_apellido"
+                      class="cai-input-plain cai-input-plain--full" />
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolSa">Segundo apellido (opcional)</label>
+                    <input
+                      id="caiSolSa"
+                      pInputText
+                      type="text"
+                      formControlName="segundo_apellido"
+                      class="cai-input-plain cai-input-plain--full" />
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolFn">Fecha de nacimiento *</label>
+                    <p-calendar
+                      inputId="caiSolFn"
+                      formControlName="fecha_nacimiento"
+                      dateFormat="dd/mm/yy"
+                      [showIcon]="true"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-solicitud-calendar"
+                      inputStyleClass="cai-solicitud-calendar-input"></p-calendar>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolFe">Fecha de expedición del documento *</label>
+                    <p-calendar
+                      inputId="caiSolFe"
+                      formControlName="fecha_expedicion"
+                      dateFormat="dd/mm/yy"
+                      [showIcon]="true"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-solicitud-calendar"
+                      inputStyleClass="cai-solicitud-calendar-input"></p-calendar>
+                  </div>
+                </div>
+              </section>
+
+              <hr class="cai-subsection-sep" />
+
+              <section class="cai-subsection">
+                <h5 class="cai-subsection__title">Datos de contacto</h5>
+                <div class="cai-form-grid cai-form-grid--cols-2">
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolCel">Celular *</label>
+                    <input
+                      id="caiSolCel"
+                      pInputText
+                      type="text"
+                      formControlName="celular"
+                      maxlength="10"
+                      class="cai-input-plain cai-input-plain--full" />
+                    <p class="cai-field-hint">Debe tener 10 dígitos e Iniciar con 3 o 6.</p>
+                    <span class="cai-form-field__error" *ngIf="solicitudPersonalForm.get('celular')?.invalid && solicitudPersonalForm.get('celular')?.touched">
+                      Celular inválido
+                    </span>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolCelC">Confirmar celular *</label>
+                    <input
+                      id="caiSolCelC"
+                      pInputText
+                      type="text"
+                      formControlName="confirmar_celular"
+                      maxlength="10"
+                      class="cai-input-plain cai-input-plain--full" />
+                    <p class="cai-field-hint">Por seguridad, ingresa nuevamente el teléfono.</p>
+                    <span class="cai-form-field__error" *ngIf="solicitudPersonalForm.hasError('confirmarCelular') && solicitudPersonalForm.touched">
+                      El celular y su confirmación deben coincidir.
+                    </span>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolMail">Correo electrónico *</label>
+                    <span class="cai-input-icon-wrap">
+                      <i class="pi pi-envelope cai-input-icon-wrap__icon" aria-hidden="true"></i>
+                      <input
+                        id="caiSolMail"
+                        pInputText
+                        type="email"
+                        formControlName="correo"
+                        class="cai-input-plain cai-input-plain--full cai-input-with-icon" />
+                    </span>
+                    <span class="cai-form-field__error" *ngIf="solicitudPersonalForm.get('correo')?.invalid && solicitudPersonalForm.get('correo')?.touched">
+                      Correo inválido
+                    </span>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolMailC">Confirmar correo electrónico *</label>
+                    <span class="cai-input-icon-wrap">
+                      <i class="pi pi-envelope cai-input-icon-wrap__icon" aria-hidden="true"></i>
+                      <input
+                        id="caiSolMailC"
+                        pInputText
+                        type="email"
+                        formControlName="confirmar_correo"
+                        class="cai-input-plain cai-input-plain--full cai-input-with-icon" />
+                    </span>
+                    <p class="cai-field-hint">Por seguridad, ingresa nuevamente el correo.</p>
+                    <span class="cai-form-field__error" *ngIf="solicitudPersonalForm.hasError('confirmarCorreo') && solicitudPersonalForm.touched">
+                      El correo y su confirmación deben coincidir.
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              <hr class="cai-subsection-sep" />
+
+              <section class="cai-subsection">
+                <h5 class="cai-subsection__title">Datos complementarios</h5>
+                <div class="cai-form-grid cai-form-grid--cols-2">
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolGen">Género *</label>
+                    <p-dropdown
+                      inputId="caiSolGen"
+                      formControlName="genero"
+                      [options]="opcionesGenero"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccione"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolEc">Estado civil *</label>
+                    <p-dropdown
+                      inputId="caiSolEc"
+                      formControlName="estado_civil"
+                      [options]="opcionesEstadoCivil"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccione"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolDir">Dirección de residencia *</label>
+                    <input
+                      id="caiSolDir"
+                      pInputText
+                      type="text"
+                      formControlName="direccion"
+                      class="cai-input-plain cai-input-plain--full" />
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolZona">Zona *</label>
+                    <p-dropdown
+                      inputId="caiSolZona"
+                      formControlName="zona"
+                      [options]="opcionesZona"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccione"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolDep">Departamento de residencia *</label>
+                    <p-dropdown
+                      inputId="caiSolDep"
+                      formControlName="id_departamento"
+                      [options]="opcionesDepartamento"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccione"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiSolMun">Municipio de residencia *</label>
+                    <p-dropdown
+                      inputId="caiSolMun"
+                      formControlName="id_municipio"
+                      [options]="opcionesMunicipio"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccione"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
+                  </div>
+                </div>
+              </section>
+
+              <div class="cai-acc-actions">
+                <p-button
+                  type="button"
+                  label="Guardar y continuar"
+                  icon="pi pi-arrow-circle-right"
+                  iconPos="right"
+                  [style]="{ 'background-color': '#00aeef' }"
+                  (click)="guardarYContinuarInformacionPersonal()"></p-button>
+                <p-button type="button" label="Regresar" [outlined]="true" (click)="regresarDesdeSolicitudTrabajador()"></p-button>
+              </div>
+            </form>
+            </div>
+          </p-accordionTab>
+
+          <p-accordionTab>
+            <ng-template pTemplate="header">
+              <span class="cai-acc-tab-head">
+                <span class="cai-acc-tab-head__icon-wrap">
+                  <i class="pi pi-briefcase cai-acc-tab-head__icon" aria-hidden="true"></i>
+                </span>
+                <span class="cai-acc-tab-head__label">Información laboral</span>
+              </span>
+            </ng-template>
+            <div class="cai-acc-body cai-solicitud-tab">
+            <form [formGroup]="solicitudLaboralForm" class="cai-solicitud-form">
+              <p class="cai-acc-intro">
+                Ingresa los datos laborales del trabajador. Los campos marcados con asterisco (*) son obligatorios.
+              </p>
+              <div class="cai-form-grid cai-form-grid--cols-2">
+                <div class="cai-form-field">
+                  <label class="cai-form-label" for="caiLabFi">Fecha de ingreso del trabajador a la empresa *</label>
+                  <p-calendar
+                    inputId="caiLabFi"
+                    formControlName="fecha_ingreso_empresa"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    appendTo="body"
+                    [minDate]="laborFechaIngresoMin || undefined"
+                    [maxDate]="laborFechaIngresoMax || undefined"
+                    [style]="{ width: '100%' }"
+                    styleClass="cai-solicitud-calendar"
+                    inputStyleClass="cai-solicitud-calendar-input"></p-calendar>
+                  <p class="cai-field-hint" *ngIf="laborFechaIngresoMin && laborFechaIngresoMax">
+                    Fecha de ingreso del trabajador a la empresa. Máximo:
+                    {{ laborFechaIngresoMax | date : 'dd/MM/yyyy' }}. Mínimo:
+                    {{ laborFechaIngresoMin | date : 'dd/MM/yyyy' }}.
+                  </p>
+                  <p class="cai-field-hint" *ngIf="!laborFechaIngresoMin || !laborFechaIngresoMax">
+                    Fecha de ingreso del trabajador a la empresa (límites según política de la empresa cuando el servicio los envía).
+                  </p>
+                  <span
+                    class="cai-form-field__error"
+                    *ngIf="
+                      solicitudLaboralForm.get('fecha_ingreso_empresa')?.invalid &&
+                      solicitudLaboralForm.get('fecha_ingreso_empresa')?.touched
+                    ">
+                    Seleccione una fecha válida
+                  </span>
+                </div>
+                <div class="cai-form-field">
+                  <label class="cai-form-label" for="caiLabHor">Horas laboradas por mes *</label>
+                  <input
+                    id="caiLabHor"
+                    pInputText
+                    type="number"
+                    formControlName="horas_mes"
+                    class="cai-input-plain cai-input-plain--full"
+                    [attr.min]="horasLaboralesMin"
+                    [attr.max]="horasLaboralesMax" />
+                  <p class="cai-field-hint">
+                    Número de horas que el trabajador labora al mes. Mínimo: {{ horasLaboralesMin }} horas. Máximo:
+                    {{ horasLaboralesMax }} horas.
+                  </p>
+                </div>
+                <div class="cai-form-field">
+                  <label class="cai-form-label" for="caiLabSal">Salario mensual *</label>
+                  <p-inputNumber
+                    inputId="caiLabSal"
+                    formControlName="salario_mensual"
+                    mode="currency"
+                    currency="COP"
+                    locale="es-CO"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="2"
+                    [min]="salarioMinimoRef != null ? salarioMinimoRef : 0"
+                    styleClass="cai-input-plain cai-input-plain--full"
+                    [style]="{ width: '100%' }"></p-inputNumber>
+                  <p class="cai-field-hint" *ngIf="salarioMinimoRef != null">
+                    Salario mensual del trabajador. Mínimo: {{ salarioMinimoRef | number : '1.2-2' }}.
+                  </p>
+                  <p class="cai-field-hint" *ngIf="salarioMinimoRef == null">Salario mensual del trabajador.</p>
+                </div>
+                <div class="cai-form-field">
+                  <label class="cai-form-label" for="caiLabCargo">Cargo desempeñado</label>
+                  <input
+                    id="caiLabCargo"
+                    pInputText
+                    type="text"
+                    formControlName="cargo_desempenado"
+                    class="cai-input-plain cai-input-plain--full"
+                    placeholder="Buscar o seleccionar cargo" />
+                  <p class="cai-field-hint">Cargo o posición que desempeña el trabajador en la empresa.</p>
+                </div>
+              </div>
+              <div class="cai-acc-actions">
+                <p-button
+                  type="button"
+                  label="Guardar y continuar"
+                  icon="pi pi-arrow-circle-right"
+                  iconPos="right"
+                  [style]="{ 'background-color': '#00aeef' }"
+                  (click)="guardarYContinuarInformacionLaboral()"></p-button>
+                <p-button type="button" label="Regresar" [outlined]="true" (click)="regresarDesdeInformacionLaboral()"></p-button>
+              </div>
+            </form>
+            </div>
+          </p-accordionTab>
+
+          <p-accordionTab>
+            <ng-template pTemplate="header">
+              <span class="cai-acc-tab-head">
+                <span class="cai-acc-tab-head__icon-wrap">
+                  <i class="pi pi-credit-card cai-acc-tab-head__icon" aria-hidden="true"></i>
+                </span>
+                <span class="cai-acc-tab-head__label">Medio de pago cuotas</span>
+              </span>
+            </ng-template>
+            <div class="cai-acc-body cai-solicitud-tab">
+            <ng-container *ngIf="mostrarFormularioMedioPago">
+              <form [formGroup]="solicitudMedioPagoForm" class="cai-solicitud-form">
+                <h5 class="cai-subsection__title cai-subsection__title--inline">Medio de pago del subsidio familiar en dinero (opcional)</h5>
+                <p class="cai-acc-intro" *ngIf="mensajeInformativoMedioPago">{{ mensajeInformativoMedioPago }}</p>
+                <p class="cai-acc-intro" *ngIf="!mensajeInformativoMedioPago">
+                  Si la empresa cuenta con los datos de medio de pago para la recepción del pago de cuota monetaria, diligencie los siguientes:
+                </p>
+                <div class="cai-form-grid cai-form-grid--cols-2">
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiMpMedio">Medio de pago</label>
+                    <p-dropdown
+                      inputId="caiMpMedio"
+                      formControlName="medio_pago"
+                      [options]="opcionesMedioPago"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccione"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiMpEnt">Entidad bancaria o billetera</label>
+                    <p-dropdown
+                      inputId="caiMpEnt"
+                      formControlName="id_entidad"
+                      [options]="opcionesEntidadesPago"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Buscar o seleccionar entidad o billetera"
+                      [filter]="true"
+                      [showClear]="true"
+                      appendTo="body"
+                      emptyMessage="Sin entidades"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
+                  </div>
+                  <div class="cai-form-field cai-form-field--grid-span-2" *ngIf="opcionesTipoCuenta.length">
+                    <label class="cai-form-label" for="caiMpTipoCta">Tipo de cuenta</label>
+                    <p-dropdown
+                      inputId="caiMpTipoCta"
+                      formControlName="tipo_cuenta"
+                      [options]="opcionesTipoCuenta"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccione"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiMpNum">Número de cuenta o billetera</label>
+                    <input
+                      id="caiMpNum"
+                      pInputText
+                      type="text"
+                      formControlName="numero_cuenta"
+                      class="cai-input-plain cai-input-plain--full"
+                      placeholder="Ingrese el número de cuenta o billetera" />
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiMpNumC">Confirmar número de cuenta o billetera</label>
+                    <input
+                      id="caiMpNumC"
+                      pInputText
+                      type="text"
+                      formControlName="confirmacion_cuenta"
+                      class="cai-input-plain cai-input-plain--full"
+                      placeholder="Confirme el número de cuenta o billetera" />
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiMpBreB">Llave Bre-B asociada a la cuenta (Opcional)</label>
+                    <input
+                      id="caiMpBreB"
+                      pInputText
+                      type="text"
+                      formControlName="llave_breb"
+                      class="cai-input-plain cai-input-plain--full"
+                      placeholder="Ingrese la llave Bre-B asociada a la cuenta" />
+                  </div>
+                  <div class="cai-form-field">
+                    <label class="cai-form-label" for="caiMpBreBC">Confirmar Llave Bre-B asociada a la cuenta (Opcional)</label>
+                    <input
+                      id="caiMpBreBC"
+                      pInputText
+                      type="text"
+                      formControlName="confirmar_llave_breb"
+                      class="cai-input-plain cai-input-plain--full"
+                      placeholder="Confirme la llave Bre-B asociada a la cuenta" />
+                  </div>
+                </div>
+                <div class="cai-acc-actions">
+                  <p-button
+                    type="button"
+                    label="Guardar y continuar"
+                    icon="pi pi-arrow-circle-right"
+                    iconPos="right"
+                    [style]="{ 'background-color': '#00aeef' }"
+                    (click)="guardarYContinuarMedioPago()"></p-button>
+                  <p-button type="button" label="Regresar" [outlined]="true" (click)="regresarDesdeMedioPago()"></p-button>
+                </div>
+              </form>
+            </ng-container>
+            <p class="cai-acc-placeholder" *ngIf="!mostrarFormularioMedioPago">Esta sección no está disponible para este caso.</p>
+            </div>
+          </p-accordionTab>
+
+          <p-accordionTab>
+            <ng-template pTemplate="header">
+              <span class="cai-acc-tab-head">
+                <span class="cai-acc-tab-head__icon-wrap">
+                  <i class="pi pi-users cai-acc-tab-head__icon" aria-hidden="true"></i>
+                </span>
+                <span class="cai-acc-tab-head__label">Beneficiarios</span>
+              </span>
+            </ng-template>
+            <div class="cai-acc-body cai-solicitud-tab">
+              <p class="cai-acc-intro" *ngIf="!beneficiariosPrecargarLista.length && !datosBeneficiarioPrecarga">
+                No hay beneficiarios precargados para esta solicitud.
+              </p>
+              <ng-container *ngIf="datosBeneficiarioPrecarga">
+                <h5 class="cai-subsection__title">Datos de beneficiario</h5>
+                <pre class="cai-json-preview">{{ datosBeneficiarioPrecarga | json }}</pre>
+              </ng-container>
+              <ng-container *ngIf="beneficiariosPrecargarLista.length">
+                <h5 class="cai-subsection__title">Listado precargado</h5>
+                <div *ngFor="let b of beneficiariosPrecargarLista; let i = index" class="cai-json-preview-wrap">
+                  <span class="cai-json-preview__idx">{{ i + 1 }}.</span>
+                  <pre class="cai-json-preview">{{ b | json }}</pre>
+                </div>
+              </ng-container>
+              <div class="cai-acc-actions">
+                <p-button type="button" label="Regresar" [outlined]="true" (click)="regresarDesdeBeneficiarios()"></p-button>
+              </div>
+            </div>
+          </p-accordionTab>
+        </p-accordion>
+
+        <div class="cai-global-actions">
+          <p-button
+            type="button"
+            label="Guardar solicitud"
+            styleClass="cai-global-btn cai-global-btn--primary"
+            (click)="guardarSolicitudGlobal()"></p-button>
+          <p-button
+            type="button"
+            label="Regresar"
+            styleClass="cai-global-btn cai-global-btn--secondary"
+            [outlined]="true"
+            (click)="regresarGlobalDesdeSolicitud()"></p-button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Paso 3: beneficiario -->
+    <ng-container *ngIf="step === 3">
+      <div class="row g-0 mb-2 cai-page-toolbar">
+        <div class="col-12">
+          <p-button
+            type="button"
+            label="Volver"
+            icon="pi pi-arrow-left"
+            [outlined]="true"
+            (click)="volverSeleccion()"></p-button>
+        </div>
+      </div>
+
+      <p-card class="container-card cai-form-card" header="Consulta de trabajador">
+        <form [formGroup]="consultaTrabajadorForm" class="cai-form-card__body">
+          <div class="cai-form-grid cai-form-grid--cols-3">
+            <div class="cai-form-field">
+              <label class="cai-form-label" for="caiTipoDocTr">Tipo de documento*</label>
+              <p-dropdown
+                inputId="caiTipoDocTr"
+                formControlName="tipo_documento"
+                [options]="tiposDocumentoPersona"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione tipo de documento"
+                [loading]="cargandoTiposDocumentoPersona"
+                [filter]="true"
+                filterPlaceholder="Buscar"
+                emptyMessage="Sin tipos de documento"
+                [style]="{ 'border-radius': '22px', width: '100%' }"
+                styleClass="cai-form-control"
+                [panelStyle]="{ 'max-height': 'none' }"></p-dropdown>
+              <div class="cai-form-field__errors" aria-live="polite">
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    consultaTrabajadorForm.get('tipo_documento')?.invalid &&
+                    consultaTrabajadorForm.get('tipo_documento')?.touched
+                  ">
+                  Seleccione un tipo de documento
+                </span>
+              </div>
+            </div>
+            <div class="cai-form-field">
+              <label class="cai-form-label" for="caiNumTr">Número de documento*</label>
+              <input
+                id="caiNumTr"
+                pInputText
+                type="text"
+                pKeyFilter="alphanum"
+                formControlName="numero_documento"
+                class="cai-input-plain cai-input-plain--full"
+                placeholder="Número de documento" />
+              <div class="cai-form-field__errors" aria-live="polite">
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    consultaTrabajadorForm.get('numero_documento')?.invalid &&
+                    consultaTrabajadorForm.get('numero_documento')?.touched
+                  ">
+                  Solo letras y números
+                </span>
+              </div>
+            </div>
+            <div class="cai-form-field">
+              <label class="cai-form-label" for="caiEmpresa">Empresa</label>
+              <p-dropdown
+                inputId="caiEmpresa"
+                formControlName="empresa_id"
+                [options]="empresasDemo"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione empresa"
+                [style]="{ 'border-radius': '22px', width: '100%' }"
+                styleClass="cai-form-control"
+                [panelStyle]="{ 'max-height': 'none' }"></p-dropdown>
+              <div class="cai-form-field__errors" aria-live="polite">
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    consultaTrabajadorForm.get('empresa_id')?.invalid &&
+                    consultaTrabajadorForm.get('empresa_id')?.touched
+                  ">
+                  Seleccione empresa
+                </span>
+              </div>
+              <p class="cai-form-hint">Se habilita después de «Consultar».</p>
+            </div>
+          </div>
+          <div class="cai-form-actions">
+            <p-button
+              type="button"
+              label="Consultar"
+              icon="pi pi-search"
+              [style]="{ 'background-color': '#00aeef' }"
+              (click)="consultarTrabajador()"></p-button>
+          </div>
+        </form>
+      </p-card>
+
+      <div class="cai-form-actions cai-form-actions--solo">
+        <p-button
+          type="button"
+          label="Agregar beneficiario"
+          icon="pi pi-user-plus"
+          [disabled]="!puedeMostrarAgregarBeneficiario"
+          [style]="{ 'background-color': '#00aeef' }"
+          (click)="agregarBeneficiario()"></p-button>
+      </div>
+
+      <p-card class="container-card cai-form-card cai-form-card--muted">
+        <ng-template pTemplate="header">
+          <span class="container-card_header cai-card-header-inline">Beneficiario</span>
+        </ng-template>
+        <div class="cai-form-card__body cai-form-card__body--text">
+          <p class="container-card_text">
+            <strong>Placeholder:</strong> aquí se cargará el formulario de beneficiario cuando exista la integración con el
+            backend.
+          </p>
+        </div>
+      </p-card>
+    </ng-container>
+    </div>
+  </div>
+</p-card>
