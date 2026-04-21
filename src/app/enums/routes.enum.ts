@@ -173,7 +173,7 @@ export enum EndPointRoute {
   /** Generar PDF expediente (unir adjuntos trabajador + beneficiarios) y asociar a solicitud */
   REQUEST_AFILIATION_GENERAR_EXPEDIENTE = 'requests-afiliation-adjuntos/expediente/generar',
   /** Actualizar estado de gestión de la solicitud (modal Gestionar estado: Pendiente RPA / Procesado / Rechazado). */
-  REQUEST_AFILIATION_ACTUALIZAR_ESTADO_GESTION = 'requests-afiliation/solicitud/actualizar-estado-gestion',
+  REQUEST_AFILIATION_ACTUALIZAR_ESTADO_GESTION = 'requests-afiliation-gestion/solicitud/actualizar-estado-gestion',
   /** POST body `{ persona_id }` — valida requisitos antes de gestionar estado por persona (SP afiliaciones.validar_requisitos_gestion_persona). */
   REQUEST_AFILIATION_VALIDAR_REQUISITOS_GESTION_PERSONA = 'afiliacion-validacion/persona/validar',
   /** POST body `{ tipo_documento, numero_documento }` — Lambda orquestadora: empresa apta para solicitud interna. */

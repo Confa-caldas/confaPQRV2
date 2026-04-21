@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
@@ -117,6 +118,10 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   /** Modal PrimeNG para previsualizar adjuntos de afiliación tipo imagen (tabla trabajador/beneficiario). */
   displayModal = false;
   urlImagenPreview = '';
+  /** Modal con iframe para PDF vía blob (evita descarga forzada por la URL firmada). */
+  displayModalPdf = false;
+  urlPdfPreview: SafeResourceUrl | null = null;
+  private pdfPreviewBlobUrl: string | null = null;
   viewerType: 'google' | 'office' | 'image' | 'pdf' = 'google';
 
   requestList: RequestsList[] = [];
@@ -360,7 +365,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   ];
 
   /** Opciones del dropdown motivo de rechazo (cargadas desde BD). */
-  motivoRechazoOpciones: { label: string; value: string }[] = [];
+  motivoRechazoOpciones: { label: string; value: string; codigo_motivo: string }[] = [];
   cargandoMotivosRechazo = false;
   /** Guardado en curso: actualizar estado gestión solicitud. */
   guardandoEstadoGestionSolicitud = false;
@@ -386,7 +391,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     private route: ActivatedRoute,
     private messageService: MessageService,
     private http: HttpClient,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private readonly sanitizer: DomSanitizer
   ) {
     // (window as any).pdfMake.vfs = pdfFonts.pdfMake.vfs;
     this.requestProcess = this.formBuilder.group({
@@ -794,10 +800,17 @@ export class RequestDetailsAfiliationComponent implements OnInit {
               if (a === false || a === 0) return false;
               return true;
             })
-            .map((m) => ({
-              label: (m.motivo_rechazo ?? '').trim() || `Motivo #${m.id}`,
-              value: String(m.id),
-            }));
+            .map((m) => {
+              const codigo = String(
+                m.codigo_motivo ?? (m as { codigoMotivo?: string | null }).codigoMotivo ?? ''
+              ).trim();
+              const desc = (m.motivo_rechazo ?? '').trim() || `Motivo #${m.id}`;
+              return {
+                codigo_motivo: codigo,
+                label: desc,
+                value: String(m.id),
+              };
+            });
         } else {
           this.motivoRechazoOpciones = [];
           this.messageService.add({
@@ -1722,7 +1735,7 @@ getRequestDetails(request_details: number) {
     return /\.pdf$/i.test(this.nombreOCaminoParaTipo(adjunto));
   }
 
-  /** Popup centrado para PDF (no pestaña del navegador). */
+  /** Respaldo: ventana emergente si no se puede cargar el PDF como blob (p. ej. CORS). */
   private abrirPdfEnVentanaEmergente(url: string): void {
     const w = 800;
     const h = 900;
@@ -1743,6 +1756,50 @@ getRequestDetails(request_details: number) {
     window.open(url, 'adjuntoPdfPreview', features);
   }
 
+  /**
+   * Descarga el PDF por GET y lo muestra en modal con iframe (blob:).
+   * Así el navegador lo trata como inline aunque la URL firmada lleve attachment.
+   */
+  private abrirPdfPrevisualizacionConBlob(url: string): void {
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const mime =
+          blob.type && blob.type !== 'application/octet-stream' ? blob.type : 'application/pdf';
+        const pdfBlob = new Blob([blob], { type: mime });
+        this.limpiarBlobPrevisualizacionPdf();
+        this.pdfPreviewBlobUrl = URL.createObjectURL(pdfBlob);
+        this.urlPdfPreview = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfPreviewBlobUrl);
+        this.displayModalPdf = true;
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Previsualización PDF',
+          detail:
+            'No se pudo cargar el archivo para vista previa en pantalla. Se intentará abrir en una ventana nueva; si sigue pidiendo descargar, use «Descargar».',
+        });
+        this.abrirPdfEnVentanaEmergente(url);
+      },
+    });
+  }
+
+  private limpiarBlobPrevisualizacionPdf(): void {
+    if (this.pdfPreviewBlobUrl) {
+      try {
+        URL.revokeObjectURL(this.pdfPreviewBlobUrl);
+      } catch {
+        /* noop */
+      }
+      this.pdfPreviewBlobUrl = null;
+    }
+    this.urlPdfPreview = null;
+  }
+
+  cerrarModalPrevisualizacionPdf(): void {
+    this.displayModalPdf = false;
+    this.limpiarBlobPrevisualizacionPdf();
+  }
+
   private aplicarPrevisualizacionAdjunto(url: string, adjunto: Adjunto | { content_type?: string | null; ruta_archivo?: string | null; nombre_archivo?: string | null }): void {
     if (this.esAdjuntoImagen(adjunto)) {
       this.urlImagenPreview = url;
@@ -1750,7 +1807,7 @@ getRequestDetails(request_details: number) {
       return;
     }
     if (this.esAdjuntoPdf(adjunto)) {
-      this.abrirPdfEnVentanaEmergente(url);
+      this.abrirPdfPrevisualizacionConBlob(url);
       return;
     }
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -1762,7 +1819,7 @@ getRequestDetails(request_details: number) {
   }
 
   /**
-   * Previsualización según tipo: imagen en p-dialog, PDF en ventana emergente, resto en nueva pestaña.
+   * Previsualización según tipo: imagen en p-dialog, PDF en modal con iframe (blob), resto en nueva pestaña.
    * Solo `ruta_archivo` en el POST (sin nombre_descarga). Rutas http(s) antiguas sin API.
    */
   /** Alias explícito para el expediente unificado y adjuntos (misma lógica que abrirAdjunto). */

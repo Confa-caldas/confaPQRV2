@@ -528,6 +528,8 @@ export interface ParametroMotivoRechazoAfiliacion {
   id: number;
   motivo_rechazo: string;
   esta_activo: boolean;
+  /** Código del motivo (respuesta del listado de parámetros). */
+  codigo_motivo?: string | null;
 }
 
 export interface IsPqrCatalog {
