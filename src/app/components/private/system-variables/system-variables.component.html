@@ -1,59 +1,53 @@
-<div class="row mb-2">
-  <div class="col-10">
-    <div class="title-page">Parametrizar variables del sistema</div>
-  </div>
-  <div class="col-2">
-    <p-button label="Crear nueva" (click)="createSystemVariable()"></p-button>
-  </div>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+  <div class="title-page">Parametrizar variables del sistema</div>
+  <p-button label="Crear nueva" (click)="createSystemVariable()"></p-button>
 </div>
-<div class="row mt-auto">
-  <div class="col-12">
-    <p-table
-      [value]="systemVariableList"
-      [scrollable]="true"
-      scrollHeight="600px"
-      selectionMode="single"
-      [paginator]="false"
-      [rows]="20"
-      [showCurrentPageReport]="true"
-      [tableStyle]="{ 'min-width': '50rem' }"
-      currentPageReportTemplate="{first} de {totalRecords}">
-      <ng-template pTemplate="header">
-        <tr>
-          <th pSortableColumn="id" style="width: 3%">
-            Código<p-sortIcon field="id"></p-sortIcon>
-          </th>
-          <th style="width: 10%">Nombre variable</th>
-          <th style="width: 5%">Valor</th>
-          <th style="width: 20%">Descripción</th>
-          <th style="width: 3%"></th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-systemVariableList>
-        <tr>
-          <td [ngStyle]="{ 'text-align': 'center' }">{{ systemVariableList.id }}</td>
-          <td [ngStyle]="{ 'text-align': 'center' }">{{ systemVariableList.nombre_variable }}</td>
-          <td [ngStyle]="{ 'text-align': 'center' }">{{ systemVariableList.valor_variable }}</td>
-          <td [ngStyle]="{ 'text-align': 'center' }">{{ systemVariableList.descripcion }}</td> 
-          <td [ngStyle]="{ 'text-align': 'center' }">
-            <p-button
-              icon="pi pi-pencil"
-              [styleClass]="'btn-icon-warning'"
-              (click)="editSystemVariable(systemVariableList)"></p-button>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-    <p-paginator
-      (onPageChange)="onPageChange($event)"
-      [first]="first"
-      [rows]="rows"
-      [totalRecords]="totalRows"
-      [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
-  </div>
+<div class="mt-auto overflow-x-auto">
+  <p-table
+    [value]="systemVariableList"
+    [scrollable]="true"
+    scrollHeight="600px"
+    selectionMode="single"
+    [paginator]="false"
+    [rows]="20"
+    [showCurrentPageReport]="true"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    currentPageReportTemplate="{first} de {totalRecords}">
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="id" style="width: 3%">
+          Código<p-sortIcon field="id"></p-sortIcon>
+        </th>
+        <th style="width: 10%">Nombre variable</th>
+        <th style="width: 5%">Valor</th>
+        <th style="width: 20%">Descripción</th>
+        <th style="width: 3%"></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-systemVariableList>
+      <tr>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ systemVariableList.id }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ systemVariableList.nombre_variable }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ systemVariableList.valor_variable }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ systemVariableList.descripcion }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">
+          <p-button
+            icon="pi pi-pencil"
+            [styleClass]="'btn-icon-warning'"
+            (click)="editSystemVariable(systemVariableList)"></p-button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+  <p-paginator
+    (onPageChange)="onPageChange($event)"
+    [first]="first"
+    [rows]="rows"
+    [totalRecords]="totalRows"
+    [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
 </div>
 <p-toast></p-toast>
-  <app-modal-alert
+<app-modal-alert
   *ngIf="visibleDialogAlert"
   [select]="true"
   [visible]="visibleDialogAlert"
@@ -62,7 +56,7 @@
   [severity]="severity"
   (setRta)="closeDialogAlert($event)"></app-modal-alert>
 
-  <app-modal-system-variable
+<app-modal-system-variable
   *ngIf="visibleDialogCategory"
   [select]="true"
   [visible]="visibleDialogCategory"
@@ -72,4 +66,3 @@
   [systemVariableForm]="systemVariable_details"
   (setRta)="closeDialogSystemVariable($event)"
   (setRtaParameter)="setParameter($event)"></app-modal-system-variable>
-  

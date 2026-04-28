@@ -2,6 +2,8 @@
 
 .modal-content {
   background-color: $color-white;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .error-label {

@@ -9,12 +9,9 @@
         <div class="login-form-header__item login-form-header__item_5"></div>
         <div class="login-form-header__item login-form-header__item_6"></div>
       </div>
-      <div class="row my-4 px-5">
-        <div class="col-12 text-center">{{ message }}</div> 
-      </div>
+      <div class="my-4 px-5 text-center">{{ message }}</div>
       <form [formGroup]="formGroup">
-        <div class="row my-4 px-5">       
-          <div class="col-12">
+        <div class="my-4 px-5">
             <input type="hidden" formControlName="id" />
             
             <label> *Nombre documento</label>
@@ -97,26 +94,17 @@
               </div>
             </div>
 
-          </div>
         </div>
       </form>
-      <div *ngIf="read_only">
-        <div class="row my-4 px-5">
-          <div class="col-12 d-flex justify-content-evenly">
-            <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
-          </div>
-        </div>
+      <div *ngIf="read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
       </div>
-      <div *ngIf="!read_only">
-        <div class="row my-4 px-5">
-          <div class="col-12 d-flex justify-content-evenly">
-            <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
-            <p-button
-              [label]="buttonmsg"
-              [disabled]="formGroup.invalid"
-              (click)="closeDialog(true)"></p-button>
-          </div>
-        </div>
+      <div *ngIf="!read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button
+          [label]="buttonmsg"
+          [disabled]="formGroup.invalid"
+          (click)="closeDialog(true)"></p-button>
       </div>
     </div>
   </ng-template>

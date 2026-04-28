@@ -10,12 +10,11 @@
         <div class="login-form-header__item login-form-header__item_6"></div>
       </div>
 
-      <div class="row my-4 px-5">
-        <div class="col-12 text-center">{{ message }}</div>
-      </div>
+      <div class="my-4 px-5 text-center">{{ message }}</div>
 
       <form [formGroup]="formGroup">
-        <div class="row px-4 py-3 form-container">
+        <div class="px-4 py-3">
+        <div class="row form-container">
           <div class="col-12">
             <input type="hidden" formControlName="id" />
 
@@ -121,44 +120,43 @@
               }}
             </label>
 
-            <!-- Fila nueva -->
-            <div class="row mt-3">
-              <div class="col-md-6 col-12">
-              <label>*Nombre responsable firma</label>
-              <input
-                [readonly]="read_only"
-                formControlName="nombre_responsable_firma"
-                pInputText
-                placeholder="Nombre responsable"
-                class="w-100" />
-              <label class="invalid">
-              {{
-                formGroup.get('nombre_responsable_firma')?.hasError('required') &&
-                formGroup.get('nombre_responsable_firma')?.touched
-                ? 'Campo requerido'
-                : ''
-              }}
-              </label>
+            <!-- Fila responsable (sin row Bootstrap para evitar overflow horizontal) -->
+            <div class="d-flex flex-column flex-md-row gap-3 mt-3">
+              <div class="flex-fill min-w-0">
+                <label>*Nombre responsable firma</label>
+                <input
+                  [readonly]="read_only"
+                  formControlName="nombre_responsable_firma"
+                  pInputText
+                  placeholder="Nombre responsable"
+                  class="w-100" />
+                <label class="invalid">
+                  {{
+                    formGroup.get('nombre_responsable_firma')?.hasError('required') &&
+                    formGroup.get('nombre_responsable_firma')?.touched
+                      ? 'Campo requerido'
+                      : ''
+                  }}
+                </label>
+              </div>
+              <div class="flex-fill min-w-0">
+                <label>*Cargo responsable firma</label>
+                <input
+                  [readonly]="read_only"
+                  formControlName="cargo_responsable_firma"
+                  pInputText
+                  placeholder="Cargo responsable"
+                  class="w-100" />
+                <label class="invalid">
+                  {{
+                    formGroup.get('cargo_responsable_firma')?.hasError('required') &&
+                    formGroup.get('cargo_responsable_firma')?.touched
+                      ? 'Campo requerido'
+                      : ''
+                  }}
+                </label>
+              </div>
             </div>
-
-            <div class="col-md-6 col-12">
-            <label>*Cargo responsable firma</label>
-            <input
-            [readonly]="read_only"
-            formControlName="cargo_responsable_firma"
-            pInputText
-            placeholder="Cargo responsable"
-            class="w-100" />
-            <label class="invalid">
-            {{
-              formGroup.get('cargo_responsable_firma')?.hasError('required') &&
-              formGroup.get('cargo_responsable_firma')?.touched
-              ? 'Campo requerido'
-              : ''
-            }}
-            </label>
-            </div>
-          </div>
 
 
             <label class="mt-3">*Adjuntar firma (JPG/PNG)</label>
@@ -187,26 +185,19 @@
 
           </div>
         </div>
+        </div>
       </form>
 
-      <div *ngIf="read_only">
-        <div class="row my-4 px-5">
-          <div class="col-12 d-flex justify-content-evenly">
-            <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
-          </div>
-        </div>
+      <div *ngIf="read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
       </div>
 
-      <div *ngIf="!read_only">
-        <div class="row my-4 px-5">
-          <div class="col-12 d-flex justify-content-evenly">
-            <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
-            <p-button
-              [label]="buttonmsg"
-              [disabled]="formGroup.invalid || !!fileError"
-              (click)="closeDialog(true)"></p-button>
-          </div>
-        </div>
+      <div *ngIf="!read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button
+          [label]="buttonmsg"
+          [disabled]="formGroup.invalid || !!fileError"
+          (click)="closeDialog(true)"></p-button>
       </div>
 
     </div>

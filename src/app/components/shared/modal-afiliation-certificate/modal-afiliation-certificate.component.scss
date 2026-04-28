@@ -2,7 +2,9 @@
 
 .modal-content {
   background-color: $color-white;
-  overflow-y: scroll;
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding-bottom: 10px;
 }
 
 .error-label {
@@ -21,10 +23,9 @@
   /* Agrega cualquier otro estilo necesario */
 }
 
-
 .form-container {
-  max-height: 70vh;
-  overflow-y: auto;
+  /* Sin max-height/overflow: evita doble barra con .p-dialog-content */
+  max-width: 100%;
 }
 
 label {
@@ -44,8 +45,4 @@ input,
   font-size: 12px;
   color: #c62828;
   margin-top: 2px;
-}
-
-.modal-content {
-  padding-bottom: 10px;
 }
