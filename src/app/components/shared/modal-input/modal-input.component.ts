@@ -20,6 +20,8 @@ export class ModalInputComponent implements OnInit {
   inputValue1: string = '';
   inputValue2: string = '';
   inputValue: string[] = [''];
+  private initialSnapshot1 = '';
+  private initialSnapshot2 = '';
   showDialog() {
     this.visible = true;
   }
@@ -34,12 +36,46 @@ export class ModalInputComponent implements OnInit {
   ngOnInit(): void {
     if (this.buttonmsg != 'Crear') {
       this.formGroup.setValue({
-        inputValue1: this.inputForm[0],
-        inputValue2: this.inputForm[1],
+        inputValue1: this.inputForm[0] ?? '',
+        inputValue2: this.inputForm[1] ?? '',
       });
     } else {
       this.formGroup.reset();
     }
+    this.initialSnapshot1 = String(this.formGroup.get('inputValue1')?.value ?? '');
+    this.initialSnapshot2 = String(this.formGroup.get('inputValue2')?.value ?? '');
+  }
+
+  /** Deshabilita el botón principal si es "Modificar" y no hay cambios respecto al valor inicial. */
+  isPrimaryDisabled(): boolean {
+    if (this.oneField) {
+      const c1 = this.formGroup.get('inputValue1');
+      if (!c1?.valid) {
+        return true;
+      }
+      if (this.buttonmsg === 'Modificar' && !this.modifyHasChanges()) {
+        return true;
+      }
+      return false;
+    }
+    if (!this.formGroup.valid) {
+      return true;
+    }
+    if (this.buttonmsg === 'Modificar' && !this.modifyHasChanges()) {
+      return true;
+    }
+    return false;
+  }
+
+  private modifyHasChanges(): boolean {
+    const v1 = String(this.formGroup.get('inputValue1')?.value ?? '').trim();
+    const v2 = String(this.formGroup.get('inputValue2')?.value ?? '').trim();
+    const i1 = String(this.initialSnapshot1 ?? '').trim();
+    const i2 = String(this.initialSnapshot2 ?? '').trim();
+    if (this.oneField) {
+      return v1 !== i1;
+    }
+    return v1 !== i1 || v2 !== i2;
   }
 
   closeDialog(value: boolean) {

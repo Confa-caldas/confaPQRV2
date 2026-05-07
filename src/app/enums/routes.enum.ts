@@ -53,6 +53,8 @@ export enum RoutesApp {
   BANK_ACCOUNT_ASSOCIATE = 'bank_account-associate',
   /** Solicitud de afiliación interna (URL pública: /solicitud-interna). */
   CREATE_AFFILIATION_INTERNAL = 'create-afiliation-internal',
+  AFI_OCCUPATIONS = 'afi-occupations',
+  AFI_REJECTION = 'afi-rejection',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
@@ -257,4 +259,13 @@ export enum EndPointRoute {
   INACTIVATE_ASSOCIATE_BANK_ACCOUNT = 'entidad_bancaria_cuenta/in-activar',
   BANK_LIST = 'db_afi/entidad_bancaria',
   ACCOUNT_TYPE_LIST = 'db_afi/tipo_cuenta',
+  AFI_OCCUPATION_LIST_PAGINATION = 'db_afi/pagination/ocupacion',
+  CREATE_AFI_OCCUPATION = 'ocupacion/crear',
+  UPDATE_AFI_OCCUPATION = 'ocupacion/modificar',
+  INACTIVATE_AFI_OCCUPATION = 'ocupacion/in-activar',
+  /** Parametrización motivos de rechazo (tabla parametros_motivo_rechazo / afiliación). */
+  AFI_MOTIVO_RECHAZO_LIST_PAGINATION = 'db_afi/pagination/motivo_rechazo',
+  CREATE_AFI_MOTIVO_RECHAZO = 'motivo_rechazo/crear',
+  UPDATE_AFI_MOTIVO_RECHAZO = 'motivo_rechazo/modificar',
+  INACTIVATE_AFI_MOTIVO_RECHAZO = 'motivo_rechazo/in-activar',
 }

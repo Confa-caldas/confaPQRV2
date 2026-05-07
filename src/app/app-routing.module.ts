@@ -420,6 +420,20 @@ const routes: Routes = [
       import('./components/private/bank-account-association/bank-account-association.module').then(m => m.BankAccountAssociationModule),
   },
   {
+    path: RoutesApp.AFI_OCCUPATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-occupations/afiliation-occupations.module').then(m => m.AfiliationOccupationsModule),
+  },
+  {
+    path: RoutesApp.AFI_REJECTION,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-rejection/afiliation-rejection.module').then(m => m.AfiliationRejectionModule),
+  },
+  {
     path: RoutesApp.MAIN_PAGE,
     canActivate: [sessionGuard],
     component: LayoutComponent,

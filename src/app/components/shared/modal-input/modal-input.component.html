@@ -69,7 +69,7 @@
             <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
             <p-button
               [label]="buttonmsg"
-              [disabled]="!formGroup.valid"
+              [disabled]="isPrimaryDisabled()"
               (click)="closeDialog(true)"></p-button>
           </div>
         </div>
@@ -78,7 +78,7 @@
             <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
             <p-button
               [label]="buttonmsg"
-              [disabled]="!formGroup.get('inputValue1')?.valid"
+              [disabled]="isPrimaryDisabled()"
               (click)="closeDialog(true)"></p-button>
           </div>
         </div>

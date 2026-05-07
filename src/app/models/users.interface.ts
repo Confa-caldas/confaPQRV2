@@ -532,6 +532,16 @@ export interface ParametroMotivoRechazoAfiliacion {
   codigo_motivo?: string | null;
 }
 
+/** Parametrización CRUD de motivos de rechazo (codigo_motivo, descripcion_motivo, esta_activo). */
+export interface AfiMotivoRechazoParamList {
+  id?: number;
+  codigo_motivo: string;
+  descripcion_motivo?: string;
+  /** Alias usado por algunos listados/API. */
+  motivo_rechazo?: string;
+  esta_activo: boolean | number;
+}
+
 export interface IsPqrCatalog {
   id: number;
   name: string;
@@ -1326,6 +1336,17 @@ export interface AfiNotificationList {
   updated_by?: string;
   updated_date?: string;
 }
+
+export interface AfiOccupationList {
+  id?: number;
+  cargo: string;
+  estado: boolean | number;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+
 export interface AfiCertificateList {
   id?: number;
   tipo_certificado?: string;

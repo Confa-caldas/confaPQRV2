@@ -107,6 +107,8 @@ import {
   BankList,
   AccountTypeList,
   AssociateBankAccountList,
+  AfiOccupationList,
+  AfiMotivoRechazoParamList,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -1573,6 +1575,58 @@ export class Users {
   getAccountTypeList() {
     return this.http.get<BodyResponse<AccountTypeList[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST}`
+    );
+  }
+
+  ///Parametrizacion ocupaciones
+  getAfiOccupationListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiOccupationList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_OCCUPATION_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiOccupation(payload: AfiOccupationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_OCCUPATION}`,
+      payload
+    );
+  }
+  modifyAfiOccupation(payload: AfiOccupationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_OCCUPATION}`,
+      payload
+    );
+  }
+  inactivateAfiOccupation(payload: AfiOccupationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_OCCUPATION}`,
+      payload
+    );
+  }
+
+  /// Parametrización motivos de rechazo afiliación
+  getAfiMotivoRechazoListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiMotivoRechazoParamList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_MOTIVO_RECHAZO_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiMotivoRechazo(payload: AfiMotivoRechazoParamList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_MOTIVO_RECHAZO}`,
+      payload
+    );
+  }
+  modifyAfiMotivoRechazo(payload: AfiMotivoRechazoParamList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_MOTIVO_RECHAZO}`,
+      payload
+    );
+  }
+  inactivateAfiMotivoRechazo(payload: AfiMotivoRechazoParamList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_MOTIVO_RECHAZO}`,
+      payload
     );
   }
 }
