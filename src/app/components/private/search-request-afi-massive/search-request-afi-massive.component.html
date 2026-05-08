@@ -46,6 +46,20 @@
             optionValue="id"
             placeholder="Tipo de estado"></p-multiSelect>
         </div>
+        <div class="filters-cell">
+          <p-multiSelect
+            formControlName="indicador_gestion"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="indicadorGestionOpciones"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Tipo novedad"
+            [filter]="true"
+            filterPlaceHolder="Buscar tipo"
+            [showToggleAll]="true"
+            [maxSelectedLabels]="2"
+            selectedItemsLabel="{0} tipos"></p-multiSelect>
+        </div>
         <div class="filters-cell filters-actions">
           <p-button
             icon="pi pi-trash"

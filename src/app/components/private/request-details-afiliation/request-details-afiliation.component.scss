@@ -684,12 +684,41 @@ label { font-weight: bold; margin-bottom: 0.5em; color: #555; }
   align-items: center;
 }
 :host ::ng-deep .expediente-unificado-actions {
+  .adjunto-action-btn.p-button {
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  }
   .adjunto-action-btn--icon-only.p-button {
     padding: 0.5rem;
     min-width: 36px;
     width: 36px;
+    min-height: 36px;
     justify-content: center;
-    .p-button-label { display: none; }
+    .p-button-label { display: none !important; }
+  }
+  /* Misma línea visual que adjuntos (tabla), pero tonos info/teal acordes a la tarjeta del expediente */
+  .adjunto-action-btn.p-button-outlined.p-button-secondary {
+    border: 1px solid #2a9eb7;
+    color: #0c5460;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(12, 84, 96, 0.06);
+    &:hover:not(:disabled) {
+      background: #d1ecf1;
+      border-color: #117a8b;
+      color: #05343b;
+    }
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.25);
+    }
+    .p-button-icon {
+      color: #117a8b;
+      font-size: 1rem;
+    }
+    &:hover:not(:disabled) .p-button-icon {
+      color: #05343b;
+    }
   }
 }
 :host ::ng-deep .adjuntos-upload-row .adjunto-action-btn.p-button.p-button-success {

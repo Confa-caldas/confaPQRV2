@@ -571,6 +571,8 @@ export interface FilterRequestsMassive {
   f_date: string | null;
   doc_id_emp?: string | null;
   status_id?: number | number[] | null;
+  /** Filtro por tipo de novedad; cada columna debe coincidir con el valor «Si». */
+  tipo_novedad?: FiltroTipoNovedadItem[] | null;
   page?: number;
   page_size?: number;
 }
@@ -617,6 +619,21 @@ export interface RequestsMassiveAfiliationListItem {
   request_days?: number;
 }
 
+/** Indicador de gestión para filtrar listados (p. ej. solo filas con ese campo en «Si»). */
+export type AfiliacionFiltroIndicadorGestion =
+  | 'novedad_restrictiva'
+  | 'pendiente_activar_empresa'
+  | 'pendiente_direccion';
+
+/** Valor en BD que debe coincidir al filtrar por tipo de novedad (palabra «Si»). */
+export type AfiliacionTipoNovedadValorFiltro = 'Si';
+
+/** Un criterio: columna en BD y valor esperado (p. ej. contiene o igual a «Si»). */
+export interface FiltroTipoNovedadItem {
+  campo: AfiliacionFiltroIndicadorGestion;
+  valor: AfiliacionTipoNovedadValorFiltro;
+}
+
 export interface FilterRequestsAfiliation {
   i_date: string | null;
   f_date: string | null;
@@ -627,6 +644,10 @@ export interface FilterRequestsAfiliation {
   applicant_name_emp?: string | null;
   status_id?: number | number[] | null;
   assigned_user?: string | string[] | null;
+  /**
+   * Filtro por tipo de novedad: cada ítem indica una columna y que en BD debe aplicarse el criterio con el valor «Si».
+   */
+  tipo_novedad?: FiltroTipoNovedadItem[] | null;
   page?: number;
   page_size?: number;
 }

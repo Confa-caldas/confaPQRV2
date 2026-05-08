@@ -1922,11 +1922,19 @@ getRequestDetails(request_details: number) {
     });
   }
 
-  /** Genera o regenera el expediente (PDF unificado). Envía id_solicitud al backend; al éxito refresca el detalle. */
+  /** Genera el expediente (PDF unificado), una sola vez por solicitud. Envía id_solicitud al backend; al éxito refresca el detalle. */
   generarExpediente(): void {
     const d = this.afiliationRequestDetails;
     if (!d?.solicitud?.id) {
       this.messageService.add({ severity: 'warn', summary: 'Expediente', detail: 'No hay solicitud cargada.' });
+      return;
+    }
+    if (d.solicitud.expediente) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Expediente',
+        detail: 'Esta solicitud ya tiene un expediente generado. Solo se permite un expediente por solicitud.',
+      });
       return;
     }
     const trabajador = this.trabajadorAdjuntosEstado ?? [];
@@ -2024,7 +2032,7 @@ getRequestDetails(request_details: number) {
         severity: 'warn',
         summary: 'Expediente unificado',
         detail:
-          'No puede subir adjuntos mientras exista un expediente generado. Regenere el expediente después de los cambios si necesita incluir archivos nuevos.',
+          'No puede subir adjuntos mientras exista un expediente generado para esta solicitud.',
       });
       return;
     }

@@ -767,7 +767,7 @@
         <div class="expediente-generacion-block">
           <h3 class="tab-data-section-title expediente-generacion-title">Generación del expediente</h3>
           <p-message
-            *ngIf="hayAdjuntosSinValidarTrabajadorOBeneficiarios"
+            *ngIf="hayAdjuntosSinValidarTrabajadorOBeneficiarios && !d.solicitud.expediente"
             severity="warn"
             styleClass="expediente-adjuntos-pendientes-msg"
             [text]="'No es posible generar el expediente hasta que todos los adjuntos del trabajador y de los beneficiarios estén validados en «Sí».'" />
@@ -798,14 +798,15 @@
               </div>
             </div>
           </div>
-          <div class="expediente-generacion-actions">
+          <div class="expediente-generacion-actions" *ngIf="!d.solicitud.expediente">
             <p-button
-              [label]="d.solicitud.expediente ? 'Regenerar expediente' : 'Generar expediente'"
+              label="Generar expediente"
               icon="pi pi-file-pdf"
               severity="primary"
               [styleClass]="'adjunto-action-btn'"
               [style]="{ 'border-radius': '6px' }"
-              [pTooltip]="d.solicitud.expediente ? 'Vuelve a generar el PDF unificado con los adjuntos actuales (todos validados en Sí). Tras regenerar podrá subir archivos nuevos si lo necesita.' : 'Genera un PDF con todos los adjuntos (trabajador y beneficiarios) validados en Sí. Todos deben estar validados en Sí.'"
+              pTooltip="Genera un PDF con todos los adjuntos (trabajador y beneficiarios) validados en Sí. Solo se permite un expediente por solicitud."
+              tooltipPosition="top"
               [loading]="generandoExpediente"
               [disabled]="generandoExpediente || !todosAdjuntosValidadosEnSi"
               (onClick)="generarExpediente()"></p-button>

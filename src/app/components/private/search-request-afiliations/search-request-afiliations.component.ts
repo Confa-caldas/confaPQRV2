@@ -1,9 +1,12 @@
 import { Component, ViewChild } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
 import {
+  AfiliacionFiltroIndicadorGestion,
   ApplicantTypeList,
+  FilterRequestsAfiliation,
   RequestTypeList,
   RequestsListAfiliation,
   RequestsList,
@@ -41,6 +44,18 @@ export class SearchRequestAfiliationsComponent extends BaseRequestsDirective {
   enableAssign: boolean = false;
   mensajeReasignacion: string = '';
   solicitudes: any[] = [];
+  readonly indicadorGestionOpciones: { label: string; value: AfiliacionFiltroIndicadorGestion }[] = [
+    { label: 'Novedad Restrictiva', value: 'novedad_restrictiva' },
+    { label: 'Pendiente Activar Empresa', value: 'pendiente_activar_empresa' },
+    { label: 'Pendiente Dirección', value: 'pendiente_direccion' },
+  ];
+
+  private static readonly INDICADOR_GESTION_VALORES: AfiliacionFiltroIndicadorGestion[] = [
+    'novedad_restrictiva',
+    'pendiente_activar_empresa',
+    'pendiente_direccion',
+  ];
+  private static readonly VALOR_FILTRO_BD: 'Si' = 'Si';
 
   isBulkAssign: boolean = false;
   selectedRequests: RequestsList[] = [];
@@ -52,6 +67,64 @@ export class SearchRequestAfiliationsComponent extends BaseRequestsDirective {
     messageService: MessageService
   ) {
     super(userService, router, messageService);
+    this.formGroup.addControl(
+      'indicador_gestion',
+      new FormControl<AfiliacionFiltroIndicadorGestion[] | null>(null)
+    );
+    this.formGroup.get('indicador_gestion')?.valueChanges.subscribe(value => {
+      if (value?.length === 0) {
+        this.formGroup.get('indicador_gestion')?.setValue(null);
+      }
+    });
+  }
+
+  private normalizarIndicadoresGestion(raw: unknown): AfiliacionFiltroIndicadorGestion[] {
+    if (raw == null || raw === '') {
+      return [];
+    }
+    const arr = Array.isArray(raw) ? raw : [raw];
+    const out: AfiliacionFiltroIndicadorGestion[] = [];
+    for (const item of arr) {
+      const s = String(item);
+      if (
+        SearchRequestAfiliationsComponent.INDICADOR_GESTION_VALORES.includes(
+          s as AfiliacionFiltroIndicadorGestion
+        )
+      ) {
+        out.push(s as AfiliacionFiltroIndicadorGestion);
+      }
+    }
+    return [...new Set(out)];
+  }
+
+  private indicadoresGestionParaPayload(
+    filtros: Record<string, any>
+  ): AfiliacionFiltroIndicadorGestion[] {
+    const desdeFormulario = this.formGroup.get('indicador_gestion')?.value;
+    if (desdeFormulario?.length) {
+      return this.normalizarIndicadoresGestion(desdeFormulario);
+    }
+    return this.normalizarIndicadoresGestion(
+      filtros['indicador_gestion'] ?? filtros['tipo_novedad']
+    );
+  }
+
+  protected override buildAfiliationFilterPayload(
+    filtros: Record<string, any>,
+    statusId: number | number[] | null | undefined
+  ): FilterRequestsAfiliation {
+    const base = super.buildAfiliationFilterPayload(filtros, statusId);
+    const campos = this.indicadoresGestionParaPayload(filtros);
+    return {
+      ...base,
+      tipo_novedad:
+        campos.length > 0
+          ? campos.map(campo => ({
+              campo,
+              valor: SearchRequestAfiliationsComponent.VALOR_FILTRO_BD,
+            }))
+          : null,
+    };
   }
 
   /**

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
 import {
+  AfiliacionFiltroIndicadorGestion,
   ApplicantTypeList,
   afiliacionIndicadoresPermitenAsignar,
   FilterRequestsMassive,
@@ -62,6 +63,17 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
   loading: boolean = true;
   PERFIL!: string;
   statusList: RequestStatusAfiliationList[] = [];
+  readonly indicadorGestionOpciones: { label: string; value: AfiliacionFiltroIndicadorGestion }[] = [
+    { label: 'Novedad Restrictiva', value: 'novedad_restrictiva' },
+    { label: 'Pendiente Activar Empresa', value: 'pendiente_activar_empresa' },
+    { label: 'Pendiente Dirección', value: 'pendiente_direccion' },
+  ];
+  private static readonly INDICADOR_GESTION_VALORES: AfiliacionFiltroIndicadorGestion[] = [
+    'novedad_restrictiva',
+    'pendiente_activar_empresa',
+    'pendiente_direccion',
+  ];
+  private static readonly VALOR_FILTRO_BD: 'Si' = 'Si';
   formGroup: FormGroup<any> = new FormGroup<any>({});
   mensajeReasignacion: string = '';
   //paginador
@@ -86,6 +98,7 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
       dates_range: new FormControl(null),
       doc_id_emp: new FormControl(null),
       request_status_id: new FormControl(null),
+      indicador_gestion: new FormControl<AfiliacionFiltroIndicadorGestion[] | null>(null),
     });
 
     this.formGroup.get('request_status_id')?.valueChanges.subscribe(value => {
@@ -93,6 +106,42 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
         this.formGroup.get('request_status_id')?.setValue(null);
       }
     });
+    this.formGroup.get('indicador_gestion')?.valueChanges.subscribe(value => {
+      if (value?.length === 0) {
+        this.formGroup.get('indicador_gestion')?.setValue(null);
+      }
+    });
+  }
+
+  private normalizarIndicadoresGestion(raw: unknown): AfiliacionFiltroIndicadorGestion[] {
+    if (raw == null || raw === '') {
+      return [];
+    }
+    const arr = Array.isArray(raw) ? raw : [raw];
+    const out: AfiliacionFiltroIndicadorGestion[] = [];
+    for (const item of arr) {
+      const s = String(item);
+      if (
+        SearchRequestAfiMassiveComponent.INDICADOR_GESTION_VALORES.includes(
+          s as AfiliacionFiltroIndicadorGestion
+        )
+      ) {
+        out.push(s as AfiliacionFiltroIndicadorGestion);
+      }
+    }
+    return [...new Set(out)];
+  }
+
+  private indicadoresGestionParaPayload(
+    filtros: Record<string, any>
+  ): AfiliacionFiltroIndicadorGestion[] {
+    const desdeFormulario = this.formGroup.get('indicador_gestion')?.value;
+    if (desdeFormulario?.length) {
+      return this.normalizarIndicadoresGestion(desdeFormulario);
+    }
+    return this.normalizarIndicadoresGestion(
+      filtros['indicador_gestion'] ?? filtros['tipo_novedad']
+    );
   }
 
   ngOnInit() {
@@ -228,6 +277,14 @@ export class SearchRequestAfiMassiveComponent implements OnInit {
         this.formGroup.controls['request_status_id'].value.length > 0
           ? this.formGroup.controls['request_status_id'].value
           : filtros['request_status_id'] || null,
+      tipo_novedad: (() => {
+        const campos = this.indicadoresGestionParaPayload(filtros);
+        if (campos.length === 0) return null;
+        return campos.map(campo => ({
+          campo,
+          valor: SearchRequestAfiMassiveComponent.VALOR_FILTRO_BD,
+        }));
+      })(),
       page: this.page,
       page_size: this.rows,
     };
