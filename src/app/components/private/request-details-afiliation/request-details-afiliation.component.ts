@@ -316,16 +316,38 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   subiendoAdjuntosAdicionales = false;
   /** En curso la generación del expediente PDF. */
   generandoExpediente = false;
-  /** Por cada índice de beneficiario, true si al cargar tenía tipo doc CE o PPT (la sección editable se mantiene aunque cambie el selector). */
+  /** Por cada índice de beneficiario, true si al cargar tenía tipo doc CE, PPT, CC, TI o RC (la sección editable se mantiene aunque cambie el selector). */
   private beneficioEditablePorIndice: boolean[] = [];
+  /** Por cada índice de beneficiario, true si al cargar tenía tipo doc CC, TI o RC (habilita la edición de campos adicionales: grupo familiar, invalidez, admin subsidios). */
+  private beneficioEditableExtrasPorIndice: boolean[] = [];
+  /** Opciones genéricas Si/No reutilizadas en varios dropdowns del beneficiario. */
+  opcionesSiNo: { label: string; value: string }[] = [
+    { label: 'Sí', value: 'Si' },
+    { label: 'No', value: 'No' },
+  ];
   /** Snapshots de datos editables por beneficiario (índice) para detectar cambios. */
   private snapshotBeneficiarios: Array<{
     parentesco: string | null;
     tipo_documento: string;
     numero_documento: string;
     primer_nombre: string;
+    segundo_nombre: string | null;
+    primer_apellido: string;
+    segundo_apellido: string | null;
+    fecha_expedicion_doc: string | null;
+    fecha_nacimiento: string | null;
+    genero: string | null;
     direccion_corresponde_trabajador: string | null;
     direccion: string | null;
+    nuevo_beneficiario: string | null;
+    nuevo_grupo_familiar: string | null;
+    numero_grupo_familiar: number | null;
+    fecha_inicio_invalidez: string | null;
+    fecha_reporte_invalidez: string | null;
+    tipo_identificacion_administrador_subsidio: string | null;
+    numero_identificacion_administrador_subsidio: string | null;
+    nombre_completo_administrador_subsidio: string | null;
+    fecha_nacimiento_administrador_subsidio: string | null;
   }> = [];
   /** Snapshot de los datos editables del afiliado al cargar/guardar; se usa para detectar si hay cambios. */
   private snapshotDatosTrabajador: {
@@ -1441,21 +1463,45 @@ getRequestDetails(request_details: number) {
     const list = this.afiliationRequestDetails?.beneficiarios ?? [];
     this.beneficioEditablePorIndice = list.map((b) => {
       const tipo = (b.persona?.tipo_documento ?? '').toString().trim().toUpperCase();
-      return tipo === 'CE' || tipo === 'PPT';
+      return tipo === 'CE' || tipo === 'PPT' || tipo === 'CC' || tipo === 'TI' || tipo === 'RC';
+    });
+    this.beneficioEditableExtrasPorIndice = list.map((b) => {
+      const tipo = (b.persona?.tipo_documento ?? '').toString().trim().toUpperCase();
+      return tipo === 'CC' || tipo === 'TI' || tipo === 'RC';
     });
     this.snapshotBeneficiarios = list.map((b) => ({
       parentesco: b.beneficiario?.parentesco != null ? String(b.beneficiario.parentesco).trim() || null : null,
       tipo_documento: (b.persona?.tipo_documento ?? '').toString().trim(),
       numero_documento: (b.persona?.numero_documento ?? '').toString().trim(),
       primer_nombre: (b.persona?.primer_nombre ?? '').toString().trim(),
+      segundo_nombre: b.persona?.segundo_nombre != null ? String(b.persona.segundo_nombre).trim() || null : null,
+      primer_apellido: (b.persona?.primer_apellido ?? '').toString().trim(),
+      segundo_apellido: b.persona?.segundo_apellido != null ? String(b.persona.segundo_apellido).trim() || null : null,
+      fecha_expedicion_doc: b.persona?.fecha_expedicion_doc ?? null,
+      fecha_nacimiento: b.persona?.fecha_nacimiento ?? null,
+      genero: b.persona?.genero != null ? String(b.persona.genero).trim() || null : null,
       direccion_corresponde_trabajador: b.beneficiario?.direccion_corresponde_trabajador != null ? String(b.beneficiario.direccion_corresponde_trabajador).trim() || null : null,
       direccion: b.persona?.direccion != null ? String(b.persona.direccion).trim() || null : null,
+      nuevo_beneficiario: b.beneficiario?.nuevo_beneficiario != null ? String(b.beneficiario.nuevo_beneficiario).trim() || null : null,
+      nuevo_grupo_familiar: b.beneficiario?.nuevo_grupo_familiar != null ? String(b.beneficiario.nuevo_grupo_familiar).trim() || null : null,
+      numero_grupo_familiar: b.beneficiario?.numero_grupo_familiar ?? null,
+      fecha_inicio_invalidez: b.beneficiario?.fecha_inicio_invalidez ?? null,
+      fecha_reporte_invalidez: b.beneficiario?.fecha_reporte_invalidez ?? null,
+      tipo_identificacion_administrador_subsidio: b.beneficiario?.tipo_identificacion_administrador_subsidio != null ? String(b.beneficiario.tipo_identificacion_administrador_subsidio).trim() || null : null,
+      numero_identificacion_administrador_subsidio: b.beneficiario?.numero_identificacion_administrador_subsidio != null ? String(b.beneficiario.numero_identificacion_administrador_subsidio).trim() || null : null,
+      nombre_completo_administrador_subsidio: b.beneficiario?.nombre_completo_administrador_subsidio != null ? String(b.beneficiario.nombre_completo_administrador_subsidio).trim() || null : null,
+      fecha_nacimiento_administrador_subsidio: b.beneficiario?.fecha_nacimiento_administrador_subsidio ?? null,
     }));
   }
 
-  /** True si el beneficiario en el índice dado tiene la sección editable (era CE/PPT al cargar; los selectores no se ocultan al cambiar). */
+  /** True si el beneficiario en el índice dado tiene la sección editable (era CE/PPT/CC/TI/RC al cargar; los selectores no se ocultan al cambiar). */
   beneficioPuedeEditar(index: number): boolean {
     return this.beneficioEditablePorIndice[index] === true;
+  }
+
+  /** True si el beneficiario en el índice dado tiene habilitada la edición de campos adicionales (era CC/TI/RC al cargar): grupo familiar, invalidez, admin subsidios. */
+  beneficioPuedeEditarExtras(index: number): boolean {
+    return this.beneficioEditableExtrasPorIndice[index] === true;
   }
 
   /** True si el beneficiario en el índice dado tiene cambios respecto a su snapshot (solo si tiene sección editable). */
@@ -1471,10 +1517,35 @@ getRequestDetails(request_details: number) {
     if ((p?.tipo_documento ?? '').toString().trim() !== snap.tipo_documento) return true;
     if ((p?.numero_documento ?? '').toString().trim() !== snap.numero_documento) return true;
     if ((p?.primer_nombre ?? '').toString().trim() !== snap.primer_nombre) return true;
+    const segNombre = (p?.segundo_nombre ?? '').toString().trim();
+    if (segNombre !== (snap.segundo_nombre ?? '')) return true;
+    if ((p?.primer_apellido ?? '').toString().trim() !== snap.primer_apellido) return true;
+    const segApellido = (p?.segundo_apellido ?? '').toString().trim();
+    if (segApellido !== (snap.segundo_apellido ?? '')) return true;
+    if ((p?.fecha_expedicion_doc ?? null) !== (snap.fecha_expedicion_doc ?? null)) return true;
+    if ((p?.fecha_nacimiento ?? null) !== (snap.fecha_nacimiento ?? null)) return true;
+    const genero = (p?.genero ?? '').toString().trim();
+    if (genero !== (snap.genero ?? '')) return true;
     const dirTrab = (ben?.direccion_corresponde_trabajador ?? '').toString().trim();
     if (dirTrab !== (snap.direccion_corresponde_trabajador ?? '')) return true;
     const dir = (p?.direccion ?? '').toString().trim();
     if (dir !== (snap.direccion ?? '')) return true;
+    if (this.beneficioPuedeEditarExtras(index)) {
+      const nuevoBenef = (ben?.nuevo_beneficiario ?? '').toString().trim();
+      if (nuevoBenef !== (snap.nuevo_beneficiario ?? '')) return true;
+      const nuevoGrupo = (ben?.nuevo_grupo_familiar ?? '').toString().trim();
+      if (nuevoGrupo !== (snap.nuevo_grupo_familiar ?? '')) return true;
+      if ((ben?.numero_grupo_familiar ?? null) !== (snap.numero_grupo_familiar ?? null)) return true;
+      if ((ben?.fecha_inicio_invalidez ?? null) !== (snap.fecha_inicio_invalidez ?? null)) return true;
+      if ((ben?.fecha_reporte_invalidez ?? null) !== (snap.fecha_reporte_invalidez ?? null)) return true;
+      const tipoAdmin = (ben?.tipo_identificacion_administrador_subsidio ?? '').toString().trim();
+      if (tipoAdmin !== (snap.tipo_identificacion_administrador_subsidio ?? '')) return true;
+      const numAdmin = (ben?.numero_identificacion_administrador_subsidio ?? '').toString().trim();
+      if (numAdmin !== (snap.numero_identificacion_administrador_subsidio ?? '')) return true;
+      const nomAdmin = (ben?.nombre_completo_administrador_subsidio ?? '').toString().trim();
+      if (nomAdmin !== (snap.nombre_completo_administrador_subsidio ?? '')) return true;
+      if ((ben?.fecha_nacimiento_administrador_subsidio ?? null) !== (snap.fecha_nacimiento_administrador_subsidio ?? null)) return true;
+    }
     return false;
   }
 
@@ -1543,7 +1614,31 @@ getRequestDetails(request_details: number) {
     const d = this.afiliationRequestDetails;
     if (!d?.solicitud?.id) return;
     this.guardandoBeneficiarioIndex = index;
-    const payload = {
+    const payload: {
+      id_persona: number;
+      id_solicitud: number;
+      tipo_documento: string;
+      numero_documento: string;
+      primer_apellido: string;
+      segundo_apellido: string | null;
+      primer_nombre: string;
+      segundo_nombre: string | null;
+      fecha_expedicion_doc: string | null;
+      fecha_nacimiento: string | null;
+      genero: string | null;
+      parentesco: string | null;
+      direccion_corresponde_trabajador: string | null;
+      direccion: string | null;
+      nuevo_beneficiario?: string | null;
+      nuevo_grupo_familiar?: string | null;
+      numero_grupo_familiar?: number | null;
+      fecha_inicio_invalidez?: string | null;
+      fecha_reporte_invalidez?: string | null;
+      tipo_identificacion_administrador_subsidio?: string | null;
+      numero_identificacion_administrador_subsidio?: string | null;
+      nombre_completo_administrador_subsidio?: string | null;
+      fecha_nacimiento_administrador_subsidio?: string | null;
+    } = {
       id_persona: p.id,
       id_solicitud: d.solicitud.id,
       tipo_documento: (p.tipo_documento ?? '').toString().trim(),
@@ -1552,12 +1647,24 @@ getRequestDetails(request_details: number) {
       segundo_apellido: p.segundo_apellido != null ? String(p.segundo_apellido).trim() || null : null,
       primer_nombre: (p.primer_nombre ?? '').toString().trim(),
       segundo_nombre: p.segundo_nombre != null ? String(p.segundo_nombre).trim() || null : null,
+      fecha_expedicion_doc: p.fecha_expedicion_doc ?? null,
       fecha_nacimiento: p.fecha_nacimiento ?? null,
       genero: p.genero ?? null,
       parentesco: ben?.parentesco ?? null,
       direccion_corresponde_trabajador: dirTrab || null,
       direccion: dirTrabNorm === 'si' ? (this.getDireccionTrabajador() || null) : (p.direccion ?? null),
     };
+    if (this.beneficioPuedeEditarExtras(index)) {
+      payload.nuevo_beneficiario = ben?.nuevo_beneficiario != null ? String(ben.nuevo_beneficiario).trim() || null : null;
+      payload.nuevo_grupo_familiar = ben?.nuevo_grupo_familiar != null ? String(ben.nuevo_grupo_familiar).trim() || null : null;
+      payload.numero_grupo_familiar = ben?.numero_grupo_familiar ?? null;
+      payload.fecha_inicio_invalidez = ben?.fecha_inicio_invalidez ?? null;
+      payload.fecha_reporte_invalidez = ben?.fecha_reporte_invalidez ?? null;
+      payload.tipo_identificacion_administrador_subsidio = ben?.tipo_identificacion_administrador_subsidio != null ? String(ben.tipo_identificacion_administrador_subsidio).trim() || null : null;
+      payload.numero_identificacion_administrador_subsidio = ben?.numero_identificacion_administrador_subsidio != null ? String(ben.numero_identificacion_administrador_subsidio).trim() || null : null;
+      payload.nombre_completo_administrador_subsidio = ben?.nombre_completo_administrador_subsidio != null ? String(ben.nombre_completo_administrador_subsidio).trim() || null : null;
+      payload.fecha_nacimiento_administrador_subsidio = ben?.fecha_nacimiento_administrador_subsidio ?? null;
+    }
     this.userService.updatePersonaBeneficiarioSolicitud(payload).subscribe({
       next: (res) => {
         this.guardandoBeneficiarioIndex = null;
@@ -1590,8 +1697,11 @@ getRequestDetails(request_details: number) {
     return this.trabajadorEditablePorCarga;
   }
 
-  /** True si existe al menos un beneficiario con parentesco "Cónyuge". El campo Estado civil queda editable para poder cambiar la opción. */
-  get mostrarEstadoCivilEditable(): boolean {
+  /** True si al cargar el trabajador no tenía estado civil registrado; la edición se mantiene aunque el usuario seleccione un valor (para que el botón Guardar siga visible). */
+  private estadoCivilVacioPorCarga = false;
+
+  /** True si existe al menos un beneficiario con parentesco "Cónyuge". */
+  private get hayBeneficiarioConyuge(): boolean {
     const d = this.afiliationRequestDetails;
     if (!d?.beneficiarios?.length) return false;
     const parentescoConyuge = (p: string | null | undefined) => {
@@ -1602,15 +1712,56 @@ getRequestDetails(request_details: number) {
     return d.beneficiarios.some((b) => parentescoConyuge(b.beneficiario?.parentesco));
   }
 
-  /** True solo cuando el estado civil actual es "Soltero(a)" Y hay beneficiario Cónyuge. Solo para mostrar el mensaje de alerta. */
+  /**
+   * True si al cargar el trabajador no tenía estado civil registrado.
+   * Es "sticky" (no depende del valor seleccionado actualmente) para que la sección y el botón
+   * Guardar permanezcan visibles mientras el usuario elige una opción.
+   */
+  private get estadoCivilTrabajadorVacio(): boolean {
+    return this.estadoCivilVacioPorCarga;
+  }
+
+  /**
+   * El campo Estado civil queda editable cuando:
+   *  (a) existe al menos un beneficiario con parentesco Cónyuge (puede que haya que actualizar el estado civil), o
+   *  (b) el trabajador no tiene estado civil registrado (el campo viene vacío y debe completarse).
+   */
+  get mostrarEstadoCivilEditable(): boolean {
+    return this.hayBeneficiarioConyuge || this.estadoCivilTrabajadorVacio;
+  }
+
+  /** True cuando el estado civil actual es "Soltero(a)" Y existe un beneficiario Cónyuge. Solo para mostrar la alerta. */
   get tieneAlertaEstadoCivilSolteroConConyuge(): boolean {
     const d = this.afiliationRequestDetails;
-    if (!d?.trabajador?.trabajador || !this.mostrarEstadoCivilEditable) return false;
+    if (!d?.trabajador?.trabajador || !this.hayBeneficiarioConyuge) return false;
     const estadoCivil = (d.trabajador.trabajador.estado_civil ?? '').toString().trim();
     return estadoCivil.toLowerCase().includes('soltero');
   }
 
-  /** Guarda snapshot de los datos editables del afiliado y marca si la sección trabajador es editable (CE/PPT al cargar). */
+  /** True cuando el valor actualmente seleccionado de estado civil es vacío. Se usa para mostrar la alerta y debe reaccionar al cambio del dropdown. */
+  get tieneAlertaEstadoCivilVacio(): boolean {
+    const d = this.afiliationRequestDetails;
+    if (!d?.trabajador?.trabajador) return false;
+    return !((d.trabajador.trabajador.estado_civil ?? '').toString().trim());
+  }
+
+  /** True cuando alguna de las alertas de estado civil debe mostrarse. */
+  get tieneAlertaEstadoCivil(): boolean {
+    return this.tieneAlertaEstadoCivilSolteroConConyuge || this.tieneAlertaEstadoCivilVacio;
+  }
+
+  /** Texto contextual de la alerta de estado civil según el caso aplicable. */
+  get mensajeAlertaEstadoCivil(): string {
+    if (this.tieneAlertaEstadoCivilSolteroConConyuge) {
+      return 'El afiliado figura como Soltero pero tiene un beneficiario con parentesco Cónyuge. Posiblemente el campo deba actualizarse.';
+    }
+    if (this.tieneAlertaEstadoCivilVacio) {
+      return 'El afiliado no tiene un estado civil registrado. Por favor, seleccione una opción.';
+    }
+    return '';
+  }
+
+  /** Guarda snapshot de los datos editables del afiliado y marca si la sección trabajador es editable (CE/PPT al cargar) y si el estado civil venía vacío. */
   guardarSnapshotDatosTrabajador(): void {
     const d = this.afiliationRequestDetails;
     const p = d?.trabajador?.persona;
@@ -1618,10 +1769,12 @@ getRequestDetails(request_details: number) {
     if (!p) {
       this.snapshotDatosTrabajador = null;
       this.trabajadorEditablePorCarga = false;
+      this.estadoCivilVacioPorCarga = false;
       return;
     }
     const tipo = (p.tipo_documento ?? '').toString().trim().toUpperCase();
     this.trabajadorEditablePorCarga = tipo === 'CE' || tipo === 'PPT';
+    this.estadoCivilVacioPorCarga = !((t?.estado_civil ?? '').toString().trim());
     const norm = (v: string | Date | null | undefined): string | null => {
       if (v == null) return null;
       if (v instanceof Date) return v.toISOString().split('T')[0] ?? null;
@@ -2310,7 +2463,11 @@ getRequestDetails(request_details: number) {
     this.guardarDatosTrabajadorCE_PPT();
   }
 
-  /** Guarda los cambios de datos del afiliado: persona (cuando CE/PPT) y/o estado civil (cuando alerta Soltero/Cónyuge). */
+  /**
+   * Guarda los cambios de datos del afiliado:
+   *  - Persona (cuando es CE/PPT al cargar).
+   *  - Estado civil (cuando hay beneficiario Cónyuge o cuando el estado civil viene vacío).
+   */
   guardarDatosTrabajadorCE_PPT(): void {
     const d = this.afiliationRequestDetails;
     if (!d?.trabajador?.persona) {

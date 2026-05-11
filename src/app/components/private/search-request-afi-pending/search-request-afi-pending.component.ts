@@ -6,7 +6,9 @@ import { Users } from '../../../services/users.service';
 import {
   AfiliacionFiltroIndicadorGestion,
   ApplicantTypeList,
+  afiliacionColumnaTextoIndicadoresSi,
   FilterRequestsAfiliation,
+  mensajeTooltipAsignarAfiliacionPorFila,
   RequestTypeList,
   RequestsListAfiliation,
   UserList,
@@ -67,6 +69,8 @@ export class SearchRequestAfiPendingComponent extends BaseRequestsDirective {
   isBulkAssign: boolean = false;
   selectedRequests: RequestsListAfiliation[] = [];
   readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
+  readonly columnaIndicadoresGestion = afiliacionColumnaTextoIndicadoresSi;
+  readonly tooltipAsignarPorFila = mensajeTooltipAsignarAfiliacionPorFila;
   @ViewChild('dt') table!: Table;
 
   constructor(

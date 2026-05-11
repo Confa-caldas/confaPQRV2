@@ -143,6 +143,7 @@
         <th pSortableColumn="assigned_user" style="min-width: 12rem">
           Responsable solicitud<p-sortIcon field="assigned_user"></p-sortIcon>
         </th>
+        <th style="min-width: 14rem">Novedad</th>
         <th style="width: 10rem" class="mai-col-asignar"></th>
       </tr>
     </ng-template>
@@ -152,7 +153,7 @@
           <span
             *ngIf="row.request_status === 1"
             class="assign-btn-tooltip-wrap"
-            [pTooltip]="mensajeTooltipAsignarInhabilitada"
+            [pTooltip]="tooltipAsignarPorFila(row)"
             [tooltipDisabled]="puedeActivarAsignar(row)"
             tooltipPosition="top"
             tooltipStyleClass="tooltip-asignar-bloqueado">
@@ -180,12 +181,15 @@
         <td style="text-align: center">{{ displayNombreEmpresa(row) }}</td>
         <td style="text-align: center">{{ displayEstadoSolicitud(row) }}</td>
         <td style="text-align: center">{{ row.assigned_user || '—' }}</td>
+        <td style="text-align: center; font-size: 0.85rem">
+          {{ columnaIndicadoresGestion(row) }}
+        </td>
         <td>
           <div
             *ngIf="esPendienteAsignacion(row) && !filaCerrada(row) && PERFIL !== 'CONSULTANTE'">
             <span
               class="assign-btn-tooltip-wrap"
-              [pTooltip]="mensajeTooltipAsignarInhabilitada"
+              [pTooltip]="tooltipAsignarPorFila(row)"
               [tooltipDisabled]="puedeActivarAsignar(row)"
               tooltipPosition="top"
               tooltipStyleClass="tooltip-asignar-bloqueado">

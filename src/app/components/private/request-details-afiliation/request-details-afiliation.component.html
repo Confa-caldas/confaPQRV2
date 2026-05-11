@@ -603,10 +603,10 @@
               <label class="process-container-label">Estado civil</label>
               <ng-container *ngIf="mostrarEstadoCivilEditable; else estadoCivilSoloLectura">
                 <p-message
-                  *ngIf="tieneAlertaEstadoCivilSolteroConConyuge"
+                  *ngIf="tieneAlertaEstadoCivil"
                   severity="warn"
                   styleClass="estado-civil-alerta"
-                  [text]="'El afiliado figura como Soltero pero tiene un beneficiario con parentesco Cónyuge. Posiblemente el campo deba actualizarse.'" />
+                  [text]="mensajeAlertaEstadoCivil" />
                 <p-dropdown
                   [options]="opcionesEstadoCivil"
                   [(ngModel)]="d.trabajador.trabajador.estado_civil"
@@ -680,7 +680,7 @@
               <ng-template pTemplate="header">
                 <tr>
                   <th style="width: 26%">Archivo</th>
-                  <th style="width: 16%">Valoración</th>
+                  <th style="width: 16%">Validación</th>
                   <th style="width: 34%">Descripción (si aplica)</th>
                   <th class="adjuntos-col-acciones">Acciones</th>
                 </tr>
@@ -896,6 +896,16 @@
                         placeholder="Número de documento" />
                       <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.numero_documento || '—' }}</div>
                     </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha expedición del documento</label>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.persona.fecha_expedicion_doc"
+                        (ngModelChange)="b.persona.fecha_expedicion_doc = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.persona.fecha_expedicion_doc) || '—' }}</div>
+                    </div>
                   </div>
                   <div class="process-container-row">
                     <div class="process-container-col">
@@ -910,25 +920,59 @@
                     </div>
                     <div class="process-container-col">
                       <label class="process-container-label">Segundo nombre</label>
-                      <div class="process-container-text">{{ b.persona.segundo_nombre || '—' }}</div>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.segundo_nombre"
+                        placeholder="Segundo nombre" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.segundo_nombre || '—' }}</div>
                     </div>
                     <div class="process-container-col">
                       <label class="process-container-label">Primer apellido</label>
-                      <div class="process-container-text">{{ b.persona.primer_apellido || '—' }}</div>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.primer_apellido"
+                        placeholder="Primer apellido" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.primer_apellido || '—' }}</div>
                     </div>
                     <div class="process-container-col">
                       <label class="process-container-label">Segundo apellido</label>
-                      <div class="process-container-text">{{ b.persona.segundo_apellido || '—' }}</div>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.segundo_apellido"
+                        placeholder="Segundo apellido" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.segundo_apellido || '—' }}</div>
                     </div>
                   </div>
                   <div class="process-container-row">
                     <div class="process-container-col">
                       <label class="process-container-label">Fecha de nacimiento (dd/mm/aaaa)</label>
-                      <div class="process-container-text">{{ formatFechaDDMMYYYY(b.persona.fecha_nacimiento) }}</div>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.persona.fecha_nacimiento"
+                        (ngModelChange)="b.persona.fecha_nacimiento = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.persona.fecha_nacimiento) || '—' }}</div>
                     </div>
                     <div class="process-container-col">
                       <label class="process-container-label">Género</label>
-                      <div class="process-container-text">{{ b.persona.genero || '—' }}</div>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        [options]="opcionesGenero"
+                        [(ngModel)]="b.persona.genero"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.genero || '—' }}</div>
                     </div>
                   </div>
                   <!-- Dirección beneficiario: Si/No si es misma del trabajador; si No, campo requerido -->
@@ -964,7 +1008,8 @@
                       <small *ngIf="!direccionBeneficiarioRequeridaValida(b, iBenef)" class="error-message">La dirección es requerida cuando no corresponde a la del trabajador.</small>
                     </div>
                   </div>
-                  <div class="process-container-row tab-data-save-row" *ngIf="beneficioPuedeEditar(iBenef)">
+                  <!-- Guardar cambios para CE/PPT: se muestra aquí porque no hay campos editables adicionales abajo. -->
+                  <div class="process-container-row tab-data-save-row" *ngIf="beneficioPuedeEditar(iBenef) && !beneficioPuedeEditarExtras(iBenef)">
                     <div class="process-container-col">
                       <p-button
                         label="Guardar cambios"
@@ -976,17 +1021,9 @@
                         [style]="{ 'border-radius': '6px' }" />
                     </div>
                   </div>
-                  <!-- Campos solo lectura cuando no tiene sección editable (no era CE/PPT al cargar) -->
+                  <!-- Campos solo lectura cuando no tiene sección editable (no era CE/PPT/CC/TI/RC al cargar) -->
                   <ng-container *ngIf="!beneficioPuedeEditar(iBenef)">
                     <div class="process-container-row">
-                      <div class="process-container-col">
-                        <label class="process-container-label">Nuevo beneficiario</label>
-                        <div class="process-container-text">{{ b.beneficiario.nuevo_beneficiario || '—' }}</div>
-                      </div>
-                      <div class="process-container-col">
-                        <label class="process-container-label">Dirección corresponde al trabajador</label>
-                        <div class="process-container-text">{{ b.beneficiario.direccion_corresponde_trabajador || '—' }}</div>
-                      </div>
                       <div class="process-container-col">
                         <label class="process-container-label">Cónyuge labora</label>
                         <div class="process-container-text">{{ b.beneficiario.conyuge_labora || '—' }}</div>
@@ -1000,7 +1037,145 @@
                         <div class="process-container-text">{{ b.beneficiario.nivel_educativo || '—' }}</div>
                       </div>
                     </div>
+                    <div class="process-container-row">
+                      <div class="process-container-col">
+                        <label class="process-container-label">Dirección corresponde al trabajador</label>
+                        <div class="process-container-text">{{ b.beneficiario.direccion_corresponde_trabajador || '—' }}</div>
+                      </div>
+                      <div class="process-container-col">
+                        <label class="process-container-label">Dirección</label>
+                        <div class="process-container-text">{{ b.persona.direccion || '—' }}</div>
+                      </div>
+                    </div>
                   </ng-container>
+                  <!-- Datos adicionales de servicio: nuevo beneficiario, grupo familiar e invalidez (editables solo si CC/TI/RC) -->
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">¿Nuevo Beneficiario?</label>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        [options]="opcionesSiNo"
+                        [(ngModel)]="b.beneficiario.nuevo_beneficiario"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.nuevo_beneficiario || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">¿Nuevo grupo familiar?</label>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        [options]="opcionesSiNo"
+                        [(ngModel)]="b.beneficiario.nuevo_grupo_familiar"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.nuevo_grupo_familiar || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Número de grupo familiar</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="number"
+                        class="data-field-input"
+                        [ngModel]="b.beneficiario.numero_grupo_familiar"
+                        (ngModelChange)="b.beneficiario.numero_grupo_familiar = ($event === null || $event === '' ? null : +$event)"
+                        placeholder="Número de grupo familiar" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.numero_grupo_familiar ?? '—' }}</div>
+                    </div>
+                  </div>
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha de inicio de invalidez (dd/mm/aaaa)</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.beneficiario.fecha_inicio_invalidez"
+                        (ngModelChange)="b.beneficiario.fecha_inicio_invalidez = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.beneficiario.fecha_inicio_invalidez) || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha de reporte de invalidez (dd/mm/aaaa)</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.beneficiario.fecha_reporte_invalidez"
+                        (ngModelChange)="b.beneficiario.fecha_reporte_invalidez = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.beneficiario.fecha_reporte_invalidez) || '—' }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Información del administrador de subsidios (editable solo si CC/TI/RC) -->
+                <h4 class="tab-data-section-subtitle">Información del administrador de subsidios</h4>
+                <div class="process-container">
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">Tipo de identificación</label>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        [options]="opcionesTipoDocumento"
+                        [(ngModel)]="b.beneficiario.tipo_identificacion_administrador_subsidio"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.tipo_identificacion_administrador_subsidio || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Número de identificación</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.beneficiario.numero_identificacion_administrador_subsidio"
+                        placeholder="Número de identificación" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.numero_identificacion_administrador_subsidio || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Nombre completo</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.beneficiario.nombre_completo_administrador_subsidio"
+                        placeholder="Nombre completo" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.nombre_completo_administrador_subsidio || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha de nacimiento (dd/mm/aaaa)</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.beneficiario.fecha_nacimiento_administrador_subsidio"
+                        (ngModelChange)="b.beneficiario.fecha_nacimiento_administrador_subsidio = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.beneficiario.fecha_nacimiento_administrador_subsidio) || '—' }}</div>
+                    </div>
+                  </div>
+                  <!-- Guardar cambios para CC/TI/RC: se muestra al final porque incluye los campos extras editables. -->
+                  <div class="process-container-row tab-data-save-row" *ngIf="beneficioPuedeEditarExtras(iBenef)">
+                    <div class="process-container-col">
+                      <p-button
+                        label="Guardar cambios"
+                        icon="pi pi-check"
+                        (onClick)="abrirConfirmacionGuardarBeneficiario(b, iBenef)"
+                        [loading]="guardandoBeneficiarioIndex === iBenef"
+                        [disabled]="guardandoBeneficiarioIndex === iBenef || !hayCambiosBeneficiario(iBenef) || !direccionBeneficiarioRequeridaValida(b, iBenef)"
+                        severity="primary"
+                        [style]="{ 'border-radius': '6px' }" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1015,7 +1190,7 @@
                     <ng-template pTemplate="header">
                       <tr>
                         <th style="width: 26%">Archivo</th>
-                        <th style="width: 16%">Valoración</th>
+                        <th style="width: 16%">Validación</th>
                         <th style="width: 34%">Descripción (si aplica)</th>
                         <th class="adjuntos-col-acciones">Acciones</th>
                       </tr>

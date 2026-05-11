@@ -6,6 +6,7 @@ import { Users } from '../../../services/users.service';
 import {
   AfiliacionFiltroIndicadorGestion,
   ApplicantTypeList,
+  afiliacionColumnaTextoIndicadoresSi,
   FilterRequestsAfiliation,
   RequestTypeList,
   RequestsListAfiliation,
@@ -23,6 +24,7 @@ import { BaseRequestsDirective } from '../../../shared/directives/base-requests.
   styleUrl: './search-request-afiliations.component.scss',
 })
 export class SearchRequestAfiliationsComponent extends BaseRequestsDirective {
+  readonly columnaIndicadoresGestion = afiliacionColumnaTextoIndicadoresSi;
   aplicantList: ApplicantTypeList[] = [];
   requestTypeList: RequestTypeList[] = [];
   requestUserList: UserList[] = [];

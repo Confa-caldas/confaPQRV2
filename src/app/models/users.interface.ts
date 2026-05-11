@@ -42,6 +42,10 @@ export interface RequestsList {
   user_name_completed: string;
   mensaje_reasignacion: string;
   message_priority: string;
+  /** Listados de afiliación: indicadores en Sí bloquean asignación si el API los envía. */
+  pendiente_direccion?: string | null;
+  pendiente_activar_empresa?: string | null;
+  novedad_restrictiva?: string | null;
 }
 
 export interface RequestsListAfiliation {
@@ -72,32 +76,78 @@ export interface RequestsListAfiliation {
   novedad_restrictiva?: string | null;
 }
 
-/**
- * Devuelve true si el botón Asignar puede estar activo.
- * Asignar se inhabilita si cualquiera de los tres indicadores es "Si".
- */
-export function afiliacionIndicadoresPermitenAsignar(row: {
+/** Fila con indicadores que bloquean asignación si vienen en «Sí». */
+export type AfiliacionIndicadoresFila = {
   pendiente_direccion?: string | null;
   pendiente_activar_empresa?: string | null;
   novedad_restrictiva?: string | null;
-}): boolean {
-  const normSi = (v: string | null | undefined) =>
+};
+
+function normSiAfiliacion(v: string | null | undefined): boolean {
+  return (
     (v ?? '')
       .toString()
       .trim()
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') === 'si';
-  const algunoEsSi =
-    normSi(row.pendiente_direccion) ||
-    normSi(row.pendiente_activar_empresa) ||
-    normSi(row.novedad_restrictiva);
-  return !algunoEsSi;
+      .replace(/[\u0300-\u036f]/g, '') === 'si'
+  );
 }
 
-/** Texto del tooltip cuando Asignar está inhabilitado por indicadores. */
+/**
+ * Devuelve true si el botón Asignar puede estar activo.
+ * Asignar se inhabilita si cualquiera de los tres indicadores es "Si".
+ */
+export function afiliacionIndicadoresPermitenAsignar(row: AfiliacionIndicadoresFila): boolean {
+  return !(
+    normSiAfiliacion(row.pendiente_direccion) ||
+    normSiAfiliacion(row.pendiente_activar_empresa) ||
+    normSiAfiliacion(row.novedad_restrictiva)
+  );
+}
+
+/** Etiquetas legibles solo de los indicadores que vienen en «Sí» (orden fijo). */
+export function afiliacionIndicadoresBloqueantesEtiquetas(row: AfiliacionIndicadoresFila): string[] {
+  const out: string[] = [];
+  if (normSiAfiliacion(row.pendiente_direccion)) {
+    out.push('Pendiente dirección');
+  }
+  if (normSiAfiliacion(row.pendiente_activar_empresa)) {
+    out.push('Pendiente activar empresa');
+  }
+  if (normSiAfiliacion(row.novedad_restrictiva)) {
+    out.push('Novedad restrictiva');
+  }
+  return out;
+}
+
+/** Texto del tooltip cuando Asignar está inhabilitado por indicadores (cabecera / acciones masivas). */
 export const MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA =
   'No puede asignar mientras pendiente dirección, pendiente activar empresa o novedad restrictiva esté en Sí.';
+
+/** Texto de columna: resume qué indicadores están en Sí, o «No». */
+export function afiliacionColumnaTextoIndicadoresSi(row: AfiliacionIndicadoresFila): string {
+  const labels = afiliacionIndicadoresBloqueantesEtiquetas(row);
+  return labels.length === 0 ? 'No' : labels.join(', ');
+}
+
+/**
+ * Tooltip por fila: solo menciona los indicadores que realmente están en Sí.
+ */
+export function mensajeTooltipAsignarAfiliacionPorFila(row: AfiliacionIndicadoresFila): string {
+  const labels = afiliacionIndicadoresBloqueantesEtiquetas(row);
+  if (labels.length === 0) {
+    return MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
+  }
+  const lista =
+    labels.length === 1
+      ? labels[0]
+      : labels.length === 2
+        ? `${labels[0]} y ${labels[1]}`
+        : `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
+  const verbo = labels.length === 1 ? 'está' : 'están';
+  return `No puede asignar mientras ${lista} ${verbo} en Sí.`;
+}
 
 export interface NovedadList {
   novedad_id: number;
@@ -1653,6 +1703,12 @@ export interface BeneficiarioInfo {
   requiere_adjunto_registro_civil: string | null;
   direccion_corresponde_trabajador: string | null;
   requiere_adjunto_documento_soporte: string | null;
+  fecha_inicio_invalidez?: string | null;
+  fecha_reporte_invalidez?: string | null;
+  tipo_identificacion_administrador_subsidio?: string | null;
+  numero_identificacion_administrador_subsidio?: string | null;
+  nombre_completo_administrador_subsidio?: string | null;
+  fecha_nacimiento_administrador_subsidio?: string | null;
   novedades?: IntegranteNovedades | null;
 }
 

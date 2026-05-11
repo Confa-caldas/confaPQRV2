@@ -5,8 +5,10 @@ import { Users } from '../../../services/users.service';
 import {
   AfiliacionFiltroIndicadorGestion,
   ApplicantTypeList,
+  afiliacionColumnaTextoIndicadoresSi,
   afiliacionIndicadoresPermitenAsignar,
   FilterRequestsMassive,
+  mensajeTooltipAsignarAfiliacionPorFila,
   MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA,
   RequestStatusAfiliationList,
   RequestTypeList,
@@ -30,6 +32,8 @@ import { Table } from 'primeng/table';
 })
 export class SearchRequestAfiMassiveComponent implements OnInit {
   readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
+  readonly columnaIndicadoresGestion = afiliacionColumnaTextoIndicadoresSi;
+  readonly tooltipAsignarPorFila = mensajeTooltipAsignarAfiliacionPorFila;
 
   /** Misma regla que pendientes: solo filas en estado 1 y sin indicadores bloqueantes. */
   readonly esFilaSeleccionableParaAsignar = (ctx: {

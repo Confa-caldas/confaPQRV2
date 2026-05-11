@@ -194,11 +194,21 @@ export class Users {
     segundo_apellido: string | null;
     primer_nombre: string;
     segundo_nombre: string | null;
+    fecha_expedicion_doc?: string | null;
     fecha_nacimiento: string | null;
     genero: string | null;
     parentesco?: string | null;
     direccion_corresponde_trabajador?: string | null;
     direccion?: string | null;
+    nuevo_beneficiario?: string | null;
+    nuevo_grupo_familiar?: string | null;
+    numero_grupo_familiar?: number | null;
+    fecha_inicio_invalidez?: string | null;
+    fecha_reporte_invalidez?: string | null;
+    tipo_identificacion_administrador_subsidio?: string | null;
+    numero_identificacion_administrador_subsidio?: string | null;
+    nombre_completo_administrador_subsidio?: string | null;
+    fecha_nacimiento_administrador_subsidio?: string | null;
   }) {
     return this.http.put<BodyResponse<unknown>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_UPDATE_PERSONA}`,
