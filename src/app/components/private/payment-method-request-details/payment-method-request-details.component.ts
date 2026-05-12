@@ -65,6 +65,8 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
   // Lista filtrada que se mostrará en el dropdown de traslado según selección de medioPago
   trasladoStatusFiltered: { label: string; value: number }[] = [];
   requestStatusOptions: { label: string; value: number }[] = [];
+  // Catálogo completo de estados de solicitud (incluye "tramitada" y "radicada"), usado para resolver IDs por nombre
+  private allRequestStatuses: { label: string; value: number }[] = [];
   transferenciaStatusOptions: { label: string; value: number }[] = [];
   showRequestStatus: boolean = false;
 
@@ -336,16 +338,15 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     this.userService.getRequestPaymentMethodStatusList().subscribe({
       next: (response: BodyResponse<RequestPaymentMethodStatusList[]>) => {
         if (response.code === 200) {
-          this.requestStatusOptions = response.data
-            .filter(
-              item =>
-                item.payment_method_status_name.toLowerCase() !== 'radicada' &&
-                item.payment_method_status_name.toLowerCase() !== 'tramitada'
-            )
-            .map(item => ({
-              label: item.payment_method_status_name,
-              value: item.payment_method_status_id,
-            }));
+          this.allRequestStatuses = response.data.map(item => ({
+            label: item.payment_method_status_name,
+            value: item.payment_method_status_id,
+          }));
+
+          this.requestStatusOptions = this.allRequestStatuses.filter(
+            item =>
+              item.label.toLowerCase() !== 'radicada' && item.label.toLowerCase() !== 'tramitada'
+          );
         }
       },
       error: (err: any) => {
@@ -508,13 +509,60 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     }
   }
 
+  /**
+   * Resuelve el ID del estado de la solicitud (payment_method_status_id) que se enviará en el payload.
+   *
+   * Reglas:
+   * 1. Si el usuario seleccionó manualmente un estado en el dropdown (caso "No aplicado" + "No aplicado"),
+   *    se respeta esa selección.
+   * 2. Si "Estado gestión medio de pago" = "Aplicado" y "Estado gestión traslado" es "Aplicado con saldo"
+   *    o "Aplicado sin saldo", se resuelve automáticamente como "Tramitada".
+   * 3. En cualquier otro caso, retorna 0 (comportamiento previo).
+   *
+   * Los IDs se buscan por nombre en los catálogos cargados para evitar hardcodear valores del backend.
+   */
+  private resolveRequestStatusId(): number {
+    const manual = this.processForm.get('requestStatus')?.value;
+    if (manual) {
+      return manual;
+    }
+
+    const medioPagoAplicadoId = this.medioPagoStatusOptions.find(
+      opt => opt.label.toLowerCase() === 'aplicado'
+    )?.value;
+
+    const trasladoIdsAplicado = this.trasladoStatusOptions
+      .filter(
+        opt =>
+          opt.label.toLowerCase() === 'aplicado con saldo' ||
+          opt.label.toLowerCase() === 'aplicado sin saldo'
+      )
+      .map(opt => opt.value);
+
+    const tramitadaId = this.allRequestStatuses.find(
+      opt => opt.label.toLowerCase() === 'tramitada'
+    )?.value;
+
+    const medioPagoValue = this.processForm.get('medioPagoStatus')?.value;
+    const trasladoValue = this.processForm.get('trasladoStatus')?.value;
+
+    const esTramitada =
+      medioPagoValue === medioPagoAplicadoId && trasladoIdsAplicado.includes(trasladoValue);
+
+    if (esTramitada && tramitadaId) {
+      return tramitadaId;
+    }
+
+    return 0;
+  }
+
   closeDialog(value: boolean) {
     this.visibleDialog = false;
     if (value) {
       // Usuario confirmó - ejecutar el guardado
       const payload: AnswerPaymentMethodRequest = {
         request_id: this.request_id,
-        payment_method_status_id: this.processForm.get('requestStatus')?.value || 0,
+        payment_method_status_id: this.resolveRequestStatusId(),
         payment_method_process_status_id: this.processForm.get('medioPagoStatus')?.value || 0,
         transfer_process_status_id: this.processForm.get('trasladoStatus')?.value || 0,
         observations: this.processForm.get('observations')?.value || '',
