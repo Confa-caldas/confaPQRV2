@@ -1,4 +1,12 @@
-import { Component, ElementRef, OnInit, ViewChild, HostListener } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  HostListener,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators, ValidationErrors } from '@angular/forms';
 import { Users } from '../../../services/users.service';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
@@ -18,14 +26,14 @@ import { environment } from '../../../../environments/environment';
 import { HttpEventType, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { throwError, retry, lastValueFrom, firstValueFrom  } from 'rxjs';
 import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
-import { ChangeDetectorRef } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-request-form',
   templateUrl: './request-form.component.html',
   styleUrl: './request-form.component.scss',
 })
-export class RequestFormComponent implements OnInit {
+export class RequestFormComponent implements OnInit, OnDestroy {
   @ViewChild('archive_request') fileInput!: ElementRef;
 
   requestForm: FormGroup;
@@ -87,6 +95,33 @@ export class RequestFormComponent implements OnInit {
   }[] = [];
   uploadedFiles: { [key: string]: File } = {};
 
+  /** URLs blob para previsualizar adjuntos obligatorios (clave = document_type_description). */
+  requiredDocPreviewUrls: { [key: string]: string } = {};
+
+  /** URLs blob para previsualizar adjuntos opcionales (clave = nombre de archivo). */
+  optionalAttachmentPreviews: { [key: string]: string } = {};
+
+  /** Nombres en proceso de lectura (evita solapamiento entre distintos inputs de archivo). */
+  private pendingUploadByName = new Set<string>();
+
+  /** Mensaje de nombre duplicado solo bajo el input donde ocurrió el intento. */
+  duplicateFileErrorMessage: string | null = null;
+  /** 'optional' o document_type_id del obligatorio (puede venir como número o string del JSON). */
+  duplicateFileErrorTarget: 'optional' | number | string | null = null;
+
+  /** Oculta el mensaje de duplicado tras un tiempo; se reinicia en cada nuevo intento fallido. */
+  private duplicateFileErrorClearHandle: ReturnType<typeof setTimeout> | null = null;
+  private readonly duplicateFileMessageDurationMs = 4000;
+
+  /** Modal de vista previa de adjunto */
+  previewDialogVisible = false;
+  previewModalTitle = '';
+  previewModalUrl: string | null = null;
+  previewIframeUrl: SafeResourceUrl | null = null;
+  previewModalShowImage = false;
+  previewModalShowPdf = false;
+  previewModalShowUnsupported = false;
+
   objectKeys = Object.keys;
 
 
@@ -122,13 +157,20 @@ export class RequestFormComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.revokeAllPreviewUrls();
+    this.pendingUploadByName.clear();
+    this.clearDuplicateFileError();
+  }
+
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
     private messageService: MessageService,
     private router: Router,
     private http: HttpClient,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) {
     this.value = {
       catalog_item_id: 1,
@@ -461,6 +503,15 @@ export class RequestFormComponent implements OnInit {
 
   const isRequiredDoc = !!doc; // indica si el archivo viene de los documentos requeridos
 
+  const duplicateCtx =
+    isRequiredDoc && doc
+      ? {
+          replaceDocumentTypeId: doc.document_type_id,
+          replaceDocumentDescription: doc.document_type_description,
+        }
+      : undefined;
+  const duplicateErrorTarget: 'optional' | number | string = isRequiredDoc ? doc.document_type_id : 'optional';
+
   // Solo limpiar lista si no hay adjuntos y no es documento obligatorio
   if (!isRequiredDoc && this.arrayApplicantAttachment.length === 0) {
     this.fileNameList = new Set<string>(); // aseguramos que sea un nuevo Set vacío
@@ -503,51 +554,75 @@ export class RequestFormComponent implements OnInit {
       continue;
     }
 
-    // --- Evitar duplicados solo si NO es documento obligatorio ---
-    if (!isRequiredDoc) {
-      const exists = this.arrayApplicantAttachment.some(
-        (item) => item.source_name === fileName
-      );
-      if (exists) {
-        this.errorMensajeFile = `El archivo ${fileName} ya está adjunto.`;
-        this.errorRepeatFile = true;
-        continue;
-      }
+    const nameKey = this.fileNameKey(fileName);
+
+    // --- Mismo nombre en cualquier adjunto (opcional u obligatorio) o lectura en curso ---
+    if (
+      this.pendingUploadByName.has(nameKey) ||
+      this.isFileNameAlreadyAttached(fileName, duplicateCtx)
+    ) {
+      this.notifyDuplicateFileName(fileName, duplicateErrorTarget);
+      continue;
     }
+
+    this.pendingUploadByName.add(nameKey);
 
     // --- Convertir a Base64 ---
     const reader = new FileReader();
+    reader.onerror = () => {
+      this.pendingUploadByName.delete(nameKey);
+    };
     reader.onload = (e: any) => {
-      const base64String: string = e.target.result.split(',')[1];
+      try {
+        if (this.isFileNameAlreadyAttached(fileName, duplicateCtx)) {
+          this.notifyDuplicateFileName(fileName, duplicateErrorTarget);
+          return;
+        }
 
-      // --- Estructura del adjunto ---
-      const applicantAttach: ApplicantAttachments = {
-        base64file: base64String,
-        source_name: fileName,
-        fileweight: fileSizeFormat,
-        file,
-        document_type_id: isRequiredDoc ? doc.document_type_id : null,
-      };
+        this.clearDuplicateFileError();
 
-      // --- Registrar tanto en el mapa de obligatorios como en el arreglo principal ---
-      if (isRequiredDoc) {
-        if (!this.uploadedFiles) this.uploadedFiles = {};
-        this.uploadedFiles[doc.document_type_description] = file;
-      } else {
-        this.fileNameList.add(fileName);
+        const base64String: string = e.target.result.split(',')[1];
+
+        // --- Estructura del adjunto ---
+        const applicantAttach: ApplicantAttachments = {
+          base64file: base64String,
+          source_name: fileName,
+          fileweight: fileSizeFormat,
+          file,
+          document_type_id: isRequiredDoc ? doc.document_type_id : null,
+        };
+
+        // --- Registrar tanto en el mapa de obligatorios como en el arreglo principal ---
+        if (isRequiredDoc) {
+          if (!this.uploadedFiles) this.uploadedFiles = {};
+          // Reemplazar adjunto previo del mismo tipo (evita duplicados y libera la vista previa).
+          this.arrayApplicantAttachment = this.arrayApplicantAttachment.filter(
+            item => !this.sameDocumentTypeId(item.document_type_id, doc.document_type_id)
+          );
+          this.revokeRequiredDocPreview(doc.document_type_description);
+          this.uploadedFiles[doc.document_type_description] = file;
+          this.registerRequiredDocPreview(doc.document_type_description, file);
+        } else {
+          this.fileNameList.add(fileName);
+          this.registerOptionalPreview(fileName, file);
+        }
+
+        // 👉 Aseguramos que todos (requeridos y opcionales) se agreguen al array principal
+        this.arrayApplicantAttachment.push(applicantAttach);
+        this.requestForm.updateValueAndValidity();
+
+        console.log(
+          `${isRequiredDoc ? 'Documento obligatorio' : 'Adjunto opcional'} agregado:`,
+          applicantAttach
+        );
+      } finally {
+        this.pendingUploadByName.delete(nameKey);
       }
-
-      // 👉 Aseguramos que todos (requeridos y opcionales) se agreguen al array principal
-      this.arrayApplicantAttachment.push(applicantAttach);
-      this.requestForm.updateValueAndValidity();
-
-      console.log(
-        `${isRequiredDoc ? 'Documento obligatorio' : 'Adjunto opcional'} agregado:`,
-        applicantAttach
-      );
     };
     reader.readAsDataURL(file);
   }
+
+  this.resetFileInputAfterPick(event);
 
   // --- Limpiar errores después de 5 segundos ---
   setTimeout(() => {
@@ -567,9 +642,229 @@ export class RequestFormComponent implements OnInit {
     return this.arrayApplicantAttachment;
   }
 
-  clearFileInput(index: number) {
-    const removedFile = this.arrayApplicantAttachment.splice(index, 1)[0];
-    this.fileNameList.delete(removedFile.source_name);
+  getOptionalFileByName(fileName: string): File | undefined {
+    const item = this.arrayApplicantAttachment.find(
+      a =>
+        a.source_name === fileName &&
+        (a.document_type_id === null || a.document_type_id === undefined)
+    );
+    return item?.file;
+  }
+
+  private resetFileInputAfterPick(event: Event | any): void {
+    const el = event?.target as HTMLInputElement | undefined;
+    if (el?.type === 'file') {
+      el.value = '';
+    }
+  }
+
+  private fileNameKey(name: string | undefined | null): string {
+    return (name ?? '').trim().toLowerCase();
+  }
+
+  private sameDocumentTypeId(
+    a: number | string | null | undefined,
+    b: number | string | null | undefined
+  ): boolean {
+    return Number(a) === Number(b);
+  }
+
+  /**
+   * True si ya existe un adjunto con el mismo nombre (lista opcional, obligatorios en memoria y en array).
+   * ctx: al reemplazar un obligatorio, se excluye solo ese slot para permitir el mismo control.
+   */
+  private isFileNameAlreadyAttached(
+    fileName: string,
+    ctx?: { replaceDocumentTypeId?: number | string | null; replaceDocumentDescription?: string }
+  ): boolean {
+    const key = this.fileNameKey(fileName);
+
+    for (const listed of this.fileNameList) {
+      if (this.fileNameKey(listed) === key) {
+        return true;
+      }
+    }
+
+    if (this.uploadedFiles) {
+      for (const [description, f] of Object.entries(this.uploadedFiles)) {
+        if (!f?.name) {
+          continue;
+        }
+        if (ctx?.replaceDocumentDescription && description === ctx.replaceDocumentDescription) {
+          continue;
+        }
+        if (this.fileNameKey(f.name) === key) {
+          return true;
+        }
+      }
+    }
+
+    return this.arrayApplicantAttachment.some(item => {
+      if (!item.source_name || this.fileNameKey(item.source_name) !== key) {
+        return false;
+      }
+      if (
+        ctx?.replaceDocumentTypeId != null &&
+        item.document_type_id != null &&
+        this.sameDocumentTypeId(item.document_type_id, ctx.replaceDocumentTypeId)
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  private clearDuplicateFileError(): void {
+    if (this.duplicateFileErrorClearHandle != null) {
+      clearTimeout(this.duplicateFileErrorClearHandle);
+      this.duplicateFileErrorClearHandle = null;
+    }
+    this.duplicateFileErrorMessage = null;
+    this.duplicateFileErrorTarget = null;
+    this.changeDetectorRef.detectChanges();
+  }
+
+  private notifyDuplicateFileName(fileName: string, target: 'optional' | number | string): void {
+    if (this.duplicateFileErrorClearHandle != null) {
+      clearTimeout(this.duplicateFileErrorClearHandle);
+      this.duplicateFileErrorClearHandle = null;
+    }
+    this.duplicateFileErrorMessage = `No se puede subir un archivo con el mismo nombre. Ya existe "${fileName}" entre los adjuntos.`;
+    this.duplicateFileErrorTarget = target;
+    this.changeDetectorRef.detectChanges();
+    this.duplicateFileErrorClearHandle = setTimeout(() => {
+      this.duplicateFileErrorClearHandle = null;
+      this.duplicateFileErrorMessage = null;
+      this.duplicateFileErrorTarget = null;
+      this.changeDetectorRef.detectChanges();
+    }, this.duplicateFileMessageDurationMs);
+  }
+
+  /** Quita un adjunto opcional por nombre de archivo (coherente con la tabla de adjuntos). */
+  clearOptionalAttachment(fileName: string): void {
+    const idx = this.arrayApplicantAttachment.findIndex(
+      item =>
+        item.source_name === fileName &&
+        (item.document_type_id === null || item.document_type_id === undefined)
+    );
+    if (idx === -1) {
+      return;
+    }
+    this.arrayApplicantAttachment.splice(idx, 1);
+    this.fileNameList.delete(fileName);
+    this.revokeOptionalPreview(fileName);
+    if (this.fileInput?.nativeElement && this.fileNameList.size === 0) {
+      this.fileInput.nativeElement.value = '';
+    }
+    this.requestForm.updateValueAndValidity();
+  }
+
+  removeRequiredAttachment(
+    doc: { document_type_id: number; document_type_description: string },
+    fileInputIndex: number
+  ): void {
+    delete this.uploadedFiles[doc.document_type_description];
+    this.revokeRequiredDocPreview(doc.document_type_description);
+    this.arrayApplicantAttachment = this.arrayApplicantAttachment.filter(
+      item => !this.sameDocumentTypeId(item.document_type_id, doc.document_type_id)
+    );
+    const input = document.getElementById(`fileInput-${fileInputIndex}`) as HTMLInputElement | null;
+    if (input) {
+      input.value = '';
+    }
+    this.requestForm.updateValueAndValidity();
+  }
+
+  openAttachmentPreviewModal(
+    file: File | null | undefined,
+    objectUrl: string | null | undefined
+  ): void {
+    if (!file || !objectUrl) {
+      return;
+    }
+    this.previewModalTitle = file.name;
+    this.previewModalUrl = objectUrl;
+    this.previewModalShowImage = this.isImageFile(file);
+    this.previewModalShowPdf = this.isPdfFile(file);
+    this.previewModalShowUnsupported = !this.previewModalShowImage && !this.previewModalShowPdf;
+    this.previewIframeUrl = this.previewModalShowPdf
+      ? this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl)
+      : null;
+    this.previewDialogVisible = true;
+    this.changeDetectorRef.detectChanges();
+  }
+
+  onPreviewDialogHide(): void {
+    this.previewModalUrl = null;
+    this.previewIframeUrl = null;
+    this.previewModalTitle = '';
+    this.previewModalShowImage = false;
+    this.previewModalShowPdf = false;
+    this.previewModalShowUnsupported = false;
+  }
+
+  openPreviewInNewWindow(): void {
+    if (this.previewModalUrl) {
+      window.open(this.previewModalUrl, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  isImageFile(file: File | null | undefined): boolean {
+    return !!file?.type?.startsWith('image/');
+  }
+
+  isPdfFile(file: File | null | undefined): boolean {
+    return file?.type === 'application/pdf' || file?.name?.toLowerCase().endsWith('.pdf') === true;
+  }
+
+  /** Icono según extensión para la tabla de adjuntos opcionales. */
+  getAttachmentIconClasses(fileName: string): string {
+    const ext = (fileName.split('.').pop() ?? '').toLowerCase();
+    const base = 'attachment-table__type-icon pi';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
+      return `${base} pi-image attachment-table__type-icon--image`;
+    }
+    if (ext === 'pdf') {
+      return `${base} pi-file-pdf attachment-table__type-icon--pdf`;
+    }
+    if (['xls', 'xlsx', 'csv'].includes(ext)) {
+      return `${base} pi-file-excel attachment-table__type-icon--sheet`;
+    }
+    if (['doc', 'docx'].includes(ext)) {
+      return `${base} pi-file-word attachment-table__type-icon--doc`;
+    }
+    return `${base} pi-file attachment-table__type-icon--default`;
+  }
+
+  private registerRequiredDocPreview(docDescription: string, file: File): void {
+    this.revokeRequiredDocPreview(docDescription);
+    this.requiredDocPreviewUrls[docDescription] = URL.createObjectURL(file);
+  }
+
+  private registerOptionalPreview(fileName: string, file: File): void {
+    this.revokeOptionalPreview(fileName);
+    this.optionalAttachmentPreviews[fileName] = URL.createObjectURL(file);
+  }
+
+  private revokeRequiredDocPreview(docDescription: string): void {
+    const url = this.requiredDocPreviewUrls[docDescription];
+    if (url) {
+      URL.revokeObjectURL(url);
+    }
+    delete this.requiredDocPreviewUrls[docDescription];
+  }
+
+  private revokeOptionalPreview(fileName: string): void {
+    const url = this.optionalAttachmentPreviews[fileName];
+    if (url) {
+      URL.revokeObjectURL(url);
+    }
+    delete this.optionalAttachmentPreviews[fileName];
+  }
+
+  private revokeAllPreviewUrls(): void {
+    Object.keys(this.requiredDocPreviewUrls).forEach(key => this.revokeRequiredDocPreview(key));
+    Object.keys(this.optionalAttachmentPreviews).forEach(key => this.revokeOptionalPreview(key));
   }
 
   isValidExtension(file: File): boolean {
@@ -1309,6 +1604,9 @@ async attachApplicantFiles(request_id: number) {
       // Restablecer formulario y mostrar mensaje de éxito
       this.requestForm.reset();
       this.fileNameList.clear();
+      this.revokeAllPreviewUrls();
+      this.uploadedFiles = {};
+      this.arrayApplicantAttachment = [];
       this.showAlertModal(request_id);
 
   } catch (error) {

@@ -16,6 +16,7 @@ import { ModalFilingModule } from '../../shared/modal-filing/modal-filing.module
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { ButtonModule } from 'primeng/button';
 
 @NgModule({
   declarations: [RequestFormComponent],
@@ -23,6 +24,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
   imports: [
     CommonModule,
     RequestFormRoutingModule,
+    ButtonModule,
     CardModule,
     DropdownModule,
     InputTextModule,

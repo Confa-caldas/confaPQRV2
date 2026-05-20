@@ -31,8 +31,16 @@
                 }"
                 class="card-form-input-select"
                 placeholder="*Tipo de documento"
-                [options]="documentList"
-                optionLabel="catalog_item_name"></p-dropdown>
+                [options]="documentList || []"
+                optionLabel="catalog_item_name"
+                dataKey="catalog_item_id"
+                appendTo="body"
+                [autoDisplayFirst]="false"
+                [panelStyle]="{ 'max-height': '280px' }">
+                <ng-template pTemplate="item" let-item>
+                  <span>{{ item.catalog_item_name }}</span>
+                </ng-template>
+              </p-dropdown>
               <label class="card-form-input-placeholder-invalid">
                 {{
                   requestForm.get('document_type')?.hasError('required') &&
@@ -187,7 +195,6 @@
               cols="30"
               id="mensage"
               formControlName="mensage"
-              [style]="{ 'border-radius': '20px' }"
               type="text"
               class="custom-input"
               placeholder="*Incluir en este espacio los datos de las personas a cargo si el tipo de solicitud aplica"
@@ -265,48 +272,115 @@
           -->
 
           <!--Caso 1: Cuando HAY documentos obligatorios -->
-          <div *ngIf="(requiredDocuments?.length ?? 0) > 0; else noRequiredDocuments">
-            <div class="card-buttonUp" *ngFor="let doc of requiredDocuments; let i = index">
+          <section
+            *ngIf="requiredDocuments.length > 0; else noRequiredDocuments"
+            class="attachments-section"
+            aria-labelledby="attachments-section-title-required"
+          >
+            <header class="attachments-section__header">
+              <h2 id="attachments-section-title-required" class="attachments-section__title">
+                <i class="pi pi-paperclip attachments-section__title-icon" aria-hidden="true"></i>
+                Documentos adjuntos
+              </h2>
+              <p class="attachments-section__lead">
+                Adjunte los archivos indicados para completar su solicitud. Formatos permitidos: PDF,
+                imágenes, Word o Excel. Tamaño máximo 30 MB por archivo.
+              </p>
+            </header>
+            <div class="attachments-section__body">
+            <div class="attachment-field" *ngFor="let doc of requiredDocuments; let i = index">
               <label class="card-buttonUp-placeholder">
                 {{ doc.document_type_description }}
               </label>
 
-              <div class="card-buttonUp-custom-button">
-                <!-- 🔹 id dinámico por documento -->
-                <input
-                  type="file"
-                  [id]="'fileInput-' + i"
-                  class="card-buttonUp-custom-icon"
-                  (change)="onFileSelected($event, doc)"
-                  accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
-                  maxFileSize="20971520"
-                />
+              <div class="attachment-field__picker">
+                <div class="card-buttonUp-custom-button">
+                  <input
+                    type="file"
+                    [id]="'fileInput-' + i"
+                    class="card-buttonUp-custom-icon"
+                    (change)="onFileSelected($event, doc)"
+                    accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+                    maxFileSize="20971520"
+                  />
 
-                <!-- 🔹 Label vinculado al input -->
-                <label class="card-buttonUp-label" [for]="'fileInput-' + i">
-                  <i class="pi pi-file" [style]="{ 'font-size': '19px', 'margin-right': '8px' }"></i>
-                  Adjuntar archivo
-                  <i class="pi pi-upload" [style]="{ 'margin-left': '20px', 'font-size': '19px' }"></i>
-                </label>
+                  <label class="card-buttonUp-label" [for]="'fileInput-' + i">
+                    <i class="pi pi-file-pdf card-buttonUp-label__icon" aria-hidden="true"></i>
+                    <span class="card-buttonUp-label__text">{{
+                      uploadedFiles[doc.document_type_description] ? 'Cambiar archivo' : 'Adjuntar archivo'
+                    }}</span>
+                    <i class="pi pi-upload card-buttonUp-label__icon" aria-hidden="true"></i>
+                  </label>
 
-                <label class="card-form-input-placeholder-invalid">
-                  {{ errorSizeFile ? errorMensajeFile : '' }}
-                  {{ errorExtensionFile ? errorMensajeFile : '' }}
-                  {{ errorRepeatFile ? errorMensajeFile : '' }}
-                </label>
+                  <label class="card-form-input-placeholder-invalid">
+                    {{ errorSizeFile ? errorMensajeFile : '' }}
+                    {{ errorExtensionFile ? errorMensajeFile : '' }}
+                    <ng-container *ngIf="duplicateFileErrorTarget == doc.document_type_id">{{
+                      duplicateFileErrorMessage
+                    }}</ng-container>
+                  </label>
+                </div>
               </div>
 
-              <!-- Mostrar archivo seleccionado -->
-              <div *ngIf="uploadedFiles[doc.document_type_description]" class="uploaded-file-info">
-                <i class="pi pi-check-circle" style="color: #28a745; margin-right: 5px"></i>
-                Archivo seleccionado:
-                <strong>{{ uploadedFiles[doc.document_type_description]?.name }}</strong>
+              <div
+                *ngIf="uploadedFiles[doc.document_type_description] as reqFile"
+                class="attachment-summary"
+              >
+                <div class="attachment-summary__status" aria-hidden="true">
+                  <i class="pi pi-check"></i>
+                </div>
+                <div class="attachment-summary__main">
+                  <div class="attachment-summary__text">
+                    <span class="attachment-summary__kicker">Documento adjunto</span>
+                    <span class="attachment-summary__name" [title]="reqFile.name">{{ reqFile.name }}</span>
+                  </div>
+                  <div class="attachment-summary__actions">
+                    <button
+                      type="button"
+                      class="attachment-btn attachment-btn--secondary"
+                      (click)="
+                        openAttachmentPreviewModal(
+                          reqFile,
+                          requiredDocPreviewUrls[doc.document_type_description]
+                        )
+                      "
+                    >
+                      <i class="pi pi-eye" aria-hidden="true"></i>
+                      <span>Vista previa</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="attachment-btn attachment-btn--remove"
+                      [attr.aria-label]="'Eliminar adjunto ' + reqFile.name"
+                      (click)="removeRequiredAttachment(doc, i)"
+                    >
+                      <i class="pi pi-trash" aria-hidden="true"></i>
+                      <span>Quitar</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+            </div>
+          </section>
 
           <!--Caso 2: Cuando NO hay documentos obligatorios -->
           <ng-template #noRequiredDocuments>
+            <section
+              class="attachments-section attachments-section--optional"
+              aria-labelledby="attachments-section-title-optional"
+            >
+              <header class="attachments-section__header">
+                <h2 id="attachments-section-title-optional" class="attachments-section__title">
+                  <i class="pi pi-paperclip attachments-section__title-icon" aria-hidden="true"></i>
+                  Documentos adjuntos
+                </h2>
+                <p class="attachments-section__lead">
+                  Si desea, puede adjuntar uno o varios archivos a su solicitud. Formatos permitidos:
+                  PDF, imágenes, Word o Excel. Tamaño máximo 30 MB por archivo.
+                </p>
+              </header>
+              <div class="attachments-section__body">
             <div class="card-buttonUp">
               <label class="card-buttonUp-placeholder">Adjuntar archivo</label>
               <div class="card-buttonUp-custom-button">
@@ -322,52 +396,91 @@
                 />
 
                 <label class="card-buttonUp-label" (click)="openFileInput()">
-                  <i
-                    class="pi pi-file-pdf"
-                    [style]="{ 'font-size': '19px', 'margin-right': '8px' }"
-                  ></i>
-                  Adjuntar archivo
-                  <i
-                    class="pi pi-upload"
-                    [style]="{ 'margin-left': '69px', 'font-size': '19px' }"
-                  ></i>
+                  <i class="pi pi-file-pdf card-buttonUp-label__icon" aria-hidden="true"></i>
+                  <span class="card-buttonUp-label__text">Adjuntar archivo</span>
+                  <i class="pi pi-upload card-buttonUp-label__icon" aria-hidden="true"></i>
                 </label>
 
                 <label class="card-form-input-placeholder-invalid">
                   {{ errorSizeFile ? errorMensajeFile : '' }}
                   {{ errorExtensionFile ? errorMensajeFile : '' }}
-                  {{ errorRepeatFile ? errorMensajeFile : '' }}
+                  <ng-container *ngIf="duplicateFileErrorTarget === 'optional'">{{
+                    duplicateFileErrorMessage
+                  }}</ng-container>
                 </label>
               </div>
             </div>
 
-            <div class="card-table" *ngIf="fileNameList && fileNameList.size > 0">
-              <div class="card-table-header">Tabla de Adjuntos</div>
-              <div class="card-table-body" *ngFor="let fileName of fileNameList; let i = index">
-                <div class="card-table-itemName">
-                  <p class="truncate-text">
-                    {{ fileName === '' ? 'Nombre de Archivo' : fileName }}
+            <div class="attachment-list" *ngIf="fileNameList && fileNameList.size > 0">
+              <div class="attachment-list__intro">
+                <div class="attachment-list__intro-icon" aria-hidden="true">
+                  <i class="pi pi-paperclip"></i>
+                </div>
+                <div class="attachment-list__intro-text">
+                  <h3 class="attachment-list__heading">Archivos cargados</h3>
+                  <p class="attachment-list__meta">
+                    <span class="attachment-list__count">{{ fileNameList.size }}</span>
+                    {{ fileNameList.size === 1 ? 'archivo' : 'archivos' }}
+                    <span class="attachment-list__meta-sep">·</span>
+                    PDF, imágenes, Word o Excel
+                    <span class="attachment-list__meta-sep">·</span>
+                    Máx. 30 MB por archivo
                   </p>
                 </div>
-                <div class="card-table-item">
-                  <span class="remover-text">Remover archivo</span>
-                  <p-button
-                    icon="pi pi-times"
-                    [style]="{
-                      'border-radius': '50%',
-                      height: '20px',
-                      width: '20px',
-                      'background-color': '#ebebeb',
-                      color: 'red',
-                      'margin-right': '20px'
-                    }"
-                    [text]="true"
-                    severity="danger"
-                    (click)="clearFileInput(i)"
-                  ></p-button>
+              </div>
+
+              <div class="attachment-table" role="table" aria-label="Archivos adjuntos a la solicitud">
+                <div class="attachment-table__head" role="row">
+                  <span class="attachment-table__th attachment-table__th--num" role="columnheader"
+                    >#</span
+                  >
+                  <span class="attachment-table__th attachment-table__th--name" role="columnheader"
+                    >Nombre del archivo</span
+                  >
+                  <span class="attachment-table__th attachment-table__th--actions" role="columnheader"
+                    >Acciones</span
+                  >
+                </div>
+                <div
+                  class="attachment-table__row"
+                  role="row"
+                  *ngFor="let fileName of fileNameList; let idx = index"
+                >
+                  <ng-container *ngIf="getOptionalFileByName(fileName) as optFile">
+                    <span class="attachment-table__td attachment-table__td--num" role="cell">{{
+                      idx + 1
+                    }}</span>
+                    <div class="attachment-table__td attachment-table__td--name" role="cell">
+                      <span [class]="getAttachmentIconClasses(fileName)" aria-hidden="true"></span>
+                      <span class="attachment-table__file-name" [title]="fileName">{{
+                        fileName === '' ? 'Sin nombre' : fileName
+                      }}</span>
+                    </div>
+                    <div class="attachment-table__td attachment-table__td--actions" role="cell">
+                      <button
+                        type="button"
+                        class="attachment-btn attachment-btn--secondary"
+                        (click)="openAttachmentPreviewModal(optFile, optionalAttachmentPreviews[fileName])"
+                      >
+                        <i class="pi pi-eye" aria-hidden="true"></i>
+                        <span>Vista previa</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="attachment-btn attachment-btn--remove"
+                        [attr.aria-label]="'Eliminar adjunto ' + fileName"
+                        (click)="clearOptionalAttachment(fileName)"
+                      >
+                        <i class="pi pi-trash" aria-hidden="true"></i>
+                        <span>Quitar</span>
+                      </button>
+                    </div>
+                  </ng-container>
                 </div>
               </div>
             </div>
+              </div>
+            </section>
           </ng-template>
 
         </div>
@@ -385,6 +498,36 @@
 </p-card>
 
 <p-toast></p-toast>
+
+<p-dialog
+  [(visible)]="previewDialogVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [closable]="true"
+  [style]="{ width: 'min(92vw, 960px)' }"
+  [breakpoints]="{ '960px': '95vw', '575px': '100vw' }"
+  [header]="previewModalTitle || 'Vista previa'"
+  styleClass="attachment-preview-dialog"
+  (onHide)="onPreviewDialogHide()"
+>
+  <div *ngIf="previewModalShowImage && previewModalUrl" class="attachment-preview-dialog__viewport">
+    <img [src]="previewModalUrl" [alt]="previewModalTitle" />
+  </div>
+  <div *ngIf="previewModalShowPdf && previewIframeUrl" class="attachment-preview-dialog__viewport">
+    <iframe [src]="previewIframeUrl" [title]="'Vista previa: ' + previewModalTitle"></iframe>
+  </div>
+  <div *ngIf="previewModalShowUnsupported" class="attachment-preview-dialog__fallback">
+    <p class="attachment-preview-dialog__fallback-text">
+      No hay vista previa integrada para este tipo de archivo. Puede abrirlo en una ventana nueva.
+    </p>
+    <button type="button" class="attachment-btn attachment-btn--secondary" (click)="openPreviewInNewWindow()">
+      <i class="pi pi-external-link" aria-hidden="true"></i>
+      <span>Abrir en nueva ventana</span>
+    </button>
+  </div>
+</p-dialog>
+
 <p-progressSpinner
   *ngIf="loadingAttachments"
   class="sppinerAtta p-element"
