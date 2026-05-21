@@ -31,6 +31,9 @@ export class CreateRequestInternalComponent {
 
   authorizeValue: boolean | null = null;
 
+  displayRequiredDocsDialog = false;
+  requiredDocuments: { document_type_id: number; document_type_description: string }[] = [];
+
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
@@ -147,7 +150,11 @@ export class CreateRequestInternalComponent {
     );
     localStorage.setItem(
       'request-type',
-      JSON.stringify(this.optionsRequest.controls['request_id'].value)
+      JSON.stringify(
+        this.requestList.find(
+          r => r.request_type_id === this.optionsRequest.controls['request_id'].value
+        )
+      )
     );
     localStorage.setItem('id-transaction', this.transactionId);
     localStorage.setItem(
@@ -200,5 +207,35 @@ export class CreateRequestInternalComponent {
   }
   setParameterDataT(dataTreatment: boolean) {
     this.optionsRequest.get('authorize')?.setValue(null);
+  }
+
+  onRequestTypeSelected(event: any) {
+    const requestTypeId = event?.value ?? event;
+
+    if (!requestTypeId) {
+      this.requiredDocuments = [];
+      localStorage.removeItem('requiredDocuments');
+      return;
+    }
+
+    this.userService.getDocumentsPublicByRequestType(requestTypeId).subscribe({
+      next: (res: any) => {
+        if (res.code === 200 && res.data?.associated?.length > 0) {
+          this.requiredDocuments = res.data.associated;
+          this.displayRequiredDocsDialog = true;
+          localStorage.setItem('requiredDocuments', JSON.stringify(res.data.associated));
+        } else {
+          this.requiredDocuments = [];
+          this.displayRequiredDocsDialog = false;
+          localStorage.removeItem('requiredDocuments');
+        }
+      },
+      error: (err: unknown) => {
+        console.error('Error al obtener los documentos requeridos:', err);
+        this.requiredDocuments = [];
+        this.displayRequiredDocsDialog = false;
+        localStorage.removeItem('requiredDocuments');
+      },
+    });
   }
 }

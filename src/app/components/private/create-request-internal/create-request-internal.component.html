@@ -60,7 +60,9 @@
                   emptyMessage="Seleccione un tipo de solicitante"
                   optionLabel="request_type_name"
                   placeholder="*Tú solicitud esta asociada con"
-                  [panelStyle]="{ 'max-height': 'none' }"></p-dropdown>
+                  optionValue="request_type_id"
+                  [panelStyle]="{ 'max-height': 'none' }"
+                  (onChange)="onRequestTypeSelected($event)"></p-dropdown>
   
                 <label class="container-select-invalid">
                   {{
@@ -161,4 +163,43 @@
     [visible]="visibleDialogDataT"
     (setRta)="closeDialogDataT($event)"
     (setRtaParameter)="setParameterDataT($event)"></app-modal-data-treatment>
+
+<p-dialog 
+  *ngIf="requiredDocuments.length > 0"
+  header="📄 Documentos requeridos para esta postulación"
+  [(visible)]="displayRequiredDocsDialog"
+  [modal]="true"
+  [closable]="false"
+  [dismissableMask]="true"
+  [baseZIndex]="10000"
+  [breakpoints]="{ '960px': '90vw', '640px': '95vw' }"
+  [style]="{ width: '40vw', 'border-radius': '20px', 'overflow': 'hidden' }"
+  contentStyleClass="dialog-content-custom"
+  footerStyleClass="dialog-footer-custom">
+
+  <div class="dialog-body">
+    <p class="intro-text">
+      <i class="pi pi-info-circle text-blue-500 mr-2"></i>
+      Señor usuario, para la solicitud que desea realizar es necesario que cuente con los siguientes 
+      <strong>documentos obligatorios</strong> para continuar con el proceso de afiliación:
+    </p>
+
+    <ul class="docs-list">
+      <li *ngFor="let doc of requiredDocuments" class="doc-item">
+        <i class="pi pi-file text-blue-500 mr-2"></i>
+        {{ doc.document_type_description }}
+      </li>
+    </ul>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button 
+      pButton 
+      label="Entendido" 
+      icon="pi pi-check"
+      class="p-button-rounded btn-ok"
+      (click)="displayRequiredDocsDialog = false">
+    </button>
+  </ng-template>
+</p-dialog>
   

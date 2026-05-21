@@ -217,7 +217,7 @@ export class CreateRequestComponent {
   }
 
   onRequestTypeSelected(event: any) {
-  const requestTypeId = event.value;
+  const requestTypeId = event?.value ?? event;
 
   if (!requestTypeId) {
     this.requiredDocuments = [];

@@ -1,12 +1,37 @@
-<div *ngIf="isSpinnerVisible" class="spinner-overlay">
+<div
+  *ngIf="isSpinnerVisible"
+  class="upload-status"
+  role="alertdialog"
+  aria-modal="true"
+  aria-busy="true"
+  aria-live="polite"
+  aria-label="Subiendo archivos adjuntos"
+>
+  <div class="upload-status__card">
+    <div class="upload-status__spinner" aria-hidden="true"></div>
 
-  <p class="spinner-text">Procesando su solicitud, por favor espere...</p>
+    <h3 class="upload-status__title">Subiendo sus archivos</h3>
+    <p class="upload-status__message">
+      Por favor <strong>no cierre ni actualice esta ventana</strong> hasta que termine la carga de
+      todos los adjuntos.
+    </p>
 
-  <div class="progress-bar-container">
-    <div class="progress-bar">
-      <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+    <p class="upload-status__counter" *ngIf="totalUploadCount > 0 && currentUploadIndex > 0">
+      Archivo {{ currentUploadIndex }} de {{ totalUploadCount }}
+    </p>
+    <p class="upload-status__file" *ngIf="currentUploadFileName">
+      <span class="upload-status__file-label">Subiendo:</span>
+      <span class="upload-status__file-name" [title]="currentUploadFileName">{{
+        currentUploadFileName
+      }}</span>
+    </p>
+
+    <div class="upload-status__progress">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+      </div>
+      <p class="progress-text">{{ uploadProgress }}% completado</p>
     </div>
-    <p class="progress-text">{{ uploadProgress }}% completado</p>
   </div>
 </div>
 
