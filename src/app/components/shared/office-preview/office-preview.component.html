@@ -1,0 +1,99 @@
+<div class="office-preview">
+  <div class="office-preview__toolbar" *ngIf="hasPreview && canDownload">
+    <span class="office-preview__filename" [title]="fileName">{{ fileName }}</span>
+    <button
+      type="button"
+      class="office-preview__btn office-preview__btn--small"
+      (click)="downloadFile()">
+      <i class="pi pi-download"></i> Descargar
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="office-preview__loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Cargando previsualización...</span>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <div *ngIf="error" class="office-preview__message office-preview__message--error">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ error }}</span>
+      <button
+        type="button"
+        class="office-preview__btn"
+        (click)="downloadFile()"
+        *ngIf="url">
+        <i class="pi pi-download"></i> Descargar archivo
+      </button>
+    </div>
+
+    <div *ngIf="!error && unsupported" class="office-preview__message">
+      <i class="pi pi-info-circle"></i>
+      <span>El formato del archivo no se puede previsualizar.</span>
+      <button
+        type="button"
+        class="office-preview__btn"
+        (click)="downloadFile()"
+        *ngIf="url">
+        <i class="pi pi-download"></i> Descargar archivo
+      </button>
+    </div>
+
+    <div
+      *ngIf="!error && (kind === 'legacy-doc' || kind === 'legacy-xls')"
+      class="office-preview__message">
+      <i class="pi pi-info-circle"></i>
+      <span>
+        Los formatos antiguos
+        <strong>.{{ kind === 'legacy-doc' ? 'doc' : 'xls' }}</strong>
+        no soportan previsualización en el navegador. Descarga el archivo para abrirlo localmente.
+      </span>
+      <button
+        type="button"
+        class="office-preview__btn"
+        (click)="downloadFile()"
+        *ngIf="url">
+        <i class="pi pi-download"></i> Descargar archivo
+      </button>
+    </div>
+
+    <div *ngIf="!error && fileTooLarge" class="office-preview__message">
+      <i class="pi pi-info-circle"></i>
+      <span>
+        El archivo supera el tamaño máximo permitido para previsualización ({{ maxBytes / 1024 / 1024 | number:'1.0-0' }} MB).
+      </span>
+      <button
+        type="button"
+        class="office-preview__btn"
+        (click)="downloadFile()"
+        *ngIf="url">
+        <i class="pi pi-download"></i> Descargar archivo
+      </button>
+    </div>
+
+    <div
+      *ngIf="!error && !unsupported && !fileTooLarge && kind === 'xlsx' && sheets.length"
+      class="office-preview__xlsx">
+      <div class="office-preview__tabs" *ngIf="sheets.length > 1">
+        <button
+          *ngFor="let sheet of sheets; let i = index"
+          type="button"
+          class="office-preview__tab"
+          [class.is-active]="i === activeSheetIndex"
+          (click)="selectSheet(i)">
+          {{ sheet.name }}
+        </button>
+      </div>
+
+      <div
+        class="office-preview__sheet"
+        [innerHTML]="sheets[activeSheetIndex].html"></div>
+    </div>
+
+    <div
+      *ngIf="!error && !unsupported && !fileTooLarge && kind === 'docx'"
+      class="office-preview__docx">
+      <div #docxContainer class="office-preview__docx-container"></div>
+    </div>
+  </ng-container>
+</div>

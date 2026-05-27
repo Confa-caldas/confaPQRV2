@@ -26,6 +26,7 @@
     <ng-template pTemplate="header">
       <tr>
         <th>Documento</th>
+        <th>Descripción</th>
         <th>Obligatorio</th>
         <th>Estado</th>
         <!-- <th>Acciones</th> -->
@@ -33,7 +34,16 @@
     </ng-template>
     <ng-template pTemplate="body" let-doc>
       <tr>
-        <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.documentName }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.documentCode }} - {{ doc.documentName }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">
+          <ng-container *ngIf="getDescriptionLines(doc.documentDescription) as lines">
+            <div *ngIf="lines.length === 0" class="description-empty">—</div>
+            <div *ngIf="lines.length === 1" class="description-single">{{ lines[0] }}</div>
+            <ul *ngIf="lines.length > 1" class="description-list">
+              <li *ngFor="let line of lines" class="description-list__item">{{ line }}</li>
+            </ul>
+          </ng-container>
+        </td>
         <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.mandatory ? 'Sí' : 'No' }}</td>
         <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.status }}</td>
 
@@ -69,20 +79,6 @@
         <div class="title-page">Asociar Documentos</div>
     </div>
 
-    <!--
-    <p-pickList 
-      [source]="availableDocuments" 
-      [target]="associatedDocuments" 
-      sourceHeader="Disponibles" 
-      targetHeader="Asociados"
-      [dragdrop]="true" 
-      [showSourceControls]="true" 
-      [showTargetControls]="true" 
-      optionLabel="document_type_name"
-      (onMoveToTarget)="onAssociationChange()"
-      (onMoveToSource)="onAssociationChange()">
-    </p-pickList>
-    -->
     <p-pickList 
         [source]="availableDocuments" 
         [target]="associatedDocuments" 
@@ -97,7 +93,7 @@
         <!-- Template para los ítems -->
         <ng-template let-doc pTemplate="item">
             <div style="padding:4px 8px; font-size:14px; color:#000;">
-            {{ doc.document_type_id }} - {{ doc.document_type_description }}
+            {{ doc.document_type_code }} - {{ doc.document_type_name }}
             </div>
         </ng-template>
         </p-pickList>

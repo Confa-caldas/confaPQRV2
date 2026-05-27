@@ -6,6 +6,7 @@ import {
   RequestTypeList,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
+import { getDescriptionLines } from '../../../utils/document-description.util';
 
 interface RequestType {
   id: number;
@@ -13,8 +14,10 @@ interface RequestType {
 }
 
 interface DocumentRelation {
-  id: number;
+  documentId?: number;
+  documentCode?: string;
   documentName: string;
+  documentDescription?: string;
   mandatory: boolean;
   status: string;
 }
@@ -25,6 +28,7 @@ interface DocumentRelation {
   styleUrls: ['./request-type-documents.component.scss']
 })
 export class RequestTypeDocumentsComponent implements OnInit {
+  readonly getDescriptionLines = getDescriptionLines;
 
   requestTypeList!: RequestTypeList[];
   selectedRequestTypeId?: number; // Guardará el id del tipo seleccionado
@@ -150,7 +154,10 @@ loadDocumentsForRequestType() {
 
       if (res.code === 200 && res.data && Array.isArray(res.data.associated)) {
         this.documents = res.data.associated.map((doc: any) => ({
-          documentName: doc.document_type_description,
+          documentId: doc.document_type_id,
+          documentCode: doc.document_type_code,
+          documentName: doc.document_type_name,
+          documentDescription: doc.document_type_description,
           mandatory: doc.is_required,
           status: doc.is_active ? 'Activo' : 'Inactivo'
         }));

@@ -20,6 +20,7 @@ import { MenuModule } from 'primeng/menu';
 import { TimelineModule } from 'primeng/timeline';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageModule } from 'primeng/message';
+import { OfficePreviewModule } from '../../shared/office-preview/office-preview.module';
 
 @NgModule({
   declarations: [RequestDetailsComponent],
@@ -42,7 +43,8 @@ import { MessageModule } from 'primeng/message';
     MenuModule,
     TimelineModule,
     SkeletonModule,
-    MessageModule
+    MessageModule,
+    OfficePreviewModule,
   ],
   exports: [RequestDetailsComponent],
 })

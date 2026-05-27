@@ -1438,6 +1438,7 @@ calcularDiferenciaFechas(
       complete: () => {
         console.log('La suscripción ha sido completada.');
         this.viewerType = this.getViewerType(file_name);
+        this.currentName = file_name;
         if (!is_download) {
           if (this.viewerType == 'pdf') {
             this.isSpinnerVisible = true;

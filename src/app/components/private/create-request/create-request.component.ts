@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
 import { v4 as uuidv4 } from 'uuid';
+import { getDescriptionLines } from '../../../utils/document-description.util';
 
 @Component({
   selector: 'app-create-request',
@@ -19,6 +20,8 @@ import { v4 as uuidv4 } from 'uuid';
   styleUrl: './create-request.component.scss',
 })
 export class CreateRequestComponent {
+  readonly getDescriptionLines = getDescriptionLines;
+
   optionsRequest: FormGroup;
   applicantList!: ApplicantTypeList[];
   requestList!: RequestTypeList[];

@@ -702,8 +702,6 @@
   margin: 0;
 
   .doc-item {
-    display: flex;
-    align-items: center;
     padding: 0.6rem 0.8rem;
     margin-bottom: 0.4rem;
     background-color: #f9fafb;
@@ -714,7 +712,28 @@
       background-color: #eef4ff;
     }
 
-    i {
+    &__lines {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__line {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.45rem;
+      line-height: 1.45;
+      color: inherit;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    &__icon {
+      flex-shrink: 0;
+      margin-top: 0.15rem;
       color: #00afef;
       font-size: 1rem;
     }

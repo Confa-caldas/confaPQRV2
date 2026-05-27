@@ -195,7 +195,7 @@
 
 <p-dialog 
   *ngIf="requiredDocuments.length > 0"
-  header="📄 Documentos requeridos para esta postulación"
+  header="📄 Documentos requeridos para esta solicitud"
   [(visible)]="displayRequiredDocsDialog"
   [modal]="true"
   [closable]="false"
@@ -210,13 +210,19 @@
     <p class="intro-text">
       <i class="pi pi-info-circle text-blue-500 mr-2"></i>
       Señor usuario, para la solicitud que desea realizar es necesario que cuente con los siguientes 
-      <strong>documentos obligatorios</strong> para continuar con el proceso de afiliación:
+      <strong>documentos obligatorios</strong> para continuar con el proceso:
     </p>
 
     <ul class="docs-list">
       <li *ngFor="let doc of requiredDocuments" class="doc-item">
-        <i class="pi pi-file text-blue-500 mr-2"></i>
-        {{ doc.document_type_description }}
+        <ul class="doc-item__lines">
+          <li
+            *ngFor="let line of getDescriptionLines(doc.document_type_description)"
+            class="doc-item__line">
+            <i class="pi pi-check-circle doc-item__icon" aria-hidden="true"></i>
+            <span>{{ line }}</span>
+          </li>
+        </ul>
       </li>
     </ul>
   </div>

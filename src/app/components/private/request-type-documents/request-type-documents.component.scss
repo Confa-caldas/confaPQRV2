@@ -74,3 +74,33 @@
 :host ::ng-deep .p-picklist .p-button:hover {
   background: #0288c2;
 }
+
+.description-list,
+.description-single,
+.description-empty {
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.description-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  text-align: left;
+  list-style-type: disc;
+
+  &__item {
+    margin-bottom: 0.5rem;
+    line-height: 1.45;
+    color: inherit;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.description-single,
+.description-empty {
+  line-height: 1.45;
+}
