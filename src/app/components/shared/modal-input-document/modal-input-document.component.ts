@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { spanishTextValidators } from '../../../utils/spanish-text-pattern.util';
 
 @Component({
   selector: 'app-modal-input-document',
@@ -29,9 +30,9 @@ export class ModalInputDocumentComponent {
   
     constructor(private formBuilder: FormBuilder) {
       this.formGroup = this.formBuilder.group({
-        inputValue1: ['', [Validators.required, Validators.pattern('^[^#$%&]+$')]],
-        inputValue2: ['', [Validators.required, Validators.pattern('^[^#$%&]+$')]],
-        inputValue3: ['', [Validators.required, Validators.pattern('^[^#$%&]+$')]],
+        inputValue1: ['', spanishTextValidators],
+        inputValue2: ['', spanishTextValidators],
+        inputValue3: ['', spanishTextValidators],
       });
     }
     ngOnInit(): void {
