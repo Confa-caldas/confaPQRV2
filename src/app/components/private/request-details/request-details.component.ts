@@ -184,6 +184,7 @@ export class RequestDetailsComponent implements OnInit {
 
   //utilitarios cuando no es cerrada
   itemsGenerals: MenuModule[] | undefined;
+  itemsGeneralsSinSubida: MenuModule[] | undefined;
   isVisibleSolicitudPrioridad = false;
   esPrioridadForm: FormGroup;
   spinnerVisible = false;
@@ -308,6 +309,18 @@ loadingFile = false;
             label: 'Subida de documentos',
             icon: 'pi pi-upload',
             command: () => this.adjuntosAdicionales(),
+          },
+        ],
+      },
+    ];
+
+    this.itemsGeneralsSinSubida = [
+      {
+        items: [
+          {
+            label: 'Priorizar',
+            icon: 'pi pi-exclamation-triangle',
+            command: () => this.sendPriority(),
           },
         ],
       },
@@ -1845,6 +1858,65 @@ calcularDiferenciaFechas(
   estadoBeneficiarioDisplay(estado: string | undefined): string {
     if (!estado) return '-';
     return estado === 'A' ? 'ACTIVO' : estado === 'I' ? 'INACTIVO' : estado;
+  }
+
+  allowOnlyNumbers(event: KeyboardEvent): void {
+    const charCode = event.key.charCodeAt(0);
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+    }
+  }
+
+  allowOnlyAlphanumeric(event: KeyboardEvent): void {
+    if (event.key.length !== 1 || !/^[a-zA-Z0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  sanitizeNumericValue(value: string): string {
+    return (value ?? '').replace(/\D/g, '');
+  }
+
+  sanitizeAlphanumericValue(value: string): string {
+    return (value ?? '').replace(/[^a-zA-Z0-9]/g, '');
+  }
+
+  onDocumentEmpresaPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+
+    const pastedText = event.clipboardData?.getData('text') ?? '';
+    const sanitized = this.sanitizeNumericValue(pastedText);
+    if (!sanitized) {
+      return;
+    }
+
+    const input = event.target as HTMLInputElement;
+    const currentValue = this.documentEmpresaValue ?? '';
+    const start = input.selectionStart ?? currentValue.length;
+    const end = input.selectionEnd ?? currentValue.length;
+
+    this.documentEmpresaValue = this.sanitizeNumericValue(
+      currentValue.slice(0, start) + sanitized + currentValue.slice(end),
+    );
+  }
+
+  onDocumentAfiliadoPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+
+    const pastedText = event.clipboardData?.getData('text') ?? '';
+    const sanitized = this.sanitizeAlphanumericValue(pastedText);
+    if (!sanitized) {
+      return;
+    }
+
+    const input = event.target as HTMLInputElement;
+    const currentValue = this.documentAfiliadoValue ?? '';
+    const start = input.selectionStart ?? currentValue.length;
+    const end = input.selectionEnd ?? currentValue.length;
+
+    this.documentAfiliadoValue = this.sanitizeAlphanumericValue(
+      currentValue.slice(0, start) + sanitized + currentValue.slice(end),
+    );
   }
 
   consultarEmpresaWs(cedula: string) {

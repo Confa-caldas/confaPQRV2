@@ -524,36 +524,21 @@ export class Users {
     return this.http.post(this.apiUrlIngresoConfa, payload, { headers }); // Envía la petición con headers
   }
 
-  // respuestaInfoAfiliacion(cedula?: string): Observable<any> {
-  //   const urlSubsidios = 'https://api-utilitarios.confa.co/replica/consultarEmpresa';
-  //   const headers = new HttpHeaders({
-  //     'Content-Type': 'application/json', // Asegura que se envíe como JSON
-  //     'x-api-key': this.apiKey, // Incluye la API key en los headers
-  //   });
-  //   const payload = {
-  //     ndoc: cedula,
-  //   };
-  //   return this.http.post(urlSubsidios, payload, { headers }); // Envía la petición con headers
-  // }
 
   respuestaInfoAfiliacion(cedula: string) {
-    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarAfiliadoDoc/${cedula}/1`;
+    const url = `${environment.ruta_consumo_subsidios_rest}consultarAfiliadoDoc/${cedula}/1`;
     // observe: 'response' para tener status y body
     return this.http.get(url, { observe: 'response' });
   }
 
   respuestaInfoEmpresa(document: string) {
-    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarEmpresaNit/${document}/1`;
+    const url = `${environment.ruta_consumo_subsidios_rest}consultarEmpresaNit/${document}/1`;
     // observe: 'response' para tener status y body
     return this.http.get(url, { observe: 'response' });
   }
 
-  /**
-   * Consulta información del grupo familiar del afiliado.
-   * GET https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarInfoGrupoFamiliar/{documento}/{tipo_doc}
-   */
   consultarInfoGrupoFamiliar(documento: string, tipoDoc: string) {
-    const url = `https://app.confa.co:8320/subsidiosWSRest/rest/wsrest/consultarInfoGrupoFamiliar/${documento}/${tipoDoc}`;
+    const url = `${environment.ruta_consumo_subsidios_rest}consultarInfoGrupoFamiliar/${documento}/${tipoDoc}`;
     return this.http.get(url, { observe: 'response' });
   }
 

@@ -155,7 +155,14 @@
         requestDetails &&
         requestDetails.status_name !== 'Cerrada' && requestDetails.priority_level !== 2 && PERFIL === 'USUARIO INTERNO'
       ">
-      <p-menu #menu [model]="itemsGenerals" [popup]="true"></p-menu>
+      <p-menu
+        #menu
+        [model]="
+          requestDetails.status_name === 'Radicada' || requestDetails.status_name === 'Cerrada'
+            ? itemsGeneralsSinSubida
+            : itemsGenerals
+        "
+        [popup]="true"></p-menu>
       <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
     </div>
   </div>
@@ -882,7 +889,10 @@
                       class="input-text"
                       placeholder="Ingresa el documento"
                       [style]="{ 'border-radius': '5px' }"
-                      [(ngModel)]="documentAfiliadoValue" />
+                      [ngModel]="documentAfiliadoValue"
+                      (ngModelChange)="documentAfiliadoValue = sanitizeAlphanumericValue($event)"
+                      (keypress)="allowOnlyAlphanumeric($event)"
+                      (paste)="onDocumentAfiliadoPaste($event)" />
                     <p-button
                       label="Consultar"
                       (click)="consultarWs(documentAfiliadoValue)"
@@ -1051,8 +1061,12 @@
                       type="text"
                       class="input-text"
                       placeholder="Ingresa el documento"
+                      inputmode="numeric"
                       [style]="{ 'border-radius': '5px' }"
-                      [(ngModel)]="documentEmpresaValue" />
+                      [ngModel]="documentEmpresaValue"
+                      (ngModelChange)="documentEmpresaValue = sanitizeNumericValue($event)"
+                      (keypress)="allowOnlyNumbers($event)"
+                      (paste)="onDocumentEmpresaPaste($event)" />
                     <p-button
                       label="Consultar"
                       (click)="consultarEmpresaWs(documentEmpresaValue)"
@@ -1683,7 +1697,7 @@
   <!-- Encabezado personalizado -->
   <ng-template pTemplate="header">
     <div class="dialog-header">
-      <span id="dialog-title">Priorización del la solicitud</span>
+      <span id="dialog-title">Priorización de la solicitud</span>
     </div>
   </ng-template>
 
