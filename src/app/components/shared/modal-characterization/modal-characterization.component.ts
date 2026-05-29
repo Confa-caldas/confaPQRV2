@@ -66,7 +66,7 @@ export class ModalCharacterizationComponent implements OnInit {
       applicant_type_id: new FormControl(null, [Validators.required]),
       request_type_id: new FormControl(null, [Validators.required]),
       is_pqr: new FormControl(null, [Validators.required]),
-      quality_dimension_id: new FormControl(null),
+      quality_dimension_id: new FormControl(null, [Validators.required]),
       modality_id: new FormControl(null),
       category_id: new FormControl(null),
       tipology_id: new FormControl(null),
@@ -76,6 +76,7 @@ export class ModalCharacterizationComponent implements OnInit {
     this.disableConditionalModalityandQuality();
     this.disableConditionalCategoryandTipology();
 
+    /*
     this.formGroup.get('is_pqr')?.valueChanges.subscribe(value => {
       if (value === 1) {
         this.enableConditionalModalityandQuality();
@@ -92,6 +93,29 @@ export class ModalCharacterizationComponent implements OnInit {
         this.disableConditionalCause();
       }
     });
+    */
+    this.formGroup.get('is_pqr')?.valueChanges.subscribe(value => {
+    if (Number(value) === 1) {
+      this.enableConditionalModalityandQuality();
+    } else {
+      this.disableConditionalModalityandQuality();
+
+      // Si no es PQR, apaga dependientes
+      this.disableConditionalCategoryandTipology();
+      this.disableConditionalCause();
+    }
+  });
+
+  this.formGroup.get('modality_id')?.valueChanges.subscribe(value => {
+    if (Number(value) === 2) {
+      this.enableConditionalCategoryandTipology();
+      this.enableConditionalCause();
+    } else {
+      this.disableConditionalCategoryandTipology();
+      this.disableConditionalCause();
+    }
+  });
+
   }
 
   ngOnInit(): void {
@@ -105,6 +129,7 @@ export class ModalCharacterizationComponent implements OnInit {
     this.month = parseInt(arrayMonth[0], 10);
   }
 
+  /*
   disableConditionalModalityandQuality() {
     this.formGroup.get('modality_id')?.clearValidators();
     this.formGroup.get('modality_id')?.updateValueAndValidity();
@@ -149,6 +174,90 @@ export class ModalCharacterizationComponent implements OnInit {
     this.formGroup.get('tipology_id')?.updateValueAndValidity();
     this.causeBoolean = true;
   }
+  */
+  disableConditionalModalityandQuality(): void {
+  // modality
+  const modality = this.formGroup.get('modality_id');
+  modality?.reset(null, { emitEvent: false });
+  modality?.clearValidators();
+  modality?.updateValueAndValidity({ emitEvent: false });
+
+  // quality (NOMBRE CORRECTO)
+  const quality = this.formGroup.get('quality_dimension_id');
+  quality?.reset(null, { emitEvent: false });
+  quality?.clearValidators();
+  quality?.updateValueAndValidity({ emitEvent: false });
+
+  this.modalBoolean = false;
+
+  this.formGroup.updateValueAndValidity({ emitEvent: false });
+}
+
+enableConditionalModalityandQuality(): void {
+  const modality = this.formGroup.get('modality_id');
+  modality?.setValidators([Validators.required]);
+  modality?.updateValueAndValidity({ emitEvent: false });
+
+  const quality = this.formGroup.get('quality_dimension_id');
+  quality?.setValidators([Validators.required]);
+  quality?.updateValueAndValidity({ emitEvent: false });
+
+  this.modalBoolean = true;
+
+  this.formGroup.updateValueAndValidity({ emitEvent: false });
+}
+
+disableConditionalCategoryandTipology(): void {
+  const category = this.formGroup.get('category_id');
+  category?.reset(null, { emitEvent: false });
+  category?.clearValidators();
+  category?.updateValueAndValidity({ emitEvent: false });
+
+  const tipology = this.formGroup.get('tipology_id');
+  tipology?.reset(null, { emitEvent: false });
+  tipology?.clearValidators();
+  tipology?.updateValueAndValidity({ emitEvent: false });
+
+  this.categoryBoolean = false;
+
+  this.formGroup.updateValueAndValidity({ emitEvent: false });
+}
+
+enableConditionalCategoryandTipology(): void {
+  const category = this.formGroup.get('category_id');
+  category?.setValidators([Validators.required]);
+  category?.updateValueAndValidity({ emitEvent: false });
+
+  const tipology = this.formGroup.get('tipology_id');
+  tipology?.setValidators([Validators.required]);
+  tipology?.updateValueAndValidity({ emitEvent: false });
+
+  this.categoryBoolean = true;
+
+  this.formGroup.updateValueAndValidity({ emitEvent: false });
+}
+
+disableConditionalCause(): void {
+  const cause = this.formGroup.get('cause_id');
+  cause?.reset(null, { emitEvent: false });
+  cause?.clearValidators();
+  cause?.updateValueAndValidity({ emitEvent: false });
+
+  this.causeBoolean = false;
+
+  this.formGroup.updateValueAndValidity({ emitEvent: false });
+}
+
+enableConditionalCause(): void {
+  const cause = this.formGroup.get('cause_id');
+  cause?.setValidators([Validators.required]); // AQUÍ estaba el error
+  cause?.updateValueAndValidity({ emitEvent: false });
+
+  this.causeBoolean = true;
+
+  this.formGroup.updateValueAndValidity({ emitEvent: false });
+}
+
 
   showDialog() {
     this.visible = true;

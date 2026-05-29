@@ -17,6 +17,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ButtonModule } from 'primeng/button';
 
 @NgModule({
   declarations: [RequestFormInternalComponent],
@@ -39,7 +40,8 @@ import { CheckboxModule } from 'primeng/checkbox';
     ProgressSpinnerModule,
     DialogModule,
     ProgressBarModule,
-    CheckboxModule
+    CheckboxModule,
+    ButtonModule,
   ],
 })
 export class RequestFormInternalModule {}

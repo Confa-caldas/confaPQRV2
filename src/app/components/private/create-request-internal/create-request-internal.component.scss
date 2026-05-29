@@ -654,3 +654,115 @@
 ::ng-deep .p-radiobutton-box:hover {
   border-color: #01aeef !important;   // borde azul al hacer hover
 }
+
+::ng-deep .p-dialog .p-dialog-header {
+  background: #f5f7fa;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+::ng-deep .dialog-content-custom {
+  background-color: #ffffff;
+  padding: 1.5rem;
+}
+
+.dialog-body {
+  font-size: 0.95rem;
+  color: #34495e;
+}
+
+/* 🗣️ Estilo del texto introductorio */
+.intro-text {
+  background-color: #eaf8ff;
+  border-left: 5px solid #00afef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  line-height: 1.5;
+  font-size: 0.95rem;
+
+  strong {
+    color: #00afef;
+  }
+}
+
+.no-docs-text {
+  text-align: center;
+  font-style: italic;
+  color: #999;
+}
+
+.docs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  .doc-item {
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 0.4rem;
+    background-color: #f9fafb;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+      background-color: #eef4ff;
+    }
+
+    &__lines {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__line {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.45rem;
+      line-height: 1.45;
+      color: inherit;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    &__icon {
+      flex-shrink: 0;
+      margin-top: 0.15rem;
+      color: #00afef;
+      font-size: 1rem;
+    }
+  }
+}
+
+::ng-deep .dialog-footer-custom {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  background: #f5f7fa;
+}
+
+/* 💠 Botón principal */
+.btn-ok {
+  background-color: #00afef !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 600;
+  padding: 0.7rem 2rem;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: darken(#00afef, 10%) !important;
+    transform: scale(1.05);
+  }
+
+  i {
+    margin-right: 0.5rem;
+  }
+}

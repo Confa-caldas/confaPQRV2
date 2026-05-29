@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-layout-request',
@@ -7,5 +7,5 @@ import { Router } from '@angular/router';
   styleUrl: './layout-request.component.scss'
 })
 export class LayoutRequestComponent {
-
+  isTestEnvironment = !environment.production;
 }

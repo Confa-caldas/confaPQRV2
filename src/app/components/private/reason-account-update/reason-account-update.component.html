@@ -1,0 +1,89 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Parametrizar motivos de actualización de cuentas</div>
+  </div>
+  <div class="col-2">
+    <p-button label="Crear motivo de actualización" (click)="createReasonAccountUpdate()"></p-button>
+  </div>
+</div>
+<div class="row mt-auto">
+  <div class="col-12">
+    <p-table
+      [value]="reasonAccountUpdateList"
+      [scrollable]="true"
+      scrollHeight="400px"
+      selectionMode="single"
+      [paginator]="false"
+      [rows]="5"
+      [showCurrentPageReport]="true"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      currentPageReportTemplate="{first} de {totalRecords}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="reason_account_update_id" style="width: 15%">
+            Código<p-sortIcon field="reason_account_update_id"></p-sortIcon>
+          </th>
+          <th style="width: 35%">Motivo</th>
+          <th style="width: 15%">Estado</th>
+          <th style="width: 10%"></th>
+          <!--<th style="width: 10%"></th>-->
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-reasonAccountUpdateList>
+        <tr>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ reasonAccountUpdateList.reason_account_update_id }}</td>
+          <td>{{ reasonAccountUpdateList.reason }}</td>
+          <td class="d-flex">
+            <p-inputSwitch
+              [(ngModel)]="reasonAccountUpdateList.is_active"
+              (onChange)="inActiveReasonAccountUpdate(reasonAccountUpdateList)"></p-inputSwitch>
+            <div
+              class="d-flex align-items-center ms-2"
+              [ngClass]="{ 'input-switch-label': reasonAccountUpdateList.is_active }">
+              {{ reasonAccountUpdateList.is_active ? 'Activo' : 'Inactivo' }}
+            </div>
+          </td>
+          <td [ngStyle]="{ 'text-align': 'center' }">
+            <p-button
+              icon="pi pi-pencil"
+              [styleClass]="'btn-icon-warning'"
+              (click)="editReasonAccountUpdate(reasonAccountUpdateList)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <p-paginator
+      (onPageChange)="onPageChange($event)"
+      [first]="first"
+      [rows]="rows"
+      [totalRecords]="totalRows"
+      [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+  </div>
+</div>
+<p-toast></p-toast>
+<app-modal-dinamic
+  *ngIf="visibleDialog"
+  [select]="true"
+  [visible]="visibleDialog"
+  [message]="message"
+  (setRta)="closeDialog($event)"></app-modal-dinamic>
+
+<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>
+
+<app-modal-reason-account-update
+  *ngIf="visibleDialogReasonAccountUpdate"
+  [select]="true"
+  [visible]="visibleDialogReasonAccountUpdate"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [read_only]="read_only"
+  [reasonAccountUpdateForm]="reasonAccountUpdate_details"
+  (setRta)="closeDialogReasonAccountUpdate($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-reason-account-update>

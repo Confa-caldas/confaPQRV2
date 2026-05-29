@@ -14,9 +14,18 @@ import { ModalFilingModule } from './modal-filing/modal-filing.module';
 import { ModalManagerSelectorModule } from './modal-manager-selector/modal-manager-selector.module';
 import { ModalReviewStateModule } from './modal-review-state/modal-review.state.module';
 import { MainNotificationModule } from './main-notification/main-notification.module';
+import { ModalInputDocumentModule } from './modal-input-document/modal-input-document.module';
+import { ModalReasonAccountUpdateModule } from './modal-reason-account-update/modal-reason-account-update.module';
+import { ModalAccountTypeModule } from './modal-account-type/modal-account-type.module';
+import { ModalEntityModule } from './modal-entity/modal-entity.module';
+import { ModalEntityAccountTypeModule } from './modal-entity-account-type/modal-entity-account-type.module';
+import { ModalAssignUserModule } from './modal-assign-user/modal-assign-user.module';
 
 @NgModule({
   declarations: [
+  
+  
+    
   ],
   imports: [
     CommonModule,
@@ -33,6 +42,11 @@ import { MainNotificationModule } from './main-notification/main-notification.mo
     ModalManagerSelectorModule,
     ModalReviewStateModule,
     MainNotificationModule,
+    ModalReasonAccountUpdateModule,
+    ModalAccountTypeModule,
+    ModalEntityModule,
+    ModalEntityAccountTypeModule,
+    ModalAssignUserModule,
   ],
   exports: [
     ModalDinamicModule,
@@ -48,7 +62,12 @@ import { MainNotificationModule } from './main-notification/main-notification.mo
     ModalFilingModule,
     ModalManagerSelectorModule,
     ModalReviewStateModule,
-    MainNotificationModule
+    MainNotificationModule,
+    ModalReasonAccountUpdateModule,
+    ModalAccountTypeModule,
+    ModalEntityModule,
+    ModalEntityAccountTypeModule,
+    ModalAssignUserModule,
   ],
 })
 export class SharedModule {}

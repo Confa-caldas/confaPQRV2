@@ -20,6 +20,9 @@ import {
   requestHistoryRequest,
   historyRequest,
   SimilarRequest,
+  Empresa,
+  AdditionalDocsRequest,
+  GrupoFamiliar,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -35,6 +38,9 @@ import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+
+type PreviewKind = 'image' | 'pdf' | 'office' | 'other';
 
 @Component({
   selector: 'app-request-details',
@@ -45,6 +51,8 @@ export class RequestDetailsComponent implements OnInit {
   @ViewChild('archive_request') fileInput!: ElementRef;
 
   @ViewChild('archive_request_pending') fileInputPending!: ElementRef;
+
+  @ViewChild('archive_request_additional') fileInputAdditional!: ElementRef;
 
   displayPreviewModal: boolean = false;
   viewerType: 'google' | 'office' | 'image' | 'pdf' = 'google';
@@ -87,6 +95,7 @@ export class RequestDetailsComponent implements OnInit {
   base64File: string = '';
   requestAssignedAttachmentsList: RequestAttachmentsList[] = [];
   requestApplicantAttachmentsList: RequestAttachmentsList[] = [];
+  requestApplicantAdditionalAttachmentsList: RequestAttachmentsList[] = [];
   errorMensajeFile!: string;
   errorRepeatFile!: boolean;
 
@@ -104,6 +113,12 @@ export class RequestDetailsComponent implements OnInit {
   pageApplicantAttachments: number = 1;
   rowsApplicantAttachments: number = 10;
   totalRowsApplicantAttachments: number = 0;
+
+  firstApplicantAdditionalAttachments: number = 0;
+  pageApplicantAdditionalAttachments: number = 1;
+  rowsApplicantAdditionalAttachments: number = 10;
+  totalRowsApplicantAdditionalAttachments: number = 0;
+
   preSignedUrl: string = '';
   preSignedUrlDownload: string = '';
   selectedFile: File | null = null;
@@ -128,13 +143,18 @@ export class RequestDetailsComponent implements OnInit {
   palabrasError: string = '';
   errores: boolean = false;
   //Esto es nuevo
-  documentValue: string = ''; // Valor del documento (cédula)
+  documentAfiliadoValue: string = ''; // Valor del documento (cédula)
+  documentEmpresaValue: string = ''; // Valor del documento
   valor: string = ''; // Otro valor que quieras pasar en la URL
   nombreAfiliado: string = '';
   userMiPerfil!: MiPerfilConfa;
   imgPdf2: string = '';
   // fechaEntrega: string = this.formatDate(new Date());
-  afiliado?: Afiliado;
+  afiliado?: Afiliado | null = null;;
+  consultaRealizadaAfiliado = false;
+  infoGrupoFamiliar: any = null; // Respuesta de consultarInfoGrupoFamiliar
+  empresa?: Empresa | null = null;;
+  consultaRealizadaEmpresa = false;
   imgPdf1: string = '';
 
   //variables para respuestas temporal
@@ -164,12 +184,29 @@ export class RequestDetailsComponent implements OnInit {
 
   //utilitarios cuando no es cerrada
   itemsGenerals: MenuModule[] | undefined;
+  itemsGeneralsSinSubida: MenuModule[] | undefined;
   isVisibleSolicitudPrioridad = false;
   esPrioridadForm: FormGroup;
   spinnerVisible = false;
 
   similares: any[] = [];
+  tiempoRespuesta: string | null = null;
+  isVisibleAdjuntosAdicionales = false;
+  additionalRequestForm: FormGroup;
+  fileNameListAdditional: string[] = [];
+  arrayAssignedAttachmentAdditional: ApplicantAttachments[] = [];
+  selectedFilesAdditional: File[] = [];
+  submitted: boolean = false;
 
+
+  // Lista de URLs crudas (las que ya usas en la tabla)
+attachments: string[] = [];
+attachmentsAdditional: string[] = [];
+currentName = '';
+viewerType2: PreviewKind = 'other';
+
+isPreviewCarouselVisible = false;
+loadingFile = false;
 
 
   constructor(
@@ -179,7 +216,8 @@ export class RequestDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private messageService: MessageService,
     private http: HttpClient,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private sanitizer: DomSanitizer,
   ) {
     // (window as any).pdfMake.vfs = pdfFonts.pdfMake.vfs;
     this.requestProcess = this.formBuilder.group({
@@ -199,6 +237,10 @@ export class RequestDetailsComponent implements OnInit {
 
     this.esPrioridadForm = this.fb.group({
       message: ['', Validators.required],
+    });
+
+    this.additionalRequestForm = this.fb.group({
+      hasFiles: this.fb.control(false, { validators: Validators.requiredTrue })
     });
   }
 
@@ -221,6 +263,7 @@ export class RequestDetailsComponent implements OnInit {
     //this.getRequestDetails(this.request_id);
     this.initPaginadorHistoric();
     this.getRequestApplicantAttachments(this.request_id);
+    this.getRequestApplicantAdditionalAttachments(this.request_id);
     this.getRequestAssignedAttachments(this.request_id);
 
     //validar si esta cerrada
@@ -255,6 +298,23 @@ export class RequestDetailsComponent implements OnInit {
     ];
 
     this.itemsGenerals = [
+      {
+        items: [
+          {
+            label: 'Priorizar',
+            icon: 'pi pi-exclamation-triangle',
+            command: () => this.sendPriority(),
+          },
+          {
+            label: 'Subida de documentos',
+            icon: 'pi pi-upload',
+            command: () => this.adjuntosAdicionales(),
+          },
+        ],
+      },
+    ];
+
+    this.itemsGeneralsSinSubida = [
       {
         items: [
           {
@@ -349,6 +409,14 @@ export class RequestDetailsComponent implements OnInit {
     this.pageApplicantAttachments = Number(eventApplicantAttachments.page) + 1 || 0;
     this.getRequestApplicantAttachments(this.request_id);
   }
+
+  onPageChangeApplicantAdditionalAttachments(eventApplicantAdditionalAttachments: PaginatorState) {
+    this.firstApplicantAdditionalAttachments = eventApplicantAdditionalAttachments.first || 0;
+    this.rowsApplicantAdditionalAttachments = eventApplicantAdditionalAttachments.rows || 0;
+    this.pageApplicantAdditionalAttachments = Number(eventApplicantAdditionalAttachments.page) + 1 || 0;
+    this.getRequestApplicantAdditionalAttachments(this.request_id);
+  }
+
   cleanFormApplicantAttachments() {
     this.firstApplicantAttachments = 0;
     this.pageApplicantAttachments = 1;
@@ -433,7 +501,15 @@ export class RequestDetailsComponent implements OnInit {
           ? 'Gestión'
           : this.requestDetails.status_name;
 
-        // ✅ Armar payload con campos relevantes
+        //Calcular diferencia de tiempo entre filing y answer
+        this.tiempoRespuesta = this.calcularDiferenciaFechas(
+          this.requestDetails.filing_date ?? '',
+          this.requestDetails.filing_time ?? '',
+          this.requestDetails.answer_date ?? '',
+          this.requestDetails.answer_time ?? '',
+        );
+
+        //Armar payload con campos relevantes
         const payload: SimilarRequest = {
           request_id: this.requestDetails.request_id,
           applicant_type_id: this.requestDetails.applicant_type_id,
@@ -446,7 +522,7 @@ export class RequestDetailsComponent implements OnInit {
           applicant_attachments: this.requestDetails.applicant_attachments
         };
 
-        // 🔍 Llamar a búsqueda de similares
+        //Llamar a búsqueda de similares
         this.userService.getSimilarRequest(payload).subscribe({
           next: (similares) => {
             this.similares = similares.data;
@@ -469,6 +545,75 @@ export class RequestDetailsComponent implements OnInit {
   });
 } 
 
+calcularDiferenciaFechas(
+  filing_date?: string,
+  filing_time?: string,
+  answer_date?: string,
+  answer_time?: string
+): string | null {
+  if (!filing_date || !filing_time || !answer_date || !answer_time) {
+    console.warn('Faltan datos para calcular diferencia');
+    return null;
+  }
+
+  try {
+    const normalizarHora = (fecha: string, hora: string): Date => {
+      hora = hora.trim();
+
+      // Normalizar zona horaria (+00 → +00:00)
+      if (/\+\d{2}$/.test(hora)) {
+        hora = hora.replace(/(\+\d{2})$/, '$1:00');
+      } else if (/\-\d{2}$/.test(hora)) {
+        hora = hora.replace(/(\-\d{2})$/, '$1:00');
+      }
+
+      // Agregar 'Z' si no hay zona ni signo
+      if (!hora.includes('+') && !hora.includes('-') && !hora.endsWith('Z')) {
+        hora += 'Z';
+      }
+
+      // Asegurar segundos
+      if (/^\d{2}:\d{2}$/.test(hora)) {
+        hora += ':00';
+      }
+
+      const fechaIso = `${fecha}T${hora}`;
+      const d = new Date(fechaIso);
+      console.log('Fecha normalizada:', fechaIso, d);
+      return d;
+    };
+
+    const inicio = normalizarHora(filing_date, filing_time);
+    const fin = normalizarHora(answer_date, answer_time);
+
+    if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
+      console.error('Alguna fecha no es válida después de normalizar:', {
+        filing_date, filing_time, answer_date, answer_time
+      });
+      return null;
+    }
+
+    const diferenciaMs = fin.getTime() - inicio.getTime();
+    if (diferenciaMs < 0) {
+      console.warn('La fecha final es anterior a la inicial');
+      return null;
+    }
+
+    const segundosTotales = Math.floor(diferenciaMs / 1000);
+    const horas = Math.floor(segundosTotales / 3600);
+    const minutos = Math.floor((segundosTotales % 3600) / 60);
+    const segundos = segundosTotales % 60;
+
+    return `${horas}h ${minutos}m ${segundos}s`;
+
+  } catch (error) {
+    console.error('Error al calcular diferencia:', error);
+    return null;
+  }
+}
+
+
+
 
   getRequestApplicantAttachments(request_id: number) {
     const payload: Pagination = {
@@ -481,6 +626,30 @@ export class RequestDetailsComponent implements OnInit {
         if (response.code === 200) {
           this.requestApplicantAttachmentsList = response.data;
           this.totalRowsApplicantAttachments = Number(response.message);
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  getRequestApplicantAdditionalAttachments(request_id: number) {
+    const payload: Pagination = {
+      request_id: request_id,
+      page: this.pageApplicantAdditionalAttachments,
+      page_size: this.rowsApplicantAdditionalAttachments,
+    };
+    this.userService.getRequestAttachments(payload, 'additional').subscribe({
+      next: (response: BodyResponse<RequestAttachmentsList[]>) => {
+        if (response.code === 200) {
+          this.requestApplicantAdditionalAttachmentsList = response.data;
+          this.totalRowsApplicantAdditionalAttachments = Number(response.message);
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -1010,6 +1179,7 @@ export class RequestDetailsComponent implements OnInit {
   //MEJORA 2025
   async uploadToPresignedUrl(file: ApplicantAttachments): Promise<void> {
     //this.isSpinnerVisible = true;
+    console.log("ENTRO 5 --->");
 
     if (!file || !file.file) {
       console.error('El archivo no es válido o está undefined.');
@@ -1281,6 +1451,7 @@ export class RequestDetailsComponent implements OnInit {
       complete: () => {
         console.log('La suscripción ha sido completada.');
         this.viewerType = this.getViewerType(file_name);
+        this.currentName = file_name;
         if (!is_download) {
           if (this.viewerType == 'pdf') {
             this.isSpinnerVisible = true;
@@ -1608,62 +1779,228 @@ export class RequestDetailsComponent implements OnInit {
     this.characterizeRequest(requestDetails);
   }
 
-/*
   consultarWs(cedula: string) {
-    this.userService.respuestaInfoAfiliacion(cedula).subscribe(
-      response => {
-        if (response.statusCode === 200) {
-          const parsedBody = JSON.parse(response.body);
-          this.afiliado = parsedBody.data;
-          if (this.afiliado) {
-            this.afiliado.tipoDocumento = this.getTipoDocumentoTexto(parsedBody.data.tipodoc);
-            this.afiliado.documento = cedula;
-            this.afiliado.nombre = parsedBody.data.nombre;
-            this.afiliado.fechaNacimiento = parsedBody.data.fechanac;
-            this.afiliado.estado = parsedBody.data.estado;
-            this.afiliado.tipoTrabajador = this.getTipoTrabajadorTexto(parsedBody.data.tipotr);
-            this.afiliado.empresa = parsedBody.data.nombreempresa;
-            this.afiliado.fechaAfiliacion = parsedBody.data.fechaafi;
-            this.afiliado.fechaIngreso = parsedBody.data.fechaing;
-          }
-          
-        }
-      },
-      (error: any) => {
-        console.error('Error al llamar al servicio:', error);
-      }
-    );
-  } */
+  this.consultaRealizadaAfiliado = true;
+  this.infoGrupoFamiliar = null;
 
-  consultarWs(cedula: string) {
   this.userService.respuestaInfoAfiliacion(cedula).subscribe(
     response => {
-      if (response.statusCode === 200) {
-        const parsedBody = JSON.parse(response.body);
-        console.log('Respuesta completa del WS:', parsedBody);
 
-        const data = parsedBody; // ya no accedas a parsedBody.data porque tus datos están directo ahí
+      if (response.status === 200 && response.body) {
+        const data = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
 
-        console.log('Tipo documento:', data.tipodoc);
-        console.log('Documento:', data.documento);
-        console.log('Nombre:', data.nombre);
-        console.log('Fecha nacimiento:', data.fechanac);
-        console.log('Estado:', data.estado);
-        console.log('Tipo trabajador:', data.tipotr);
-        console.log('Empresa:', data.empresa?.razonSocial);
-        console.log('Fecha afiliación:', data.fechaafi);
-        console.log('Fecha ingreso:', data.fechaing);
+        this.afiliado = {
+          tipoDocumento: data.tipodoc || '',
+          documento: data.documento || '',
+          nombre: data.nombre|| '',
+          edad: data.edad || '',
+          fechaNacimiento: data.fechanac || '',
+          estado: data.estado === 'A' ? 'ACTIVO' : data.estado === 'I' ? 'INACTIVO' : data.estado,
+          categoria: data.categoria || '',
+          telefono: data.telefono || '',
+          sexo: data.sexo || '',
+          estadoCivil: data.estcivil || '',
+          email: data.email || '',
+          empresa: data.empresa?.razonSocial || '',
+          tipoTrabajador: data.tipotr || '',
+          fechaAfiliacion: data.fechaafi || '',
+          fechaIngreso: data.fechaing || '',
+
+        };
+
+        // Llamar a consultarInfoGrupoFamiliar con documento y tipo_doc de la respuesta
+        const documento = data.documento ?? '';
+        const tipoDoc = data.tipodoc ?? '1';
+        if (documento) {
+          this.userService.consultarInfoGrupoFamiliar(documento, String(tipoDoc)).subscribe(
+            resGrupo => {
+              if (resGrupo.status === 200 && resGrupo.body != null) {
+                this.infoGrupoFamiliar = typeof resGrupo.body === 'string' ? JSON.parse(resGrupo.body) : resGrupo.body;
+              }
+            },
+            errGrupo => {
+              console.warn('Error al consultar grupo familiar:', errGrupo);
+              this.infoGrupoFamiliar = null;
+            }
+          );
+        }
       } else {
-        console.warn('El servicio no respondió con status 200:', response);
+        console.warn('El servicio no devolvió status 200 o body vacío', response);
+        this.afiliado = null;
       }
     },
     error => {
       console.error('Error al llamar al servicio:', error);
+      this.afiliado = null;
     }
   );
 }
 
+  /**
+   * Lista de grupos familiares (respuesta del servicio: array de GrupoFamiliar).
+   * Cada grupo tiene documentoTrabajdor, tipoDocTrabajdor, numGrupo y personasACargo.
+   */
+  get listaGruposFamiliares(): GrupoFamiliar[] {
+    if (!this.infoGrupoFamiliar) return [];
+    if (Array.isArray(this.infoGrupoFamiliar)) return this.infoGrupoFamiliar;
+    if (this.infoGrupoFamiliar && typeof this.infoGrupoFamiliar === 'object' && this.infoGrupoFamiliar.personasACargo) {
+      return [{ ...this.infoGrupoFamiliar, personasACargo: Array.isArray(this.infoGrupoFamiliar.personasACargo) ? this.infoGrupoFamiliar.personasACargo : [] }];
+    }
+    return [];
+  }
 
+  /** Indica si hay datos del segundo servicio (grupo familiar) para mostrar */
+  get tieneInfoGrupoFamiliar(): boolean {
+    return this.listaGruposFamiliares.length > 0;
+  }
+
+  /** Estado del beneficiario para mostrar (A = ACTIVO, I = INACTIVO) */
+  estadoBeneficiarioDisplay(estado: string | undefined): string {
+    if (!estado) return '-';
+    return estado === 'A' ? 'ACTIVO' : estado === 'I' ? 'INACTIVO' : estado;
+  }
+
+  allowOnlyNumbers(event: KeyboardEvent): void {
+    const charCode = event.key.charCodeAt(0);
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+    }
+  }
+
+  allowOnlyAlphanumeric(event: KeyboardEvent): void {
+    if (event.key.length !== 1 || !/^[a-zA-Z0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  sanitizeNumericValue(value: string): string {
+    return (value ?? '').replace(/\D/g, '');
+  }
+
+  sanitizeAlphanumericValue(value: string): string {
+    return (value ?? '').replace(/[^a-zA-Z0-9]/g, '');
+  }
+
+  onDocumentEmpresaPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+
+    const pastedText = event.clipboardData?.getData('text') ?? '';
+    const sanitized = this.sanitizeNumericValue(pastedText);
+    if (!sanitized) {
+      return;
+    }
+
+    const input = event.target as HTMLInputElement;
+    const currentValue = this.documentEmpresaValue ?? '';
+    const start = input.selectionStart ?? currentValue.length;
+    const end = input.selectionEnd ?? currentValue.length;
+
+    this.documentEmpresaValue = this.sanitizeNumericValue(
+      currentValue.slice(0, start) + sanitized + currentValue.slice(end),
+    );
+  }
+
+  onDocumentAfiliadoPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+
+    const pastedText = event.clipboardData?.getData('text') ?? '';
+    const sanitized = this.sanitizeAlphanumericValue(pastedText);
+    if (!sanitized) {
+      return;
+    }
+
+    const input = event.target as HTMLInputElement;
+    const currentValue = this.documentAfiliadoValue ?? '';
+    const start = input.selectionStart ?? currentValue.length;
+    const end = input.selectionEnd ?? currentValue.length;
+
+    this.documentAfiliadoValue = this.sanitizeAlphanumericValue(
+      currentValue.slice(0, start) + sanitized + currentValue.slice(end),
+    );
+  }
+
+  consultarEmpresaWs(cedula: string) {
+  this.consultaRealizadaEmpresa = true;
+
+  this.userService.respuestaInfoEmpresa(cedula).subscribe(
+    response => {
+
+      if (response.status === 200 && response.body) {
+        const data = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
+
+        this.empresa = {
+            codigoGenesys: data.codigo || '',
+            documento: data.nit || '',
+            digitoVerificacion: '',
+            razonSocial: data.razonSocial || '',
+            nombreComercial: data.nombreComercial || '',
+            telefono: data.telefono || '',
+            direccion: data.direccion || '',
+            email: data.email || '',
+            estado: data.estado === 'A' ? 'ACTIVA' : data.estado === 'I' ? 'INACTIVA' : data.estado,
+            nombreRepLeg: data.replegal || '',
+            tipoDocumentoRepLeg: data.tipodoc_replegal || '',
+            documentoRepLeg: data.doc_repLegal || '',
+            actividadEconomica: data.codigoActividadEconomica || '',
+            numTrabajadores: data.nroTrabajadores || '',
+          };
+      } else {
+        console.warn('El servicio no devolvió status 200 o body vacío', response);
+        this.afiliado = null;
+      }
+    },
+    error => {
+      console.error('Error al llamar al servicio:', error);
+      this.afiliado = null;
+    }
+  );
+}
+
+/*
+consultarEmpresaWs(document: string) {
+  this.consultaRealizadaEmpresa = true;
+
+  this.userService.respuestaInfoEmpresa(document).subscribe(
+    response => {
+      try {
+        // Verificar si la respuesta es un HttpResponse o directamente JSON
+        const data = typeof response.body === 'string' ? JSON.parse(response.body) : response.body || response;
+
+        if (data) {
+          this.empresa = {
+            codigoGenesys: data.codigoGenesys || '',
+            documento: data.documento || '',
+            digitoVerificacion: '',
+            razonSocial: data.razonSocial || '',
+            nombreComercial: data.nombreComercial || '',
+            telefono: data.telefono || '',
+            direccion: data.direccion || '',
+            email: data.email || '',
+            estado: data.estado === 'A' ? 'ACTIVA' : data.estado === 'I' ? 'INACTIVA' : data.estado,
+            nombreRepLeg: data.nombreRepLeg || '',
+            tipoDocumentoRepLeg: data.tipoDocumentoRepLeg || '',
+            documentoRepLeg: data.documentoRepLeg || '',
+            actividadEconomica: data.actividadEconomica || '',
+            numTrabajadores: data.numTrabajadores || '',
+          };
+
+          console.log('Empresa asignada:', this.empresa);
+        } else {
+          console.warn('El servicio no devolvió datos válidos');
+          this.empresa = null;
+        }
+      } catch (e) {
+        console.error('Error parseando la respuesta del WS:', e);
+        this.empresa = null;
+      }
+    },
+    error => {
+      console.error('Error al llamar al servicio:', error);
+      this.empresa = null;
+    }
+  );
+}
+  */
 
   getTipoTrabajadorTexto(tipo: string): string {
     switch (tipo) {
@@ -2018,6 +2355,10 @@ export class RequestDetailsComponent implements OnInit {
     this.visibleSolicitudEnvioMasivo = true;
   }
 
+  adjuntosAdicionales() {
+    this.isVisibleAdjuntosAdicionales = true;
+  }
+
   closeDialogenvioCorreoMasivo(): void {
     this.visibleSolicitudEnvioMasivo = false;
     this.emailList = []; // Limpia la lista de correos
@@ -2215,6 +2556,29 @@ export class RequestDetailsComponent implements OnInit {
       console.error('Error al descargar archivos:', error);
     }
   }
+
+  async downloadAttachmentsAdditionalAsZip() {
+    const zip = new JSZip();
+    const filingNumber = this.requestDetails?.filing_number || 'radicado';
+    const attachments = this.requestApplicantAdditionalAttachmentsList;
+    const zipFolder = zip.folder(filingNumber.toString());
+  
+    try {
+      await Promise.all(attachments.map(async (attachment) => {
+        const presignedUrl = await this.getPreSignedUrlToDownloadPromise(attachment.url, attachment.file_name, false); // obtenemos la URL
+        const fileBlob = await this.downloadFileBlob(presignedUrl); // descargamos el blob
+        zipFolder?.file(attachment.file_name, fileBlob); // agregamos al zip
+      }));
+  
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(zipBlob);
+      downloadLink.download = `${filingNumber}_archivos.zip`;
+      downloadLink.click();
+    } catch (error) {
+      console.error('Error al descargar archivos:', error);
+    }
+  }
   
   async downloadFileBlob(url: string): Promise<Blob> {
     const response = await fetch(url);
@@ -2224,5 +2588,514 @@ export class RequestDetailsComponent implements OnInit {
     const blob = await response.blob();
     return blob;
   }
+
+  openFileInputAdditional() {
+    this.fileInputAdditional.nativeElement.value = ''; // Limpiar la entrada de archivos antes de abrir el cuadro de diálogo
+    this.fileInputAdditional.nativeElement.click();
+  }
+
+  clearFileInputAdditional(index: number) {
+    this.fileNameListAdditional.splice(index, 1);
+
+    const hasAny = this.fileNameListAdditional.length > 0;
+    this.additionalRequestForm.get('hasFiles')?.setValue(hasAny);
+    this.additionalRequestForm.updateValueAndValidity();
+  }
+
+  onFileSelectedAdditional(event: any) {
+  const filesAdditional: FileList = event?.target?.files || event?.dataTransfer?.files || [];
+
+  for (let i = 0; i < filesAdditional.length; i++) {
+    if (this.fileNameListAdditional.includes(filesAdditional[i].name)) {
+      this.errorMensajeFile = `El archivo ${filesAdditional[i].name} ya está adjunto`;
+      this.errorRepeatFile = true;
+      continue;
+    } else {
+      const file: File = filesAdditional[i];
+
+      let fileSizeFormat: string;
+      const fileName: string = file.name;
+      const fileSizeInKiloBytes = file.size / 1024;
+      if (fileSizeInKiloBytes < 1024) {
+        fileSizeFormat = fileSizeInKiloBytes.toFixed(2) + 'KB';
+      } else {
+        const fileSizeMegabytes = fileSizeInKiloBytes / 1024;
+        fileSizeFormat = fileSizeMegabytes.toFixed(2) + 'MB';
+      }
+
+      if (this.isValidExtension(file)) {
+        this.errorMensajeFile = `El archivo ${filesAdditional[i].name} tiene una extensión no permitida`;
+        this.errorExtensionFile = true;
+        continue;
+      }
+
+      if (file.size > 20971520) {
+        this.errorMensajeFile = `El archivo ${filesAdditional[i].name} supera los 20MB`;
+        this.errorSizeFile = true;
+        continue;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const base64String: string = e.target.result.split(',')[1];
+
+        const applicantAttach: ApplicantAttachments = {
+          base64file: base64String,
+          source_name: fileName,
+          fileweight: fileSizeFormat,
+          file: filesAdditional[i],
+        };
+
+        this.fileNameListAdditional.push(fileName);
+        this.arrayAssignedAttachmentAdditional.push(applicantAttach);
+
+        //Actualiza el control lógico dentro del reader (una vez realmente agregado)
+        this.additionalRequestForm.get('hasFiles')?.setValue(this.fileNameListAdditional.length > 0);
+        this.additionalRequestForm.updateValueAndValidity();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  setTimeout(() => {
+    this.errorRepeatFile = false;
+    this.errorExtensionFile = false;
+    this.errorSizeFile = false;
+  }, 5000);
+
+  console.log(this.getAssignedAdditional());
+
+  //Por seguridad, también actualiza al final
+  this.additionalRequestForm.get('hasFiles')?.setValue(this.fileNameListAdditional.length > 0);
+  this.additionalRequestForm.updateValueAndValidity();
+}
+
+  closeDialogAdditional(): void {
+  this.isVisibleAdjuntosAdicionales = false;
+
+  //Limpia el formulario
+  this.additionalRequestForm.reset();
+  this.additionalRequestForm.get('hasFiles')?.setValue(false);
+  this.additionalRequestForm.updateValueAndValidity();
+
+  //Limpia el input file (si existe referencia en el DOM)
+  const fileInput = document.getElementById('file') as HTMLInputElement | null;
+  if (fileInput) {
+    fileInput.value = ''; // Vacía el input visualmente
+  }
+
+  //Limpia tus listas de archivos
+  this.fileNameListAdditional = [];
+  this.arrayAssignedAttachmentAdditional = [];
+  this.selectedFile = null;
+
+  //(Opcional) Limpia errores visuales si los manejas
+  this.errorRepeatFile = false;
+  this.errorExtensionFile = false;
+  this.errorSizeFile = false;
+}
+
+
+  getAssignedAdditional(): ApplicantAttachments[] {
+    return this.arrayAssignedAttachmentAdditional;
+  }
+
+  //REALIZA PROCESO DE SUBIR ADJUNTOS ADICIONALES
+onSubmitAdditional(): void {
+  this.submitted = true;
+
+  if (!this.additionalRequestForm.valid) {
+    this.additionalRequestForm.markAllAsTouched();
+    return;
+  }
+
+  // Evita fallback 0: valida id real
+  const rawId = this.requestDetails?.request_id ?? this.requestDetails?.filing_number;
+  const requestId = Number(rawId);
+  if (!Number.isFinite(requestId) || requestId <= 0) {
+    this.showSuccessMessage('error', 'Faltan datos', 'No hay request_id válido.');
+    return;
+  }
+
+  const payload: AdditionalDocsRequest = {
+    request_id: requestId,
+    user_action: this.user,
+    request_status: 2,
+  };
+
+  this.userService.registerAdditionalDocsRequest(payload).subscribe({
+    next: async (response: BodyResponse<string>) => {
+      if (response.code !== 200) {
+        this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        return;
+      }
+
+      // 👇 Espera a que termine toda la subida ANTES de cerrar/limpiar
+      await this.uploadAllFilesAdditional();
+
+      this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+      this.closeDialogAdditional(); // pasa true para limpiar arrays
+      this.ngOnInit();                  // refresca después
+    },
+    error: (err: any) => console.error(err),
+  });
+}
+
+
+
+  async attachAssignedFilesAdditional() {
+    await Promise.all(
+      this.arrayAssignedAttachmentAdditional.map(async item => {
+        item.preSignedUrl = await this.getPreSignedUrlAdditional(item);
+      })
+    );
+  }
+
+  async uploadAllFilesAdditional() {
+    await this.attachAssignedFilesAdditional(); // Espera que se obtengan todas las URLs
+    console.log('Array listo?', this.arrayAssignedAttachmentAdditional);
+    console.log('Largo:', this.arrayAssignedAttachmentAdditional?.length);
+
+
+    console.log("LLEGOOOOOOOOO --->");
+    // Subimos los archivos
+    for (const file of this.arrayAssignedAttachmentAdditional) {
+      console.log("LLEGOOOOOOOOO FOR--->");
+      await this.uploadToPresignedUrl(file);
+    }
+  }
+
+  //URL para los documentos adicionales
+  async getPreSignedUrlAdditional(file: ApplicantAttachments): Promise<string> {
+    const payload = {
+      source_name: file.source_name.replace(/(?!\.[^.]+$)\./g, '_'), // Evitar caracteres conflictivos
+      fileweight: file.fileweight,
+      content_type: file.file?.type || 'application/octet-stream',
+      request_id: this.request_id,
+    };
+
+    const MAX_RETRIES = 3;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+      try {
+        const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'additional'));
+
+        if (response.code === 200 && response.data) {
+          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+        } else {
+          console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
+        }
+      } catch (error) {
+        console.error(
+          `Intento ${attempts + 1}: Falló la solicitud para obtener la URL prefirmada`,
+          error
+        );
+      }
+
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2s antes de reintentar
+    }
+
+    throw new Error('No se pudo obtener la URL prefirmada después de múltiples intentos');
+  }
   
+  ///////////////////////////////////
+  private buildAttachmentsFromList(): void {
+  if (!this.requestApplicantAttachmentsList || this.requestApplicantAttachmentsList.length === 0) {
+    this.attachments = [];
+    return;
+  }
+
+  const urls: string[] = [];
+
+  for (const row of this.requestApplicantAttachmentsList) {
+    urls.push(...this.extractUrlsFromRowGeneric(row));
+  }
+
+  // quitamos duplicados y vacíos
+  this.attachments = Array.from(new Set(urls.filter(u => !!u)));
+}
+
+private extractUrlsFromRowGeneric(row: any): string[] {
+  if (!row) return [];
+
+  const candidateUrls: string[] = [];
+
+  // 1. Campos típicos de URL directa
+  const simpleProps = ['url', 'source_route', 'file_url', 'attachment_url'];
+
+  for (const prop of simpleProps) {
+    if (row[prop] && typeof row[prop] === 'string') {
+      candidateUrls.push(row[prop]);
+    }
+  }
+
+  // 2. Campos típicos que traen arrays o cadenas con varias URLs
+  const multiProps = ['applicant_attachments', 'assigned_attachments', 'attachments'];
+
+  for (const prop of multiProps) {
+    const raw = row[prop];
+
+    // Si ya es array: lo agregamos tal cual
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        if (typeof item === 'string') {
+          candidateUrls.push(this.cleanUrlString(item));
+        }
+      }
+    }
+
+    // Si es string tipo "{url1,url2}" o "url1,url2"
+    if (typeof raw === 'string' && raw.trim()) {
+      const stripped = raw.trim().replace(/^\{|\}$/g, '');
+      if (stripped) {
+        const parts = stripped.split(/\s*,\s*/);
+        for (const part of parts) {
+          candidateUrls.push(this.cleanUrlString(part));
+        }
+      }
+    }
+  }
+
+  return candidateUrls;
+}
+
+private cleanUrlString(value: string): string {
+  if (!value) return '';
+  // Si viene con peso al final tipo "...@115.87KB" lo cortamos
+  const [urlPart] = value.split('@');
+  return urlPart.trim();
+}
+
+
+
+async openPreviewCarousel(): Promise<void> {
+
+  this.buildAttachmentsFromList();
+
+  if (!this.attachments.length) {
+    this.showSuccessMessage('info', 'Información', 'No hay adjuntos para mostrar');
+    return;
+  }
+
+  this.currentIndex = 0;
+  await this.loadCurrentAttachment();
+
+  // 👇 Aquí abrimos el p-dialog correcto (del carrusel)
+  this.isPreviewCarouselVisible = true;
+}
+
+private async getPreSigned(storedUrl: string): Promise<string> {
+  const payload = { url: storedUrl };
+  const resp = await firstValueFrom(
+    this.userService.getUrlSigned(payload, 'download')
+  ) as BodyResponse<string>;
+
+  if (resp.code !== 200 || !resp.data) {
+    throw new Error('No hubo URL prefirmada');
+  }
+  return resp.data;
+}
+
+private extractFileName(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const fileName = pathname.split('/').pop();
+    return decodeURIComponent(fileName || 'archivo');
+  } catch {
+    const segments = url.split('?')[0].split('#')[0].split('/');
+    return decodeURIComponent(segments.pop() || 'archivo');
+  }
+}
+
+async prevAttachment(): Promise<void> {
+  if (this.currentIndex > 0) {
+    this.currentIndex--;
+    await this.loadCurrentAttachment();
+  }
+}
+
+async nextAttachment(): Promise<void> {
+  if (this.currentIndex < this.attachments.length - 1) {
+    this.currentIndex++;
+    await this.loadCurrentAttachment();
+  }
+}
+
+private async loadCurrentAttachment(): Promise<void> {
+  this.loadingFile = true;
+  const originalUrl = this.attachments[this.currentIndex];
+  this.currentName = this.extractFileName(originalUrl);
+
+  try {
+    const signedUrl = await this.getPreSigned(originalUrl);
+    this.preSignedUrlDownload = signedUrl;
+    this.viewerType = this.getViewerType(this.currentName);
+  } catch (e) {
+    console.error('[preview-carousel] error cargando adjunto', e);
+    this.viewerType2 = 'other';
+  } finally {
+    this.loadingFile = false;
+  }
+}
+
+openCurrentInNewTab(): void {
+  if (!this.preSignedUrlDownload) return;
+
+  // Abre el archivo actual en una nueva pestaña
+  window.open(this.preSignedUrlDownload, '_blank', 'noopener');
+}
+
+
+//////////////// Preview Carousel Additional ///////////////////////////////
+async openPreviewCarouselAdditional(): Promise<void> {
+
+  this.buildAttachmentsFromListAdditional();
+
+  if (!this.attachments.length) {
+    this.showSuccessMessage('info', 'Información', 'No hay adjuntos para mostrar');
+    return;
+  }
+
+  this.currentIndex = 0;
+  await this.loadCurrentAttachmentAdditional();
+
+  // 👇 Aquí abrimos el p-dialog correcto (del carrusel)
+  this.isPreviewCarouselVisible = true;
+}
+
+private async getPreSignedAdditional(storedUrl: string): Promise<string> {
+  const payload = { url: storedUrl };
+  const resp = await firstValueFrom(
+    this.userService.getUrlSigned(payload, 'download')
+  ) as BodyResponse<string>;
+
+  if (resp.code !== 200 || !resp.data) {
+    throw new Error('No hubo URL prefirmada');
+  }
+  return resp.data;
+}
+
+private extractFileNameAdditional(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const fileName = pathname.split('/').pop();
+    return decodeURIComponent(fileName || 'archivo');
+  } catch {
+    const segments = url.split('?')[0].split('#')[0].split('/');
+    return decodeURIComponent(segments.pop() || 'archivo');
+  }
+}
+
+async prevAttachmentAdditional(): Promise<void> {
+  if (this.currentIndex > 0) {
+    this.currentIndex--;
+    await this.loadCurrentAttachment();
+  }
+}
+
+async nextAttachmentAdditional(): Promise<void> {
+  if (this.currentIndex < this.attachments.length - 1) {
+    this.currentIndex++;
+    await this.loadCurrentAttachment();
+  }
+}
+
+private async loadCurrentAttachmentAdditional(): Promise<void> {
+  this.loadingFile = true;
+  const originalUrl = this.attachments[this.currentIndex];
+  this.currentName = this.extractFileNameAdditional(originalUrl);
+
+  try {
+    const signedUrl = await this.getPreSignedAdditional(originalUrl);
+    this.preSignedUrlDownload = signedUrl;
+    this.viewerType = this.getViewerType(this.currentName);
+  } catch (e) {
+    console.error('[preview-carousel] error cargando adjunto', e);
+    this.viewerType2 = 'other';
+  } finally {
+    this.loadingFile = false;
+  }
+}
+
+openCurrentInNewTabAdditional(): void {
+  if (!this.preSignedUrlDownload) return;
+
+  // Abre el archivo actual en una nueva pestaña
+  window.open(this.preSignedUrlDownload, '_blank', 'noopener');
+}
+
+///////////////////////////////////
+private buildAttachmentsFromListAdditional(): void {
+  if (!this.requestApplicantAdditionalAttachmentsList || this.requestApplicantAdditionalAttachmentsList.length === 0) {
+    this.attachments = [];
+    return;
+  }
+
+  const urls: string[] = [];
+
+  for (const row of this.requestApplicantAdditionalAttachmentsList) {
+    urls.push(...this.extractUrlsFromRowGenericAdditional(row));
+  }
+
+  // quitamos duplicados y vacíos
+  this.attachments = Array.from(new Set(urls.filter(u => !!u)));
+}
+
+private extractUrlsFromRowGenericAdditional(row: any): string[] {
+  if (!row) return [];
+
+  const candidateUrls: string[] = [];
+
+  // 1. Campos típicos de URL directa
+  const simpleProps = ['url', 'source_route', 'file_url', 'attachment_url'];
+
+  for (const prop of simpleProps) {
+    if (row[prop] && typeof row[prop] === 'string') {
+      candidateUrls.push(row[prop]);
+    }
+  }
+
+  // 2. Campos típicos que traen arrays o cadenas con varias URLs
+  const multiProps = ['applicant_attachments', 'assigned_attachments', 'attachments'];
+
+  for (const prop of multiProps) {
+    const raw = row[prop];
+
+    // Si ya es array: lo agregamos tal cual
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        if (typeof item === 'string') {
+          candidateUrls.push(this.cleanUrlString(item));
+        }
+      }
+    }
+
+    // Si es string tipo "{url1,url2}" o "url1,url2"
+    if (typeof raw === 'string' && raw.trim()) {
+      const stripped = raw.trim().replace(/^\{|\}$/g, '');
+      if (stripped) {
+        const parts = stripped.split(/\s*,\s*/);
+        for (const part of parts) {
+          candidateUrls.push(this.cleanUrlString(part));
+        }
+      }
+    }
+  }
+
+  return candidateUrls;
+}
+
+private cleanUrlStringAdditional(value: string): string {
+  if (!value) return '';
+  // Si viene con peso al final tipo "...@115.87KB" lo cortamos
+  const [urlPart] = value.split('@');
+  return urlPart.trim();
+}
+//////////////////////////////////////////////////////////////////////////
+
+
+
+
 }

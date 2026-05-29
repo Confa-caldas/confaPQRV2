@@ -70,6 +70,8 @@ export interface RequestsDetails {
   priority_level: number;
   contact_cellphone: boolean;
   contact_email: boolean;
+  answer_date?: string;
+  answer_time?: string;
 }
 export interface RequestAttachmentsList {
   url: string;
@@ -127,6 +129,18 @@ export interface ApplicantTypeList {
   applicant_type_id: number;
   applicant_type_name: string;
   applicant_type_description: string;
+  is_active: number | boolean;
+  created_by: string;
+  created_date: string;
+  updated_by: string;
+  updated_date: string;
+}
+
+export interface DocumentTypeList {
+  document_type_id: number;
+  document_type_code: string;
+  document_type_name: string;
+  document_type_description: string;
   is_active: number | boolean;
   created_by: string;
   created_date: string;
@@ -203,6 +217,7 @@ export interface ApplicantAttachments {
   fileweight: string;
   file?: File;
   preSignedUrl?: string;
+  document_type_id?: number | null;
 }
 export interface AssociationApplicantRequestList {
   applicant_requests_type_id: number;
@@ -215,6 +230,12 @@ export interface AssociationApplicantRequestList {
 export interface CreateApplicantType {
   applicant_type_name: string;
   applicant_type_description: string;
+}
+
+export interface CreateDocumentType {
+  document_type_code: string;
+  document_type_name: string;
+  document_type_description: string;
 }
 
 export interface CreateRequestType {
@@ -466,16 +487,44 @@ export interface MiPerfilConfa {
 }
 
 export interface Afiliado {
-  tipoDocumento: string;
-  documento: string;
-  nombre: string;
-  fechaNacimiento: string;
-  estado: string;
-  empresa: string;
-  tipoTrabajador: string;
-  fechaAfiliacion: string;
-  fechaIngreso: string;
+  tipoDocumento?: string;
+  documento?: string;
+  nombre?: string;
+  edad?: string;
+  fechaNacimiento?: string;
+  estado?: string;
+  categoria?: string;
+  telefono?: string;
+  sexo?: string;
+  estadoCivil?: string;
+  email?: string;
+  empresa?: string;
+  tipoTrabajador?: string;
+  fechaAfiliacion?: string;
+  fechaIngreso?: string;
 }
+
+/** Persona a cargo del grupo familiar (respuesta consultarInfoGrupoFamiliar) */
+export interface Beneficiario {
+  nombre?: string;
+  documento?: string;
+  tipoDoc?: string;
+  parentesco?: string;
+  edad?: number;
+  fechaNacimiento?: string;
+  estadoBeneficiario?: string;
+  estadoEscolaridad?: string;
+  discapacidad?: string;
+}
+
+/** Grupo familiar (respuesta consultarInfoGrupoFamiliar: cada elemento del array) */
+export interface GrupoFamiliar {
+  documentoTrabajdor: string;
+  tipoDocTrabajdor: string;
+  numGrupo: string | number;
+  personasACargo: Beneficiario[];
+}
+
 export interface RequestReportStatus {
   date: Date;
   radicadas: number;
@@ -568,6 +617,12 @@ export interface PendingRequest {
   previus_state?: string;
   user_action?: string;
 }
+
+export interface AdditionalDocsRequest {
+  request_id: number;
+  user_action?: string;
+  request_status: number;
+}
 export interface RequestsReview {
   request_id: number;
   filing_number: number;
@@ -627,15 +682,20 @@ export interface RequestFormListPending {
 }
 
 export interface Empresa {
-  tipoDocumento: string;
+  codigoGenesys: string;
   documento: string;
   digitoVerificacion: string;
   razonSocial: string;
   nombreComercial: string;
-  email: string;
-  direccion: string;
   telefono: string;
+  direccion: string;
+  email: string;
+  estado: string;
+  nombreRepLeg: string;
+  tipoDocumentoRepLeg: string;
+  documentoRepLeg: string;
   actividadEconomica: string;
+  numTrabajadores: string;
 }
 
 export interface FilterRequestsIntern {
@@ -836,3 +896,196 @@ export interface SimilarRequest {
   applicant_attachments: string[];
 }
 
+export interface ReasonAccountUpdateList {
+  reason_account_update_id?: number;
+  reason: string;
+  is_active?: number | boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+
+export interface AccountTypeList {
+  account_type_id: number;
+  account_type_name: string;
+  is_active?: number | boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+
+export interface EntityList {
+  entity_id?: number;
+  entity_code: string;
+  entity_name: string;
+  entity_type_id: number;
+  entity_type_name?: string;
+  is_active?: number | boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+
+export interface EntityTypeList {
+  entity_type_id: number;
+  entity_type_name: string;
+  is_active: number | boolean;
+}
+
+export interface EntityAccountTypeList {
+  entity_account_type_id: number;
+  entity_id: number;
+  entity_name?: string;
+  account_type_id: number;
+  account_type_name?: string;
+  min_length: number;
+  max_length: number;
+  observation: string;
+  is_active?: number | boolean;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+
+export interface PaymentMethodRequestList {
+  request_id: number;
+  filing_number: string;
+  worker_document_type: string;
+  worker_document_number: string;
+  worker_full_name: string;
+  admin_document_type: string;
+  admin_document_number: string;
+  admin_full_name: string;
+  previous_payment_method: string;
+  new_payment_method: string;
+  request_datetime: string;
+  payment_method_status_id: number;
+  payment_method_status_name: string;
+  internal_management: string;
+  internal_management_user: string;
+  payment_method_process_status_id: number;
+  payment_method_process_status_name: string;
+  transfer_process_status_id: number;
+  transfer_process_status_name: string;
+}
+
+export interface PaymentMethodRequestDetails {
+  request_id: number;
+  filing_number: string;
+  worker_document_type: string;
+  worker_document_number: string;
+  worker_full_name: string;
+  admin_document_type: string;
+  admin_document_number: string;
+  admin_full_name: string;
+  previous_payment_method: string;
+  new_payment_method: string;
+  change_reason: string;
+  bank_code: string;
+  bank_name: string;
+  account_type: string;
+  account_number: string;
+  key_value: string;
+  previous_bank_name: string;
+  previous_bank_code: string;
+  previous_account_type: string;
+  previous_account_number: string;
+  request_datetime: string;
+  payment_method_status_id: number;
+  payment_method_status_name: string;
+  payment_method_process_status_id: number;
+  payment_method_process_status_name: string;
+  transfer_process_status_id: number;
+  transfer_process_status_name: string;
+  internal_management: boolean;
+  payment_method_update_datetime: string;
+  transfer_update_datetime: string;
+  payment_method_update_user: string;
+  transfer_update_user: string;
+  internal_management_user: string;
+  processed_datetime: string;
+  user_observation: string;
+  account_validation_status: string;
+  request_days: number;
+  transfer_status_id: number;
+  transfer_status_name: string;
+  attachment: string;
+}
+
+export interface FilterPaymentMethodRequests {
+  i_date: string | null;
+  f_date: string | null;
+  filing_number?: string | null;
+  worker_document_number?: string | null;
+  status_id?: number | number[] | null;
+  payment_method_status_id?: number | number[] | null;
+  transfer_process_status_id?: number | number[] | null;
+  page?: number;
+  page_size?: number;
+}
+
+export interface RequestPaymentMethodStatusList {
+  payment_method_status_id: number;
+  payment_method_status_name: string;
+  is_active: number;
+}
+
+export interface PaymentMethodRequestsInManagementByUser {
+  request_id: number;
+  filing_number: string;
+  internal_management_user: string;
+}
+
+export interface PaymentMethodProcessStatusList {
+  payment_method_process_status_id: number;
+  payment_method_process_status_name: string;
+  is_active: number;
+}
+
+export interface TransferProcessStatusList {
+  transfer_process_status_id: number;
+  transfer_process_status_name: string;
+  is_active: number;
+}
+
+export interface AssignManagementUser {
+  request_id: number;
+  internal_management: boolean;
+  internal_management_user: string;
+}
+
+export interface AnswerPaymentMethodRequest {
+  request_id: number;
+  payment_method_status_id: number;
+  payment_method_process_status_id: number;
+  transfer_process_status_id: number;
+  observations: string;
+  internal_management_user: string;  
+  transfer_status_id: number;
+}
+
+export interface RequestHistoricPaymentMethodRequest {
+  request_id: number;
+  request_datetime: string;
+  payment_method_status_id: number;
+  payment_method_status_name: string;
+  payment_method_process_status_id: number;
+  payment_method_process_status_name: string;
+  transfer_process_status_id: number;
+  transfer_process_status_name: string;
+  payment_method_update_datetime: string;
+  transfer_update_datetime: string;
+  processed_datetime: string;
+  payment_method_update_user: string;
+  transfer_update_user: string;
+}
+
+export interface TransferStatusList {
+  transfer_status_id: number;
+  transfer_status_name: string;
+  is_active: number;
+}
