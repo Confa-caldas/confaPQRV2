@@ -7,11 +7,11 @@ import { MessageService } from 'primeng/api';
 import { PaginatorState } from 'primeng/paginator';
 
 @Component({
-  selector: 'app-account-type',
-  templateUrl: './account-type.component.html',
-  styleUrl: './account-type.component.scss'
+  selector: 'app-afiliation-account-type',
+  templateUrl: './afiliation-account-type.component.html',
+  styleUrl: './afiliation-account-type.component.scss'
 })
-export class AccountTypeComponent {
+export class AfiliationAccountTypeComponent {
   data!: IRequestManager[];
   accountTypeList!: AccountTypeList[];
   ingredient!: string;

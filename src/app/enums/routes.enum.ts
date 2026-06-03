@@ -49,7 +49,7 @@ export enum RoutesApp {
   AFI_NOTIFICATIONS = 'afi-notification',
   AFI_CERTIFICATE = 'afi-certificate',
   BANK = 'bank',
-  ACCOUNT_TYPE = 'account-type',
+  AFILIATION_ACCOUNT_TYPE = 'afi-account-type',
   BANK_ACCOUNT_ASSOCIATE = 'bank_account-associate',
   /** Solicitud de afiliación interna (URL pública: /solicitud-interna). */
   CREATE_AFFILIATION_INTERNAL = 'create-afiliation-internal',

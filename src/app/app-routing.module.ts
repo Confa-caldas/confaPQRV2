@@ -406,11 +406,11 @@ const routes: Routes = [
       import('./components/private/bank/bank.module').then(m => m.BankModule),
   },
   {
-    path: RoutesApp.ACCOUNT_TYPE,
+    path: RoutesApp.AFILIATION_ACCOUNT_TYPE,
     canActivate: [sessionGuard],
     component: LayoutComponent,
     loadChildren: () =>
-      import('./components/private/account-type/account-type.module').then(m => m.AccountTypeModule),
+      import('./components/private/afiliation-account-type/afiliation-account-type.module').then(m => m.AfiliationAccountTypeModule),
   },
   {
     path: RoutesApp.BANK_ACCOUNT_ASSOCIATE,

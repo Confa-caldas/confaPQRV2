@@ -1,20 +1,20 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AccountTypeRoutingModule } from './account-type-routing.module';
+import { AfiliationAccountTypeRoutingModule } from './afiliation-account-type-routing.module';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DropdownModule } from 'primeng/dropdown';
 import { PaginatorModule } from 'primeng/paginator';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { SharedModule } from '../../shared/shared.module';
-import { AccountTypeComponent } from './account-type.component';
+import { AfiliationAccountTypeComponent } from './afiliation-account-type.component';
 import { ToastModule } from 'primeng/toast';
 
 @NgModule({
-  declarations: [AccountTypeComponent],
+  declarations: [AfiliationAccountTypeComponent],
   imports: [
     CommonModule,
-    AccountTypeRoutingModule,
+    AfiliationAccountTypeRoutingModule,
     ButtonModule,
     TableModule,
     PaginatorModule,
@@ -23,6 +23,6 @@ import { ToastModule } from 'primeng/toast';
     SharedModule,
     ToastModule,
   ],
-  exports: [AccountTypeComponent],
+  exports: [AfiliationAccountTypeComponent],
 })
-export class AccountTypeModule {}
+export class AfiliationAccountTypeModule {}
