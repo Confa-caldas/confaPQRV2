@@ -1527,27 +1527,27 @@ export class Users {
     );
   }
   ///Parametrizacion tipo cuenta
-   getAccountTypeListPagination(payload: Pagination) {
+   getAccountTypeListPaginationAfi(payload: Pagination) {
     return this.http.post<BodyResponse<AccountTypeListAfi[]>>(
-      `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST_PAGINATION}`,
+      `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST_PAGINATION_AFI}`,
       payload
     );
   }
-  createAccountType(payload: AccountTypeListAfi) {
+  createAccountTypeAfi(payload: AccountTypeListAfi) {
     return this.http.post<BodyResponse<string>>(
-      `${environment.API_PUBLIC}${EndPointRoute.CREATE_ACCOUNT_TYPE}`,
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_ACCOUNT_TYPE_AFI}`,
       payload
     );
   }
-  modifyAccountType(payload: AccountTypeListAfi) {
+  modifyAccountTypeAfi(payload: AccountTypeListAfi) {
     return this.http.post<BodyResponse<string>>(
-      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_ACCOUNT_TYPE}`,
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_ACCOUNT_TYPE_AFI}`,
       payload
     );
   }
-  inactivateAccountType(payload: AccountTypeListAfi) {
+  inactivateAccountTypeAfi(payload: AccountTypeListAfi) {
     return this.http.post<BodyResponse<string>>(
-      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_ACCOUNT_TYPE}`,
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_ACCOUNT_TYPE_AFI}`,
       payload
     );
   }

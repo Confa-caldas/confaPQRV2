@@ -69,7 +69,7 @@ export class AfiliationAccountTypeComponent {
       page: this.page,
       page_size: this.rows,
     };
-    this.userService.getAccountTypeListPagination(payload).subscribe({
+    this.userService.getAccountTypeListPaginationAfi(payload).subscribe({
       next: (response: BodyResponse<AccountTypeListAfi[]>) => {
         if (response.code === 200) {
           this.accountTypeListAfi = response.data;
@@ -148,7 +148,7 @@ export class AfiliationAccountTypeComponent {
         this.message = 'Ya existe un tipo de cuenta con ese nombre ' + accountType_details.nombre_tipo_cuenta;
         this.severity = 'danger';
       } else {
-        this.userService.createAccountType(accountType_details).subscribe({
+        this.userService.createAccountTypeAfi(accountType_details).subscribe({
           next: (response: BodyResponse<string>) => {
             if (response.code === 200) {
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
@@ -166,7 +166,7 @@ export class AfiliationAccountTypeComponent {
         });
       }
     } else {
-      this.userService.modifyAccountType(accountType_details).subscribe({
+      this.userService.modifyAccountTypeAfi(accountType_details).subscribe({
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
@@ -188,7 +188,7 @@ export class AfiliationAccountTypeComponent {
   closeDialog(value: boolean) {
     this.visibleDialog = false;
     if (value) {
-      this.userService.inactivateAccountType(this.accountType_details).subscribe({
+      this.userService.inactivateAccountTypeAfi(this.accountType_details).subscribe({
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
