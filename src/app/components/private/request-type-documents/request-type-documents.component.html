@@ -1,0 +1,107 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Asociar Documentos a tipo de solicitud</div>
+  </div>
+</div>
+
+<div class="row">
+
+  <!-- Selección de tipo de solicitud -->
+  <div class="p-field">
+    <label for="requestType">Tipo de Solicitud</label>
+    <p-dropdown 
+        [options]="requestTypeList"
+        optionLabel="request_type_name"
+        optionValue="request_type_id"
+        [(ngModel)]="selectedRequestTypeId"
+        placeholder="Seleccione un tipo de solicitud"
+        [showClear]="true"
+        (onChange)="onRequestTypeChange($event)">
+    </p-dropdown>
+  </div>
+
+  <!-- Tabla de documentos -->
+  <p-table [value]="documents" *ngIf="selectedRequestTypeId"
+  [tableStyle]="{ 'min-width': '50rem' }">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Documento</th>
+        <th>Descripción</th>
+        <th>Obligatorio</th>
+        <th>Estado</th>
+        <!-- <th>Acciones</th> -->
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-doc>
+      <tr>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.documentCode }} - {{ doc.documentName }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">
+          <ng-container *ngIf="getDescriptionLines(doc.documentDescription) as lines">
+            <div *ngIf="lines.length === 0" class="description-empty">—</div>
+            <div *ngIf="lines.length === 1" class="description-single">{{ lines[0] }}</div>
+            <ul *ngIf="lines.length > 1" class="description-list">
+              <li *ngFor="let line of lines" class="description-list__item">{{ line }}</li>
+            </ul>
+          </ng-container>
+        </td>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.mandatory ? 'Sí' : 'No' }}</td>
+        <td [ngStyle]="{ 'text-align': 'center' }">{{ doc.status }}</td>
+
+      </tr>
+    </ng-template>
+  </p-table>
+  <br>
+  <!-- Mensaje cuando no hay documentos -->
+  <p *ngIf="selectedRequestTypeId && (!documents || documents.length === 0)">
+    No hay documentos asociados a este tipo de solicitud.
+  </p>
+
+  <br>
+
+  <!-- Botón agregar documento -->
+  <div class="p-mt-3">
+    <button pButton label="Gestionar Documentos" icon="pi pi-plus" 
+      (click)="openDialog()" [disabled]="!selectedRequestTypeId">
+    </button>
+  </div>
+
+  <!-- Modal con PickList -->
+  <p-dialog 
+    header="Asociar Documentos"
+    [showHeader]="false"
+    [(visible)]="displayDialog" 
+    [modal]="true" 
+    [style]="{width: '900px'}"
+    [draggable]="false" 
+    [resizable]="false">
+
+    <div class="col-10">
+        <div class="title-page">Asociar Documentos</div>
+    </div>
+
+    <p-pickList 
+        [source]="availableDocuments" 
+        [target]="associatedDocuments" 
+        sourceHeader="Disponibles" 
+        targetHeader="Asociados"
+        [dragdrop]="true" 
+        [showSourceControls]="true" 
+        [showTargetControls]="true"
+        (onMoveToTarget)="onAssociationChange()"
+        (onMoveToSource)="onAssociationChange()">
+
+        <!-- Template para los ítems -->
+        <ng-template let-doc pTemplate="item">
+            <div style="padding:4px 8px; font-size:14px; color:#000;">
+            {{ doc.document_type_code }} - {{ doc.document_type_name }}
+            </div>
+        </ng-template>
+        </p-pickList>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Cancelar" class="p-button-text" (click)="displayDialog=false"></button>
+      <button pButton label="Guardar" icon="pi pi-check" (click)="saveAssociations()"></button>
+    </ng-template>
+  </p-dialog>
+
+</div>

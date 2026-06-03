@@ -33,9 +33,18 @@ import { ModalAfiliationCertificateModule } from './modal-afiliation-certificate
 import { ModalBankModule } from './modal-bank/modal-bank.module';
 import { ModalAfiliationAccountTypeModule } from './modal-afiliation-account-type/modal-afiliation-account-type.module';
 import { ModalBankAccountAssociationModule } from './modal-bank-account-association/modal-bank-account-association.module';
+import { ModalInputDocumentModule } from './modal-input-document/modal-input-document.module';
+import { ModalReasonAccountUpdateModule } from './modal-reason-account-update/modal-reason-account-update.module';
+import { ModalAccountTypeModule } from './modal-account-type/modal-account-type.module';
+import { ModalEntityModule } from './modal-entity/modal-entity.module';
+import { ModalEntityAccountTypeModule } from './modal-entity-account-type/modal-entity-account-type.module';
+import { ModalAssignUserModule } from './modal-assign-user/modal-assign-user.module';
 
 @NgModule({
   declarations: [
+  
+  
+    
   ],
   imports: [
     CommonModule,
@@ -70,6 +79,11 @@ import { ModalBankAccountAssociationModule } from './modal-bank-account-associat
     ModalBankModule,
     ModalAfiliationAccountTypeModule,
     ModalBankAccountAssociationModule,
+    ModalReasonAccountUpdateModule,
+    ModalAccountTypeModule,
+    ModalEntityModule,
+    ModalEntityAccountTypeModule,
+    ModalAssignUserModule,
   ],
   exports: [
     ModalDinamicModule,
@@ -104,7 +118,12 @@ import { ModalBankAccountAssociationModule } from './modal-bank-account-associat
     ModalAfiliationCertificateModule,
     ModalBankModule,
     ModalAfiliationAccountTypeModule,
-    ModalBankAccountAssociationModule
+    ModalBankAccountAssociationModule,
+    ModalReasonAccountUpdateModule,
+    ModalAccountTypeModule,
+    ModalEntityModule,
+    ModalEntityAccountTypeModule,
+    ModalAssignUserModule,
   ],
 })
 export class SharedModule {}

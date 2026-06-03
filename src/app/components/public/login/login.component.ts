@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { environment } from '../../../../environments/environment';
 import { LoginService } from '../../../services/login.service';
 import { ILogin } from '../../../models/login/login.interface';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
@@ -16,6 +17,7 @@ import { TreeNode } from 'primeng/api';
   styleUrl: './login.component.scss',
 })
 export class LoginComponent implements OnInit {
+  isTestEnvironment = !environment.production;
   ingredient!: string;
   visibleDialog = false;
   message = '';

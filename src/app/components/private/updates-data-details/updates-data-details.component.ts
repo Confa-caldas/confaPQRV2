@@ -1545,8 +1545,8 @@ get empresaDocumento(): string {
   consultarWs(cedula: string) {
   this.userService.respuestaInfoAfiliacion(cedula).subscribe(
     response => {
-      if (response.statusCode === 200) {
-        const parsedBody = JSON.parse(response.body);
+      if (response.status === 200 && response.body) {
+        const parsedBody = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
         console.log('Respuesta completa del WS:', parsedBody);
 
         const data = parsedBody; // ya no accedas a parsedBody.data porque tus datos están directo ahí

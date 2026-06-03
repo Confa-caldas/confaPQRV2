@@ -18,6 +18,9 @@ import { NgxDocViewerModule } from 'ngx-doc-viewer';
 import { DialogModule } from 'primeng/dialog';
 import { MenuModule } from 'primeng/menu';
 import { TimelineModule } from 'primeng/timeline';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MessageModule } from 'primeng/message';
+import { OfficePreviewModule } from '../../shared/office-preview/office-preview.module';
 
 @NgModule({
   declarations: [RequestDetailsComponent],
@@ -39,6 +42,9 @@ import { TimelineModule } from 'primeng/timeline';
     DialogModule,
     MenuModule,
     TimelineModule,
+    SkeletonModule,
+    MessageModule,
+    OfficePreviewModule,
   ],
   exports: [RequestDetailsComponent],
 })

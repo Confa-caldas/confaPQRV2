@@ -153,16 +153,9 @@
           </div>
           <div class="container-rowCauses" *ngIf="causeBoolean && modalBoolean">
             <div class="container-colCauses">
-              <label class="label-select" style="margin-left: 110px; margin-top: 50px">
-                Causas</label
-              >
+              <label class="label-select"> Causas </label>
               <p-dropdown
-                [style]="{
-                  width: '300px',
-                  height: '30px',
-                  'align-items': 'center',
-                  'margin-left': '115px'
-                }"
+                [style]="{ width: '300px', height: '30px', 'align-items': 'center' }"
                 formControlName="cause_id"
                 [options]="CauseList"
                 optionLabel="cause_name"
@@ -175,8 +168,7 @@
                   formGroup.get('cause_id')?.touched
                     ? 'Campo Requerido'
                     : ''
-                }}</label
-              >
+                }}</label>
             </div>
           </div>
           <div class="row my-4 px-5" style="margin-top: 50px">

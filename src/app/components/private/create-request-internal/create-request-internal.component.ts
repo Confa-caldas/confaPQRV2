@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
 import { v4 as uuidv4 } from 'uuid';
+import { getDescriptionLines } from '../../../utils/document-description.util';
 
 @Component({
   selector: 'app-create-request-internal',
@@ -19,6 +20,8 @@ import { v4 as uuidv4 } from 'uuid';
   styleUrl: './create-request-internal.component.scss',
 })
 export class CreateRequestInternalComponent {
+  readonly getDescriptionLines = getDescriptionLines;
+
   optionsRequest: FormGroup;
   applicantList!: ApplicantTypeList[];
   requestList!: RequestTypeList[];
@@ -30,6 +33,9 @@ export class CreateRequestInternalComponent {
   userEnvironmentData: any;
 
   authorizeValue: boolean | null = null;
+
+  displayRequiredDocsDialog = false;
+  requiredDocuments: { document_type_id: number; document_type_description: string }[] = [];
 
   constructor(
     private router: Router,
@@ -147,7 +153,11 @@ export class CreateRequestInternalComponent {
     );
     localStorage.setItem(
       'request-type',
-      JSON.stringify(this.optionsRequest.controls['request_id'].value)
+      JSON.stringify(
+        this.requestList.find(
+          r => r.request_type_id === this.optionsRequest.controls['request_id'].value
+        )
+      )
     );
     localStorage.setItem('id-transaction', this.transactionId);
     localStorage.setItem(
@@ -200,5 +210,35 @@ export class CreateRequestInternalComponent {
   }
   setParameterDataT(dataTreatment: boolean) {
     this.optionsRequest.get('authorize')?.setValue(null);
+  }
+
+  onRequestTypeSelected(event: any) {
+    const requestTypeId = event?.value ?? event;
+
+    if (!requestTypeId) {
+      this.requiredDocuments = [];
+      localStorage.removeItem('requiredDocuments');
+      return;
+    }
+
+    this.userService.getDocumentsPublicByRequestType(requestTypeId).subscribe({
+      next: (res: any) => {
+        if (res.code === 200 && res.data?.associated?.length > 0) {
+          this.requiredDocuments = res.data.associated;
+          this.displayRequiredDocsDialog = true;
+          localStorage.setItem('requiredDocuments', JSON.stringify(res.data.associated));
+        } else {
+          this.requiredDocuments = [];
+          this.displayRequiredDocsDialog = false;
+          localStorage.removeItem('requiredDocuments');
+        }
+      },
+      error: (err: unknown) => {
+        console.error('Error al obtener los documentos requeridos:', err);
+        this.requiredDocuments = [];
+        this.displayRequiredDocsDialog = false;
+        localStorage.removeItem('requiredDocuments');
+      },
+    });
   }
 }

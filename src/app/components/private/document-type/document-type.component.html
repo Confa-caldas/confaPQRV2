@@ -1,0 +1,113 @@
+<div class="document-type-layout">
+  <div class="row mb-2 document-type-header" #pageHeader>
+    <div class="col-10">
+      <div class="title-page">Parametrizar Documentos</div>
+    </div>
+    <div class="col-2">
+      <p-button label="Crear tipo de documento" (click)="createDocumentType()"></p-button>
+    </div>
+  </div>
+
+  <div class="document-type-body" #documentTypeBody>
+    <div class="document-type-table-area" #tableArea>
+      <p-table
+        [value]="documentTypeList"
+        [scrollable]="true"
+        [scrollHeight]="tableScrollHeight"
+        selectionMode="single"
+        [paginator]="false"
+        [rows]="20"
+        [showCurrentPageReport]="true"
+        [tableStyle]="{ width: '100%', 'table-layout': 'fixed' }"
+        styleClass="document-type-table"
+        currentPageReportTemplate="{first} de {totalRecords}">
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="document_type_code" class="col-code">
+              Código<p-sortIcon field="document_type_code"></p-sortIcon>
+            </th>
+            <th pSortableColumn="document_type_name" class="col-name">
+              Nombre documento<p-sortIcon field="document_type_name"></p-sortIcon>
+            </th>
+            <th pSortableColumn="document_type_description" class="col-description">
+              Descripción<p-sortIcon field="document_type_description"></p-sortIcon>
+            </th>
+            <th pSortableColumn="is_active" class="col-status">
+              Estado<p-sortIcon field="is_active"></p-sortIcon>
+            </th>
+            <th class="col-action"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-documentTypeList>
+          <tr>
+            <td class="col-code cell-center">
+              {{ documentTypeList.document_type_code }}
+            </td>
+            <td class="col-name cell-center">
+              {{ documentTypeList.document_type_name }}
+            </td>
+            <td class="col-description cell-description">
+              {{ documentTypeList.document_type_description }}
+            </td>
+            <td class="col-status cell-center">
+              <div class="d-flex align-items-center justify-content-center">
+                <p-inputSwitch
+                  [(ngModel)]="documentTypeList.is_active"
+                  (onChange)="inActiveDocument(documentTypeList)"></p-inputSwitch>
+                <div
+                  class="d-flex align-items-center ms-2"
+                  [ngClass]="{ 'input-switch-label': documentTypeList.is_active }">
+                  {{ documentTypeList.is_active ? 'Activo' : 'Inactivo' }}
+                </div>
+              </div>
+            </td>
+            <td class="col-action cell-center">
+              <p-button
+                icon="pi pi-pencil"
+                [styleClass]="'btn-icon-warning'"
+                (click)="editDocument(documentTypeList)"></p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <p-paginator
+      #paginatorBar
+      class="document-type-paginator"
+      (onPageChange)="onPageChange($event)"
+      [first]="first"
+      [rows]="rows"
+      [totalRecords]="totalRows"
+      [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+
+    <div class="document-type-actions" #actionsFooter>
+      <p-button
+        label="Asociar documentos a tipo de solicitud"
+        icon="pi pi-link"
+        styleClass="document-type-associate-btn"
+        (click)="goToRequestTypeDocuments()">
+      </p-button>
+    </div>
+  </div>
+</div>
+
+<p-toast></p-toast>
+<app-modal-dinamic
+  *ngIf="visibleDialog"
+  [select]="true"
+  [visible]="visibleDialog"
+  [message]="message"
+  (setRta)="closeDialog($event)"></app-modal-dinamic>
+
+<app-modal-input-document
+  *ngIf="visibleDialogInput"
+  [select]="true"
+  [visible]="visibleDialogInput"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [parameter]="parameter"
+  [inputForm]="inputForm"
+  [oneField]="false"
+  (setRta)="closeDialogInput($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-input-document>
