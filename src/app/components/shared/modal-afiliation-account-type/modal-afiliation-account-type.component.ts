@@ -1,14 +1,14 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { AccountTypeList, BankList } from '../../../models/users.interface';
+import { AccountTypeList } from '../../../models/users.interface';
 import { Users } from '../../../services/users.service';
 
 @Component({
-  selector: 'app-modal-account-type',
-  templateUrl: './modal-account-type.component.html',
-  styleUrl: './modal-account-type.component.scss'
+  selector: 'app-modal-afiliation-account-type',
+  templateUrl: './modal-afiliation-account-type.component.html',
+  styleUrl: './modal-afiliation-account-type.component.scss'
 })
-export class ModalAccountTypeComponent {
+export class ModalAfiliationAccountTypeComponent {
   @Input() login = false;
   @Input() select = false;
   @Input() message = '';
@@ -27,8 +27,6 @@ export class ModalAccountTypeComponent {
     { label: 'Banco', value: 'Banco' },
     { label: 'Billetera', value: 'Billetera' }
   ];
-
-  //formGroup: FormGroup;
 
   constructor(
     private userService: Users,

@@ -86,7 +86,7 @@
   [severity]="severity"
   (setRta)="closeDialogAlert($event)"></app-modal-alert>
 
-  <app-modal-account-type
+  <app-modal-afiliation-account-type
   *ngIf="visibleDialogCategory"
   [select]="true"
   [visible]="visibleDialogCategory"
@@ -95,5 +95,5 @@
   [read_only]="read_only"
   [accountTypeForm]="accountType_details"
   (setRta)="closeDialogAccountType($event)"
-  (setRtaParameter)="setParameter($event)"></app-modal-account-type>
+  (setRtaParameter)="setParameter($event)"></app-modal-afiliation-account-type>
   

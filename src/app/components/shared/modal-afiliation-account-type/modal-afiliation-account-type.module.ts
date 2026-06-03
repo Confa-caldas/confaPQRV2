@@ -5,10 +5,10 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
-import { ModalAccountTypeComponent } from './modal-account-type.component';
+import { ModalAfiliationAccountTypeComponent } from './modal-afiliation-account-type.component';
 
 @NgModule({
-  declarations: [ModalAccountTypeComponent],
+  declarations: [ModalAfiliationAccountTypeComponent],
   imports: [
     CommonModule,
     DialogModule,
@@ -18,6 +18,6 @@ import { ModalAccountTypeComponent } from './modal-account-type.component';
     DropdownModule,
     ReactiveFormsModule,
   ],
-  exports: [ModalAccountTypeComponent],
+  exports: [ModalAfiliationAccountTypeComponent],
 })
-export class ModalAccountTypeModule {}
+export class ModalAfiliationAccountTypeModule {}

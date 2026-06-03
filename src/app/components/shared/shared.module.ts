@@ -31,7 +31,7 @@ import { ModalResponsibleModule } from './modal-responsible/modal-responsible.mo
 import { ModalAfiliationNotificationModule } from './modal-afiliation-notification/modal-afiliation-notification.module';
 import { ModalAfiliationCertificateModule } from './modal-afiliation-certificate/modal-afiliation-certificate.module';
 import { ModalBankModule } from './modal-bank/modal-bank.module';
-import { ModalAccountTypeModule } from './modal-account-type/modal-account-type.module';
+import { ModalAfiliationAccountTypeModule } from './modal-afiliation-account-type/modal-afiliation-account-type.module';
 import { ModalBankAccountAssociationModule } from './modal-bank-account-association/modal-bank-account-association.module';
 
 @NgModule({
@@ -68,7 +68,7 @@ import { ModalBankAccountAssociationModule } from './modal-bank-account-associat
     ModalAfiliationNotificationModule,
     ModalAfiliationCertificateModule,
     ModalBankModule,
-    ModalAccountTypeModule,
+    ModalAfiliationAccountTypeModule,
     ModalBankAccountAssociationModule,
   ],
   exports: [
@@ -103,7 +103,7 @@ import { ModalBankAccountAssociationModule } from './modal-bank-account-associat
     ModalAfiliationNotificationModule,
     ModalAfiliationCertificateModule,
     ModalBankModule,
-    ModalAccountTypeModule,
+    ModalAfiliationAccountTypeModule,
     ModalBankAccountAssociationModule
   ],
 })
