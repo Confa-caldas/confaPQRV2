@@ -1449,7 +1449,7 @@ export interface BankList {
   updated_by?: string;
   updated_date?: string;
 }
-export interface AccountTypeList {
+export interface AccountTypeListAfi {
   id_tipo_cuenta?: number;
   nombre_tipo_cuenta: string;
   esta_activo?: boolean;

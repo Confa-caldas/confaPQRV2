@@ -9,7 +9,7 @@
 <div class="row mt-auto">
   <div class="col-12">
     <p-table
-      [value]="accountTypeList"
+      [value]="accountTypeListAfi"
       [scrollable]="true"
       scrollHeight="600px"
       selectionMode="single"
@@ -29,19 +29,19 @@
           <th style="width: 3%"></th>
         </tr>
       </ng-template>
-      <ng-template pTemplate="body" let-accountTypeList>
+      <ng-template pTemplate="body" let-accountTypeListAfi>
         <tr>
-          <td [ngStyle]="{ 'text-align': 'center' }">{{ accountTypeList.id_tipo_cuenta }}</td>
-          <td [ngStyle]="{ 'text-align': 'center' }">{{ accountTypeList.nombre_tipo_cuenta }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ accountTypeListAfi.id_tipo_cuenta }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ accountTypeListAfi.nombre_tipo_cuenta }}</td>
 
           <td [ngStyle]="{ 'text-align': 'center' }">
             <div class="d-flex flex-column align-items-center gap-1">
               <p-inputSwitch
-                [(ngModel)]="accountTypeList.esta_activo"
-                (onChange)="inActiveAccountType(accountTypeList)">
+                [(ngModel)]="accountTypeListAfi.esta_activo"
+                (onChange)="inActiveAccountType(accountTypeListAfi)">
               </p-inputSwitch>
-              <div [ngClass]="{ 'input-switch-label': accountTypeList.esta_activo }">
-                {{ accountTypeList.esta_activo ? 'Activo' : 'Inactivo' }}
+              <div [ngClass]="{ 'input-switch-label': accountTypeListAfi.esta_activo }">
+                {{ accountTypeListAfi.esta_activo ? 'Activo' : 'Inactivo' }}
               </div>
             </div>
           </td>
@@ -50,13 +50,13 @@
             <p-button
               icon="pi pi-pencil"
               [styleClass]="'btn-icon-warning'"
-              (click)="editAccountType(accountTypeList)"></p-button>
+              (click)="editAccountType(accountTypeListAfi)"></p-button>
           </td>
           <td [ngStyle]="{ 'text-align': 'center' }">
             <p-button
               icon="pi pi-eye"
               [styleClass]="'btn-icon-info'"
-              (click)="displayAccountType(accountTypeList)"></p-button>
+              (click)="displayAccountType(accountTypeListAfi)"></p-button>
           </td>
         </tr>
       </ng-template>

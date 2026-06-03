@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { AccountTypeList, AssociateBankAccountList, BankList, CategoryList, DepartmentList, ModalityList, MunicipalityList } from '../../../models/users.interface';
+import { AccountTypeListAfi, AssociateBankAccountList, BankList, CategoryList, DepartmentList, ModalityList, MunicipalityList } from '../../../models/users.interface';
 import { Users } from '../../../services/users.service';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 
@@ -24,7 +24,7 @@ export class ModalBankAccountAssociationComponent {
   inputValue: string[] = [''];
 
   associateBankAccountList!: AssociateBankAccountList[];
-  accountTypeList!: AccountTypeList[];
+  accountTypeListAfi!: AccountTypeListAfi[];
   bankList!: BankList[];
 
   //formGroup: FormGroup;
@@ -81,10 +81,10 @@ export class ModalBankAccountAssociationComponent {
   }
 
   getAccountTypeTable() {
-    this.userService.getAccountTypeList().subscribe({
-      next: (response: BodyResponse<AccountTypeList[]>) => {
+    this.userService.getAccountTypeListAfi().subscribe({
+      next: (response: BodyResponse<AccountTypeListAfi[]>) => {
         if (response.code === 200) {
-          this.accountTypeList = response.data.filter(obj => obj.esta_activo !== false);
+          this.accountTypeListAfi = response.data.filter(obj => obj.esta_activo !== false);
         } else {
         }
       },

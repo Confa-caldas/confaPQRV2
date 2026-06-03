@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { IRequestManager } from '../../../models/request-manager/request-manager.interface';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
-import { AccountTypeList, Pagination } from '../../../models/users.interface';
+import { AccountTypeListAfi, Pagination } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { PaginatorState } from 'primeng/paginator';
 
@@ -13,7 +13,7 @@ import { PaginatorState } from 'primeng/paginator';
 })
 export class AfiliationAccountTypeComponent {
   data!: IRequestManager[];
-  accountTypeList!: AccountTypeList[];
+  accountTypeListAfi!: AccountTypeListAfi[];
   ingredient!: string;
   visibleDialog = false;
   visibleDialogCategory = false;
@@ -21,7 +21,7 @@ export class AfiliationAccountTypeComponent {
   message = '';
   parameter = [''];
   buttonmsg = '';
-  accountType_details!: AccountTypeList;
+  accountType_details!: AccountTypeListAfi;
   enableAction: boolean = false;
   read_only: boolean = false;
   enableCreate: boolean = false;
@@ -70,11 +70,11 @@ export class AfiliationAccountTypeComponent {
       page_size: this.rows,
     };
     this.userService.getAccountTypeListPagination(payload).subscribe({
-      next: (response: BodyResponse<AccountTypeList[]>) => {
+      next: (response: BodyResponse<AccountTypeListAfi[]>) => {
         if (response.code === 200) {
-          this.accountTypeList = response.data;
+          this.accountTypeListAfi = response.data;
           this.totalRows = Number(response.message);
-          this.accountTypeList.forEach(item => {
+          this.accountTypeListAfi.forEach(item => {
             item.esta_activo = item.esta_activo;
           });
         } else {
@@ -90,7 +90,7 @@ export class AfiliationAccountTypeComponent {
     });
   }
 
-  inActiveAccountType(accountType_details: AccountTypeList) {
+  inActiveAccountType(accountType_details: AccountTypeListAfi) {
     if (!accountType_details.esta_activo) {
       this.message = '¿Seguro que desea Inactivar el tipo de cuenta?';
       this.visibleDialog = true;
@@ -102,7 +102,7 @@ export class AfiliationAccountTypeComponent {
     }
     this.accountType_details = accountType_details;
   }
-  displayAccountType(accountType_details: AccountTypeList) {
+  displayAccountType(accountType_details: AccountTypeListAfi) {
     this.visibleDialogCategory = true;
     this.buttonmsg = '';
     this.message = 'Detalles del tipo de cuenta';
@@ -110,7 +110,7 @@ export class AfiliationAccountTypeComponent {
     this.enableCreate = false;
     this.accountType_details = accountType_details;
   }
-  editAccountType(accountType_details: AccountTypeList) {
+  editAccountType(accountType_details: AccountTypeListAfi) {
     this.visibleDialogCategory = true;
     this.buttonmsg = 'Modificar';
     this.message = 'Modificar el tipo de cuenta';
@@ -138,11 +138,11 @@ export class AfiliationAccountTypeComponent {
     this.visibleDialogAlert = false;
     this.enableAction = value;
   }
-  setParameter(accountType_details: AccountTypeList) {
+  setParameter(accountType_details: AccountTypeListAfi) {
      if (!this.enableAction || this.read_only) {
       return;
     } else if (this.enableCreate) {
-      if (this.accountTypeList.some(obj => obj.nombre_tipo_cuenta === accountType_details.nombre_tipo_cuenta)) {
+      if (this.accountTypeListAfi.some(obj => obj.nombre_tipo_cuenta === accountType_details.nombre_tipo_cuenta)) {
         this.visibleDialogAlert = true;
         this.informative = true;
         this.message = 'Ya existe un tipo de cuenta con ese nombre ' + accountType_details.nombre_tipo_cuenta;

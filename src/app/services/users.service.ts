@@ -105,7 +105,7 @@ import {
   AfiNotificationList,
   AfiCertificateList,
   BankList,
-  AccountTypeList,
+  AccountTypeListAfi,
   AssociateBankAccountList,
   AfiOccupationList,
   AfiMotivoRechazoParamList,
@@ -1528,24 +1528,24 @@ export class Users {
   }
   ///Parametrizacion tipo cuenta
    getAccountTypeListPagination(payload: Pagination) {
-    return this.http.post<BodyResponse<AccountTypeList[]>>(
+    return this.http.post<BodyResponse<AccountTypeListAfi[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST_PAGINATION}`,
       payload
     );
   }
-  createAccountType(payload: AccountTypeList) {
+  createAccountType(payload: AccountTypeListAfi) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.CREATE_ACCOUNT_TYPE}`,
       payload
     );
   }
-  modifyAccountType(payload: AccountTypeList) {
+  modifyAccountType(payload: AccountTypeListAfi) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.UPDATE_ACCOUNT_TYPE}`,
       payload
     );
   }
-  inactivateAccountType(payload: AccountTypeList) {
+  inactivateAccountType(payload: AccountTypeListAfi) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_ACCOUNT_TYPE}`,
       payload
@@ -1582,9 +1582,9 @@ export class Users {
       `${environment.API_PUBLIC}${EndPointRoute.BANK_LIST}`
     );
   }
-  getAccountTypeList() {
-    return this.http.get<BodyResponse<AccountTypeList[]>>(
-      `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST}`
+  getAccountTypeListAfi() {
+    return this.http.get<BodyResponse<AccountTypeListAfi[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST_AFI}`
     );
   }
 

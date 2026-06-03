@@ -258,7 +258,7 @@ export enum EndPointRoute {
   UPDATE_ASSOCIATE_BANK_ACCOUNT = 'entidad_bancaria_cuenta/modificar',
   INACTIVATE_ASSOCIATE_BANK_ACCOUNT = 'entidad_bancaria_cuenta/in-activar',
   BANK_LIST = 'db_afi/entidad_bancaria',
-  ACCOUNT_TYPE_LIST = 'db_afi/tipo_cuenta',
+  ACCOUNT_TYPE_LIST_AFI = 'db_afi/tipo_cuenta',
   AFI_OCCUPATION_LIST_PAGINATION = 'db_afi/pagination/ocupacion',
   CREATE_AFI_OCCUPATION = 'ocupacion/crear',
   UPDATE_AFI_OCCUPATION = 'ocupacion/modificar',

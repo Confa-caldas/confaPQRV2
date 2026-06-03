@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { AccountTypeList } from '../../../models/users.interface';
+import { AccountTypeListAfi } from '../../../models/users.interface';
 import { Users } from '../../../services/users.service';
 
 @Component({
@@ -15,12 +15,12 @@ export class ModalAfiliationAccountTypeComponent {
   @Input() buttonmsg = '';
   @Input() visible: boolean = false;
   @Input() read_only: boolean = false;
-  @Input() accountTypeForm?: AccountTypeList;
+  @Input() accountTypeForm?: AccountTypeListAfi;
   @Output() setRta = new EventEmitter<boolean>();
-  @Output() setRtaParameter = new EventEmitter<AccountTypeList>();
+  @Output() setRtaParameter = new EventEmitter<AccountTypeListAfi>();
 
   inputValue: string[] = [''];
-  accountTypeList!: AccountTypeList[];
+  accountTypeListAfi!: AccountTypeListAfi[];
 
   // tipo entidad options
   tipoDatoOptions = [
@@ -54,7 +54,7 @@ export class ModalAfiliationAccountTypeComponent {
 
   closeDialog(value: boolean) {
     this.setRta.emit(value);
-    const payload: AccountTypeList = {
+    const payload: AccountTypeListAfi = {
       id_tipo_cuenta: this.formGroup.controls['id_tipo_cuenta'].value,
       nombre_tipo_cuenta: this.formGroup.controls['nombre_tipo_cuenta'].value,
     };
