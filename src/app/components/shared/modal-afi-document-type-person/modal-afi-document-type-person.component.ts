@@ -2,16 +2,14 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { DocumentTypePersonList } from '../../../models/users.interface';
 import { Users } from '../../../services/users.service';
-import { BodyResponse } from '../../../models/shared/body-response.inteface';
-
 
 @Component({
-  selector: 'app-modal-document-type-person',
-  templateUrl: './modal-document-type-person.component.html',
-  styleUrl: './modal-document-type-person.component.scss'
+  selector: 'app-modal-afi-document-type-person',
+  templateUrl: './modal-afi-document-type-person.component.html',
+  styleUrl: './modal-afi-document-type-person.component.scss'
 })
-export class ModalDocumentTypePersonComponent {
-@Input() login = false;
+export class ModalAfiDocumentTypePersonComponent {
+  @Input() login = false;
   @Input() select = false;
   @Input() message = '';
   @Input() buttonmsg = '';
@@ -23,7 +21,6 @@ export class ModalDocumentTypePersonComponent {
 
   inputValue: string[] = [''];
   DocumentTypePersonList!: DocumentTypePersonList[];
-  //formGroup: FormGroup;
 
   constructor(
     private userService: Users,
@@ -105,13 +102,10 @@ export class ModalDocumentTypePersonComponent {
   private normalizeRequerido(value: any): 'S' | 'N' | null {
     if (value === null || value === undefined) return null;
 
-    // Si llega boolean
     if (typeof value === 'boolean') return value ? 'S' : 'N';
 
-    // Si llega number 1/0
     if (typeof value === 'number') return value === 1 ? 'S' : 'N';
 
-    // Si llega string
     const v = String(value).trim().toUpperCase();
     if (['S', 'SI', 'TRUE', '1', 'T', 'Y', 'YES'].includes(v)) return 'S';
     if (['N', 'NO', 'FALSE', '0', 'F'].includes(v)) return 'N';
@@ -127,8 +121,7 @@ private applyCantidadLetrasRule(permite: 'S' | 'N' | null): void {
     ctrl.enable({ emitEvent: false });
     ctrl.setValidators([Validators.required, Validators.pattern('^[0-9]+$')]);
   } else {
-    //BORRAR el valor
-    ctrl.setValidators([Validators.pattern('^[0-9]+$')]); // requerido NO
+    ctrl.setValidators([Validators.pattern('^[0-9]+$')]);
     ctrl.disable({ emitEvent: false });
   }
 

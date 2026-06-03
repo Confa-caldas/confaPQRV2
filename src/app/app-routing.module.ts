@@ -336,18 +336,18 @@ const routes: Routes = [
       import('./components/private/afiliation-company/afiliaton-company.module').then(m => m.AfiliationCompanyModule),
   },
   {
-    path: RoutesApp.DOCUMENT_TYPE_COMPANY,
+    path: RoutesApp.AFILIATION_DOCUMENT_TYPE,
     canActivate: [sessionGuard],
     component: LayoutComponent,
     loadChildren: () =>
-      import('./components/private/document-type/document-type.module').then(m => m.DocumentTypeModule),
+      import('./components/private/afiliation-document-type/afiliation-document-type.module').then(m => m.AfiliationDocumentTypeModule),
   },
   {
-    path: RoutesApp.DOCUMENT_TYPE_PERSON,
+    path: RoutesApp.AFILIATION_DOCUMENT_TYPE_PERSON,
     canActivate: [sessionGuard],
     component: LayoutComponent,
     loadChildren: () =>
-      import('./components/private/document-type-person/document-type-person.module').then(m => m.DocumentTypePersonModule),
+      import('./components/private/afiliation-document-type-person/afiliation-document-type-person.module').then(m => m.AfiliationDocumentTypePersonModule),
   },
   {
     path: RoutesApp.DEPARTMENT,

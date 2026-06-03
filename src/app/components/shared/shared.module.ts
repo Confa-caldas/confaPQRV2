@@ -21,8 +21,8 @@ import { ModalMaritalStatusModule } from './modal-marital-status/modal-marital-s
 import { ModalSystemVariablesModule } from './modal-system-variable/modal-system-variable.module';
 import { ModalAfiTemplateValidationsModule } from './modal-afi-template-validations/modal-afi-template-validations.module';
 import { ModalAfiCompanyModule } from './modal-afi-company/modal-afi-company.module';
-import { ModalDocumentTypeModule } from './modal-document-type/modal-document-type.module';
-import { ModalDocumentTypePersonModule } from './modal-document-type-person/modal-document-type-persona.module';
+import { ModalAfiDocumentTypeModule } from './modal-afi-document-type/modal-afi-document-type.module';
+import { ModalAfiDocumentTypePersonModule } from './modal-afi-document-type-person/modal-afi-document-type-person.module';
 import { ModalDepartmentModule } from './modal-department/modal-department.module';
 import { ModalMunicipalityModule } from './modal-municipality/modal-municipality.module';
 import { ModalAttachmentTypeModule } from './modal-attachment-type/modal-attachment-type.module';
@@ -58,8 +58,8 @@ import { ModalBankAccountAssociationModule } from './modal-bank-account-associat
     ModalSystemVariablesModule,
     ModalAfiTemplateValidationsModule,
     ModalAfiCompanyModule,
-    ModalDocumentTypeModule,
-    ModalDocumentTypePersonModule,
+    ModalAfiDocumentTypeModule,
+    ModalAfiDocumentTypePersonModule,
     ModalDepartmentModule,
     ModalMunicipalityModule,
     ModalAttachmentTypeModule,
@@ -93,8 +93,8 @@ import { ModalBankAccountAssociationModule } from './modal-bank-account-associat
     ModalSystemVariablesModule,
     ModalAfiTemplateValidationsModule,
     ModalAfiCompanyModule,
-    ModalDocumentTypeModule,
-    ModalDocumentTypePersonModule,
+    ModalAfiDocumentTypeModule,
+    ModalAfiDocumentTypePersonModule,
     ModalDepartmentModule,
     ModalMunicipalityModule,
     ModalAttachmentTypeModule,

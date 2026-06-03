@@ -1,20 +1,20 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DocumentTypeRoutingModule } from './document-type-routing.module';
+import { AfiliationDocumentTypeRoutingModule } from './afiliation-document-type-routing.module';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DropdownModule } from 'primeng/dropdown';
 import { PaginatorModule } from 'primeng/paginator';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { SharedModule } from '../../shared/shared.module';
-import { DocumentTypeComponent } from './document-type.component';
+import { AfiliationDocumentTypeComponent } from './afiliation-document-type.component';
 import { ToastModule } from 'primeng/toast';
 
 @NgModule({
-  declarations: [DocumentTypeComponent],
+  declarations: [AfiliationDocumentTypeComponent],
   imports: [
     CommonModule,
-    DocumentTypeRoutingModule,
+    AfiliationDocumentTypeRoutingModule,
     ButtonModule,
     TableModule,
     PaginatorModule,
@@ -23,6 +23,6 @@ import { ToastModule } from 'primeng/toast';
     SharedModule,
     ToastModule,
   ],
-  exports: [DocumentTypeComponent],
+  exports: [AfiliationDocumentTypeComponent],
 })
-export class DocumentTypeModule {}
+export class AfiliationDocumentTypeModule {}

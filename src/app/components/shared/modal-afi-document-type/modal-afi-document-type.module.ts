@@ -5,11 +5,11 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
-import { ModalDocumentTypeComponent  } from './modal-document-type.component';
+import { ModalAfiDocumentTypeComponent } from './modal-afi-document-type.component';
 import { RadioButtonModule } from "primeng/radiobutton";
 
 @NgModule({
-  declarations: [ModalDocumentTypeComponent],
+  declarations: [ModalAfiDocumentTypeComponent],
   imports: [
     CommonModule,
     DialogModule,
@@ -20,6 +20,6 @@ import { RadioButtonModule } from "primeng/radiobutton";
     ReactiveFormsModule,
     RadioButtonModule
 ],
-  exports: [ModalDocumentTypeComponent],
+  exports: [ModalAfiDocumentTypeComponent],
 })
-export class ModalDocumentTypeModule {}
+export class ModalAfiDocumentTypeModule {}

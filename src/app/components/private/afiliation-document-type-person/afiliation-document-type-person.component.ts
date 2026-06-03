@@ -2,26 +2,26 @@ import { Component, OnInit } from '@angular/core';
 import { IRequestManager } from '../../../models/request-manager/request-manager.interface';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
-import { DocumentTypeCompanyList, Pagination } from '../../../models/users.interface';
+import { DocumentTypePersonList, Pagination } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { PaginatorState } from 'primeng/paginator';
 
 @Component({
-  selector: 'app-document-type',
-  templateUrl: './document-type.component.html',
-  styleUrl: './document-type.component.scss'
+  selector: 'app-afiliation-document-type-person',
+  templateUrl: './afiliation-document-type-person.component.html',
+  styleUrl: './afiliation-document-type-person.component.scss'
 })
-export class DocumentTypeComponent {
-data!: IRequestManager[];
-  documentTypeCompanyList!: DocumentTypeCompanyList[];
+export class AfiliationDocumentTypePersonComponent {
+  data!: IRequestManager[];
+  documentTypePersonList!: DocumentTypePersonList[];
   ingredient!: string;
   visibleDialog = false;
-  visibleDialogCategory = false;
+  visibleDialogDocumentTypePerson = false;
   visibleDialogAlert = false;
   message = '';
   parameter = [''];
   buttonmsg = '';
-  documentTypeCompany_details!: DocumentTypeCompanyList;
+  documentTypePersona_details!: DocumentTypePersonList;
   enableAction: boolean = false;
   read_only: boolean = false;
   enableCreate: boolean = false;
@@ -40,41 +40,41 @@ data!: IRequestManager[];
   ) {}
 
   ngOnInit() {
-    this.getDocumentTypeCompanyTablePagination();
+    this.getDocumentTypePersonTablePagination();
   }
   onPageChange(event: PaginatorState) {
     this.first = event.first || 0;
     this.rows = event.rows || 0;
     this.page = Number(event.page) + 1 || 0;
-    this.getDocumentTypeCompanyTablePagination();
+    this.getDocumentTypePersonTablePagination();
   }
   cleanForm() {
     this.first = 0;
     this.page = 1;
     this.rows = 10;
-    this.getDocumentTypeCompanyTablePagination();
+    this.getDocumentTypePersonTablePagination();
   }
 
   initPaginador() {
     this.first = 0;
     this.page = 1;
     this.rows = 10;
-    this.getDocumentTypeCompanyTablePagination();
+    this.getDocumentTypePersonTablePagination();
   }
   showSuccessMessage(state: string, title: string, message: string) {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
-  getDocumentTypeCompanyTablePagination() {
+  getDocumentTypePersonTablePagination() {
     const payload: Pagination = {
       page: this.page,
       page_size: this.rows,
     };
-    this.userService.getDocumentoTypeCompanyListPagination(payload).subscribe({
-      next: (response: BodyResponse<DocumentTypeCompanyList[]>) => {
+    this.userService.getDocumentoTypePersonListPagination(payload).subscribe({
+      next: (response: BodyResponse<DocumentTypePersonList[]>) => {
         if (response.code === 200) {
-          this.documentTypeCompanyList = response.data;
+          this.documentTypePersonList = response.data;
           this.totalRows = Number(response.message);
-          this.documentTypeCompanyList.forEach(item => {
+          this.documentTypePersonList.forEach(item => {
             item.esta_activo = item.esta_activo;
           });
         } else {
@@ -90,44 +90,44 @@ data!: IRequestManager[];
     });
   }
 
-  inActiveDocumentTypeCompany(documentTypeCompany_details: DocumentTypeCompanyList) {
-    if (!documentTypeCompany_details.esta_activo) {
-      this.message = '¿Seguro que desea Inactivar el tipo de documento empresa?';
+  inActiveDocumentTypePerson(documentTypePersona_details: DocumentTypePersonList) {
+    if (!documentTypePersona_details.esta_activo) {
+      this.message = '¿Seguro que desea Inactivar el tipo de documento?';
       this.visibleDialog = true;
-      documentTypeCompany_details.esta_activo = false;
+      documentTypePersona_details.esta_activo = false;
     } else {
-      this.message = '¿Seguro que desea Activar el tipo de documento empresa?';
+      this.message = '¿Seguro que desea Activar el tipo de documento?';
       this.visibleDialog = true;
-      documentTypeCompany_details.esta_activo = true;
+      documentTypePersona_details.esta_activo = true;
     }
-    this.documentTypeCompany_details = documentTypeCompany_details;
+    this.documentTypePersona_details = documentTypePersona_details;
   }
-  displayAfiTemplateValidation(documentTypeCompany_details: DocumentTypeCompanyList) {
-    this.visibleDialogCategory = true;
+  displayDocumentTypePerson(documentTypePersona_details: DocumentTypePersonList) {
+    this.visibleDialogDocumentTypePerson = true;
     this.buttonmsg = '';
-    this.message = 'Detalles tipo de documento empresa';
+    this.message = 'Detalles tipo de documento trabajador/beneficiario';
     this.read_only = true;
     this.enableCreate = false;
-    this.documentTypeCompany_details = documentTypeCompany_details;
+    this.documentTypePersona_details = documentTypePersona_details;
   }
-  editAfiTemplateValidation(documentTypeCompany_details: DocumentTypeCompanyList) {
-    this.visibleDialogCategory = true;
+  editDocumentTypePerson(documentTypePersona_details: DocumentTypePersonList) {
+    this.visibleDialogDocumentTypePerson = true;
     this.buttonmsg = 'Modificar';
-    this.message = 'Modificar tipo de documento empresa';
+    this.message = 'Modificar tipo de documento trabajador/beneficiario';
     this.read_only = false;
     this.enableCreate = false;
-    this.documentTypeCompany_details = documentTypeCompany_details;
+    this.documentTypePersona_details = documentTypePersona_details;
   }
-  createDocumentTypeCompany() {
-    this.visibleDialogCategory = true;
+  createDocumentTypePerson() {
+    this.visibleDialogDocumentTypePerson = true;
     this.buttonmsg = 'Crear';
-    this.message = 'Crear tipo de documento empresa';
+    this.message = 'Crear tipo de documento trabajador/beneficiario';
     this.read_only = false;
     this.enableCreate = true;
   }
 
-  closeDialogDocumentTypeCompany(value: boolean) {
-    this.visibleDialogCategory = false;
+  closeDialogDocumentTypePerson(value: boolean) {
+    this.visibleDialogDocumentTypePerson = false;
     this.enableAction = value;
     if (value) {
       //
@@ -138,18 +138,18 @@ data!: IRequestManager[];
     this.visibleDialogAlert = false;
     this.enableAction = value;
   }
-  setParameter(documentTypeCompany_details: DocumentTypeCompanyList) {
+  setParameter(documentTypePersona_details: DocumentTypePersonList) {
      if (!this.enableAction || this.read_only) {
       return;
     } else if (this.enableCreate) {
       
-      if (this.documentTypeCompanyList.some(obj => obj.tipo_documento === documentTypeCompany_details.tipo_documento)) {
+      if (this.documentTypePersonList.some(obj => obj.tipo_documento === documentTypePersona_details.tipo_documento)) {
         this.visibleDialogAlert = true;
         this.informative = true;
-        this.message = 'Ya existe un tipo de documento con ese nombre ' + documentTypeCompany_details.tipo_documento;
+        this.message = 'Ya existe un tipo de documento con ese nombre ' + documentTypePersona_details.tipo_documento;
         this.severity = 'danger';
       } else {
-        this.userService.createDocumentoTypeCompany(documentTypeCompany_details).subscribe({
+        this.userService.createDocumentoTypePerson(documentTypePersona_details).subscribe({
           next: (response: BodyResponse<string>) => {
             if (response.code === 200) {
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
@@ -167,7 +167,7 @@ data!: IRequestManager[];
         });
       }
     } else {
-      this.userService.modifyDocumentoTypeCompany(documentTypeCompany_details).subscribe({
+      this.userService.modifyDocumentoTypePerson(documentTypePersona_details).subscribe({
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
@@ -189,16 +189,16 @@ data!: IRequestManager[];
   closeDialog(value: boolean) {
     this.visibleDialog = false;
     if (value) {
-      this.userService.inactivateDocumentoTypeCompany(this.documentTypeCompany_details).subscribe({
+      this.userService.inactivateDocumentoTypePerson(this.documentTypePersona_details).subscribe({
         next: (response: BodyResponse<string>) => {
           if (response.code === 200) {
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
           } else {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-            if ((this.documentTypeCompany_details.esta_activo = true)) {
-              this.documentTypeCompany_details.esta_activo = false;
+            if ((this.documentTypePersona_details.esta_activo = true)) {
+              this.documentTypePersona_details.esta_activo = false;
             } else {
-              this.documentTypeCompany_details.esta_activo = true;
+              this.documentTypePersona_details.esta_activo = true;
             }
           }
         },
