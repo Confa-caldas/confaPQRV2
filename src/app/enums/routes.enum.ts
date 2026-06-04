@@ -190,6 +190,11 @@ export enum EndPointRoute {
   AFILIACION_INTERNA_VALIDAR_EMPRESA = 'afiliacion-interna/empresa/validar',
   /** POST — valida trabajador y devuelve `datosFormulario` + `camposVisibles` para el paso de solicitud. */
   AFILIACION_INTERNA_VALIDAR_TRABAJADOR = 'afiliacion-interna/trabajador/validar',
+  AFILIACION_INTERNA_CONSULTAR_TRABAJADOR_ACTIVO = 'afiliacion-interna/trabajador/activo',
+  AFILIACION_INTERNA_VALIDAR_BENEFICIARIO = 'afiliacion-interna/beneficiario/validar',
+  AFILIACION_INTERNA_WS_TOKEN = 'afiliacion-interna/ws-token',
+  AFILIACION_INTERNA_AGREGAR_BENEFICIARIO = 'afiliacion-interna/beneficiario/agregar',
+  AFILIACION_INTERNA_GUARDAR_SOLICITUD = 'afiliacion-interna/solicitud/guardar',
   /** Tipos de adjunto permitidos por parentesco (query: id_parentesco). */
   ADJUNTOS_POR_PARENTESCO = 'parametros/adjuntos-por-parentesco',
   /** POST paso 1: URL pre-firmada S3 + s3_key (sin confirmar en BD). */

@@ -32,8 +32,7 @@ export class HttpRequestInterceptor implements HttpInterceptor {
   ) {}
 
   intercept(requestIn: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    this.blockUI(true);
-    this.spinner.show();
+    this.beginRequest();
 
     const sessionToken = sessionStorage.getItem(SessionStorageItems.SESSION);
     const token = sessionToken || '';
@@ -49,7 +48,7 @@ export class HttpRequestInterceptor implements HttpInterceptor {
     };
 
     if (token && isTokenExpired(token)) {
-      this.blockUI(false);
+      this.endRequest();
       this.messageService.add({
         severity: 'warn',
         summary: 'Sesión expirada',
@@ -62,47 +61,58 @@ export class HttpRequestInterceptor implements HttpInterceptor {
     }
 
     let requestOut = requestIn;
+    const esWsAfiliacionEmpresa =
+      requestOut.url.includes('afiliacion-empresa-ws') || requestOut.url.includes('p.confa.co/afiliacion');
     if (token && !requestOut.url.includes('.s3.amazonaws.com')) {
-      requestOut = requestOut.clone({
-        headers: requestOut.headers.set('Authorization', `${token}`),
-      });
+      if (!requestOut.headers.has('Authorization')) {
+        requestOut = requestOut.clone({
+          headers: requestOut.headers.set('Authorization', `${token}`),
+        });
+      }
     }
 
     return next.handle(requestOut).pipe(
       retry({ count: 2, delay: 1000 }),
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
+        if (error.status === 401 && !esWsAfiliacionEmpresa) {
           this.messageService.add({
             severity: 'error',
             summary: 'Acceso no autorizado',
             detail: 'Tu sesión ha expirado o no tienes permisos.',
           });
-          this.spinner.hide();
           sessionStorage.clear();
           localStorage.clear();
           this.router.navigate([RoutesApp.LOGOUT]);
         }
+        if (esWsAfiliacionEmpresa) {
+          return throwError(() => error);
+        }
         return throwError(() => new Error('The Error'));
       }),
-      finalize(() => {
-        setTimeout(() => {
-          this.spinner.hide();
-          this.blockUI(false)}, 500);
-      })
+      finalize(() => this.endRequest())
     );
   }
 
-  private blockUI(show: boolean) {
-    if (show) {
-      this.activeRequests++;
+  /** Mantiene spinner/bloqueo mientras haya al menos una petición HTTP en curso. */
+  private beginRequest(): void {
+    this.activeRequests++;
+    if (this.activeRequests === 1) {
       document.body.classList.add('blocked');
-    } else {
-      this.activeRequests--;
-      if (this.activeRequests <= 0) {
-        document.body.classList.remove('blocked');
-        this.activeRequests = 0;
-      }
+      this.spinner.show();
     }
+  }
+
+  private endRequest(): void {
+    this.activeRequests = Math.max(0, this.activeRequests - 1);
+    if (this.activeRequests > 0) {
+      return;
+    }
+    setTimeout(() => {
+      if (this.activeRequests === 0) {
+        this.spinner.hide();
+        document.body.classList.remove('blocked');
+      }
+    }, 500);
   }
 }
 

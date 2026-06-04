@@ -1405,6 +1405,7 @@ export interface DocumentTypePersonList {
 }
 export interface DepartmentList {
   id?: number;
+  id_departamento?: number;
   codigo_departamento: string;
   nombre_departamento: string;
   esta_activo?: boolean;
@@ -1415,6 +1416,7 @@ export interface DepartmentList {
 }
 export interface MunicipalityList {
   id?: number;
+  id_municipio?: number;
   codigo_municipio: string;
   nombre_municipio: string;
   id_departamento: number;
