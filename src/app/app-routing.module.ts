@@ -406,6 +406,15 @@ const routes: Routes = [
       import('./components/private/afiliation-company/afiliaton-company.module').then(m => m.AfiliationCompanyModule),
   },
   {
+    path: RoutesApp.AFI_COMPANY_ACTIVATION,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-company-activation/afiliation-company-activation.module').then(
+        m => m.AfiliationCompanyActivationModule
+      ),
+  },
+  {
     path: RoutesApp.AFILIATION_DOCUMENT_TYPE,
     canActivate: [sessionGuard],
     component: LayoutComponent,

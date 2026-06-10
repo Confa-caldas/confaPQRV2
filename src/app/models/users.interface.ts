@@ -1990,3 +1990,45 @@ export interface TransferStatusList {
   transfer_status_name: string;
   is_active: number;
 }
+
+/** Consulta gestión activación empresa PQR (`estado_gestion`: POR_GESTIONAR | GESTIONADO). */
+export type ActivacionEmpresaEstadoGestion = 'POR_GESTIONAR' | 'GESTIONADO';
+
+export interface ConsultarActivacionEmpresaPayload {
+  estado_gestion: ActivacionEmpresaEstadoGestion;
+  tipo_documento_empresa?: string;
+  numero_documento_empresa?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface ActivacionEmpresaConsultaFila {
+  total_count?: number;
+  id_empresa: number;
+  tipo_documento?: string | null;
+  numero_documento?: string | null;
+  razon_social?: string | null;
+  pendiente_activar_empresa?: string | null;
+  puede_gestionar?: boolean | null;
+  cantidad_solicitudes?: number | null;
+  fecha_solicitud_mas_antigua?: string | null;
+  id_gestion_empresa?: number | null;
+  numero_radicado?: string | null;
+  observaciones?: string | null;
+  sinc_fecha?: string | null;
+  sinc_hora?: string | null;
+  sinc_usuario?: string | null;
+}
+
+export interface ActivacionEmpresaGestionPayload {
+  id_empresa: number;
+  numero_radicado: string;
+  observaciones?: string | null;
+}
+
+export interface ActivacionEmpresaGestionResultado {
+  id_gestion_empresa?: number;
+  id_empresa?: number;
+  cantidad_solicitudes?: number;
+  ids_solicitudes?: number[];
+}
