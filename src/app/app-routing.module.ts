@@ -504,6 +504,15 @@ const routes: Routes = [
       import('./components/private/afiliation-rejection/afiliation-rejection.module').then(m => m.AfiliationRejectionModule),
   },
   {
+    path: RoutesApp.AFI_MANUAL_MANAGEMENT,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-manual-management/afiliation-manual-management.module').then(
+        m => m.AfiliationManualManagementModule
+      ),
+  },
+  {
     path: RoutesApp.MAIN_PAGE,
     canActivate: [sessionGuard],
     component: LayoutComponent,

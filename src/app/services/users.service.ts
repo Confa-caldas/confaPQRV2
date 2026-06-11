@@ -109,6 +109,7 @@ import {
   AssociateBankAccountList,
   AfiOccupationList,
   AfiMotivoRechazoParamList,
+  AfiMotivoGestionManualList,
   DocumentTypeList,
   CreateDocumentType,
   AdditionalDocsRequest,
@@ -1718,6 +1719,32 @@ export class Users {
   inactivateAfiMotivoRechazo(payload: AfiMotivoRechazoParamList) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_MOTIVO_RECHAZO}`,
+      payload
+    );
+  }
+
+  /// Parametrización motivos de afiliación manual
+  getAfiMotivoGestionManualListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiMotivoGestionManualList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_MOTIVO_GESTION_MANUAL_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiMotivoGestionManual(payload: AfiMotivoGestionManualList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_MOTIVO_GESTION_MANUAL}`,
+      payload
+    );
+  }
+  modifyAfiMotivoGestionManual(payload: AfiMotivoGestionManualList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_MOTIVO_GESTION_MANUAL}`,
+      payload
+    );
+  }
+  inactivateAfiMotivoGestionManual(payload: AfiMotivoGestionManualList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_MOTIVO_GESTION_MANUAL}`,
       payload
     );
   }

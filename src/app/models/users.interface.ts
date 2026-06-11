@@ -1478,6 +1478,17 @@ export interface AfiOccupationList {
   updated_date?: string;
 }
 
+/** Motivos por los cuales la afiliación se realiza manualmente. */
+export interface AfiMotivoGestionManualList {
+  id?: number;
+  motivo_gestion: string;
+  estado?: boolean | number;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+
 export interface ReasonAccountUpdateList {
   reason_account_update_id?: number;
   reason: string;
