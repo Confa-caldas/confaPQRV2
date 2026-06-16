@@ -16,6 +16,7 @@ import {
   RequestsListAfiliation,
   afiliacionIndicadoresPermitenAsignar,
   MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA,
+  mensajeTooltipAsignarAfiliacionPorFila,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -77,6 +78,7 @@ export class ProcessRequestAfiliationComponent implements OnInit {
   totalRowsAssigned: number = 0;
   loadingAssigned = false;
   readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
+  readonly tooltipAsignarPorFila = mensajeTooltipAsignarAfiliacionPorFila;
 
   PERFIL!: string;
   isBulkAssign: boolean = false; // Saber si es masivo o no
@@ -345,6 +347,15 @@ export class ProcessRequestAfiliationComponent implements OnInit {
 assignRequest(request_details: RequestsListAfiliation) {
     this.isBulkAssign = false;
 
+    if (!afiliacionIndicadoresPermitenAsignar(request_details)) {
+      this.showSuccessMessage(
+        'warn',
+        'Asignación no disponible',
+        'No puede asignar mientras pendiente dirección, pendiente activar empresa o novedad restrictiva esté en Sí.'
+      );
+      return;
+    }
+
     if (request_details.assigned_user == null || request_details.assigned_user == '') {
       this.message = 'Asignar responsable de solicitud';
       this.buttonmsg = 'Asignar';
@@ -434,9 +445,11 @@ assignRequest(request_details: RequestsListAfiliation) {
   closeDialogAssignedInput(value: boolean) {
     this.visibleAssignedInput = false;
     this.enableAssign = value;
-    if (value) {
-      // accion de eliminar
-    }
+  }
+
+  closeDialogAlert(value: boolean) {
+    this.visibleDialogAlert = false;
+    this.enableAssign = value;
   }
   
   assignSelectedRequests(requests: RequestsListAfiliation[]) {
@@ -448,7 +461,7 @@ assignRequest(request_details: RequestsListAfiliation) {
       this.showSuccessMessage(
         'warn',
         'Asignación no disponible',
-        'No puede reasignar en lote si alguna solicitud tiene pendiente dirección, pendiente activar empresa o novedad restrictiva en Sí.'
+        'No puede asignar en lote si alguna solicitud tiene pendiente dirección, pendiente activar empresa o novedad restrictiva en Sí.'
       );
       return;
     }
