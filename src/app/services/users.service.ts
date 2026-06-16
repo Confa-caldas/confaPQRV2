@@ -94,6 +94,10 @@ import {
   FilterRequestsMassive,
   RequestsMassiveAfiliationListItem,
   ValidarRequisitosGestionPersonaData,
+  ActivacionEmpresaConsultaFila,
+  ActivacionEmpresaGestionPayload,
+  ActivacionEmpresaGestionResultado,
+  ConsultarActivacionEmpresaPayload,
   GenderList,
   MaritalStatusList,
   SystemVariableList,
@@ -1974,6 +1978,20 @@ export class Users {
   getTransferStatusList() {
     return this.http.get<BodyResponse<TransferStatusList[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.TRANSFER_STATUS}`
+    );
+  }
+
+  consultarActivacionEmpresa(payload: ConsultarActivacionEmpresaPayload) {
+    return this.http.post<BodyResponse<ActivacionEmpresaConsultaFila[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ACTIVACION_EMPRESA_CONSULTAR}`,
+      payload
+    );
+  }
+
+  gestionarActivacionEmpresa(payload: ActivacionEmpresaGestionPayload) {
+    return this.http.post<BodyResponse<ActivacionEmpresaGestionResultado>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ACTIVACION_EMPRESA_GESTIONAR}`,
+      payload
     );
   }
 }

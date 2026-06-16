@@ -1,10 +1,28 @@
 /**
- * Visibilidad/edición por campo (false = control deshabilitado).
- * Pueden enviarse solo las claves relevantes; ausencia se interpreta como editable.
+ * Modelos alineados a POST validar-trabajador (afiliacionEmpresaWS).
+ * Doc referencia: afiliacion_empresa/src/app/interfaces/afiliacion.interfaces.ts
  */
+
+/** Un resultado de validación dentro de la respuesta 200 del WS. */
+export interface ValidacionResultAfiliacionInterna {
+  nombre: string;
+  nombreParaMostrar?: string;
+  paso: boolean;
+  mensaje: string | null;
+  data?: Record<string, unknown> | null;
+}
+
+/** Validación mostrada en UI (paso identificación trabajador). */
+export interface ValidacionMostradaAfiliacionInterna {
+  passed: boolean;
+  message: string;
+  name: string;
+}
+
+/** Visibilidad/edición por campo (false = control deshabilitado). */
 export type CamposVisiblesAfiliacionInterna = Record<string, boolean | undefined>;
 
-/** Bloque personal devuelto por validar-trabajador (acepta camelCase y snake_case vía mapeo en el componente). */
+/** Bloque personal devuelto por validar-trabajador. */
 export interface PersonalInfoAfiliacionInterna {
   tipo_documento?: string | null;
   tipoDocumento?: string | null;
@@ -42,10 +60,27 @@ export interface PersonalInfoAfiliacionInterna {
   ciudad?: string | null;
   telefono?: string | null;
   correoElectronico?: string | null;
+  nombreCompleto?: string | null;
   cargoOficio?: string | null;
   cargo_oficio?: string | null;
-  /** Visibilidad por campo en camelCase (se normaliza a controles del formulario en el componente). */
+  requiereAdjuntoDocumento?: boolean;
+  datosRegistraduriaDisponibles?: boolean;
+  datosContactoDisponibles?: boolean;
+  datosGenesysDisponibles?: boolean;
+  mensajeAdjuntoDocumento?: string | null;
   camposVisibles?: Record<string, boolean | undefined> | null;
+  cabezaHogar?: string | null;
+  ocupacion?: string | null;
+  nivelEducativo?: string | null;
+  viveEnCasaPropia?: boolean;
+  claseTrabajador?: string | null;
+  tipoSalario?: string | null;
+  tipoContratoLaboral?: string | null;
+  fechaTerminacionContrato?: string | null;
+  sucursalAsociada?: number | null;
+  municipioDesempenoLabores?: string | null;
+  paisResidencia?: string | null;
+  autorizacionEnvioCorreo?: boolean;
   [key: string]: unknown;
 }
 
@@ -61,6 +96,8 @@ export interface LaborInfoAfiliacionInterna {
   salarioActual?: number | null;
   horasMaximas?: number | null;
   horasMinimas?: number | null;
+  requierePermisoLaboral?: boolean;
+  mensajePermisoLaboral?: string | null;
   [key: string]: unknown;
 }
 
@@ -91,7 +128,73 @@ export interface MedioPagoAfiliacionInterna {
   tipoCuenta?: number | string | null;
   numeroCuenta?: string | null;
   confirmacionCuenta?: string | null;
+  tipoIdentificacionTitular?: string | null;
+  numeroIdentificacionTitular?: string | null;
+  titularCuenta?: string | null;
   entidadesDisponibles?: EntidadDisponibleAfiliacionInterna[] | null;
+  [key: string]: unknown;
+}
+
+export interface Form007DataAfiliacionInterna {
+  disponible?: boolean;
+  orientacionSexual?: string | null;
+  factorVulnerabilidad?: string | null;
+  pertenenciaEtnica?: string | null;
+  [key: string]: unknown;
+}
+
+export interface DireccionCalculadaAfiliacionInterna {
+  disponible?: boolean;
+  elemento?: string | null;
+  tipoVia?: string | null;
+  numero?: string | null;
+  letra?: string | null;
+  viaGeneradora?: string | null;
+  descripcionBarrio?: string | null;
+  [key: string]: unknown;
+}
+
+/** Beneficiario precargado desde validar-trabajador (para guardar-solicitud). */
+export interface BeneficiarioPrecargarAfiliacionInterna {
+  documento: string;
+  tipoDoc: string;
+  parentesco: string;
+  fecharet?: string;
+  estadoBeneficiario?: string;
+  tipoDocumento?: string;
+  primerNombre?: string;
+  segundoNombre?: string;
+  primerApellido?: string;
+  segundoApellido?: string;
+  fechaNacimiento?: string;
+  fechaExpedicionDoc?: string;
+  genero?: string;
+  gradoCursado?: string;
+  certificadoEscolar?: string;
+  fechaInicioVigenciaCertificadoEscolar?: string;
+  fechaFinVigenciaCertificadoEscolar?: string;
+  fechaReporteInvalidez?: string;
+  [key: string]: unknown;
+}
+
+export interface AdjuntoRequeridoAfiliacionInterna {
+  id?: number | null;
+  nombreDocumento?: string | null;
+  esRequerido?: boolean;
+}
+
+/** Datos específicos del beneficiario (validar-beneficiario → datosFormulario.datosBeneficiario). */
+export interface DatosBeneficiarioAfiliacionInterna {
+  adjuntosRequeridos?: AdjuntoRequeridoAfiliacionInterna[] | null;
+  requiereAdjuntoRegistroCivil?: boolean;
+  requiereAdjuntoDocumentoSoporte?: boolean;
+  requiereSoporteDiscapacidad?: boolean;
+  obligarPersonaDiscapacidadSi?: boolean;
+  edadMinimaRequeridaPadreMadre?: number | null;
+  nuevoBeneficiario?: string | null;
+  nuevoGrupoFamiliar?: string | null;
+  numeroGrupoFamiliar?: number | null;
+  revisionBack?: boolean;
   [key: string]: unknown;
 }
 
@@ -99,18 +202,26 @@ export interface DatosFormularioAfiliacionInterna {
   personalInfo?: PersonalInfoAfiliacionInterna | null;
   laborInfo?: LaborInfoAfiliacionInterna | null;
   medioPago?: MedioPagoAfiliacionInterna | null;
-  beneficiariosPrecargar?: unknown[] | null;
-  datosBeneficiario?: unknown | null;
+  form007Data?: Form007DataAfiliacionInterna | null;
+  direccionCalculada?: DireccionCalculadaAfiliacionInterna | null;
+  beneficiariosPrecargar?: BeneficiarioPrecargarAfiliacionInterna[] | null;
+  datosBeneficiario?: DatosBeneficiarioAfiliacionInterna | null;
   [key: string]: unknown;
 }
 
-/** Respuesta de negocio de validar-trabajador (envuelta en BodyResponse en API). */
+/**
+ * Cuerpo de negocio del WS validar-trabajador (envuelto en BodyResponse.data por la Lambda).
+ * Se conserva completo en memoria para guardar-solicitud (form007, Genesys, beneficiarios precargar, etc.).
+ */
 export interface ValidarTrabajadorResponse {
   success?: boolean;
   exitoso?: boolean;
   mensaje?: string | null;
   puedeContinuar?: boolean;
+  validaciones?: ValidacionResultAfiliacionInterna[];
   datosFormulario?: DatosFormularioAfiliacionInterna | null;
+  error?: string;
+  message?: string;
   camposVisibles?: CamposVisiblesAfiliacionInterna | null;
   [key: string]: unknown;
 }

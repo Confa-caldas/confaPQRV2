@@ -40,6 +40,7 @@ export enum RoutesApp {
   SYSTEM_VARIABLES = 'system-variables',
   AFI_TEMPLATE_VALIDATIONS = 'afi-template-validations',
   AFI_COMPANY_VALIDATIONS = 'afi-company',
+  AFI_COMPANY_ACTIVATION = 'afi-company-activation',
   AFILIATION_DOCUMENT_TYPE = 'afi-document-type-company',
   AFILIATION_DOCUMENT_TYPE_PERSON = 'afi-document-type-person',
   DEPARTMENT = 'department',
@@ -195,6 +196,14 @@ export enum EndPointRoute {
   AFILIACION_INTERNA_VALIDAR_EMPRESA = 'afiliacion-interna/empresa/validar',
   /** POST — valida trabajador y devuelve `datosFormulario` + `camposVisibles` para el paso de solicitud. */
   AFILIACION_INTERNA_VALIDAR_TRABAJADOR = 'afiliacion-interna/trabajador/validar',
+  AFILIACION_INTERNA_CONSULTAR_TRABAJADOR_ACTIVO = 'afiliacion-interna/trabajador/activo',
+  AFILIACION_INTERNA_VALIDAR_BENEFICIARIO = 'afiliacion-interna/beneficiario/validar',
+  AFILIACION_INTERNA_WS_TOKEN = 'afiliacion-interna/ws-token',
+  AFILIACION_INTERNA_AGREGAR_BENEFICIARIO = 'afiliacion-interna/beneficiario/agregar',
+  AFILIACION_INTERNA_GUARDAR_SOLICITUD = 'afiliacion-interna/solicitud/guardar',
+  /** Gestión activación empresa PQR (por gestionar / gestionado). */
+  ACTIVACION_EMPRESA_CONSULTAR = 'activacion-empresa/consultar',
+  ACTIVACION_EMPRESA_GESTIONAR = 'activacion-empresa/gestionar',
   /** Tipos de adjunto permitidos por parentesco (query: id_parentesco). */
   ADJUNTOS_POR_PARENTESCO = 'parametros/adjuntos-por-parentesco',
   /** POST paso 1: URL pre-firmada S3 + s3_key (sin confirmar en BD). */

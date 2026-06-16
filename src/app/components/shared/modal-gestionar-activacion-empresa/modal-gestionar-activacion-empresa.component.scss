@@ -1,0 +1,66 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+:host ::ng-deep .p-dialog .p-dialog-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+.modal-content {
+  background-color: $color-white;
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-title {
+  margin: 1.25rem 0 1rem;
+  padding: 0 1.5rem;
+  text-align: center;
+  font-weight: 600;
+  color: #111827;
+}
+
+.empresa-resumen {
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #374151;
+  line-height: 1.45;
+}
+
+.empresa-resumen-doc {
+  margin-bottom: 0.25rem;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.modal-field-label {
+  display: block;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.invalid {
+  display: block;
+  min-height: 1rem;
+  color: $color-red;
+  font-size: 0.8rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 1rem;
+  margin: 1.25rem 0 1.5rem;
+}
+
+:host ::ng-deep .modal-field .p-inputtext,
+:host ::ng-deep .modal-field textarea {
+  width: 100%;
+}

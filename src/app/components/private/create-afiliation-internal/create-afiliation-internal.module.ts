@@ -14,12 +14,18 @@ import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageService } from 'primeng/api';
 import { SharedModule } from '../../shared/shared.module';
+import { ValidacionNumeroDocumentoDirective } from '../../../shared/directives/validacion-numero-documento.directive';
+import { SinCopiarPegarDirective } from '../../../shared/directives/sin-copiar-pegar.directive';
+import { CorreoMinusculasDirective } from '../../../shared/directives/correo-minusculas.directive';
 
 @NgModule({
   declarations: [CreateAfiliationInternalComponent],
   providers: [MessageService],
   imports: [
     CommonModule,
+    ValidacionNumeroDocumentoDirective,
+    SinCopiarPegarDirective,
+    CorreoMinusculasDirective,
     CreateAfiliationInternalRoutingModule,
     CardModule,
     ButtonModule,
