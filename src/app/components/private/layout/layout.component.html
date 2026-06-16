@@ -5,12 +5,14 @@
       <nav class="menu ms-auto">
         <button class="notificaciones-btn" (click)="toggleNotificaciones()">
           🔔
-          <span class="notificaciones-badge">{{ totalRowsAssigned }}</span>
+          <span class="notificaciones-badge" *ngIf="totalNotifications > 0">{{ totalNotifications }}</span>
         </button>
 
-        <app-main-notification 
-          *ngIf="mostrarNotificaciones" 
-          [requestListByAssigned]="requestListByAssigned">
+        <app-main-notification
+          *ngIf="mostrarNotificaciones"
+          [requestListByAssigned]="requestListByAssigned"
+          [rpaInconsistencyList]="rpaInconsistencyList"
+          (closed)="mostrarNotificaciones = false">
         </app-main-notification>
       </nav>
     </div>
@@ -44,20 +46,40 @@
               class="pi pi-cog icons"
               style="font-size: 1.5rem"></i>
             <i
+            *ngIf="node.label === 'CONFIGURACION AFILIACIONES'"
+            (click)="toggleNavBar()"
+            class="pi pi-cog icons"
+            style="font-size: 1.5rem"></i>
+            <i
               *ngIf="node.label === 'CONSULTAR SOLICITUDES'"
               (click)="toggleNavBar()"
               class="pi pi-search icons"
               style="font-size: 1.5rem"></i>
+            <i
+            *ngIf="node.label === 'CONSULTAR SOLICITUDES AFILIACION'"
+            (click)="toggleNavBar()"
+            class="pi pi-search icons"
+            style="font-size: 1.5rem"></i>
             <i
               *ngIf="node.label === 'GENERAR REPORTE'"
               (click)="toggleNavBar()"
               class="pi pi-user-edit icons"
               style="font-size: 1.5rem"></i>
             <i
+            *ngIf="node.label === 'GENERAR REPORTE AFILIACION'"
+            (click)="toggleNavBar()"
+            class="pi pi-user-edit icons"
+            style="font-size: 1.5rem"></i>
+            <i
               *ngIf="node.label === 'TRAMITAR SOLICITUD'"
               (click)="toggleNavBar()"
               class="pi pi-file-import icons"
               style="font-size: 1.5rem"></i>
+            <i
+            *ngIf="node.label === 'TRAMITAR SOLICITUD AFILIACION'"
+            (click)="toggleNavBar()"
+            class="pi pi-file-import icons"
+            style="font-size: 1.5rem"></i>
             <i
               *ngIf="node.label === 'GESTION INTERNA'"
               (click)="toggleNavBar()"

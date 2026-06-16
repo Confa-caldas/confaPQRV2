@@ -67,6 +67,9 @@ import {
   CompanyUpdateRecord,
   SimilarRequest,
   FilterRequestsAfiliation,
+  FilterRpaAfiInconsistency,
+  RpaAfiInconsistencyListItem,
+  BulkChangeRpaStatusPayload,
   RequestsListAfiliation,
   AfiliacionRequestDetailsData,
   RequestStatusAfiliationList,
@@ -87,6 +90,7 @@ import {
   AdjuntoTipoPorParentesco,
   PresignAdjuntoAdicionalData,
   ActualizarEstadoGestionAfiliacionPayload,
+  AfiliationIntegranteHistoriaGestionRow,
   FilterRequestsMassive,
   RequestsMassiveAfiliationListItem,
   ValidarRequisitosGestionPersonaData,
@@ -334,6 +338,18 @@ export class Users {
   getRequestHistoricAfiliation<T = RequestHistoric[]>(payload: Pagination) {
     return this.http.post<BodyResponse<T>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION}`,
+      payload
+    );
+  }
+  /**
+   * Lambda → PL `afiliaciones.obtener_solicitud_persona_historia_pagination` (page, page_size).
+   * Histórico de cambios de estado por integrante (trabajador / beneficiarios).
+   */
+  getRequestHistoricAfiliationIntegrantes(
+    payload: Pagination
+  ) {
+    return this.http.post<BodyResponse<AfiliationIntegranteHistoriaGestionRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION_INTEGRANTES}`,
       payload
     );
   }
@@ -729,6 +745,18 @@ export class Users {
   getRequestAfiliationListByFilter(payload: FilterRequestsAfiliation) {
     return this.http.post<BodyResponse<RequestsListAfiliation[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_BY_FILTER}`,
+      payload
+    );
+  }
+  getRpaAfiInconsistencyListByFilter(payload: FilterRpaAfiInconsistency) {
+    return this.http.post<BodyResponse<RpaAfiInconsistencyListItem[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.RPA_AFI_INCONSISTENCY_BY_FILTER}`,
+      payload
+    );
+  }
+  bulkChangeRpaAfiInconsistencyStatus(payload: BulkChangeRpaStatusPayload) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.RPA_AFI_INCONSISTENCY_BULK_STATUS}`,
       payload
     );
   }

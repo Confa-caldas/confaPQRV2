@@ -7,6 +7,7 @@ import {
   ApplicantAttach,
   ApplicantAttachments,
   CharacterizationCreate,
+  AfiliationIntegranteHistoriaGestionRow,
   AfiliationSolicitudHistoriaGestionRow,
   RequestHistoric,
   RequestsDetails,
@@ -129,6 +130,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   afiliationRequestDetails?: AfiliacionRequestDetailsData;
   readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
   requestHistoric: AfiliationSolicitudHistoriaGestionRow[] = [];
+  requestHistoricIntegrantes: AfiliationIntegranteHistoriaGestionRow[] = [];
   requestHistoricAttach: RequestHistoric[] = [];
   ingredient!: string;
   visibleDialog = false;
@@ -176,6 +178,12 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   cargandoHistorialGestion = false;
   /** Filas cuyo texto de observación está expandido (índice en la página actual). */
   private historialObsExpandidos = new Set<number>();
+  firstHistoricIntegrantes: number = 0;
+  pageHistoricIntegrantes: number = 1;
+  rowsHistoricIntegrantes: number = 10;
+  totalRowsHistoricIntegrantes: number = 0;
+  cargandoHistorialGestionIntegrantes = false;
+  private historialIntegrantesObsExpandidos = new Set<number>();
 
   firstAssignedAttachments: number = 0;
   pageAssignedAttachments: number = 1;
@@ -523,6 +531,14 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.pageHistoric = (eventHistoric.page ?? 0) + 1;
     this.getRequestHistoric(this.request_id);
   }
+
+  onPageChangeHistoricIntegrantes(eventHistoric: PaginatorState) {
+    this.firstHistoricIntegrantes = eventHistoric.first ?? 0;
+    this.rowsHistoricIntegrantes = eventHistoric.rows ?? this.rowsHistoricIntegrantes;
+    this.pageHistoricIntegrantes = (eventHistoric.page ?? 0) + 1;
+    this.getRequestHistoricIntegrantes(this.request_id);
+  }
+
   cleanFormHistoric() {
     this.firstHistoric = 0;
     this.pageHistoric = 1;
@@ -530,6 +546,12 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.requestHistoric = [];
     this.totalRowsHistoric = 0;
     this.historialObsExpandidos.clear();
+    this.firstHistoricIntegrantes = 0;
+    this.pageHistoricIntegrantes = 1;
+    this.rowsHistoricIntegrantes = 10;
+    this.requestHistoricIntegrantes = [];
+    this.totalRowsHistoricIntegrantes = 0;
+    this.historialIntegrantesObsExpandidos.clear();
     this.rebuildTimelineEstadosSolicitudAfiliacion([]);
   }
 
@@ -538,6 +560,10 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.pageHistoric = 1;
     this.rowsHistoric = 10;
     this.getRequestHistoric(this.request_id);
+    this.firstHistoricIntegrantes = 0;
+    this.pageHistoricIntegrantes = 1;
+    this.rowsHistoricIntegrantes = 10;
+    this.getRequestHistoricIntegrantes(this.request_id);
   }
 
   onPageChangeAssignedAttachments(eventAssignedAttachments: PaginatorState) {
@@ -1182,8 +1208,11 @@ getRequestDetails(request_details: number) {
       this.loadParentescos();
       this.firstHistoric = 0;
       this.pageHistoric = 1;
+      this.firstHistoricIntegrantes = 0;
+      this.pageHistoricIntegrantes = 1;
       this.rebuildTimelineEstadosSolicitudAfiliacion([]);
       this.getRequestHistoric(request_details);
+      this.getRequestHistoricIntegrantes(request_details);
     },
     error: (err) => {
       this.loading = false;
@@ -2858,6 +2887,40 @@ get empresaDocumento(): string {
       });
   }
 
+  getRequestHistoricIntegrantes(request_id: number) {
+    this.cargandoHistorialGestionIntegrantes = true;
+    const payload: Pagination = {
+      request_id,
+      page: this.pageHistoricIntegrantes,
+      page_size: this.rowsHistoricIntegrantes,
+    };
+    this.userService
+      .getRequestHistoricAfiliationIntegrantes(payload)
+      .pipe(finalize(() => (this.cargandoHistorialGestionIntegrantes = false)))
+      .subscribe({
+        next: (response: BodyResponse<AfiliationIntegranteHistoriaGestionRow[]>) => {
+          if (response.code === 200) {
+            this.requestHistoricIntegrantes = Array.isArray(response.data) ? response.data : [];
+            this.historialIntegrantesObsExpandidos.clear();
+            const rawTotal =
+              response.total_count !== undefined && response.total_count !== null
+                ? Number(response.total_count)
+                : NaN;
+            this.totalRowsHistoricIntegrantes = Number.isFinite(rawTotal)
+              ? rawTotal
+              : Number.isFinite(Number(response.message))
+                ? Number(response.message)
+                : 0;
+          } else {
+            this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+          }
+        },
+        error: (err: unknown) => {
+          console.log(err);
+        },
+      });
+  }
+
   fillStatesDetails(request: AfiliationSolicitudHistoriaGestionRow[]): void {
     this.rebuildTimelineEstadosSolicitudAfiliacion(request ?? []);
   }
@@ -2933,6 +2996,36 @@ get empresaDocumento(): string {
 
   isHistorialObsExpandido(rowIndex: number): boolean {
     return this.historialObsExpandidos.has(rowIndex);
+  }
+
+  toggleHistorialObsIntegrante(rowIndex: number): void {
+    if (this.historialIntegrantesObsExpandidos.has(rowIndex)) {
+      this.historialIntegrantesObsExpandidos.delete(rowIndex);
+    } else {
+      this.historialIntegrantesObsExpandidos.add(rowIndex);
+    }
+  }
+
+  isHistorialObsExpandidoIntegrante(rowIndex: number): boolean {
+    return this.historialIntegrantesObsExpandidos.has(rowIndex);
+  }
+
+  nombreIntegranteHistorial(row: AfiliationIntegranteHistoriaGestionRow): string {
+    const nombre = row.nombre_integrante != null ? String(row.nombre_integrante).trim() : '';
+    const tipoPersona = row.tipo_persona != null ? String(row.tipo_persona).trim() : '';
+    if (nombre && tipoPersona) {
+      return `${tipoPersona}: ${nombre}`;
+    }
+    return nombre || tipoPersona || '—';
+  }
+
+  identificacionIntegranteHistorial(row: AfiliationIntegranteHistoriaGestionRow): string {
+    const tipoDoc = row.tipo_documento != null ? String(row.tipo_documento).trim() : '';
+    const doc = row.numero_documento != null ? String(row.numero_documento).trim() : '';
+    if (!tipoDoc && !doc) {
+      return '—';
+    }
+    return [tipoDoc, doc].filter(Boolean).join(' ');
   }
 
   /** Id de fila del catálogo (API puede usar `request_status_id` o `id`). */

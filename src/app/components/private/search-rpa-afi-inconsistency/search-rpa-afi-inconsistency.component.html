@@ -1,0 +1,217 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Consultar inconsistencias RPA de afiliación</div>
+  </div>
+</div>
+
+<form [formGroup]="formGroup" (keydown.enter)="initPaginador()" (keydown.escape)="cleanForm()">
+  <div class="position-relative">
+    <div class="card flex justify-content-center absolute-center">
+      <div class="filters-grid">
+        <div class="filters-cell">
+          <input
+            pInputText
+            class="filters-input"
+            pKeyFilter="int"
+            placeholder="Número de radicado"
+            formControlName="filing_number" />
+        </div>
+        <div class="filters-cell">
+          <input
+            pInputText
+            class="filters-input"
+            placeholder="Número documento trabajador"
+            formControlName="doc_id_tr" />
+        </div>
+        <div class="filters-cell">
+          <input
+            pInputText
+            class="filters-input"
+            placeholder="Número documento beneficiario"
+            formControlName="doc_id_bn" />
+        </div>
+        <div class="filters-cell">
+          <input
+            pInputText
+            class="filters-input"
+            placeholder="Transacción"
+            formControlName="transaccion" />
+        </div>
+        <div class="filters-cell">
+          <p-dropdown
+            formControlName="con_radicado_genesys"
+            [options]="genesysOpciones"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Con radicado Genesys"
+            [showClear]="true"
+            [style]="{ width: '100%', height: '28px', 'border-radius': '5px' }"></p-dropdown>
+        </div>
+        <div class="filters-cell filters-actions">
+          <p-button icon="pi pi-trash" [styleClass]="'btn-icon-info'" (click)="cleanForm()"></p-button>
+          <p-button icon="pi pi-search" [styleClass]="'btn-icon-info'" (click)="initPaginador()"></p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="bulk-actions" *ngIf="selectedRequests.length > 0">
+  <button
+    pButton
+    type="button"
+    label="Asignar seleccionadas"
+    icon="pi pi-users"
+    class="p-button-success assign-bulk-btn"
+    (click)="assignSelectedRequests()"
+    [disabled]="!todasSeleccionadasPuedenAsignar()"></button>
+
+  <button
+    pButton
+    type="button"
+    label="Cambiar estado"
+    icon="pi pi-sync"
+    class="p-button-warning assign-bulk-btn ms-2"
+    (click)="abrirModalCambiarEstado()"
+    [disabled]="!todasSeleccionadasPuedenCambiarEstado()"></button>
+</div>
+
+<div class="mt-auto">
+  <p-table
+    #dt
+    [value]="requestList"
+    dataKey="request_id"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    [loading]="loading"
+    [paginator]="false"
+    currentPageReportTemplate="{first} de {totalRecords}"
+    [tableStyle]="{ 'min-width': '80rem' }"
+    [scrollable]="true"
+    scrollHeight="500px"
+    [(selection)]="selectedRequests"
+    sortField="fecha_ejecucion"
+    [sortOrder]="1">
+    <ng-template pTemplate="header">
+      <tr [style]="{ height: '50px' }">
+        <th style="width: 4%">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
+        <th style="width: 4%"></th>
+        <th pSortableColumn="filing_number" style="min-width: 8rem">
+          Número de radicado<p-sortIcon field="filing_number"></p-sortIcon>
+        </th>
+        <th pSortableColumn="filing_date" style="min-width: 8rem">
+          Fecha de solicitud<p-sortIcon field="filing_date"></p-sortIcon>
+        </th>
+        <th style="min-width: 10rem">Tipo documento trabajador</th>
+        <th style="min-width: 10rem">Número documento trabajador</th>
+        <th style="min-width: 10rem">Tipo documento beneficiario</th>
+        <th style="min-width: 10rem">Número documento beneficiario</th>
+        <th pSortableColumn="name_empresa" style="min-width: 12rem">
+          Nombre empresa<p-sortIcon field="name_empresa"></p-sortIcon>
+        </th>
+        <th pSortableColumn="status_name" style="min-width: 10rem">
+          Estado solicitud<p-sortIcon field="status_name"></p-sortIcon>
+        </th>
+        <th style="min-width: 12rem">Estado integrante solicitud</th>
+        <th style="min-width: 10rem">Pantalla error</th>
+        <th style="min-width: 12rem">Observaciones</th>
+        <th pSortableColumn="fecha_ejecucion" style="min-width: 9rem">
+          Fecha ejecución<p-sortIcon field="fecha_ejecucion"></p-sortIcon>
+        </th>
+        <th style="min-width: 8rem">Hora inicio ejecución</th>
+        <th style="min-width: 8rem">Hora fin ejecución</th>
+        <th style="width: 8%"></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>
+          <p-tableCheckbox [value]="row"></p-tableCheckbox>
+        </td>
+        <td>
+          <p-button
+            icon="pi pi-eye"
+            [styleClass]="'btn-icon-info'"
+            (click)="redirectDetails(row.request_id)"></p-button>
+        </td>
+        <td style="text-align: center">{{ row.filing_number }}</td>
+        <td style="text-align: center">{{ row.filing_date | date }}</td>
+        <td style="text-align: center">{{ tipoDocTrabajador(row) }}</td>
+        <td style="text-align: center">{{ docTrabajador(row) }}</td>
+        <td style="text-align: center">{{ tipoDocBeneficiario(row) }}</td>
+        <td style="text-align: center">{{ docBeneficiario(row) }}</td>
+        <td style="text-align: center">{{ row.name_empresa }}</td>
+        <td style="text-align: center">{{ row.status_name || row.cod_estatus }}</td>
+        <td style="text-align: center">{{ row.estado_integrante_solicitud || '—' }}</td>
+        <td style="text-align: center">{{ row.pantalla_error || '—' }}</td>
+        <td style="text-align: center">{{ row.observaciones || '—' }}</td>
+        <td style="text-align: center">{{ row.fecha_ejecucion || '—' }}</td>
+        <td style="text-align: center">{{ row.hora_inicio_ejecucion || '—' }}</td>
+        <td style="text-align: center">{{ row.hora_fin_ejecucion || '—' }}</td>
+        <td>
+          <div *ngIf="PERFIL !== 'CONSULTANTE'">
+            <button class="custom-button" type="button" (click)="assignRequest(row)">
+              {{ tieneResponsable(row) ? 'Reasignar' : 'Asignar' }}
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-paginator
+    (onPageChange)="onPageChange($event)"
+    [first]="first"
+    [rows]="rows"
+    [totalRecords]="totalRows"
+    [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+</div>
+
+<p-toast></p-toast>
+
+<p-dialog
+  header="Cambiar estado"
+  [(visible)]="visibleDialogCambiarEstado"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '420px' }"
+  (onHide)="cancelarCambioEstado()">
+  <div class="mb-3">
+    <label class="d-block mb-2">Estado</label>
+    <p-dropdown
+      [(ngModel)]="estadoCambioSeleccionado"
+      [options]="estadoCambioOpciones"
+      optionLabel="label"
+      optionValue="value"
+      [disabled]="true"
+      [style]="{ width: '100%' }"></p-dropdown>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [styleClass]="'p-button-secondary'" (click)="cancelarCambioEstado()"></p-button>
+    <p-button
+      label="Confirmar"
+      [loading]="guardandoCambioEstado"
+      (click)="confirmarCambioEstado()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<app-modal-assign-afiliation-selector
+  *ngIf="visibleDialogInput"
+  [visible]="visibleDialogInput"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [parameter]="parameter"
+  (setRta)="closeDialogInput($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-assign-afiliation-selector>
+
+<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [message2]="message2"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>

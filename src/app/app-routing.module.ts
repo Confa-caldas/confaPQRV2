@@ -326,6 +326,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.SEARCH_RPA_AFI_INCONSISTENCY,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-rpa-afi-inconsistency/search-rpa-afi-inconsistency.module').then(
+        m => m.SearchRpaAfiInconsistencyModule
+      ),
+  },
+  {
     path: RoutesApp.SEARCH_UPDATES_DATA,
     canActivate: [sessionGuard],
     component: LayoutComponent,
