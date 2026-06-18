@@ -85,6 +85,7 @@ import {
   AnswerPaymentMethodRequest,
   RequestHistoricPaymentMethodRequest,
   TransferStatusList,
+  SuccessfulTransferBulk,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -1104,6 +1105,13 @@ export class Users {
   getTransferStatusList() {
     return this.http.get<BodyResponse<TransferStatusList[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.TRANSFER_STATUS}`
+    );
+  }
+
+  markSuccessfulTransfer(payload: SuccessfulTransferBulk) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.SUCCESSFUL_TRANSFER}`,
+      payload
     );
   }
 }
