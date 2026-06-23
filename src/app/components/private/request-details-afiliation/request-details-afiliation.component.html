@@ -48,7 +48,14 @@
         <div class="info-list">
           <div class="info-row">
             <span class="info-label">Nombre completo</span>
-            <span class="info-value">{{ trabajadorNombreCompleto }}</span>
+            <span class="info-value info-value--with-estado">
+              {{ trabajadorNombreCompleto }}
+              <p-tag
+                [value]="textoEstadoGestionIntegrante('trabajador')"
+                [severity]="severidadEstadoGestionIntegrante('trabajador')"
+                [rounded]="true"
+                styleClass="integrante-estado-gestion-tag"></p-tag>
+            </span>
           </div>
 
           <div class="info-row">
@@ -167,16 +174,15 @@
       <span
         *ngIf="afiliationRequestDetails.solicitud.id_estado_solicitud === 1"
         class="assign-afiliacion-tooltip-wrap"
-        [pTooltip]="mensajeTooltipAsignarInhabilitada"
+        [pTooltip]="tooltipAsignarPorFila(afiliationRequestDetails.solicitud)"
         [tooltipDisabled]="puedeActivarBotonAsignarAfiliacion()"
         tooltipPosition="top"
         tooltipStyleClass="tooltip-asignar-bloqueado">
         <p-button
           [label]="
-            afiliationRequestDetails.solicitud.usuario_gestion === null ||
-            afiliationRequestDetails.solicitud.usuario_gestion === ''
-              ? 'Asignar'
-              : 'Reasignar'
+            afiliationRequestDetails.solicitud.usuario_gestion?.trim()
+              ? 'Reasignar'
+              : 'Asignar'
           "
           [disabled]="!puedeActivarBotonAsignarAfiliacion()"
           (click)="assignRequestAfiliation(afiliationRequestDetails)"
@@ -464,7 +470,14 @@
     <p-tabPanel header="Trabajador" headerStyleClass="p-tabview-nav-link-3">
       <div class="tab-data-view">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2 tab-data-title-actions">
-          <h3 class="tab-data-section-title mb-0">Datos del afiliado</h3>
+          <div class="tab-data-title-with-estado">
+            <h3 class="tab-data-section-title mb-0">Datos del afiliado</h3>
+            <p-tag
+              [value]="textoEstadoGestionIntegrante('trabajador')"
+              [severity]="severidadEstadoGestionIntegrante('trabajador')"
+              [rounded]="true"
+              styleClass="integrante-estado-gestion-tag"></p-tag>
+          </div>
           <div class="d-flex flex-wrap gap-2 align-items-center tab-data-header-actions">
             <p-button
               label="Ver Datos adicionales"
@@ -474,7 +487,9 @@
               tooltipPosition="top"
               (onClick)="abrirResumenIntegranteAfiliacionWs('trabajador')"
               [style]="{ 'border-radius': '10px' }"></p-button>
-            <span class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
+            <span
+              *ngIf="mostrarBotonGestionarEstadoIntegrante('trabajador')"
+              class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
               <p-button
                 label="Gestionar estado"
                 icon="pi pi-cog"
@@ -824,7 +839,14 @@
             <div class="benef-card" *ngFor="let b of d.beneficiarios; let iBenef = index">
               <div class="benef-card-header">
                 <div class="benef-card-header-main">
-                  <span class="benef-card-title">Beneficiario {{ iBenef + 1 }}: {{ getNombreBeneficiario(b) }}</span>
+                  <span class="benef-card-title-row">
+                    <span class="benef-card-title">Beneficiario {{ iBenef + 1 }}: {{ getNombreBeneficiario(b) }}</span>
+                    <p-tag
+                      [value]="textoEstadoGestionIntegrante('beneficiario', iBenef)"
+                      [severity]="severidadEstadoGestionIntegrante('beneficiario', iBenef)"
+                      [rounded]="true"
+                      styleClass="integrante-estado-gestion-tag"></p-tag>
+                  </span>
                   <span class="benef-card-meta">{{ b.persona.tipo_documento }} {{ b.persona.numero_documento }} · {{ b.beneficiario.parentesco || '—' }}</span>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center benef-card-header-actions">
@@ -836,7 +858,9 @@
                     tooltipPosition="top"
                     (onClick)="abrirResumenIntegranteAfiliacionWs('beneficiario', iBenef)"
                     [style]="{ 'border-radius': '10px' }"></p-button>
-                  <span class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
+                  <span
+                    *ngIf="mostrarBotonGestionarEstadoIntegrante('beneficiario', iBenef)"
+                    class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
                     <p-button
                       label="Gestionar estado"
                       icon="pi pi-cog"
@@ -1616,6 +1640,41 @@
         severity="secondary"
         [disabled]="subiendoAdjuntosAdicionales"
         (onClick)="closeModalAdjuntosAdicionales()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmación rechazo trabajador (cascade integrantes + solicitud Rechazada) -->
+<p-dialog
+  header="Confirmar rechazo del trabajador"
+  [(visible)]="visibleConfirmarRechazoTrabajador"
+  [modal]="true"
+  [style]="{ width: '460px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarConfirmacionRechazoTrabajador()">
+  <div class="dialog-content">
+    <p class="confirmation-text">
+      Al rechazar al trabajador, todos los integrantes pasarán a estado <strong>Rechazado</strong>
+      y la solicitud quedará en <strong>Rechazada</strong>. ¿Desea continuar?
+    </p>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Sí, rechazar"
+        icon="pi pi-check"
+        severity="danger"
+        [loading]="guardandoEstadoGestionSolicitud"
+        [disabled]="guardandoEstadoGestionSolicitud"
+        (onClick)="confirmarRechazoTrabajadorGestionEstado()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        [disabled]="guardandoEstadoGestionSolicitud"
+        (onClick)="cerrarConfirmacionRechazoTrabajador()"
         [style]="{ 'border-radius': '6px' }"></p-button>
     </div>
   </div>

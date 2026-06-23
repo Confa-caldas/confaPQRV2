@@ -1767,17 +1767,18 @@ export interface ValidarRequisitosGestionPersonaData {
 /**
  * Actualizar estado desde el modal "Gestionar estado de afiliado".
  * Requisitos por persona ya validados antes de abrir el modal (`validarRequisitosGestionPersona`).
- * El backend debe aceptar el mismo contrato (PUT).
  */
 export interface ActualizarEstadoGestionAfiliacionPayload {
   id_solicitud: number;
-  /** Persona (trabajador o beneficiario) cuyo estado de afiliación se actualiza. */
+  /** Registro en afiliacion_solicitud_persona (persona.id del detalle). */
   persona_id: number;
-  /** PK `parametros_estado_solicitud.id` del estado elegido. */
-  id_estado_solicitud: number;
-  /** `codigo` en BD (misma fila que `id_estado_solicitud`). */
-  estado_afiliado: string;
-  /** Id del catálogo de motivos de rechazo; enviar cuando el estado es Rechazado (`id_estado_solicitud` 4). */
+  /** PK `parametros_estado_gestion_persona.id`. */
+  id_estado_gestion_persona: number;
+  /** Alias legacy; mismo valor que id_estado_gestion_persona. */
+  id_estado_solicitud?: number;
+  /** Código legible del estado (informativo). */
+  estado_afiliado?: string;
+  /** Obligatorio solo cuando el estado es Rechazado; null en los demás. */
   id_motivo_rechazo?: number | null;
 }
 
@@ -1824,6 +1825,8 @@ export interface Persona {
   fecha_expedicion_doc: string | null;
   usuario_modificacion: string | null;
   fecha_creacion: string;
+  /** Estado de gestión del integrante (parametros_estado_gestion_persona.id). */
+  id_estado_gestion_persona?: number | null;
 }
 
 export interface Adjunto {

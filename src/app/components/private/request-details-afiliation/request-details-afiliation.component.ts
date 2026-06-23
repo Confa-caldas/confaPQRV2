@@ -35,8 +35,10 @@ import {
   ValoracionAdjunto,
   afiliacionIndicadoresPermitenAsignar,
   MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA,
+  mensajeTooltipAsignarAfiliacionPorFila,
   ActualizarEstadoGestionAfiliacionPayload,
   RequestStatusAfiliationList,
+  RequestsListAfiliation,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -129,6 +131,9 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   requestDetails?: RequestsDetails;
   afiliationRequestDetails?: AfiliacionRequestDetailsData;
   readonly mensajeTooltipAsignarInhabilitada = MENSAJE_TOOLTIP_ASIGNAR_AFILIACION_INHABILITADA;
+  readonly tooltipAsignarPorFila = mensajeTooltipAsignarAfiliacionPorFila;
+  requestAfiliationAssign?: RequestsListAfiliation;
+  isAfiliationAssignModal = false;
   requestHistoric: AfiliationSolicitudHistoriaGestionRow[] = [];
   requestHistoricIntegrantes: AfiliationIntegranteHistoriaGestionRow[] = [];
   requestHistoricAttach: RequestHistoric[] = [];
@@ -380,16 +385,47 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   gestionarEstadoAfiliadoForm!: FormGroup;
   private gestionarEstadoAfiliadoSub?: Subscription;
 
-  /** Ids `parametros_estado_solicitud.id` alineados con BD (mismo orden que `codigo`). */
-  readonly ID_ESTADO_SOLICITUD_PENDIENTE_AFILIACION_RPA = 1;
-  readonly ID_ESTADO_SOLICITUD_INCONSISTENCIAS_RPA = 2;
-  readonly ID_ESTADO_SOLICITUD_PROCESADO = 3;
-  readonly ID_ESTADO_SOLICITUD_RECHAZADO = 4;
+  /** Ids `parametros_estado_gestion_persona.id` alineados con BD. */
+  readonly ID_ESTADO_GESTION_PENDIENTE_AFILIACION_RPA = 1;
+  readonly ID_ESTADO_GESTION_INCONSISTENCIAS_RPA = 2;
+  readonly ID_ESTADO_GESTION_PROCESADO = 3;
+  readonly ID_ESTADO_GESTION_RECHAZADO = 4;
+  readonly ID_ESTADO_GESTION_PENDIENTE_INICIAL = 5;
+  readonly ID_ESTADO_GESTION_EN_EJECUCION_RPA = 6;
 
-  /** Dropdown: `value` = id BD; `label` = `codigo` legible. */
+  /** Catálogo completo `parametros_estado_gestion_persona` para mostrar estado por integrante. */
+  private readonly catalogoEstadoGestionPersona: Readonly<
+    Record<number, { label: string; severity: 'success' | 'info' | 'warning' | 'danger' | 'secondary' }>
+  > = {
+    [this.ID_ESTADO_GESTION_PENDIENTE_AFILIACION_RPA]: {
+      label: 'Pendiente afiliación RPA',
+      severity: 'info',
+    },
+    [this.ID_ESTADO_GESTION_INCONSISTENCIAS_RPA]: {
+      label: 'Inconsistencias RPA',
+      severity: 'warning',
+    },
+    [this.ID_ESTADO_GESTION_PROCESADO]: {
+      label: 'Procesado',
+      severity: 'success',
+    },
+    [this.ID_ESTADO_GESTION_RECHAZADO]: {
+      label: 'Rechazado',
+      severity: 'danger',
+    },
+    [this.ID_ESTADO_GESTION_PENDIENTE_INICIAL]: {
+      label: 'Pendiente',
+      severity: 'warning',
+    },
+    [this.ID_ESTADO_GESTION_EN_EJECUCION_RPA]: {
+      label: 'En ejecución RPA',
+      severity: 'info',
+    },
+  };
+
+  /** Estados seleccionables manualmente en gestión interna. */
   estadoAfiliadoOpciones: { label: string; value: number }[] = [
     { label: 'Pendiente afiliación RPA', value: 1 },
-    { label: 'Inconsistencias RPA', value: 2 },
     { label: 'Procesado', value: 3 },
     { label: 'Rechazado', value: 4 },
   ];
@@ -404,6 +440,9 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   gestionarEstadoValidacionCargaKey: string | null = null;
   /** Persona cuyo estado se gestiona en el modal (se fija al abrir tras validar requisitos). */
   gestionarEstadoPersonaId: number | null = null;
+  gestionarEstadoContexto: 'trabajador' | 'beneficiario' = 'trabajador';
+  visibleConfirmarRechazoTrabajador = false;
+  private pendingGestionEstadoPayload: ActualizarEstadoGestionAfiliacionPayload | null = null;
   private readonly validacionRequisitosGestionCache = new Map<
     number,
     { valido: boolean; errores: string[] }
@@ -623,8 +662,11 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       return;
     }
     this.gestionarEstadoAfiliadoSub = estadoCtrl.valueChanges.subscribe((val: number | null) => {
-      if (val === this.ID_ESTADO_SOLICITUD_RECHAZADO) {
+      if (val != null && this.esEstadoGestionRechazado(Number(val))) {
         motivoCtrl.setValidators([Validators.required]);
+        if (this.motivoRechazoOpciones.length === 0 && !this.cargandoMotivosRechazo) {
+          this.cargarMotivosRechazoAfiliacion();
+        }
       } else {
         motivoCtrl.clearValidators();
         motivoCtrl.setValue(null, { emitEvent: false });
@@ -633,8 +675,21 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     });
   }
 
+  /** True si el id corresponde al estado Rechazado del catálogo de gestión por persona. */
+  esEstadoGestionRechazado(idEstado: number): boolean {
+    if (!Number.isFinite(idEstado)) {
+      return false;
+    }
+    const row = this.estadoAfiliadoOpciones.find(o => o.value === idEstado);
+    if (row?.label && /rechaz/i.test(row.label)) {
+      return true;
+    }
+    return idEstado === this.ID_ESTADO_GESTION_RECHAZADO;
+  }
+
   get mostrarMotivoRechazoGestion(): boolean {
-    return this.gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.value === this.ID_ESTADO_SOLICITUD_RECHAZADO;
+    const id = this.gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.value;
+    return id != null && this.esEstadoGestionRechazado(Number(id));
   }
 
   /** `codigo` BD para el id de estado del modal (parametros_estado_solicitud). */
@@ -668,6 +723,23 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     contexto: 'trabajador' | 'beneficiario' = 'trabajador',
     indiceBeneficiario?: number
   ): void {
+    if (contexto === 'trabajador' && this.tieneAlertaEstadoCivil) {
+      const detalle = this.tieneAlertaEstadoCivilVacio
+        ? 'Debe seleccionar un estado civil antes de gestionar el estado.'
+        : 'Debe actualizar el estado civil antes de gestionar el estado.';
+      this.showSuccessMessage('warn', 'Estado civil requerido', detalle);
+      return;
+    }
+
+    if (contexto === 'beneficiario' && !this.trabajadorTieneEstadoGestionAsignado()) {
+      this.showSuccessMessage(
+        'warn',
+        'Gestión no permitida',
+        'El trabajador debe tener un estado de gestión antes de gestionar beneficiarios.'
+      );
+      return;
+    }
+
     const personaId = this.obtenerPersonaIdParaGestionEstado(contexto, indiceBeneficiario);
     const nombre = this.nombrePersonaParaMensajeGestionEstado(contexto, indiceBeneficiario);
     if (personaId == null || !Number.isFinite(personaId)) {
@@ -809,6 +881,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     contexto: 'trabajador' | 'beneficiario' = 'trabajador',
     indiceBeneficiario?: number
   ): void {
+    this.gestionarEstadoContexto = contexto;
     this.gestionarEstadoPersonaId = this.obtenerPersonaIdParaGestionEstado(
       contexto,
       indiceBeneficiario
@@ -832,8 +905,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     });
     this.gestionarEstadoAfiliadoForm.get('motivoRechazo')?.clearValidators();
     this.gestionarEstadoAfiliadoForm.get('motivoRechazo')?.updateValueAndValidity({ emitEvent: false });
+    this.motivoRechazoOpciones = [];
     this.visibleGestionarEstadoModal = true;
-    this.cargarMotivosRechazoAfiliacion();
   }
 
   /** Carga catálogo de motivos de rechazo desde el servicio (BD). */
@@ -887,6 +960,67 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.visibleGestionarEstadoModal = false;
     this.gestionarEstadoContextoLabel = '';
     this.gestionarEstadoPersonaId = null;
+    this.gestionarEstadoContexto = 'trabajador';
+  }
+
+  private idEstadoGestionPersonaIntegrante(
+    contexto: 'trabajador' | 'beneficiario',
+    indiceBeneficiario?: number
+  ): number | null | undefined {
+    if (contexto === 'trabajador') {
+      return this.afiliationRequestDetails?.trabajador?.persona?.id_estado_gestion_persona;
+    }
+    if (indiceBeneficiario == null) {
+      return undefined;
+    }
+    return this.afiliationRequestDetails?.beneficiarios?.[indiceBeneficiario]?.persona
+      ?.id_estado_gestion_persona;
+  }
+
+  /** Visible solo mientras el integrante sigue en Pendiente inicial (id 5) o sin estado asignado. */
+  mostrarBotonGestionarEstadoIntegrante(
+    contexto: 'trabajador' | 'beneficiario',
+    indiceBeneficiario?: number
+  ): boolean {
+    const id = this.idEstadoGestionPersonaIntegrante(contexto, indiceBeneficiario);
+    if (id == null || id === undefined) {
+      return true;
+    }
+    return Number(id) === this.ID_ESTADO_GESTION_PENDIENTE_INICIAL;
+  }
+
+  /** Etiqueta legible del estado de gestión individual del integrante. */
+  textoEstadoGestionIntegrante(
+    contexto: 'trabajador' | 'beneficiario',
+    indiceBeneficiario?: number
+  ): string {
+    const id = this.idEstadoGestionPersonaIntegrante(contexto, indiceBeneficiario);
+    if (id == null || id === undefined) {
+      return 'Pendiente';
+    }
+    const n = Number(id);
+    return this.catalogoEstadoGestionPersona[n]?.label ?? `Estado ${n}`;
+  }
+
+  /** Color del tag según el estado de gestión del integrante. */
+  severidadEstadoGestionIntegrante(
+    contexto: 'trabajador' | 'beneficiario',
+    indiceBeneficiario?: number
+  ): 'success' | 'info' | 'warning' | 'danger' | 'secondary' {
+    const id = this.idEstadoGestionPersonaIntegrante(contexto, indiceBeneficiario);
+    if (id == null || id === undefined) {
+      return 'secondary';
+    }
+    return this.catalogoEstadoGestionPersona[Number(id)]?.severity ?? 'secondary';
+  }
+
+  /** Trabajador ya gestionado: estado distinto de null y del inicial Pendiente (5). */
+  trabajadorTieneEstadoGestionAsignado(): boolean {
+    const id = this.idEstadoGestionPersonaIntegrante('trabajador');
+    if (id == null || id === undefined) {
+      return false;
+    }
+    return Number(id) !== this.ID_ESTADO_GESTION_PENDIENTE_INICIAL;
   }
 
   guardarGestionarEstadoAfiliado(): void {
@@ -920,8 +1054,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     }
 
     const raw = this.gestionarEstadoAfiliadoForm.getRawValue();
-    const idEstadoSolicitud = Number(raw.estadoAfiliado);
-    if (!Number.isFinite(idEstadoSolicitud) || idEstadoSolicitud < 1) {
+    const idEstadoGestion = Number(raw.estadoAfiliado);
+    if (!Number.isFinite(idEstadoGestion) || idEstadoGestion < 1) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Formulario incompleto',
@@ -929,7 +1063,19 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       });
       return;
     }
-    const estadoAfiliadoCodigo = this.codigoEstadoAfiliadoPorId(idEstadoSolicitud);
+
+    const esRechazado = this.esEstadoGestionRechazado(idEstadoGestion);
+    if (esRechazado && (raw.motivoRechazo == null || raw.motivoRechazo === '')) {
+      this.gestionarEstadoAfiliadoForm.get('motivoRechazo')?.markAsTouched();
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Seleccione un motivo de rechazo.',
+      });
+      return;
+    }
+
+    const estadoAfiliadoCodigo = this.codigoEstadoAfiliadoPorId(idEstadoGestion);
     if (!estadoAfiliadoCodigo) {
       this.messageService.add({
         severity: 'error',
@@ -938,23 +1084,43 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       });
       return;
     }
+
     const payload: ActualizarEstadoGestionAfiliacionPayload = {
       id_solicitud: idSolicitud,
       persona_id: personaId,
-      id_estado_solicitud: idEstadoSolicitud,
+      id_estado_gestion_persona: idEstadoGestion,
+      id_estado_solicitud: idEstadoGestion,
       estado_afiliado: estadoAfiliadoCodigo,
+      id_motivo_rechazo: esRechazado ? Number(raw.motivoRechazo) : null,
     };
+
     if (
-      idEstadoSolicitud === this.ID_ESTADO_SOLICITUD_RECHAZADO &&
-      raw.motivoRechazo != null &&
-      raw.motivoRechazo !== ''
+      this.gestionarEstadoContexto === 'trabajador' &&
+      esRechazado
     ) {
-      const idMotivo = Number(raw.motivoRechazo);
-      if (!Number.isNaN(idMotivo)) {
-        payload.id_motivo_rechazo = idMotivo;
-      }
+      this.pendingGestionEstadoPayload = payload;
+      this.visibleConfirmarRechazoTrabajador = true;
+      return;
     }
 
+    this.ejecutarGuardarGestionEstadoAfiliado(payload);
+  }
+
+  cerrarConfirmacionRechazoTrabajador(): void {
+    this.visibleConfirmarRechazoTrabajador = false;
+    this.pendingGestionEstadoPayload = null;
+  }
+
+  confirmarRechazoTrabajadorGestionEstado(): void {
+    const payload = this.pendingGestionEstadoPayload;
+    this.cerrarConfirmacionRechazoTrabajador();
+    if (!payload) {
+      return;
+    }
+    this.ejecutarGuardarGestionEstadoAfiliado(payload);
+  }
+
+  private ejecutarGuardarGestionEstadoAfiliado(payload: ActualizarEstadoGestionAfiliacionPayload): void {
     this.guardandoEstadoGestionSolicitud = true;
     this.userService.actualizarEstadoGestionSolicitudAfiliacion(payload).subscribe({
       next: (res) => {
@@ -3144,6 +3310,8 @@ get empresaDocumento(): string {
   }
 
   assignRequest(request_details: RequestsDetails) {
+    this.isAfiliationAssignModal = false;
+    this.requestAfiliationAssign = undefined;
     if (request_details.assigned_user == null || request_details.assigned_user == '') {
       this.message = 'Asignar responsable al requerimiento';
       this.buttonmsg = 'Asignar';
@@ -3156,6 +3324,44 @@ get empresaDocumento(): string {
     this.visibleDialogInput = true;
     this.parameter = ['Usuario'];
     this.request_details = request_details;
+  }
+
+  private buildAssignPayloadFromDetails(
+    data: AfiliacionRequestDetailsData,
+    requestStatus: number
+  ): RequestsListAfiliation {
+    const s = data.solicitud;
+    const t = data.trabajador;
+    const e = data.empresa;
+    const nombreTrabajador = [
+      t.persona.primer_nombre,
+      t.persona.segundo_nombre,
+      t.persona.primer_apellido,
+      t.persona.segundo_apellido,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    return {
+      request_id: s.id,
+      filing_number: s.numero_radicado,
+      filing_date: s.fecha_solicitud,
+      doc_trabajador: t.persona.numero_documento ?? '',
+      name_trabajador: nombreTrabajador,
+      documents_beneficiarios: '',
+      names_beneficiarios: '',
+      id_empresa: s.id_empresa,
+      name_empresa: e?.razon_social ?? e?.nombre_comercial ?? '',
+      request_status: requestStatus,
+      cod_estatus: s.estado_codigo ?? '',
+      assigned_user: s.usuario_gestion,
+      user_name_completed: '',
+      mensaje_reasignacion: '',
+      total_count: 0,
+      pendiente_direccion: s.pendiente_direccion,
+      pendiente_activar_empresa: s.pendiente_activar_empresa,
+      novedad_restrictiva: s.novedad_restrictiva,
+    };
   }
 
   /** Asignar/Reasignar inhabilitado si algún indicador (pendiente dirección, activar empresa, novedad restrictiva) es "Si". */
@@ -3175,18 +3381,23 @@ get empresaDocumento(): string {
       return;
     }
 
-    if (request_details.solicitud.usuario_gestion == null || request_details.solicitud.usuario_gestion == '') {
-      this.message = 'Asignar responsable al requerimiento';
+    this.isAfiliationAssignModal = true;
+    const sinResponsable =
+      request_details.solicitud.usuario_gestion == null ||
+      request_details.solicitud.usuario_gestion === '';
+
+    if (sinResponsable) {
+      this.message = 'Asignar responsable de solicitud';
       this.buttonmsg = 'Asignar';
-      request_details.solicitud.id_estado_solicitud = 2;
+      this.requestAfiliationAssign = this.buildAssignPayloadFromDetails(request_details, 2);
     } else {
-      this.message = 'Reasignar responsable al requerimiento';
+      this.message = 'Reasignar responsable de solicitud';
       this.buttonmsg = 'Reasignar';
-      request_details.solicitud.id_estado_solicitud = 3;
+      this.requestAfiliationAssign = this.buildAssignPayloadFromDetails(request_details, 3);
     }
+
     this.visibleDialogInput = true;
-    this.parameter = ['Usuario'];
-    this.afiliationRequestDetails = request_details;
+    this.parameter = ['Colaborador'];
   }
 
   closeDialog(value: boolean) {
@@ -3204,6 +3415,7 @@ get empresaDocumento(): string {
   }
   closeDialogAlert(value: boolean) {
     this.visibleDialogAlert = false;
+    this.enableAssign = value;
   }
   closeDialogCharacterization(value: boolean) {
     this.visibleCharacterization = false;
@@ -3214,6 +3426,40 @@ get empresaDocumento(): string {
     mensajeReasignacion: string;
   }) {
     if (!this.enableAssign) return;
+
+    if (this.isAfiliationAssignModal && this.requestAfiliationAssign) {
+      if (this.requestAfiliationAssign.assigned_user === inputValue.userName) {
+        this.visibleDialogAlert = true;
+        this.informative = true;
+        this.message = 'Verifique el responsable a asignar';
+        this.message2 = 'Debe seleccionar un colaborador diferente';
+        this.severity = 'danger';
+        return;
+      }
+
+      this.requestAfiliationAssign.assigned_user = inputValue.userName;
+      this.requestAfiliationAssign.user_name_completed = inputValue.userNameCompleted;
+      this.requestAfiliationAssign.mensaje_reasignacion = inputValue.mensajeReasignacion;
+
+      this.userService.assignUserToRequestAfiliation(this.requestAfiliationAssign).subscribe({
+        next: (response: BodyResponse<string>) => {
+          if (response.code === 200) {
+            this.showSuccessMessage('success', 'Éxito', 'Asignación exitosa');
+          } else {
+            this.showSuccessMessage('error', 'Falló', 'Asignación fallida');
+          }
+        },
+        error: (err: unknown) => console.error(err),
+        complete: () => {
+          this.visibleDialogInput = false;
+          this.isAfiliationAssignModal = false;
+          this.requestAfiliationAssign = undefined;
+          this.getRequestDetails(this.request_id);
+        },
+      });
+      return;
+    }
+
     if (this.request_details['assigned_user'] == inputValue.userName) {
       this.visibleDialogAlert = true;
       this.informative = true;
@@ -3227,24 +3473,21 @@ get empresaDocumento(): string {
     this.request_details['user_name_completed'] = inputValue.userNameCompleted;
     this.request_details['mensaje_reasignacion'] = inputValue.mensajeReasignacion;
 
-    if (inputValue) {
-      this.userService.assignUserToRequest(this.request_details).subscribe({
-        next: (response: BodyResponse<string>) => {
-          if (response.code === 200) {
-            this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
-          } else {
-            this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
-          }
-        },
-        error: (err: any) => {
-          console.log(err);
-        },
-        complete: () => {
-          this.ngOnInit();
-          console.log('La suscripción ha sido completada.');
-        },
-      });
-    }
+    this.userService.assignUserToRequest(this.request_details).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: unknown) => {
+        console.log(err);
+      },
+      complete: () => {
+        this.ngOnInit();
+      },
+    });
   }
 
   isValidExtension(file: File): boolean {
