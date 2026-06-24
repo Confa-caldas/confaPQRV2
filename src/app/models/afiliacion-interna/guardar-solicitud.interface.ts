@@ -27,6 +27,7 @@ export interface TrabajadorGuardarSolicitudInterna {
   llaveBreb?: string;
   cabezaHogar?: string;
   ocupacion?: string;
+  cargoOficioDesempenado?: string;
   nivelEducativo?: string;
   viveCasaPropia?: boolean;
   claseTrabajador?: string;

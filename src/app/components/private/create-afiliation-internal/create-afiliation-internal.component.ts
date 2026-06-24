@@ -4818,9 +4818,13 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const s = (v: unknown): string => (v == null ? '' : String(v).trim());
     let result: TrabajadorGuardarSolicitudInterna = { ...base };
 
+    const cargoForm = s(laboral.cargo_desempenado);
+    if (cargoForm !== '') {
+      result.cargoOficioDesempenado = cargoForm;
+    }
+
     if (pi) {
-      const cargoForm = s(laboral.cargo_desempenado);
-      const ocupacion = cargoForm || s(pi.cargoOficio) || s(pi.cargo_oficio) || s(pi.ocupacion);
+      const ocupacionGenesys = s(pi.ocupacion);
       const rawFecTerm = pi.fechaTerminacionContrato;
       let fechaTerminacionContrato: string | undefined;
       if (rawFecTerm != null && s(rawFecTerm) !== '') {
@@ -4829,8 +4833,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
       if (s(pi.cabezaHogar) !== '') {
         result.cabezaHogar = s(pi.cabezaHogar);
       }
-      if (ocupacion !== '') {
-        result.ocupacion = ocupacion;
+      if (ocupacionGenesys !== '') {
+        result.ocupacion = ocupacionGenesys;
       }
       if (s(pi.nivelEducativo) !== '') {
         result.nivelEducativo = s(pi.nivelEducativo);
