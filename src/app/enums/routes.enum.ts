@@ -162,4 +162,5 @@ export enum EndPointRoute {
   PAYMENT_METHOD_REQUEST_HISTORIC = 'payment_method_request/historic',
   UPLOAD_PAYMENT_METHOD_FILES = 'payment_method_request/url_signer',
   TRANSFER_STATUS = 'db/transfer_status',
+  SUCCESSFUL_TRANSFER = 'payment_method_request/successful_transfer',
 }

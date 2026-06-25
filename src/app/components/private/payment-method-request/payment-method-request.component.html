@@ -58,6 +58,15 @@
             [styleClass]="'btn-icon-info'"
             (click)="initPaginator()"></p-button>
         </div>
+        <div>
+          <p-button
+            icon="pi pi-file-excel"
+            [styleClass]="'btn-export-excel'"
+            pTooltip="Exportar a Excel"
+            tooltipPosition="top"
+            [loading]="exporting"
+            (click)="exportToExcel()"></p-button>
+        </div>
       </div>
       <div class="filters-row">
         <div class="filters-col">
@@ -78,10 +87,28 @@
             optionValue="transfer_process_status_id"
             placeholder="Estado proceso de transferencia"></p-multiSelect>
         </div>
+        <div class="filters-col">
+          <p-multiSelect
+            formControlName="transfer_status_id"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="transferStatusList"
+            optionLabel="transfer_status_name"
+            optionValue="transfer_status_id"
+            placeholder="Estado transferencia"></p-multiSelect>
+        </div>
       </div>
     </div>
   </div>
 </form>
+
+<p-button
+  *ngIf="selectedRequests.length > 0"
+  label="Marcar transferencia exitosa"
+  icon="pi pi-check"
+  [loading]="bulkMarking"
+  [style]="{ 'margin-bottom': '0.5rem' }"
+  (click)="openBulkMarkModal()">
+</p-button>
 
 <div class="mt-auto">
   <p-table
@@ -93,9 +120,20 @@
     [paginator]="false"
     [tableStyle]="{ 'min-width': '60rem' }"
     [scrollable]="true"
-    scrollHeight="500px">
+    scrollHeight="500px"
+    [selection]="selectedRequests"
+    (selectionChange)="onSelectionChange($event)">
     <ng-template pTemplate="header">
       <tr [style]="{ height: '50px' }">
+        <th style="width: 3%">
+          <p-checkbox
+            *ngIf="totalRows > 0"
+            [binary]="true"
+            [ngModel]="isHeaderCheckboxChecked()"
+            (ngModelChange)="onToggleSelectAllEligible($event)"
+            [disabled]="selectingAllEligible || loading || bulkMarking">
+          </p-checkbox>
+        </th>
         <th style="width: 2%"></th>
         <th pSortableColumn="radication_code" style="min-width: 7rem">
           Numero de radicado <p-sortIcon field="radication_code"></p-sortIcon>
@@ -136,10 +174,16 @@
         <th pSortableColumn="transfer_process_status_name" style="min-width: 5rem">
           Estado traslado <p-sortIcon field="transfer_process_status_name"></p-sortIcon>
         </th>
+        <th pSortableColumn="transfer_status_name" style="min-width: 5rem">
+          Estado transferencia <p-sortIcon field="transfer_status_name"></p-sortIcon>
+        </th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-row>
       <tr>
+        <td>
+          <p-tableCheckbox *ngIf="isEligibleForBulkMark(row)" [value]="row"></p-tableCheckbox>
+        </td>
         <td>
           <p-button
             icon="pi pi-eye"
@@ -159,6 +203,7 @@
         <td style="text-align: center">{{ row.payment_method_status_name }}</td>
         <td style="text-align: center">{{ row.payment_method_process_status_name }}</td>
         <td style="text-align: center">{{ row.transfer_process_status_name }}</td>
+        <td style="text-align: center">{{ row.transfer_status_name ?? '' }}</td>
       </tr>
     </ng-template>
   </p-table>
@@ -170,3 +215,10 @@
     [totalRecords]="totalRows"
     [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
 </div>
+
+<app-modal-successful-transfer
+  *ngIf="visibleBulkMarkModal"
+  [visible]="visibleBulkMarkModal"
+  [message]="bulkMarkMessage"
+  (setRta)="closeBulkMarkModal($event)">
+</app-modal-successful-transfer>

@@ -9,6 +9,7 @@ import {
   PaymentMethodRequestsInManagementByUser,
   PaymentMethodProcessStatusList,
   TransferProcessStatusList,
+  TransferStatusList,
 } from '../../../models/users.interface';
 import { RoutesApp } from '../../../enums/routes.enum';
 import { MessageService } from 'primeng/api';
@@ -16,6 +17,7 @@ import { SessionStorageItems } from '../../../enums/session-storage-items.enum';
 import { FormControl, FormGroup } from '@angular/forms';
 import { PaginatorState } from 'primeng/paginator';
 import { Table } from 'primeng/table';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-payment-method-request',
@@ -23,12 +25,25 @@ import { Table } from 'primeng/table';
   styleUrl: './payment-method-request.component.scss',
 })
 export class PaymentMethodRequestComponent implements OnInit {
+  readonly transferStatusPendingValue = 'PENDIENTE_NULL';
+
   requestList: PaymentMethodRequestList[] = [];
+  selectedRequests: PaymentMethodRequestList[] = [];
   statusList: RequestPaymentMethodStatusList[] = [];
   paymentMethodStatusList: PaymentMethodProcessStatusList[] = [];
   transferProcessStatusList: TransferProcessStatusList[] = [];
+  transferStatusList: TransferStatusList[] = [];
 
   loading: boolean = false;
+  exporting: boolean = false;
+  bulkMarking: boolean = false;
+  selectingAllEligible: boolean = false;
+  selectAllEligibleMode: boolean = false;
+  visibleBulkMarkModal: boolean = false;
+  bulkMarkMessage =
+    '¿Está seguro de marcar la transferencia exitosa para los registros seleccionados?';
+  private pendingRequestIds: number[] = [];
+  private isUpdatingBulkSelection = false;
   PERFIL!: string;
   user!: string;
   formGroup: FormGroup<any> = new FormGroup<any>({});
@@ -52,6 +67,7 @@ export class PaymentMethodRequestComponent implements OnInit {
       request_status_id: new FormControl(null),
       payment_method_status_id: new FormControl(null),
       transfer_process_status_id: new FormControl(null),
+      transfer_status_id: new FormControl(null),
     });
 
     // Normalización: si el multiSelect queda vacío, establecer null
@@ -70,6 +86,12 @@ export class PaymentMethodRequestComponent implements OnInit {
     this.formGroup.get('transfer_process_status_id')?.valueChanges.subscribe(value => {
       if (Array.isArray(value) && value.length === 0) {
         this.formGroup.get('transfer_process_status_id')?.setValue(null, { emitEvent: false });
+      }
+    });
+
+    this.formGroup.get('transfer_status_id')?.valueChanges.subscribe(value => {
+      if (Array.isArray(value) && value.length === 0) {
+        this.formGroup.get('transfer_status_id')?.setValue(null, { emitEvent: false });
       }
     });
   }
@@ -100,6 +122,17 @@ export class PaymentMethodRequestComponent implements OnInit {
 
           if (filtros.transfer_process_status_id && !Array.isArray(filtros.transfer_process_status_id)) {
             filtros.transfer_process_status_id = [filtros.transfer_process_status_id];
+          }
+
+          if (filtros.transfer_status_id && !Array.isArray(filtros.transfer_status_id)) {
+            filtros.transfer_status_id = [filtros.transfer_status_id];
+          }
+
+          if (Array.isArray(filtros.transfer_status_id)) {
+            filtros.transfer_status_id = filtros.transfer_status_id.map(
+              (id: number | string | null) =>
+                id === null || id === 0 ? this.transferStatusPendingValue : id
+            );
           }
 
           const valoresValidos = Object.keys(filtros).reduce((acc: any, key) => {
@@ -134,6 +167,7 @@ export class PaymentMethodRequestComponent implements OnInit {
     this.getRequestPaymentMethodStatusList();
     this.getPaymentMethodProcessStatusList();
     this.getTransferProcessStatusList();
+    this.getTransferStatusList();
   }
 
   onPageChange(event: PaginatorState) {
@@ -167,6 +201,7 @@ export class PaymentMethodRequestComponent implements OnInit {
     this.rows = 10;
     this.formGroup.reset();
     this.requestList = [];
+    this.clearBulkSelection();
     this.table?.clear();
     sessionStorage.removeItem('pmr_filtrosBusqueda');
     sessionStorage.removeItem('pmr_estadoPaginacion');
@@ -182,10 +217,15 @@ export class PaymentMethodRequestComponent implements OnInit {
   }
 
   searchRequests() {
-    const filtrosGuardados = sessionStorage.getItem('pmr_filtrosBusqueda');
-    let filtros = filtrosGuardados ? JSON.parse(filtrosGuardados) : {};
+    const payload = this.buildFilterPayload(this.page, this.rows);
+    this.getPaymentMethodRequestListByFilter(payload);
+  }
 
-    const payload: FilterPaymentMethodRequests = {
+  private buildFilterPayload(page: number, pageSize: number): FilterPaymentMethodRequests {
+    const filtrosGuardados = sessionStorage.getItem('pmr_filtrosBusqueda');
+    const filtros = filtrosGuardados ? JSON.parse(filtrosGuardados) : {};
+
+    return {
       i_date:
         this.formGroup.controls['dates_range'].value?.length > 0
           ? this.convertDates(this.formGroup.controls['dates_range'].value[0])
@@ -221,11 +261,89 @@ export class PaymentMethodRequestComponent implements OnInit {
         this.formGroup.controls['transfer_process_status_id'].value.length > 0
           ? this.formGroup.controls['transfer_process_status_id'].value
           : filtros['transfer_process_status_id'] || null,
-      page: this.page,
-      page_size: this.rows,
+      transfer_status_id: this.mapTransferStatusFilter(
+        this.formGroup.controls['transfer_status_id'].value?.length > 0
+          ? this.formGroup.controls['transfer_status_id'].value
+          : filtros['transfer_status_id'] || null
+      ),
+      page,
+      page_size: pageSize,
     };
+  }
 
-    this.getPaymentMethodRequestListByFilter(payload);
+  exportToExcel(): void {
+    if (!this.totalRows) {
+      this.showSuccessMessage('warn', 'Validación', 'No hay datos para exportar.');
+      return;
+    }
+
+    const payload = this.buildFilterPayload(1, this.totalRows);
+    this.exporting = true;
+
+    this.userService.getRequestPaymentMethodListByFilter(payload).subscribe({
+      next: (response: BodyResponse<PaymentMethodRequestList[]>) => {
+        if (response.code === 200 && response.data?.length) {
+          const exportData = response.data.map(row => ({
+            'Numero de radicado': (row as PaymentMethodRequestList & { radication_code?: string })
+              .radication_code || row.filing_number || '',
+            'Fecha y hora solicitud': this.formatDateTime(row.request_datetime),
+            'Tipo doc. trabajador': row.worker_document_type || '',
+            'Número doc. trabajador': row.worker_document_number || '',
+            'Nombre completo trabajador': row.worker_full_name || '',
+            'Tipo doc. administrador': row.admin_document_type || '',
+            'Número doc. administrador': row.admin_document_number || '',
+            'Nombre completo administrador': row.admin_full_name || '',
+            'Medio de pago anterior': row.previous_payment_method || '',
+            'Medio de pago nuevo': row.new_payment_method || '',
+            'Estado solicitud': row.payment_method_status_name || '',
+            'Estado medio de pago': row.payment_method_process_status_name || '',
+            'Estado traslado': row.transfer_process_status_name || '',
+            'Estado transferencia': row.transfer_status_name ?? '',
+          }));
+          this.downloadExcel(exportData);
+        } else {
+          this.showSuccessMessage('warn', 'Validación', 'No hay datos para exportar.');
+        }
+      },
+      error: () => {
+        this.showSuccessMessage('error', 'Error', 'Ocurrió un error al exportar los datos.');
+      },
+      complete: () => {
+        this.exporting = false;
+      },
+    });
+  }
+
+  private formatDateTime(value: string | null | undefined): string {
+    if (!value) return '';
+
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  private downloadExcel(exportData: Record<string, string>[]): void {
+    import('xlsx').then(xlsx => {
+      const worksheet = xlsx.utils.json_to_sheet(exportData);
+      const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+      const excelBuffer: ArrayBuffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const data = new Blob([excelBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+      });
+
+      FileSaver.saveAs(
+        data,
+        `Solicitudes_cambio_medio_pago_export_${new Date().getTime()}.xlsx`
+      );
+    });
   }
 
   convertDates(dateString: string) {
@@ -324,8 +442,201 @@ export class PaymentMethodRequestComponent implements OnInit {
     });
   }
 
+  getTransferStatusList() {
+    this.userService.getTransferStatusList().subscribe({
+      next: (response: BodyResponse<TransferStatusList[]>) => {
+        if (response.code === 200) {
+          this.transferStatusList = [
+            {
+              transfer_status_id: this.transferStatusPendingValue as unknown as number,
+              transfer_status_name: 'Pendiente',
+              is_active: 1,
+            },
+            ...response.data,
+          ];
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
+        }
+      },
+      error: (err: any) => {
+        console.log(err);
+      },
+      complete: () => {
+        console.log('La suscripción ha sido completada.');
+      },
+    });
+  }
+
+  private mapTransferStatusFilter(
+    value: (number | string | null)[] | null | undefined
+  ): number[] | null {
+    if (!value || !Array.isArray(value) || value.length === 0) {
+      return null;
+    }
+
+    return value.map(id =>
+      id === this.transferStatusPendingValue || id === null ? 0 : (id as number)
+    );
+  }
+
   showSuccessMessage(state: string, title: string, message: string) {
     this.messageService.add({ severity: state, summary: title, detail: message });
+  }
+
+  isEligibleForBulkMark(row: PaymentMethodRequestList): boolean {
+    return (
+      row.payment_method_status_name?.trim() === 'Tramitada' &&
+      row.payment_method_process_status_name?.trim() === 'Aplicado' &&
+      row.transfer_process_status_name?.trim() === 'Aplicado con saldo' &&
+      (row.transfer_status_name === null ||
+        row.transfer_status_name === undefined ||
+        row.transfer_status_name === '')
+    );
+  }
+
+  hasEligibleRowsOnPage(): boolean {
+    return this.requestList.some(row => this.isEligibleForBulkMark(row));
+  }
+
+  isHeaderCheckboxChecked(): boolean {
+    if (this.selectAllEligibleMode) {
+      return true;
+    }
+
+    const eligibleOnPage = this.requestList.filter(row => this.isEligibleForBulkMark(row));
+    if (!eligibleOnPage.length || !this.selectedRequests.length) {
+      return false;
+    }
+
+    return eligibleOnPage.every(row =>
+      this.selectedRequests.some(selected => selected.request_id === row.request_id)
+    );
+  }
+
+  onToggleSelectAllEligible(checked: boolean): void {
+    if (checked) {
+      this.selectAllEligibleRequests();
+      return;
+    }
+
+    this.selectAllEligibleMode = false;
+    this.clearBulkSelection();
+  }
+
+  onSelectionChange(selection: PaymentMethodRequestList[]): void {
+    if (this.isUpdatingBulkSelection) {
+      return;
+    }
+
+    if (this.selectAllEligibleMode) {
+      this.selectAllEligibleMode = false;
+    }
+
+    this.selectedRequests = selection;
+  }
+
+  selectAllEligibleRequests(): void {
+    if (!this.totalRows) {
+      this.showSuccessMessage('warn', 'Validación', 'No hay registros para seleccionar.');
+      return;
+    }
+
+    this.selectingAllEligible = true;
+    const payload = this.buildFilterPayload(1, this.totalRows);
+
+    this.userService.getRequestPaymentMethodListByFilter(payload).subscribe({
+      next: (response: BodyResponse<PaymentMethodRequestList[]>) => {
+        if (response.code === 200) {
+          const eligible = response.data.filter(row => this.isEligibleForBulkMark(row));
+
+          if (!eligible.length) {
+            this.showSuccessMessage(
+              'warn',
+              'Validación',
+              'No hay registros elegibles para marcar en el resultado actual.'
+            );
+            this.selectAllEligibleMode = false;
+            this.clearBulkSelection();
+            return;
+          }
+
+          this.isUpdatingBulkSelection = true;
+          this.selectedRequests = eligible;
+          this.selectAllEligibleMode = true;
+          this.isUpdatingBulkSelection = false;
+        } else {
+          this.showSuccessMessage('error', 'Fallida', 'No fue posible cargar los registros.');
+        }
+      },
+      error: () => {
+        this.showSuccessMessage('error', 'Error', 'Ocurrió un error al seleccionar los registros.');
+      },
+      complete: () => {
+        this.selectingAllEligible = false;
+      },
+    });
+  }
+
+  openBulkMarkModal(): void {
+    const requestIds = this.selectedRequests
+      .filter(row => this.isEligibleForBulkMark(row))
+      .map(row => row.request_id);
+
+    if (!requestIds.length) {
+      this.showSuccessMessage('warn', 'Validación', 'No hay registros válidos seleccionados.');
+      return;
+    }
+
+    this.pendingRequestIds = [...requestIds];
+    this.visibleBulkMarkModal = true;
+  }
+
+  closeBulkMarkModal(confirmed: boolean): void {
+    this.visibleBulkMarkModal = false;
+
+    if (!confirmed) {
+      this.pendingRequestIds = [];
+      return;
+    }
+
+    const requestIds = [...this.pendingRequestIds];
+    this.pendingRequestIds = [];
+
+    if (!requestIds.length) {
+      this.showSuccessMessage('warn', 'Validación', 'No hay registros válidos para marcar.');
+      return;
+    }
+
+    this.bulkMarking = true;
+
+    this.userService.markSuccessfulTransfer({ request_id: requestIds }).subscribe({
+      next: (response: BodyResponse<string>) => {
+        if (response.code === 200) {
+          this.showSuccessMessage(
+            'success',
+            'Éxito',
+            'Las transferencias fueron marcadas exitosamente.'
+          );
+        } else {
+          this.showSuccessMessage('error', 'Fallida', response.message || 'Operación fallida.');
+        }
+      },
+      error: () => {
+        this.showSuccessMessage('error', 'Error', 'Ocurrió un error al marcar las transferencias.');
+      },
+      complete: () => {
+        this.bulkMarking = false;
+        this.clearBulkSelection();
+        this.searchRequests();
+      },
+    });
+  }
+
+  private clearBulkSelection(): void {
+    this.selectedRequests = [];
+    this.pendingRequestIds = [];
+    this.selectAllEligibleMode = false;
+    this.table?.clear();
   }
 
   redirectDetails(request_id: number) {
