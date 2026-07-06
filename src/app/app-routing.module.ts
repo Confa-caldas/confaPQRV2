@@ -326,6 +326,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.SEARCH_RPA_AFI_INCONSISTENCY,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-rpa-afi-inconsistency/search-rpa-afi-inconsistency.module').then(
+        m => m.SearchRpaAfiInconsistencyModule
+      ),
+  },
+  {
     path: RoutesApp.SEARCH_UPDATES_DATA,
     canActivate: [sessionGuard],
     component: LayoutComponent,
@@ -511,6 +520,15 @@ const routes: Routes = [
     component: LayoutComponent,
     loadChildren: () =>
       import('./components/private/afiliation-rejection/afiliation-rejection.module').then(m => m.AfiliationRejectionModule),
+  },
+  {
+    path: RoutesApp.AFI_MANUAL_MANAGEMENT,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-manual-management/afiliation-manual-management.module').then(
+        m => m.AfiliationManualManagementModule
+      ),
   },
   {
     path: RoutesApp.MAIN_PAGE,

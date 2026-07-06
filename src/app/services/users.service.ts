@@ -67,6 +67,9 @@ import {
   CompanyUpdateRecord,
   SimilarRequest,
   FilterRequestsAfiliation,
+  FilterRpaAfiInconsistency,
+  RpaAfiInconsistencyListItem,
+  BulkChangeRpaStatusPayload,
   RequestsListAfiliation,
   AfiliacionRequestDetailsData,
   RequestStatusAfiliationList,
@@ -87,6 +90,7 @@ import {
   AdjuntoTipoPorParentesco,
   PresignAdjuntoAdicionalData,
   ActualizarEstadoGestionAfiliacionPayload,
+  AfiliationIntegranteHistoriaGestionRow,
   FilterRequestsMassive,
   RequestsMassiveAfiliationListItem,
   ValidarRequisitosGestionPersonaData,
@@ -113,6 +117,7 @@ import {
   AssociateBankAccountList,
   AfiOccupationList,
   AfiMotivoRechazoParamList,
+  AfiMotivoGestionManualList,
   DocumentTypeList,
   CreateDocumentType,
   AdditionalDocsRequest,
@@ -337,6 +342,18 @@ export class Users {
   getRequestHistoricAfiliation<T = RequestHistoric[]>(payload: Pagination) {
     return this.http.post<BodyResponse<T>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION}`,
+      payload
+    );
+  }
+  /**
+   * Lambda → PL `afiliaciones.obtener_solicitud_persona_historia_pagination` (page, page_size).
+   * Histórico de cambios de estado por integrante (trabajador / beneficiarios).
+   */
+  getRequestHistoricAfiliationIntegrantes(
+    payload: Pagination
+  ) {
+    return this.http.post<BodyResponse<AfiliationIntegranteHistoriaGestionRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION_INTEGRANTES}`,
       payload
     );
   }
@@ -732,6 +749,18 @@ export class Users {
   getRequestAfiliationListByFilter(payload: FilterRequestsAfiliation) {
     return this.http.post<BodyResponse<RequestsListAfiliation[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_BY_FILTER}`,
+      payload
+    );
+  }
+  getRpaAfiInconsistencyListByFilter(payload: FilterRpaAfiInconsistency) {
+    return this.http.post<BodyResponse<RpaAfiInconsistencyListItem[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.RPA_AFI_INCONSISTENCY_BY_FILTER}`,
+      payload
+    );
+  }
+  bulkChangeRpaAfiInconsistencyStatus(payload: BulkChangeRpaStatusPayload) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.RPA_AFI_INCONSISTENCY_BULK_STATUS}`,
       payload
     );
   }
@@ -1722,6 +1751,32 @@ export class Users {
   inactivateAfiMotivoRechazo(payload: AfiMotivoRechazoParamList) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_MOTIVO_RECHAZO}`,
+      payload
+    );
+  }
+
+  /// Parametrización motivos de afiliación manual
+  getAfiMotivoGestionManualListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiMotivoGestionManualList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_MOTIVO_GESTION_MANUAL_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiMotivoGestionManual(payload: AfiMotivoGestionManualList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_MOTIVO_GESTION_MANUAL}`,
+      payload
+    );
+  }
+  modifyAfiMotivoGestionManual(payload: AfiMotivoGestionManualList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_MOTIVO_GESTION_MANUAL}`,
+      payload
+    );
+  }
+  inactivateAfiMotivoGestionManual(payload: AfiMotivoGestionManualList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_MOTIVO_GESTION_MANUAL}`,
       payload
     );
   }

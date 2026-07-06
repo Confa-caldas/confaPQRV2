@@ -4,8 +4,13 @@ import { SessionStorageItems } from '../../../enums/session-storage-items.enum';
 import { Router } from '@angular/router';
 import { Users } from '../../../services/users.service';
 import { formatDate } from '@angular/common';
-import { BodyResponse } from '../../../models/shared/body-response.inteface';
-import { RequestsList, FilterRequests } from '../../../models/users.interface';
+import {
+  FilterRpaAfiInconsistency,
+  FilterRequests,
+  RequestsList,
+  RpaAfiInconsistencyListItem,
+} from '../../../models/users.interface';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-layout',
@@ -18,9 +23,15 @@ export class LayoutComponent implements OnInit {
   user: string = '';
   mostrarNotificaciones = false;
   requestListByAssigned: RequestsList[] = [];
+  rpaInconsistencyList: RpaAfiInconsistencyListItem[] = [];
   statusOptions!: string[];
   daysOption!: number[];
   totalRowsAssigned: number = 0;
+  totalRowsRpaInconsistency: number = 0;
+
+  get totalNotifications(): number {
+    return this.totalRowsAssigned + this.totalRowsRpaInconsistency;
+  }
 
   solicitudesPendientes = [
     { nombre: 'Solicitud 1', fechaVencimiento: '2024-02-15' },
@@ -91,36 +102,39 @@ export class LayoutComponent implements OnInit {
 
   loadNotification(user: string) {
     const payload: FilterRequests = {
-          i_date: null,
-          f_date: null,
-          filing_number: null,
-          doc_id: null,
-          applicant_name: null,
-          request_days: null,
-          applicant_type_id: null,
-          request_type_id: null,
-          status_id: [2, 3, 5, 6, 7],
-          priority_level: null,
-          confa_user: null,
-          area_name: null,
-          page: 1,
-          page_size: 100
-        };
-        this.getRequestListByAssignedUserByFilter(payload);
-  }
+      i_date: null,
+      f_date: null,
+      filing_number: null,
+      doc_id: null,
+      applicant_name: null,
+      request_days: null,
+      applicant_type_id: null,
+      request_type_id: null,
+      status_id: [2, 3, 5, 6, 7],
+      priority_level: null,
+      confa_user: null,
+      area_name: null,
+      page: 1,
+      page_size: 100,
+    };
 
-  getRequestListByAssignedUserByFilter(payload: FilterRequests) {
-    this.userService.getRequestListByAssignedUser(this.user, payload).subscribe({
-      next: (response: BodyResponse<RequestsList[]>) => {
-        if (response.code === 200) {
-          this.requestListByAssigned = response.data;
-          this.daysOption = Array.from(
-            new Set(this.requestListByAssigned.map(item => item.request_days))
-          );
-          this.statusOptions = Array.from(
-            new Set(this.requestListByAssigned.map(item => item.status_name))
-          );
-          this.requestListByAssigned = response.data.map(item => {
+    const rpaPayload: FilterRpaAfiInconsistency = {
+      filing_number: null,
+      doc_id_tr: null,
+      doc_id_bn: null,
+      transaccion: null,
+      con_radicado_genesys: null,
+      page: 1,
+      page_size: 100,
+    };
+
+    forkJoin({
+      pqr: this.userService.getRequestListByAssignedUser(this.user, payload),
+      rpa: this.userService.getRpaAfiInconsistencyListByFilter(rpaPayload),
+    }).subscribe({
+      next: ({ pqr, rpa }) => {
+        if (pqr.code === 200) {
+          this.requestListByAssigned = pqr.data.map(item => {
             const transformedDate = formatDate(item.filing_date, 'MM/dd/yyyy', 'en-US');
             return { ...item, filing_date: transformedDate };
           });
@@ -129,15 +143,25 @@ export class LayoutComponent implements OnInit {
               item.filing_date_date = new Date(item.filing_date);
             }
           });
-          this.totalRowsAssigned = Number(response.message);
-        } else {
+          this.daysOption = Array.from(new Set(this.requestListByAssigned.map(item => item.request_days)));
+          this.statusOptions = Array.from(new Set(this.requestListByAssigned.map(item => item.status_name)));
+          this.totalRowsAssigned = Number(pqr.message);
+        }
+
+        if (rpa.code === 200 && rpa.data) {
+          const userNormalized = user.trim().toLowerCase();
+          const assigned = rpa.data.filter(
+            item => (item.assigned_user ?? '').trim().toLowerCase() === userNormalized
+          );
+          this.rpaInconsistencyList = assigned.map(item => ({
+            ...item,
+            filing_date: formatDate(item.filing_date, 'MM/dd/yyyy', 'en-US'),
+          }));
+          this.totalRowsRpaInconsistency = this.rpaInconsistencyList.length;
         }
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         console.log(err);
-      },
-      complete: () => {
-        console.log('La suscripción ha sido completada.');
       },
     });
   }

@@ -48,7 +48,14 @@
         <div class="info-list">
           <div class="info-row">
             <span class="info-label">Nombre completo</span>
-            <span class="info-value">{{ trabajadorNombreCompleto }}</span>
+            <span class="info-value info-value--with-estado">
+              {{ trabajadorNombreCompleto }}
+              <p-tag
+                [value]="textoEstadoGestionIntegrante('trabajador')"
+                [severity]="severidadEstadoGestionIntegrante('trabajador')"
+                [rounded]="true"
+                styleClass="integrante-estado-gestion-tag"></p-tag>
+            </span>
           </div>
 
           <div class="info-row">
@@ -167,16 +174,15 @@
       <span
         *ngIf="afiliationRequestDetails.solicitud.id_estado_solicitud === 1"
         class="assign-afiliacion-tooltip-wrap"
-        [pTooltip]="mensajeTooltipAsignarInhabilitada"
+        [pTooltip]="tooltipAsignarPorFila(afiliationRequestDetails.solicitud)"
         [tooltipDisabled]="puedeActivarBotonAsignarAfiliacion()"
         tooltipPosition="top"
         tooltipStyleClass="tooltip-asignar-bloqueado">
         <p-button
           [label]="
-            afiliationRequestDetails.solicitud.usuario_gestion === null ||
-            afiliationRequestDetails.solicitud.usuario_gestion === ''
-              ? 'Asignar'
-              : 'Reasignar'
+            afiliationRequestDetails.solicitud.usuario_gestion?.trim()
+              ? 'Reasignar'
+              : 'Asignar'
           "
           [disabled]="!puedeActivarBotonAsignarAfiliacion()"
           (click)="assignRequestAfiliation(afiliationRequestDetails)"
@@ -464,7 +470,14 @@
     <p-tabPanel header="Trabajador" headerStyleClass="p-tabview-nav-link-3">
       <div class="tab-data-view">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2 tab-data-title-actions">
-          <h3 class="tab-data-section-title mb-0">Datos del afiliado</h3>
+          <div class="tab-data-title-with-estado">
+            <h3 class="tab-data-section-title mb-0">Datos del afiliado</h3>
+            <p-tag
+              [value]="textoEstadoGestionIntegrante('trabajador')"
+              [severity]="severidadEstadoGestionIntegrante('trabajador')"
+              [rounded]="true"
+              styleClass="integrante-estado-gestion-tag"></p-tag>
+          </div>
           <div class="d-flex flex-wrap gap-2 align-items-center tab-data-header-actions">
             <p-button
               label="Ver Datos adicionales"
@@ -474,7 +487,9 @@
               tooltipPosition="top"
               (onClick)="abrirResumenIntegranteAfiliacionWs('trabajador')"
               [style]="{ 'border-radius': '10px' }"></p-button>
-            <span class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
+            <span
+              *ngIf="mostrarBotonGestionarEstadoIntegrante('trabajador')"
+              class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
               <p-button
                 label="Gestionar estado"
                 icon="pi pi-cog"
@@ -819,12 +834,19 @@
     <!-- ===================== BENEFICIARIOS ===================== -->
     <p-tabPanel header="Beneficiarios" headerStyleClass="p-tabview-nav-link-4">
       <div class="tab-data-view">
-        <ng-container *ngIf="d.beneficiarios?.length; else noBenef">
+        <ng-container *ngIf="d.beneficiarios.length; else noBenef">
           <div class="benef-list">
             <div class="benef-card" *ngFor="let b of d.beneficiarios; let iBenef = index">
               <div class="benef-card-header">
                 <div class="benef-card-header-main">
-                  <span class="benef-card-title">Beneficiario {{ iBenef + 1 }}: {{ getNombreBeneficiario(b) }}</span>
+                  <span class="benef-card-title-row">
+                    <span class="benef-card-title">Beneficiario {{ iBenef + 1 }}: {{ getNombreBeneficiario(b) }}</span>
+                    <p-tag
+                      [value]="textoEstadoGestionIntegrante('beneficiario', iBenef)"
+                      [severity]="severidadEstadoGestionIntegrante('beneficiario', iBenef)"
+                      [rounded]="true"
+                      styleClass="integrante-estado-gestion-tag"></p-tag>
+                  </span>
                   <span class="benef-card-meta">{{ b.persona.tipo_documento }} {{ b.persona.numero_documento }} · {{ b.beneficiario.parentesco || '—' }}</span>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center benef-card-header-actions">
@@ -836,7 +858,9 @@
                     tooltipPosition="top"
                     (onClick)="abrirResumenIntegranteAfiliacionWs('beneficiario', iBenef)"
                     [style]="{ 'border-radius': '10px' }"></p-button>
-                  <span class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
+                  <span
+                    *ngIf="mostrarBotonGestionarEstadoIntegrante('beneficiario', iBenef)"
+                    class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
                     <p-button
                       label="Gestionar estado"
                       icon="pi pi-cog"
@@ -1340,6 +1364,7 @@
     <!-- ===================== HISTORICO GESTION ===================== -->
     <p-tabPanel header="Histórico Gestión" headerStyleClass="p-tabview-nav-link-2">
       <div class="tab-data-view historial-gestion-tab">
+        <h4 class="tab-data-section-subtitle mb-3">Histórico solicitud general</h4>
         <p-table
           [value]="requestHistoric"
           [loading]="cargandoHistorialGestion"
@@ -1414,6 +1439,95 @@
           [first]="firstHistoric"
           [rows]="rowsHistoric"
           [totalRecords]="totalRowsHistoric"
+          [rowsPerPageOptions]="[10, 20, 30]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"></p-paginator>
+
+        <h4 class="tab-data-section-subtitle mt-4 mb-3">Histórico integrantes</h4>
+        <p-table
+          [value]="requestHistoricIntegrantes"
+          [loading]="cargandoHistorialGestionIntegrantes"
+          [scrollable]="true"
+          scrollHeight="420px"
+          styleClass="p-datatable-sm historial-gestion-table"
+          responsiveLayout="stack"
+          [paginator]="false"
+          [tableStyle]="{ 'min-width': '48rem' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col" style="min-width: 9.5rem">Fecha / hora</th>
+              <th scope="col" style="min-width: 10rem">Integrante</th>
+              <th scope="col" style="min-width: 9rem">Identificación</th>
+              <th scope="col" style="min-width: 6rem">Estado</th>
+              <th scope="col" style="min-width: 8rem">Responsable asignado</th>
+              <th scope="col" style="min-width: 14rem">Observaciones / detalle</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+            <tr>
+              <td>
+                <span class="p-column-title">Fecha / hora</span>
+                <span class="historial-celda-valor">{{ historialFechaHoraMostrar(row) }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Integrante</span>
+                <span class="historial-celda-valor">{{ nombreIntegranteHistorial(row) }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Identificación</span>
+                <span class="historial-celda-valor">{{ identificacionIntegranteHistorial(row) }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Estado</span>
+                <span class="historial-celda-valor">{{ estadoHistorialCodigo(row) || '—' }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Responsable asignado</span>
+                <span class="historial-celda-valor">{{
+                  row.responsable_asignado || row.user_name_completed || '—'
+                }}</span>
+              </td>
+              <td class="historial-td-obs">
+                <span class="p-column-title">Observaciones / detalle</span>
+                <div class="historial-obs-wrap">
+                  <ng-container *ngIf="row.detalle_observacion?.trim(); else sinObsIntegranteTpl">
+                    <div
+                      class="historial-obs-texto"
+                      [class.historial-obs-texto--collapsed]="
+                        observacionHistorialLarga(row) && !isHistorialObsExpandidoIntegrante(rowIndex)
+                      ">
+                      {{ row.detalle_observacion }}
+                    </div>
+                    <button
+                      *ngIf="observacionHistorialLarga(row)"
+                      type="button"
+                      class="historial-obs-toggle"
+                      (click)="toggleHistorialObsIntegrante(rowIndex)">
+                      {{ isHistorialObsExpandidoIntegrante(rowIndex) ? 'Ver menos' : 'Ver más' }}
+                    </button>
+                  </ng-container>
+                  <ng-template #sinObsIntegranteTpl>
+                    <span class="historial-sin-obs">Sin observaciones</span>
+                  </ng-template>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="historial-empty">
+                <ng-container *ngIf="!cargandoHistorialGestionIntegrantes">
+                  No hay registros disponibles en el histórico de integrantes.
+                </ng-container>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <p-paginator
+          (onPageChange)="onPageChangeHistoricIntegrantes($event)"
+          [first]="firstHistoricIntegrantes"
+          [rows]="rowsHistoricIntegrantes"
+          [totalRecords]="totalRowsHistoricIntegrantes"
           [rowsPerPageOptions]="[10, 20, 30]"
           [showCurrentPageReport]="true"
           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"></p-paginator>
@@ -1526,6 +1640,41 @@
         severity="secondary"
         [disabled]="subiendoAdjuntosAdicionales"
         (onClick)="closeModalAdjuntosAdicionales()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmación rechazo trabajador (cascade integrantes + solicitud Rechazada) -->
+<p-dialog
+  header="Confirmar rechazo del trabajador"
+  [(visible)]="visibleConfirmarRechazoTrabajador"
+  [modal]="true"
+  [style]="{ width: '460px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarConfirmacionRechazoTrabajador()">
+  <div class="dialog-content">
+    <p class="confirmation-text">
+      Al rechazar al trabajador, todos los integrantes pasarán a estado <strong>Rechazado</strong>
+      y la solicitud quedará en <strong>Rechazada</strong>. ¿Desea continuar?
+    </p>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Sí, rechazar"
+        icon="pi pi-check"
+        severity="danger"
+        [loading]="guardandoEstadoGestionSolicitud"
+        [disabled]="guardandoEstadoGestionSolicitud"
+        (onClick)="confirmarRechazoTrabajadorGestionEstado()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        [disabled]="guardandoEstadoGestionSolicitud"
+        (onClick)="cerrarConfirmacionRechazoTrabajador()"
         [style]="{ 'border-radius': '6px' }"></p-button>
     </div>
   </div>

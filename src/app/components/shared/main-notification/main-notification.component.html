@@ -1,21 +1,72 @@
 <div class="notificaciones-container">
-  <h3>🔔 Solicitudes Pendientes</h3>
-  <div [ngClass]="{'scroll-container': requestListByAssigned.length > 7}">
-      <ul *ngIf="requestListByAssigned.length > 0; else sinSolicitudes">
-          <li *ngFor="let solicitud of requestListByAssigned">
-              <a (click)="redirectDetails(solicitud.request_id)">
-                  <div class="notificacion-item">
-                      <div class="notificacion-texto">
-                          <strong>Radicación Id: {{ solicitud.request_id }}</strong>
-                          <p class="fecha">📅 {{ solicitud.filing_date }}</p>
-                      </div>
-                  </div>
-              </a>
-          </li>
-      </ul>
+  <div class="notificaciones-tabs" role="tablist">
+    <button
+      type="button"
+      class="notificaciones-tab"
+      role="tab"
+      [class.active]="activeSection === 'pqr'"
+      [attr.aria-selected]="activeSection === 'pqr'"
+      (click)="setSection('pqr')">
+      PQRS
+      <span class="tab-badge" *ngIf="requestListByAssigned.length">{{ requestListByAssigned.length }}</span>
+    </button>
+    <button
+      type="button"
+      class="notificaciones-tab"
+      role="tab"
+      [class.active]="activeSection === 'rpa'"
+      [attr.aria-selected]="activeSection === 'rpa'"
+      (click)="setSection('rpa')">
+      Afiliación RPA
+      <span class="tab-badge tab-badge--warning" *ngIf="rpaInconsistencyList.length">{{
+        rpaInconsistencyList.length
+      }}</span>
+    </button>
   </div>
 
-  <ng-template #sinSolicitudes>
-      <p class="sin-solicitudes">No tienes solicitudes pendientes.</p>
-  </ng-template>
+  <section *ngIf="activeSection === 'pqr'" class="notificaciones-seccion" role="tabpanel">
+    <h4 class="notificaciones-subtitulo">Solicitudes pendientes</h4>
+    <div [ngClass]="{ 'scroll-container': requestListByAssigned.length > 7 }">
+      <ul *ngIf="requestListByAssigned.length > 0; else sinSolicitudesPqr">
+        <li *ngFor="let solicitud of requestListByAssigned">
+          <a (click)="redirectDetails(solicitud.request_id)">
+            <div class="notificacion-item">
+              <div class="notificacion-texto">
+                <strong>Radicación Id: {{ solicitud.request_id }}</strong>
+                <p class="fecha">📅 {{ solicitud.filing_date }}</p>
+              </div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <ng-template #sinSolicitudesPqr>
+      <p class="sin-solicitudes">No tienes solicitudes PQRS pendientes.</p>
+    </ng-template>
+  </section>
+
+  <section *ngIf="activeSection === 'rpa'" class="notificaciones-seccion" role="tabpanel">
+    <h4 class="notificaciones-subtitulo">Inconsistencias RPA asignadas</h4>
+    <div [ngClass]="{ 'scroll-container': rpaInconsistencyList.length > 7 }">
+      <ul *ngIf="rpaInconsistencyList.length > 0; else sinSolicitudesRpa">
+        <li *ngFor="let solicitud of rpaInconsistencyList">
+          <a (click)="redirectAfiliationDetails(solicitud.request_id)">
+            <div class="notificacion-item">
+              <div class="notificacion-texto">
+                <strong>Rad: {{ solicitud.filing_number || solicitud.request_id }}</strong>
+                <p class="fecha">📅 {{ solicitud.filing_date }}</p>
+                <p class="detalle-rpa" *ngIf="solicitud.estado_integrante_solicitud">
+                  ⚠️ {{ solicitud.estado_integrante_solicitud }}
+                </p>
+                <p class="detalle-empresa" *ngIf="solicitud.name_empresa">{{ solicitud.name_empresa }}</p>
+              </div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <ng-template #sinSolicitudesRpa>
+      <p class="sin-solicitudes">No tienes afiliaciones con inconsistencias RPA.</p>
+    </ng-template>
+  </section>
 </div>

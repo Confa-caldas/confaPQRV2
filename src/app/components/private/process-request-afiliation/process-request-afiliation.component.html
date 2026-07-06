@@ -171,7 +171,7 @@
                       PERFIL !== 'CONSULTANTE'
                     "
                     class="assign-btn-tooltip-wrap"
-                    [pTooltip]="mensajeTooltipAsignarInhabilitada"
+                    [pTooltip]="tooltipAsignarPorFila(requestList)"
                     [tooltipDisabled]="puedeActivarAsignar(requestList)"
                     tooltipPosition="top"
                     tooltipStyleClass="tooltip-asignar-bloqueado">
@@ -198,9 +198,9 @@
                 <td>
                   <div *ngIf="requestList.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'" class="process-afi-actions-col">
                     <span
-                      class="assign-btn-tooltip-wrap assign-btn-tooltip-wrap--block"
-                      [pTooltip]="mensajeTooltipAsignarInhabilitada"
-                      [tooltipDisabled]="puedeActivarAsignar(requestList)"
+                    class="assign-btn-tooltip-wrap assign-btn-tooltip-wrap--block"
+                    [pTooltip]="tooltipAsignarPorFila(requestList)"
+                    [tooltipDisabled]="puedeActivarAsignar(requestList)"
                       tooltipPosition="top"
                       tooltipStyleClass="tooltip-asignar-bloqueado">
                       <button
@@ -245,11 +245,21 @@
   (setRtaParameter)="setParameter($event)"></app-modal-review-state>
 <p-toast></p-toast>
 
-<app-modal-assign-selector
+<app-modal-assign-afiliation-selector
   *ngIf="visibleAssignedInput"
   [visible]="visibleAssignedInput"
   [message]="message"
   [buttonmsg]="buttonmsg"
   [parameter]="parameter"
   (setRta)="closeDialogAssignedInput($event)"
-  (setRtaParameter)="setParameterAssigned($event)"></app-modal-assign-selector>
+  (setRtaParameter)="setParameterAssigned($event)"></app-modal-assign-afiliation-selector>
+
+<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [message2]="message2"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>

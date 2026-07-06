@@ -253,6 +253,15 @@ export interface AfiliationSolicitudHistoriaGestionRow {
   answer_request?: string | null;
 }
 
+/** Fila histórico gestión de integrantes (trabajador / beneficiarios). */
+export interface AfiliationIntegranteHistoriaGestionRow extends AfiliationSolicitudHistoriaGestionRow {
+  id_persona?: number | null;
+  tipo_persona?: string | null;
+  nombre_integrante?: string | null;
+  tipo_documento?: string | null;
+  numero_documento?: string | null;
+}
+
 export interface AssignUserRequest {
   request_id: number;
   filing_number?: number;
@@ -727,6 +736,54 @@ export interface FilterRequestsAfiliation {
  * Mismo contrato que {@link FilterRequestsAfiliation} (alineado con búsqueda pendientes / asignadas).
  */
 export type FilterRequestsAfiliationAssigned = FilterRequestsAfiliation;
+
+/** Filtros consulta inconsistencias RPA (solicitudes directas a afiliación RPA sin usuario back). */
+export interface FilterRpaAfiInconsistency {
+  filing_number?: number | string | null;
+  doc_id_tr?: string | null;
+  doc_id_bn?: string | null;
+  transaccion?: string | null;
+  /** Si | No — indica si tiene radicado Genesys. */
+  con_radicado_genesys?: 'Si' | 'No' | null;
+  page?: number;
+  page_size?: number;
+}
+
+/** Fila listado inconsistencias RPA. */
+export interface RpaAfiInconsistencyListItem {
+  request_id: number;
+  filing_number: string | null;
+  filing_date: string;
+  tipo_doc_trabajador?: string | null;
+  type_doc_id_tr?: string | null;
+  doc_id_tr?: string | null;
+  doc_trabajador?: string | null;
+  tipo_doc_beneficiario?: string | null;
+  tipos_doc_beneficiarios?: string | null;
+  doc_id_bn?: string | null;
+  documents_beneficiarios?: string | null;
+  name_empresa: string;
+  status_name?: string | null;
+  request_status: number;
+  cod_estatus?: string;
+  estado_integrante_solicitud?: string | null;
+  pantalla_error?: string | null;
+  observaciones?: string | null;
+  fecha_ejecucion?: string | null;
+  hora_inicio_ejecucion?: string | null;
+  hora_fin_ejecucion?: string | null;
+  transaccion?: string | null;
+  assigned_user?: string | null;
+  user_name_completed?: string;
+  mensaje_reasignacion?: string;
+  total_count?: number;
+}
+
+/** Payload cambio masivo a Pendiente afiliación RPA. */
+export interface BulkChangeRpaStatusPayload {
+  request_ids: number[];
+  id_estado_solicitud: number;
+}
 export interface FilterNovedad {
   i_date: string | null;
   f_date: string | null;
@@ -1480,6 +1537,17 @@ export interface AfiOccupationList {
   updated_date?: string;
 }
 
+/** Motivos por los cuales la afiliación se realiza manualmente. */
+export interface AfiMotivoGestionManualList {
+  id?: number;
+  motivo_gestion: string;
+  estado?: boolean | number;
+  created_by?: string;
+  created_date?: string;
+  updated_by?: string;
+  updated_date?: string;
+}
+
 export interface ReasonAccountUpdateList {
   reason_account_update_id?: number;
   reason: string;
@@ -1699,17 +1767,18 @@ export interface ValidarRequisitosGestionPersonaData {
 /**
  * Actualizar estado desde el modal "Gestionar estado de afiliado".
  * Requisitos por persona ya validados antes de abrir el modal (`validarRequisitosGestionPersona`).
- * El backend debe aceptar el mismo contrato (PUT).
  */
 export interface ActualizarEstadoGestionAfiliacionPayload {
   id_solicitud: number;
-  /** Persona (trabajador o beneficiario) cuyo estado de afiliación se actualiza. */
+  /** Registro en afiliacion_solicitud_persona (persona.id del detalle). */
   persona_id: number;
-  /** PK `parametros_estado_solicitud.id` del estado elegido. */
-  id_estado_solicitud: number;
-  /** `codigo` en BD (misma fila que `id_estado_solicitud`). */
-  estado_afiliado: string;
-  /** Id del catálogo de motivos de rechazo; enviar cuando el estado es Rechazado (`id_estado_solicitud` 4). */
+  /** PK `parametros_estado_gestion_persona.id`. */
+  id_estado_gestion_persona: number;
+  /** Alias legacy; mismo valor que id_estado_gestion_persona. */
+  id_estado_solicitud?: number;
+  /** Código legible del estado (informativo). */
+  estado_afiliado?: string;
+  /** Obligatorio solo cuando el estado es Rechazado; null en los demás. */
   id_motivo_rechazo?: number | null;
 }
 
@@ -1756,6 +1825,8 @@ export interface Persona {
   fecha_expedicion_doc: string | null;
   usuario_modificacion: string | null;
   fecha_creacion: string;
+  /** Estado de gestión del integrante (parametros_estado_gestion_persona.id). */
+  id_estado_gestion_persona?: number | null;
 }
 
 export interface Adjunto {
