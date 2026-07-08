@@ -231,10 +231,13 @@
           <form [formGroup]="gestionarEstadoAfiliadoForm" class="gestionar-estado-form gestionar-estado-form--modal">
             <div class="gestionar-estado-field multi">
               <label class="label" for="estadoAfiliadoDd">Estado afiliación <span class="req">*</span></label>
+              <small *ngIf="gestionarEstadoSoloRechazoPermitido" class="gestionar-estado-error error-label">
+                Hay adjuntos sin validar en «Sí»: solo puede pasar a estado Rechazado.
+              </small>
               <p-dropdown
                 id="estadoAfiliadoDd"
                 formControlName="estadoAfiliado"
-                [options]="estadoAfiliadoOpciones"
+                [options]="opcionesEstadoAfiliadoModal"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccione estado"

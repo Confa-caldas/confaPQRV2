@@ -384,6 +384,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   gestionarEstadoContextoLabel = '';
   gestionarEstadoAfiliadoForm!: FormGroup;
   private gestionarEstadoAfiliadoSub?: Subscription;
+  /** true si el único motivo de bloqueo fue "adjuntos sin validar en Sí": solo se permite Rechazar. */
+  gestionarEstadoSoloRechazoPermitido = false;
 
   /** Ids `parametros_estado_gestion_persona.id` alineados con BD. */
   readonly ID_ESTADO_GESTION_PENDIENTE_AFILIACION_RPA = 1;
@@ -429,6 +431,14 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     { label: 'Procesado', value: 3 },
     { label: 'Rechazado', value: 4 },
   ];
+
+  /** Opciones a mostrar en el dropdown del modal: si hay adjuntos sin validar en Sí, solo Rechazado. */
+  get opcionesEstadoAfiliadoModal(): { label: string; value: number }[] {
+    if (!this.gestionarEstadoSoloRechazoPermitido) {
+      return this.estadoAfiliadoOpciones;
+    }
+    return this.estadoAfiliadoOpciones.filter((o) => this.esEstadoGestionRechazado(o.value));
+  }
 
   /** Opciones del dropdown motivo de rechazo (cargadas desde BD). */
   motivoRechazoOpciones: { label: string; value: string; codigo_motivo: string }[] = [];
@@ -779,8 +789,21 @@ export class RequestDetailsAfiliationComponent implements OnInit {
                 : ['No cumple los requisitos para gestionar el estado.'];
 
           if (!d.es_valido) {
-            this.validacionRequisitosGestionCache.set(personaId, { valido: false, errores: lista });
-            this.mostrarModalBloqueoRequisitosGestion(nombre, lista);
+            const erroresRestantes = lista.filter((e) => !this.esErrorAdjuntosSinValidar(e));
+            if (erroresRestantes.length === 0) {
+              // Único motivo de bloqueo: adjuntos sin validar en Sí. No bloquea: permite gestionar,
+              // pero solo hacia el estado Rechazado (ver opcionesEstadoAfiliadoModal).
+              this.validacionRequisitosGestionCache.set(personaId, { valido: true, errores: [] });
+              this.showSuccessMessage(
+                'info',
+                'Gestión restringida',
+                'Hay adjuntos sin validar en «Sí»: solo puede pasar esta persona a estado Rechazado.'
+              );
+              this.abrirModalGestionarEstado(contexto, indiceBeneficiario, true);
+              return;
+            }
+            this.validacionRequisitosGestionCache.set(personaId, { valido: false, errores: erroresRestantes });
+            this.mostrarModalBloqueoRequisitosGestion(nombre, erroresRestantes);
             return;
           }
           this.validacionRequisitosGestionCache.set(personaId, { valido: true, errores: [] });
@@ -795,6 +818,17 @@ export class RequestDetailsAfiliationComponent implements OnInit {
           );
         },
       });
+  }
+
+  /** True si el mensaje de error corresponde a "adjuntos sin validar en Sí" (no bloquea, solo restringe a Rechazado). */
+  private esErrorAdjuntosSinValidar(mensaje: string): boolean {
+    const t = (mensaje ?? '')
+      .toString()
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '');
+    return t.includes('adjunt') && (t.includes('valida') || t.includes('estado diferente a si'));
   }
 
   mostrarModalBloqueoRequisitosGestion(nombrePersona: string, errores: string[]): void {
@@ -879,9 +913,11 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
   private abrirModalGestionarEstado(
     contexto: 'trabajador' | 'beneficiario' = 'trabajador',
-    indiceBeneficiario?: number
+    indiceBeneficiario?: number,
+    soloRechazoPermitido = false
   ): void {
     this.gestionarEstadoContexto = contexto;
+    this.gestionarEstadoSoloRechazoPermitido = soloRechazoPermitido;
     this.gestionarEstadoPersonaId = this.obtenerPersonaIdParaGestionEstado(
       contexto,
       indiceBeneficiario
@@ -961,6 +997,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.gestionarEstadoContextoLabel = '';
     this.gestionarEstadoPersonaId = null;
     this.gestionarEstadoContexto = 'trabajador';
+    this.gestionarEstadoSoloRechazoPermitido = false;
   }
 
   private idEstadoGestionPersonaIntegrante(
