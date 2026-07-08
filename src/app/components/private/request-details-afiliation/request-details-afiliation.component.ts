@@ -1447,6 +1447,13 @@ getRequestDetails(request_details: number) {
     return todos.some((item) => this.esAdjuntoPendienteValidacion(item));
   }
 
+  /** True si la solicitud está en Pendiente afiliación RPA (no permite adjuntos adicionales). */
+  get solicitudEnPendienteAfiliacionRpa(): boolean {
+    const codigo = this.afiliationRequestDetails?.solicitud?.estado_codigo ?? '';
+    const n = codigo.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return n === 'pendiente afiliacion rpa';
+  }
+
   /** True si el adjunto está pendiente de validación (estado_validacion vacío o PENDIENTE). */
   esAdjuntoPendienteValidacion(item: AdjuntoConValoracion): boolean {
     const est = (item?.adjunto?.estado_validacion ?? '').toString().trim().toUpperCase();
@@ -2361,9 +2368,11 @@ getRequestDetails(request_details: number) {
   }
 
   /**
-   * Abre el modal, limpia el formulario y carga tipos de adjunto según parentesco.
+   * Abre el modal, limpia el formulario y carga tipos de adjunto.
+   * Trabajador: catálogo general de tipos de adjunto (sin parentesco).
+   * Beneficiario: tipos según id del catálogo parametros_parentesco.
    * @param idPersona id de persona (trabajador o beneficiario)
-   * @param idParentesco id del catálogo parametros_parentesco
+   * @param idParentesco id del catálogo parametros_parentesco (solo beneficiario)
    */
   abrirModalAdjuntos(idPersona: number, idParentesco: number): void {
     const d = this.afiliationRequestDetails;
@@ -2384,17 +2393,36 @@ getRequestDetails(request_details: number) {
       });
       return;
     }
-    if (!idPersona || !idParentesco) {
+    if (this.solicitudEnPendienteAfiliacionRpa) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Parentesco',
+        summary: 'Pendiente afiliación RPA',
         detail:
-          'No se pudo determinar la persona o el parentesco para cargar los tipos de adjunto. Verifique el catálogo de parentescos.',
+          'No puede subir adjuntos adicionales mientras la solicitud esté en Pendiente afiliación RPA.',
+      });
+      return;
+    }
+    if (!idPersona) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Datos',
+        detail: 'No se pudo determinar la persona para cargar los tipos de adjunto.',
       });
       return;
     }
 
-    if (d.trabajador?.persona?.id === idPersona) {
+    const esTrabajador = d.trabajador?.persona?.id === idPersona;
+    if (!esTrabajador && !idParentesco) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Parentesco',
+        detail:
+          'No se pudo determinar el parentesco para cargar los tipos de adjunto. Verifique el catálogo de parentescos.',
+      });
+      return;
+    }
+
+    if (esTrabajador) {
       this.adjuntosAdicionalesPara = 'trabajador';
     } else {
       const idx = d.beneficiarios?.findIndex(b => b.persona.id === idPersona) ?? -1;
@@ -2411,6 +2439,40 @@ getRequestDetails(request_details: number) {
     if (input) input.value = '';
 
     this.cargandoCatalogoAdjuntosPorParentesco = true;
+    if (esTrabajador) {
+      this.userService.getAttachmentList().subscribe({
+        next: res => {
+          this.cargandoCatalogoAdjuntosPorParentesco = false;
+          if (res?.code === 200 && Array.isArray(res.data)) {
+            this.listaTiposAdjunto = res.data
+              .filter(t => t.esta_activo !== false && t.id != null)
+              .map(t => ({
+                id: t.id as number,
+                nombre_documento: t.nombre_documento,
+                formatos_permitidos: t.formatos_permitidos,
+              }));
+          } else {
+            this.listaTiposAdjunto = [];
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Catálogo',
+              detail: res?.message || 'No se obtuvieron tipos de adjunto para el trabajador.',
+            });
+          }
+        },
+        error: () => {
+          this.cargandoCatalogoAdjuntosPorParentesco = false;
+          this.listaTiposAdjunto = [];
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo cargar el catálogo de tipos de adjunto.',
+          });
+        },
+      });
+      return;
+    }
+
     this.userService.obtenerAdjuntosPorParentesco(idParentesco).subscribe({
       next: res => {
         this.cargandoCatalogoAdjuntosPorParentesco = false;

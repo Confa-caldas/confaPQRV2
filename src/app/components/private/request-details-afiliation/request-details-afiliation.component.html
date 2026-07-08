@@ -769,7 +769,7 @@
         <div class="adjuntos-section empty adjuntos-trabajador-block" *ngIf="getAdjuntosTrabajador().length === 0">
           <p class="adjuntos-empty-text">No hay archivos adjuntos para el trabajador de esta solicitud.</p>
         </div>
-        <div class="adjuntos-upload-row" *ngIf="!d.solicitud.expediente">
+        <div class="adjuntos-upload-row" *ngIf="!d.solicitud.expediente && !solicitudEnPendienteAfiliacionRpa">
           <p-button
             label="Subir adjuntos adicionales"
             icon="pi pi-upload"
@@ -1053,10 +1053,6 @@
                         <div class="process-container-text">{{ b.beneficiario.conyuge_labora || '—' }}</div>
                       </div>
                       <div class="process-container-col">
-                        <label class="process-container-label">Persona en situación de discapacidad</label>
-                        <div class="process-container-text">{{ b.beneficiario.persona_discapacidad || '—' }}</div>
-                      </div>
-                      <div class="process-container-col">
                         <label class="process-container-label">Nivel educativo</label>
                         <div class="process-container-text">{{ b.beneficiario.nivel_educativo || '—' }}</div>
                       </div>
@@ -1112,6 +1108,10 @@
                         (ngModelChange)="b.beneficiario.numero_grupo_familiar = ($event === null || $event === '' ? null : +$event)"
                         placeholder="Número de grupo familiar" />
                       <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.numero_grupo_familiar ?? '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Persona en situación de discapacidad</label>
+                      <div class="process-container-text">{{ b.beneficiario.persona_discapacidad || '—' }}</div>
                     </div>
                   </div>
                   <div class="process-container-row">
@@ -1288,7 +1288,7 @@
               <div class="adjuntos-section empty benef-adjuntos" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">
                 <p class="adjuntos-empty-text">No hay archivos adjuntos para {{ getNombreBeneficiario(b) }}.</p>
               </div>
-              <div class="adjuntos-upload-row" *ngIf="!d.solicitud.expediente">
+              <div class="adjuntos-upload-row" *ngIf="!d.solicitud.expediente && !solicitudEnPendienteAfiliacionRpa">
                 <p-button
                   label="Subir adjuntos adicionales"
                   icon="pi pi-upload"

@@ -349,7 +349,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
 
   opcionesMedioPago: { label: string; value: string }[] = [
     { label: 'Efectivo', value: 'Efectivo' },
-    { label: 'Transferencia bancaria', value: 'Transferencia bancaria' },
+    { label: 'Transferencia', value: 'Transferencia' },
   ];
   opcionesEntidadesPago: { label: string; value: number }[] = [];
   opcionesTipoCuenta: { label: string; value: number }[] = [];
@@ -424,7 +424,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
 
     this.solicitudMedioPagoForm = this.fb.group(
       {
-        medio_pago: ['Transferencia bancaria'],
+        medio_pago: ['Transferencia'],
       id_entidad: [null as number | null],
       tipo_cuenta: [null as number | null],
       numero_cuenta: [''],
@@ -1240,7 +1240,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.opcionesTipoCuenta = [];
     this.opcionesMedioPago = [
       { label: 'Efectivo', value: 'Efectivo' },
-      { label: 'Transferencia bancaria', value: 'Transferencia bancaria' },
+      { label: 'Transferencia', value: 'Transferencia' },
     ];
     this.laborFechaIngresoMin = null;
     this.laborFechaIngresoMax = null;
@@ -1267,7 +1267,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.solicitudLaboralForm.updateValueAndValidity({ emitEvent: false });
     this.solicitudMedioPagoForm.reset(
       {
-        medio_pago: 'Transferencia bancaria',
+        medio_pago: 'Transferencia',
         id_entidad: null,
         tipo_cuenta: null,
         numero_cuenta: '',
@@ -3732,7 +3732,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     }
 
     const medioRaw = (mp.medioPago ?? '').trim();
-    const medioNormalizado = medioRaw.toLowerCase() === 'efectivo' ? 'Transferencia bancaria' : medioRaw;
+    const medioNormalizado = medioRaw.toLowerCase() === 'efectivo' ? 'Transferencia' : medioRaw;
     this.asegurarOpcionMedioPagoEnCatalogo(medioNormalizado || medioRaw);
 
     const idBanco = this.resolverIdEntidadDesdeMedioPago(mp);

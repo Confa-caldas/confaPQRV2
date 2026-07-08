@@ -1253,9 +1253,9 @@
                       [style]="{ width: '100%' }"
                       styleClass="cai-form-control cai-solicitud-dropdown"></p-dropdown>
                   </div>
-                  <div class="cai-form-field">
+                  <div class="cai-form-field" *ngIf="requiereDatosBancariosMedioPago()">
                     <label class="cai-form-label" for="caiMpEnt">
-                      Entidad bancaria o billetera{{ requiereDatosBancariosMedioPago() ? ' *' : '' }}
+                      Entidad bancaria o billetera *
                     </label>
                     <p-dropdown
                       inputId="caiMpEnt"
@@ -1274,9 +1274,9 @@
                       Seleccione una entidad bancaria o billetera.
                     </span>
                   </div>
-                  <div class="cai-form-field cai-form-field--grid-span-2" *ngIf="debeMostrarTipoCuentaMedioPago">
+                  <div class="cai-form-field cai-form-field--grid-span-2" *ngIf="requiereDatosBancariosMedioPago() && debeMostrarTipoCuentaMedioPago">
                     <label class="cai-form-label" for="caiMpTipoCta">
-                      Tipo de cuenta{{ requiereDatosBancariosMedioPago() ? ' *' : '' }}
+                      Tipo de cuenta *
                     </label>
                     <p-dropdown
                       inputId="caiMpTipoCta"
@@ -1292,9 +1292,9 @@
                       Seleccione el tipo de cuenta.
                     </span>
                   </div>
-                  <div class="cai-form-field">
+                  <div class="cai-form-field" *ngIf="requiereDatosBancariosMedioPago()">
                     <label class="cai-form-label" for="caiMpNum">
-                      Número de cuenta o billetera{{ requiereDatosBancariosMedioPago() ? ' *' : '' }}
+                      Número de cuenta o billetera *
                     </label>
                     <input
                       id="caiMpNum"
@@ -1307,9 +1307,9 @@
                       El número de cuenta o billetera es obligatorio.
                     </span>
                   </div>
-                  <div class="cai-form-field">
+                  <div class="cai-form-field" *ngIf="requiereDatosBancariosMedioPago()">
                     <label class="cai-form-label" for="caiMpNumC">
-                      Confirmar número de cuenta o billetera{{ requiereDatosBancariosMedioPago() ? ' *' : '' }}
+                      Confirmar número de cuenta o billetera *
                     </label>
                     <input
                       id="caiMpNumC"
@@ -1327,7 +1327,7 @@
                       El número de cuenta y la confirmación no coinciden.
                     </span>
                   </div>
-                  <div class="cai-form-field">
+                  <div class="cai-form-field" *ngIf="requiereDatosBancariosMedioPago()">
                     <label class="cai-form-label" for="caiMpBreB">Llave Bre-B asociada a la cuenta (Opcional)</label>
                     <input
                       id="caiMpBreB"
@@ -1337,7 +1337,7 @@
                       class="cai-input-plain cai-input-plain--full"
                       placeholder="Ingrese la llave Bre-B asociada a la cuenta" />
                   </div>
-                  <div class="cai-form-field">
+                  <div class="cai-form-field" *ngIf="requiereDatosBancariosMedioPago()">
                     <label class="cai-form-label" for="caiMpBreBC">Confirmar Llave Bre-B asociada a la cuenta (Opcional)</label>
                     <input
                       id="caiMpBreBC"
