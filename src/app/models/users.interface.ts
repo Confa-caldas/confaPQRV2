@@ -1840,6 +1840,10 @@ export interface Adjunto {
   usuario_carga: string;
   nombre_archivo: string;
   id_tipo_adjunto: number;
+  /** Nombre legible del tipo de adjunto (parametros_tipo_adjunto.nombre_documento). */
+  nombre_tipo_adjunto?: string | null;
+  /** Código del tipo de adjunto (parametros_tipo_adjunto.codigo). */
+  codigo_tipo_adjunto?: string | null;
   fecha_modificacion: string | null;
   usuario_modificacion: string | null;
   /** Estado de validación del adjunto: PENDIENTE | Validado (si/no/no_aplica). */

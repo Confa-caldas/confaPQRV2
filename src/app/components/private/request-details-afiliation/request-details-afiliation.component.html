@@ -697,15 +697,17 @@
               styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
               <ng-template pTemplate="header">
                 <tr>
-                  <th style="width: 26%">Archivo</th>
-                  <th style="width: 16%">Validación</th>
-                  <th style="width: 34%">Descripción (si aplica)</th>
+                  <th style="width: 22%">Archivo</th>
+                  <th style="width: 18%">Tipo de adjunto</th>
+                  <th style="width: 14%">Validación</th>
+                  <th style="width: 30%">Descripción (si aplica)</th>
                   <th class="adjuntos-col-acciones">Acciones</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-item>
                 <tr>
                   <td>{{ item.adjunto.nombre_archivo }}</td>
+                  <td>{{ item.adjunto.nombre_tipo_adjunto || '—' }}</td>
                   <td>
                     <p-dropdown
                       *ngIf="esAdjuntoPendienteValidacion(item)"
@@ -1216,15 +1218,17 @@
                     styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
                     <ng-template pTemplate="header">
                       <tr>
-                        <th style="width: 26%">Archivo</th>
-                        <th style="width: 16%">Validación</th>
-                        <th style="width: 34%">Descripción (si aplica)</th>
+                        <th style="width: 22%">Archivo</th>
+                        <th style="width: 18%">Tipo de adjunto</th>
+                        <th style="width: 14%">Validación</th>
+                        <th style="width: 30%">Descripción (si aplica)</th>
                         <th class="adjuntos-col-acciones">Acciones</th>
                       </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-item>
                       <tr>
                         <td>{{ item.adjunto.nombre_archivo }}</td>
+                        <td>{{ item.adjunto.nombre_tipo_adjunto || '—' }}</td>
                         <td>
                           <p-dropdown
                             *ngIf="esAdjuntoPendienteValidacion(item)"
