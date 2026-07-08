@@ -1365,6 +1365,7 @@ getRequestDetails(request_details: number) {
 
       this.afiliationRequestDetails = response.data;
       this.validacionRequisitosGestionCache.clear();
+      this.precargarFechaNacimientoAdministradorSubsidioIgualTrabajador();
       this.guardarSnapshotDatosTrabajador();
       this.guardarSnapshotBeneficiarios();
       this.initAdjuntosValoracion();
@@ -1652,12 +1653,45 @@ getRequestDetails(request_details: number) {
   /** Formatea fecha para mostrar como dd/mm/yyyy. */
   formatFechaDDMMYYYY(value: string | Date | null | undefined): string {
     if (value == null) return '—';
+    if (typeof value === 'string') {
+      // Extrae año/mes/día directamente del string (evita que "YYYY-MM-DD" se interprete
+      // como medianoche UTC y, al leerse en hora local, muestre un día menos).
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim());
+      if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+    }
     const d = typeof value === 'string' ? new Date(value) : value;
     if (isNaN(d.getTime())) return '—';
     const day = d.getDate().toString().padStart(2, '0');
     const month = (d.getMonth() + 1).toString().padStart(2, '0');
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
+  }
+
+  /**
+   * Si el administrador del subsidio de un beneficiario es el mismo trabajador titular (mismo tipo y
+   * número de documento) y no trae fecha de nacimiento, la precarga con la del trabajador.
+   * Se ejecuta antes de tomar el snapshot para que no quede marcado como "cambio sin guardar".
+   */
+  private precargarFechaNacimientoAdministradorSubsidioIgualTrabajador(): void {
+    const trabajadorPersona = this.afiliationRequestDetails?.trabajador?.persona;
+    const fechaNacimientoTrabajador = trabajadorPersona?.fecha_nacimiento ?? null;
+    const numDocTrabajador = (trabajadorPersona?.numero_documento ?? '').toString().trim().toUpperCase();
+    if (!fechaNacimientoTrabajador || !numDocTrabajador) return;
+    const tipoDocTrabajador = (trabajadorPersona?.tipo_documento ?? '').toString().trim().toUpperCase();
+
+    (this.afiliationRequestDetails?.beneficiarios ?? []).forEach((b) => {
+      const info = b.beneficiario;
+      if (!info) return;
+      const yaTieneFecha =
+        info.fecha_nacimiento_administrador_subsidio != null &&
+        String(info.fecha_nacimiento_administrador_subsidio).trim() !== '';
+      if (yaTieneFecha) return;
+      const numAdmin = (info.numero_identificacion_administrador_subsidio ?? '').toString().trim().toUpperCase();
+      if (!numAdmin || numAdmin !== numDocTrabajador) return;
+      const tipoAdmin = (info.tipo_identificacion_administrador_subsidio ?? '').toString().trim().toUpperCase();
+      if (tipoAdmin && tipoDocTrabajador && tipoAdmin !== tipoDocTrabajador) return;
+      info.fecha_nacimiento_administrador_subsidio = fechaNacimientoTrabajador;
+    });
   }
 
   /** Guarda snapshots de los datos editables de cada beneficiario y marca cuáles tienen sección editable (CE/PPT al cargar). */
@@ -3262,6 +3296,36 @@ get empresaDocumento(): string {
     return ext.request_status_id ?? ext.id ?? 0;
   }
 
+  /** Orden fijo del timeline de estados (independiente del `orden`/id que traiga el catálogo). */
+  private readonly ORDEN_TIMELINE_ESTADOS_AFILIACION: string[] = [
+    'pendiente',
+    'asignada',
+    'reasignada',
+    'rechazada',
+    'pendiente afiliacion rpa',
+    'en ejecucion rpa',
+    'inconsistencias rpa',
+    'aprobada incompleta',
+    'aprobada completa',
+  ];
+
+  private normalizarTextoEstadoTimeline(v: string | null | undefined): string {
+    return (v ?? '')
+      .toString()
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '');
+  }
+
+  /** Posición del estado en el orden fijo del timeline; los no listados quedan al final, en su orden original. */
+  private ordenTimelineEstado(row: RequestStatusAfiliationList): number {
+    const texto = this.normalizarTextoEstadoTimeline(row.codigo || row.status_name);
+    const idx = this.ORDEN_TIMELINE_ESTADOS_AFILIACION.indexOf(texto);
+    if (idx >= 0) return idx;
+    return this.ORDEN_TIMELINE_ESTADOS_AFILIACION.length + (row.orden ?? this.idEstadoCatalogoFila(row));
+  }
+
   /** Texto para comparar histórico con una fila del catálogo. */
   private nombresEstadoParaCoincidencia(row: RequestStatusAfiliationList): string[] {
     return [
@@ -3313,8 +3377,7 @@ get empresaDocumento(): string {
     const aplicar = (rows: RequestStatusAfiliationList[]) => {
       const activos = rows.filter(r => r.is_active !== false);
       const ordenados = [...activos].sort(
-        (a, b) =>
-          (a.orden ?? this.idEstadoCatalogoFila(a)) - (b.orden ?? this.idEstadoCatalogoFila(b)),
+        (a, b) => this.ordenTimelineEstado(a) - this.ordenTimelineEstado(b),
       );
       const actualRow = ordenados.find(r => this.idEstadoCatalogoFila(r) === idActual);
       this.currentState =
