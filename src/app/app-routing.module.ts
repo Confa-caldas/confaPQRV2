@@ -335,6 +335,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.PADRES_RPA_NO_PROCESADO,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/padres-rpa-no-procesado/padres-rpa-no-procesado.module').then(
+        m => m.PadresRpaNoProcesadoModule
+      ),
+  },
+  {
     path: RoutesApp.SEARCH_UPDATES_DATA,
     canActivate: [sessionGuard],
     component: LayoutComponent,

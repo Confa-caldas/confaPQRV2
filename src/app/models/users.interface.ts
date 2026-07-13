@@ -1919,6 +1919,87 @@ export interface BeneficiarioBundle {
   novedades?: IntegranteNovedades | null;
 }
 
+/** Registro de afiliaciones.padres_biologicos para un beneficiario Hijo. */
+export interface PadreBiologicoRecord {
+  id: number;
+  id_solicitud: number;
+  id_solicitud_persona: number;
+  tipo_documento: string;
+  numero_documento: string;
+  primer_nombre: string;
+  segundo_nombre: string | null;
+  primer_apellido: string;
+  segundo_apellido: string | null;
+  es_madre_o_padre: 'madre' | 'padre';
+  pendiente_completar: 'Si' | 'No' | 'No aplica';
+  estado_rpa_padres: string;
+  radicado_otro_padre: string | null;
+}
+
+/** Payload para agregar (id null/omitido) o completar (id presente) un padre/madre biológico. */
+export interface GuardarPadreBiologicoPayload {
+  idSolicitudPersona: number;
+  esMadreOPadre: 'padre' | 'madre';
+  id?: number | null;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
+  primerNombre?: string | null;
+  segundoNombre?: string | null;
+  primerApellido?: string | null;
+  segundoApellido?: string | null;
+}
+
+/** Payload para cambiar estado_rpa_padres cuando está en "No procesado". */
+export interface CambiarEstadoRpaPadreBiologicoPayload {
+  id: number;
+  estadoRpaPadres: 'Pendiente' | 'Procesado';
+  radicadoOtroPadre?: string | null;
+}
+
+/** Fila del menú "Beneficiarios con padres RPA No procesado" (una fila = un registro padre o madre). */
+export interface PadreRpaNoProcesadoListItem {
+  id_padre_biologico: number;
+  id_solicitud: number;
+  id_solicitud_persona: number;
+  numero_radicado_solicitud: string;
+  fecha_solicitud: string;
+  tipo_documento_beneficiario: string;
+  numero_documento_beneficiario: string;
+  tipo_documento_trabajador: string;
+  numero_documento_trabajador: string;
+  es_madre_o_padre: 'madre' | 'padre';
+  tipo_documento: string;
+  numero_documento: string;
+  primer_nombre: string;
+  segundo_nombre: string | null;
+  primer_apellido: string;
+  segundo_apellido: string | null;
+  observaciones_rpa_padres: string | null;
+  pantalla_error: string | null;
+  radicado_otro_padre: string | null;
+  usuario_asignado: string | null;
+  cantidad_padres_pendientes: number;
+  total_count: number;
+}
+
+export interface FilterPadresRpaNoProcesado {
+  tipoDocumentoBeneficiario?: string | null;
+  numeroDocumentoBeneficiario?: string | null;
+  tipoDocumentoTrabajador?: string | null;
+  numeroDocumentoTrabajador?: string | null;
+  page: number;
+  pageSize: number;
+}
+
+export interface AsignarPadresRpaPayload {
+  idsSolicitudPersona: number[];
+  usuarioAsignado: string;
+}
+
+export interface CambiarEstadoMasivoPadresRpaPayload {
+  idsSolicitud: number[];
+}
+
 /** Valores válidos en BD: SI, NO, NA, PENDIENTE */
 export type ValoracionAdjunto = 'SI' | 'NO' | 'NA';
 export interface AdjuntoConValoracion {

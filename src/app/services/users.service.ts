@@ -72,6 +72,13 @@ import {
   BulkChangeRpaStatusPayload,
   RequestsListAfiliation,
   AfiliacionRequestDetailsData,
+  PadreBiologicoRecord,
+  GuardarPadreBiologicoPayload,
+  CambiarEstadoRpaPadreBiologicoPayload,
+  PadreRpaNoProcesadoListItem,
+  FilterPadresRpaNoProcesado,
+  AsignarPadresRpaPayload,
+  CambiarEstadoMasivoPadresRpaPayload,
   RequestStatusAfiliationList,
   UserListAfiliation,
   NovedadCalidadDatosDetalle,
@@ -188,6 +195,54 @@ export class Users {
   getRequestDetailsAfiliation(payload: number) {
     return this.http.get<BodyResponse<AfiliacionRequestDetailsData>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_DETAILS_AFILIATION}/${payload}`
+    );
+  }
+
+  /** Consulta padre/madre biológicos registrados para un beneficiario Hijo (afiliaciones.padres_biologicos). */
+  getPadresBiologicosByPersona(idSolicitudPersona: number) {
+    return this.http.post<BodyResponse<PadreBiologicoRecord[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_BIOLOGICOS_CONSULTAR}`,
+      { idSolicitudPersona }
+    );
+  }
+
+  /** Agrega (id null/omitido) o completa (id presente) un padre/madre biológico. */
+  guardarPadreBiologico(payload: GuardarPadreBiologicoPayload) {
+    return this.http.post<BodyResponse<{ id: number | null }>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_BIOLOGICOS_GUARDAR}`,
+      payload
+    );
+  }
+
+  /** Cambia estado_rpa_padres de "No procesado" a "Pendiente" o "Procesado". */
+  cambiarEstadoRpaPadreBiologico(payload: CambiarEstadoRpaPadreBiologicoPayload) {
+    return this.http.post<BodyResponse<null>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_BIOLOGICOS_CAMBIAR_ESTADO_RPA}`,
+      payload
+    );
+  }
+
+  /** Menú: beneficiarios con padres biológicos en estado_rpa_padres = No procesado. */
+  getPadresRpaNoProcesadosByFilter(payload: FilterPadresRpaNoProcesado) {
+    return this.http.post<BodyResponse<PadreRpaNoProcesadoListItem[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_RPA_NO_PROCESADO_FILTRAR}`,
+      payload
+    );
+  }
+
+  /** Asigna (masivamente) un colaborador a la gestión de padres biológicos de uno o varios beneficiarios. */
+  asignarUsuarioPadresRpa(payload: AsignarPadresRpaPayload) {
+    return this.http.post<BodyResponse<null>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_RPA_NO_PROCESADO_ASIGNAR}`,
+      payload
+    );
+  }
+
+  /** Cambia estado_rpa_padres de No procesado -> Pendiente para las solicitudes seleccionadas. */
+  cambiarEstadoMasivoPadresRpa(payload: CambiarEstadoMasivoPadresRpaPayload) {
+    return this.http.post<BodyResponse<null>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_RPA_NO_PROCESADO_CAMBIAR_ESTADO_MASIVO}`,
+      payload
     );
   }
 

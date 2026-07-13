@@ -24,6 +24,7 @@ import {
   historyRequest,
   SimilarRequest,
   AfiliacionRequestDetailsData,
+  PadreBiologicoRecord,
   NovedadCalidadDatosIntegrante,
   Adjunto,
   AdjuntoTipoPorParentesco,
@@ -362,6 +363,32 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     nombre_completo_administrador_subsidio: string | null;
     fecha_nacimiento_administrador_subsidio: string | null;
   }> = [];
+  /** Por cada índice de beneficiario Hijo: padre/madre biológicos consultados (afiliaciones.padres_biologicos) y estado de carga. */
+  padresBiologicosPorBeneficiario: Array<{
+    padre: PadreBiologicoRecord | null;
+    madre: PadreBiologicoRecord | null;
+    loading: boolean;
+  }> = [];
+  /** Formulario "Agregar padre/madre" abierto, por clave `${iBenef}-padre` / `${iBenef}-madre`. */
+  formularioPadreBiologicoAbierto: Record<string, boolean> = {};
+  /** Modelo editable del formulario "Agregar padre/madre", por la misma clave. */
+  formPadreBiologico: Record<
+    string,
+    {
+      tipo_documento: string | null;
+      numero_documento: string | null;
+      primer_nombre: string | null;
+      segundo_nombre: string | null;
+      primer_apellido: string | null;
+      segundo_apellido: string | null;
+    }
+  > = {};
+  /** Clave (`${iBenef}-padre`/`${iBenef}-madre`) del guardado en curso (agregar o completar). */
+  guardandoPadreBiologicoKey: string | null = null;
+  /** Edición de estado RPA por id de registro padres_biologicos. */
+  estadoRpaPadresEdicion: Record<number, { nuevoEstado: 'Pendiente' | 'Procesado' | null; radicado: string }> = {};
+  /** Id del registro padres_biologicos cuyo cambio de estado RPA está en curso. */
+  guardandoEstadoRpaPadresId: number | null = null;
   /** Snapshot de los datos editables del afiliado al cargar/guardar; se usa para detectar si hay cambios. */
   private snapshotDatosTrabajador: {
     tipo_documento: string;
@@ -1405,6 +1432,7 @@ getRequestDetails(request_details: number) {
       this.precargarFechaNacimientoAdministradorSubsidioIgualTrabajador();
       this.guardarSnapshotDatosTrabajador();
       this.guardarSnapshotBeneficiarios();
+      this.cargarPadresBiologicosBeneficiarios();
       this.initAdjuntosValoracion();
       this.loadTiposDocumentoPersona();
       this.loadGeneros();
@@ -1775,6 +1803,231 @@ getRequestDetails(request_details: number) {
   /** True si el beneficiario en el índice dado tiene habilitada la edición de campos adicionales (era CC/TI/RC al cargar): grupo familiar, invalidez, admin subsidios. */
   beneficioPuedeEditarExtras(index: number): boolean {
     return this.beneficioEditableExtrasPorIndice[index] === true;
+  }
+
+  /** True si el beneficiario tiene parentesco "Hijo" (único caso con sección de Padres biológicos). */
+  esBeneficiarioHijo(b: BeneficiarioBundle | undefined): boolean {
+    const parentesco = (b?.beneficiario?.parentesco ?? '').toString().trim().toLowerCase();
+    return parentesco === 'hijo';
+  }
+
+  /** Consulta padre/madre biológicos de cada beneficiario Hijo de la solicitud (afiliaciones.padres_biologicos). */
+  cargarPadresBiologicosBeneficiarios(): void {
+    const list = this.afiliationRequestDetails?.beneficiarios ?? [];
+    this.padresBiologicosPorBeneficiario = list.map(() => ({ padre: null, madre: null, loading: false }));
+
+    list.forEach((b, index) => {
+      if (!this.esBeneficiarioHijo(b)) return;
+      this.fetchPadresBiologicosBeneficiario(index, b.persona.id);
+    });
+  }
+
+  /** Vuelve a consultar padre/madre biológicos de un solo beneficiario (tras agregar/completar/cambiar estado). */
+  private fetchPadresBiologicosBeneficiario(index: number, idSolicitudPersona: number): void {
+    if (!this.padresBiologicosPorBeneficiario[index]) {
+      this.padresBiologicosPorBeneficiario[index] = { padre: null, madre: null, loading: false };
+    }
+    this.padresBiologicosPorBeneficiario[index].loading = true;
+    this.userService.getPadresBiologicosByPersona(idSolicitudPersona).subscribe({
+      next: (response) => {
+        this.padresBiologicosPorBeneficiario[index].loading = false;
+        if (response.code !== 200) return;
+        const registros = response.data ?? [];
+        this.padresBiologicosPorBeneficiario[index].padre =
+          registros.find((r) => r.es_madre_o_padre === 'padre') ?? null;
+        this.padresBiologicosPorBeneficiario[index].madre =
+          registros.find((r) => r.es_madre_o_padre === 'madre') ?? null;
+      },
+      error: () => {
+        this.padresBiologicosPorBeneficiario[index].loading = false;
+      },
+    });
+  }
+
+  padresBiologicosCargando(index: number): boolean {
+    return this.padresBiologicosPorBeneficiario[index]?.loading === true;
+  }
+
+  getPadreBiologico(index: number): PadreBiologicoRecord | null {
+    return this.padresBiologicosPorBeneficiario[index]?.padre ?? null;
+  }
+
+  getMadreBiologica(index: number): PadreBiologicoRecord | null {
+    return this.padresBiologicosPorBeneficiario[index]?.madre ?? null;
+  }
+
+  /** Formatea estado_rpa_padres para mostrar (el valor crudo se conserva en el registro para futura persistencia). */
+  getLabelEstadoRpaPadres(value: string | null | undefined): string {
+    const v = (value ?? '').toString().trim();
+    if (v === 'En_ejecucion') return 'En ejecución';
+    if (v === 'No procesado') return 'No procesado';
+    return v || '—';
+  }
+
+  keyPadreBiologico(iBenef: number, rol: 'padre' | 'madre'): string {
+    return `${iBenef}-${rol}`;
+  }
+
+  /** Abre el formulario en blanco para agregar el padre/madre biológico inexistente. */
+  abrirAgregarPadreBiologico(iBenef: number, rol: 'padre' | 'madre'): void {
+    const key = this.keyPadreBiologico(iBenef, rol);
+    this.formularioPadreBiologicoAbierto[key] = true;
+    this.formPadreBiologico[key] = {
+      tipo_documento: null,
+      numero_documento: null,
+      primer_nombre: null,
+      segundo_nombre: null,
+      primer_apellido: null,
+      segundo_apellido: null,
+    };
+  }
+
+  cancelarAgregarPadreBiologico(iBenef: number, rol: 'padre' | 'madre'): void {
+    const key = this.keyPadreBiologico(iBenef, rol);
+    this.formularioPadreBiologicoAbierto[key] = false;
+    delete this.formPadreBiologico[key];
+  }
+
+  puedeGuardarNuevoPadreBiologico(iBenef: number, rol: 'padre' | 'madre'): boolean {
+    const form = this.formPadreBiologico[this.keyPadreBiologico(iBenef, rol)];
+    if (!form) return false;
+    return !!(
+      form.tipo_documento?.trim() &&
+      form.numero_documento?.trim() &&
+      form.primer_nombre?.trim() &&
+      form.primer_apellido?.trim()
+    );
+  }
+
+  /** Inserta el padre/madre biológico a partir del formulario "Agregar". */
+  guardarNuevoPadreBiologico(b: BeneficiarioBundle, iBenef: number, rol: 'padre' | 'madre'): void {
+    const key = this.keyPadreBiologico(iBenef, rol);
+    const form = this.formPadreBiologico[key];
+    if (!form) return;
+
+    this.guardandoPadreBiologicoKey = key;
+    this.userService
+      .guardarPadreBiologico({
+        idSolicitudPersona: b.persona.id,
+        esMadreOPadre: rol,
+        tipoDocumento: form.tipo_documento,
+        numeroDocumento: form.numero_documento,
+        primerNombre: form.primer_nombre,
+        segundoNombre: form.segundo_nombre,
+        primerApellido: form.primer_apellido,
+        segundoApellido: form.segundo_apellido,
+      })
+      .subscribe({
+        next: (res) => {
+          this.guardandoPadreBiologicoKey = null;
+          if (res?.code === 200) {
+            this.cancelarAgregarPadreBiologico(iBenef, rol);
+            this.showSuccessMessage(
+              'success',
+              'Exitoso',
+              rol === 'padre' ? 'Se agregó la información del padre.' : 'Se agregó la información de la madre.'
+            );
+            this.fetchPadresBiologicosBeneficiario(iBenef, b.persona.id);
+          } else {
+            this.showSuccessMessage('warn', 'Aviso', res?.message || 'No fue posible guardar la información.');
+          }
+        },
+        error: () => {
+          this.guardandoPadreBiologicoKey = null;
+          this.showSuccessMessage('error', 'Error', 'Error al guardar la información.');
+        },
+      });
+  }
+
+  /** True si el registro tiene los campos obligatorios completos (habilita guardar cuando pendiente_completar = 'Si'). */
+  puedeGuardarCompletarPadreBiologico(registro: PadreBiologicoRecord | null): boolean {
+    if (!registro) return false;
+    return !!(
+      registro.tipo_documento?.trim() &&
+      registro.numero_documento?.trim() &&
+      registro.primer_nombre?.trim() &&
+      registro.primer_apellido?.trim()
+    );
+  }
+
+  /** Completa (update) un padre/madre biológico con pendiente_completar = 'Si'. Solo se envían los campos del registro; el backend solo actualiza los que estén vacíos. */
+  completarPadreBiologico(registro: PadreBiologicoRecord | null, b: BeneficiarioBundle, iBenef: number, rol: 'padre' | 'madre'): void {
+    if (!registro) return;
+    const key = this.keyPadreBiologico(iBenef, rol);
+
+    this.guardandoPadreBiologicoKey = key;
+    this.userService
+      .guardarPadreBiologico({
+        idSolicitudPersona: b.persona.id,
+        esMadreOPadre: rol,
+        id: registro.id,
+        tipoDocumento: registro.tipo_documento,
+        numeroDocumento: registro.numero_documento,
+        primerNombre: registro.primer_nombre,
+        segundoNombre: registro.segundo_nombre,
+        primerApellido: registro.primer_apellido,
+        segundoApellido: registro.segundo_apellido,
+      })
+      .subscribe({
+        next: (res) => {
+          this.guardandoPadreBiologicoKey = null;
+          if (res?.code === 200) {
+            this.showSuccessMessage('success', 'Exitoso', 'Información actualizada.');
+            this.fetchPadresBiologicosBeneficiario(iBenef, b.persona.id);
+          } else {
+            this.showSuccessMessage('warn', 'Aviso', res?.message || 'No fue posible guardar la información.');
+          }
+        },
+        error: () => {
+          this.guardandoPadreBiologicoKey = null;
+          this.showSuccessMessage('error', 'Error', 'Error al guardar la información.');
+        },
+      });
+  }
+
+  /** Modelo de edición de estado RPA por id de registro (se crea perezosamente al primer acceso). */
+  estadoRpaModel(idPadre: number): { nuevoEstado: 'Pendiente' | 'Procesado' | null; radicado: string } {
+    if (!this.estadoRpaPadresEdicion[idPadre]) {
+      this.estadoRpaPadresEdicion[idPadre] = { nuevoEstado: null, radicado: '' };
+    }
+    return this.estadoRpaPadresEdicion[idPadre];
+  }
+
+  puedeGuardarEstadoRpaPadreBiologico(idPadre: number): boolean {
+    const modelo = this.estadoRpaModel(idPadre);
+    if (!modelo.nuevoEstado) return false;
+    if (modelo.nuevoEstado === 'Procesado' && !modelo.radicado.trim()) return false;
+    return true;
+  }
+
+  /** Cambia estado_rpa_padres de "No procesado" a "Pendiente" o "Procesado". */
+  guardarEstadoRpaPadreBiologico(registro: PadreBiologicoRecord, iBenef: number, b: BeneficiarioBundle): void {
+    const modelo = this.estadoRpaModel(registro.id);
+    if (!this.puedeGuardarEstadoRpaPadreBiologico(registro.id) || !modelo.nuevoEstado) return;
+
+    this.guardandoEstadoRpaPadresId = registro.id;
+    this.userService
+      .cambiarEstadoRpaPadreBiologico({
+        id: registro.id,
+        estadoRpaPadres: modelo.nuevoEstado,
+        radicadoOtroPadre: modelo.nuevoEstado === 'Procesado' ? modelo.radicado.trim() : null,
+      })
+      .subscribe({
+        next: (res) => {
+          this.guardandoEstadoRpaPadresId = null;
+          if (res?.code === 200) {
+            delete this.estadoRpaPadresEdicion[registro.id];
+            this.showSuccessMessage('success', 'Exitoso', 'Estado actualizado.');
+            this.fetchPadresBiologicosBeneficiario(iBenef, b.persona.id);
+          } else {
+            this.showSuccessMessage('warn', 'Aviso', res?.message || 'No fue posible actualizar el estado.');
+          }
+        },
+        error: () => {
+          this.guardandoEstadoRpaPadresId = null;
+          this.showSuccessMessage('error', 'Error', 'Error al actualizar el estado.');
+        },
+      });
   }
 
   /** True si el beneficiario en el índice dado tiene cambios respecto a su snapshot (solo si tiene sección editable). */

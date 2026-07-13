@@ -1206,6 +1206,403 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Padres biológicos (solo beneficiarios con parentesco Hijo) -->
+                <div class="process-container" *ngIf="esBeneficiarioHijo(b)">
+                  <h4 class="tab-data-section-subtitle">Padres biológicos</h4>
+
+                  <p-message *ngIf="padresBiologicosCargando(iBenef)" severity="info" text="Cargando información de los padres..."></p-message>
+
+                  <ng-container *ngIf="!padresBiologicosCargando(iBenef)">
+                    <h5 class="tab-data-section-subtitle">Información del Padre</h5>
+                    <ng-container *ngIf="getPadreBiologico(iBenef) as padre; else formPadre">
+                      <div class="process-container-row">
+                        <div class="process-container-col">
+                          <label class="process-container-label">Tipo documento</label>
+                          <p-dropdown
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.tipo_documento"
+                            [options]="opcionesTipoDocumento"
+                            [(ngModel)]="padre.tipo_documento"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            styleClass="data-field-dropdown" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.tipo_documento)" class="process-container-text">{{ padre.tipo_documento || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Número documento</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.numero_documento"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.numero_documento"
+                            placeholder="Número documento" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.numero_documento)" class="process-container-text">{{ padre.numero_documento || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Primer nombre</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.primer_nombre"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.primer_nombre"
+                            placeholder="Primer nombre" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.primer_nombre)" class="process-container-text">{{ padre.primer_nombre || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Segundo nombre</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.segundo_nombre"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.segundo_nombre"
+                            placeholder="Segundo nombre" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.segundo_nombre)" class="process-container-text">{{ padre.segundo_nombre || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Primer apellido</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.primer_apellido"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.primer_apellido"
+                            placeholder="Primer apellido" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.primer_apellido)" class="process-container-text">{{ padre.primer_apellido || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Segundo apellido</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.segundo_apellido"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.segundo_apellido"
+                            placeholder="Segundo apellido" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.segundo_apellido)" class="process-container-text">{{ padre.segundo_apellido || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Pendiente completar</label>
+                          <div class="process-container-text">{{ padre.pendiente_completar }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Estado Rpa padres</label>
+                          <div class="process-container-text">{{ getLabelEstadoRpaPadres(padre.estado_rpa_padres) }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Radicado otro padre</label>
+                          <div class="process-container-text">{{ padre.radicado_otro_padre || '—' }}</div>
+                        </div>
+                      </div>
+                      <div class="process-container-row tab-data-save-row" *ngIf="padre.pendiente_completar === 'Si'">
+                        <div class="process-container-col">
+                          <p-button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            (onClick)="completarPadreBiologico(padre, b, iBenef, 'padre')"
+                            [loading]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre')"
+                            [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre') || !puedeGuardarCompletarPadreBiologico(padre)"
+                            severity="primary"
+                            [style]="{ 'border-radius': '6px' }" />
+                        </div>
+                      </div>
+
+                      <!-- Gestión de estado Rpa padres: solo accionable si está en "No procesado" -->
+                      <div class="process-container-row" *ngIf="padre.estado_rpa_padres === 'No procesado'">
+                        <div class="process-container-col">
+                          <label class="process-container-label">Cambiar estado Rpa padres</label>
+                          <p-dropdown
+                            [options]="[{ label: 'Pendiente', value: 'Pendiente' }, { label: 'Procesado', value: 'Procesado' }]"
+                            [(ngModel)]="estadoRpaModel(padre.id).nuevoEstado"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            styleClass="data-field-dropdown" />
+                        </div>
+                        <div class="process-container-col" *ngIf="estadoRpaModel(padre.id).nuevoEstado === 'Procesado'">
+                          <label class="process-container-label">Radicado otro padre</label>
+                          <input
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="estadoRpaModel(padre.id).radicado"
+                            placeholder="Radicado otro padre" />
+                        </div>
+                        <div class="process-container-col">
+                          <p-button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            (onClick)="guardarEstadoRpaPadreBiologico(padre, iBenef, b)"
+                            [loading]="guardandoEstadoRpaPadresId === padre.id"
+                            [disabled]="guardandoEstadoRpaPadresId === padre.id || !puedeGuardarEstadoRpaPadreBiologico(padre.id)"
+                            severity="primary"
+                            [style]="{ 'border-radius': '6px' }" />
+                        </div>
+                      </div>
+                    </ng-container>
+                    <ng-template #formPadre>
+                      <p-button
+                        *ngIf="!formularioPadreBiologicoAbierto[keyPadreBiologico(iBenef, 'padre')]"
+                        label="Agregar padre"
+                        icon="pi pi-plus"
+                        severity="success"
+                        [style]="{ 'border-radius': '6px' }"
+                        (onClick)="abrirAgregarPadreBiologico(iBenef, 'padre')"></p-button>
+                      <ng-container *ngIf="formularioPadreBiologicoAbierto[keyPadreBiologico(iBenef, 'padre')]">
+                        <div class="process-container-row">
+                          <div class="process-container-col">
+                            <label class="process-container-label">Tipo documento</label>
+                            <p-dropdown
+                              [options]="opcionesTipoDocumento"
+                              [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].tipo_documento"
+                              optionLabel="label"
+                              optionValue="value"
+                              placeholder="Seleccione"
+                              appendTo="body"
+                              [style]="{ width: '100%' }"
+                              styleClass="data-field-dropdown" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Número documento</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].numero_documento" placeholder="Número documento" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Primer nombre</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].primer_nombre" placeholder="Primer nombre" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Segundo nombre</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].segundo_nombre" placeholder="Segundo nombre" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Primer apellido</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].primer_apellido" placeholder="Primer apellido" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Segundo apellido</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].segundo_apellido" placeholder="Segundo apellido" />
+                          </div>
+                        </div>
+                        <div class="process-container-row tab-data-save-row">
+                          <div class="process-container-col">
+                            <p-button
+                              label="Guardar"
+                              icon="pi pi-check"
+                              (onClick)="guardarNuevoPadreBiologico(b, iBenef, 'padre')"
+                              [loading]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre')"
+                              [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre') || !puedeGuardarNuevoPadreBiologico(iBenef, 'padre')"
+                              severity="primary"
+                              [style]="{ 'border-radius': '6px' }" />
+                          </div>
+                          <div class="process-container-col">
+                            <p-button
+                              label="Cancelar"
+                              icon="pi pi-times"
+                              severity="secondary"
+                              [style]="{ 'border-radius': '6px' }"
+                              [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre')"
+                              (onClick)="cancelarAgregarPadreBiologico(iBenef, 'padre')"></p-button>
+                          </div>
+                        </div>
+                      </ng-container>
+                    </ng-template>
+
+                    <h5 class="tab-data-section-subtitle">Información de la Madre</h5>
+                    <ng-container *ngIf="getMadreBiologica(iBenef) as madre; else formMadre">
+                      <div class="process-container-row">
+                        <div class="process-container-col">
+                          <label class="process-container-label">Tipo documento</label>
+                          <p-dropdown
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.tipo_documento"
+                            [options]="opcionesTipoDocumento"
+                            [(ngModel)]="madre.tipo_documento"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            styleClass="data-field-dropdown" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.tipo_documento)" class="process-container-text">{{ madre.tipo_documento || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Número documento</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.numero_documento"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.numero_documento"
+                            placeholder="Número documento" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.numero_documento)" class="process-container-text">{{ madre.numero_documento || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Primer nombre</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.primer_nombre"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.primer_nombre"
+                            placeholder="Primer nombre" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.primer_nombre)" class="process-container-text">{{ madre.primer_nombre || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Segundo nombre</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.segundo_nombre"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.segundo_nombre"
+                            placeholder="Segundo nombre" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.segundo_nombre)" class="process-container-text">{{ madre.segundo_nombre || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Primer apellido</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.primer_apellido"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.primer_apellido"
+                            placeholder="Primer apellido" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.primer_apellido)" class="process-container-text">{{ madre.primer_apellido || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Segundo apellido</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.segundo_apellido"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.segundo_apellido"
+                            placeholder="Segundo apellido" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.segundo_apellido)" class="process-container-text">{{ madre.segundo_apellido || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Pendiente completar</label>
+                          <div class="process-container-text">{{ madre.pendiente_completar }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Estado Rpa padres</label>
+                          <div class="process-container-text">{{ getLabelEstadoRpaPadres(madre.estado_rpa_padres) }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Radicado otro padre</label>
+                          <div class="process-container-text">{{ madre.radicado_otro_padre || '—' }}</div>
+                        </div>
+                      </div>
+                      <div class="process-container-row tab-data-save-row" *ngIf="madre.pendiente_completar === 'Si'">
+                        <div class="process-container-col">
+                          <p-button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            (onClick)="completarPadreBiologico(madre, b, iBenef, 'madre')"
+                            [loading]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre')"
+                            [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre') || !puedeGuardarCompletarPadreBiologico(madre)"
+                            severity="primary"
+                            [style]="{ 'border-radius': '6px' }" />
+                        </div>
+                      </div>
+
+                      <!-- Gestión de estado Rpa padres: solo accionable si está en "No procesado" -->
+                      <div class="process-container-row" *ngIf="madre.estado_rpa_padres === 'No procesado'">
+                        <div class="process-container-col">
+                          <label class="process-container-label">Cambiar estado Rpa padres</label>
+                          <p-dropdown
+                            [options]="[{ label: 'Pendiente', value: 'Pendiente' }, { label: 'Procesado', value: 'Procesado' }]"
+                            [(ngModel)]="estadoRpaModel(madre.id).nuevoEstado"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            styleClass="data-field-dropdown" />
+                        </div>
+                        <div class="process-container-col" *ngIf="estadoRpaModel(madre.id).nuevoEstado === 'Procesado'">
+                          <label class="process-container-label">Radicado otro padre</label>
+                          <input
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="estadoRpaModel(madre.id).radicado"
+                            placeholder="Radicado otro padre" />
+                        </div>
+                        <div class="process-container-col">
+                          <p-button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            (onClick)="guardarEstadoRpaPadreBiologico(madre, iBenef, b)"
+                            [loading]="guardandoEstadoRpaPadresId === madre.id"
+                            [disabled]="guardandoEstadoRpaPadresId === madre.id || !puedeGuardarEstadoRpaPadreBiologico(madre.id)"
+                            severity="primary"
+                            [style]="{ 'border-radius': '6px' }" />
+                        </div>
+                      </div>
+                    </ng-container>
+                    <ng-template #formMadre>
+                      <p-button
+                        *ngIf="!formularioPadreBiologicoAbierto[keyPadreBiologico(iBenef, 'madre')]"
+                        label="Agregar madre"
+                        icon="pi pi-plus"
+                        severity="success"
+                        [style]="{ 'border-radius': '6px' }"
+                        (onClick)="abrirAgregarPadreBiologico(iBenef, 'madre')"></p-button>
+                      <ng-container *ngIf="formularioPadreBiologicoAbierto[keyPadreBiologico(iBenef, 'madre')]">
+                        <div class="process-container-row">
+                          <div class="process-container-col">
+                            <label class="process-container-label">Tipo documento</label>
+                            <p-dropdown
+                              [options]="opcionesTipoDocumento"
+                              [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].tipo_documento"
+                              optionLabel="label"
+                              optionValue="value"
+                              placeholder="Seleccione"
+                              appendTo="body"
+                              [style]="{ width: '100%' }"
+                              styleClass="data-field-dropdown" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Número documento</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].numero_documento" placeholder="Número documento" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Primer nombre</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].primer_nombre" placeholder="Primer nombre" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Segundo nombre</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].segundo_nombre" placeholder="Segundo nombre" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Primer apellido</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].primer_apellido" placeholder="Primer apellido" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Segundo apellido</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].segundo_apellido" placeholder="Segundo apellido" />
+                          </div>
+                        </div>
+                        <div class="process-container-row tab-data-save-row">
+                          <div class="process-container-col">
+                            <p-button
+                              label="Guardar"
+                              icon="pi pi-check"
+                              (onClick)="guardarNuevoPadreBiologico(b, iBenef, 'madre')"
+                              [loading]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre')"
+                              [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre') || !puedeGuardarNuevoPadreBiologico(iBenef, 'madre')"
+                              severity="primary"
+                              [style]="{ 'border-radius': '6px' }" />
+                          </div>
+                          <div class="process-container-col">
+                            <p-button
+                              label="Cancelar"
+                              icon="pi pi-times"
+                              severity="secondary"
+                              [style]="{ 'border-radius': '6px' }"
+                              [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre')"
+                              (onClick)="cancelarAgregarPadreBiologico(iBenef, 'madre')"></p-button>
+                          </div>
+                        </div>
+                      </ng-container>
+                    </ng-template>
+                  </ng-container>
+                </div>
               </div>
 
               <!-- Archivos adjuntos del beneficiario -->
