@@ -799,6 +799,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
             };
             this.trabajadorBeneficiarioValidado = true;
             this.bloquearIdentificacionTrabajadorBeneficiario();
+            this.cargarCatalogosParaSolicitud();
             return;
           }
           this.trabajadorBeneficiarioValidado = false;
