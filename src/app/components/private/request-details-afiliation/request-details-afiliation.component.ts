@@ -1795,14 +1795,22 @@ getRequestDetails(request_details: number) {
     }));
   }
 
+  /** True si el estado actual de la solicitud es "Aprobada completa" o "Aprobada incompleta": ya no se permite editar datos de trabajador ni beneficiarios. */
+  private get solicitudEstadoNoEditable(): boolean {
+    const d = this.afiliationRequestDetails;
+    if (!d?.solicitud) return false;
+    const texto = this.normalizarTextoEstadoTimeline(this.currentState || d.solicitud.estado_codigo);
+    return texto === 'aprobada completa' || texto === 'aprobada incompleta';
+  }
+
   /** True si el beneficiario en el índice dado tiene la sección editable (era CE/PPT/CC/TI/RC al cargar; los selectores no se ocultan al cambiar). */
   beneficioPuedeEditar(index: number): boolean {
-    return this.beneficioEditablePorIndice[index] === true;
+    return this.beneficioEditablePorIndice[index] === true && !this.solicitudEstadoNoEditable;
   }
 
   /** True si el beneficiario en el índice dado tiene habilitada la edición de campos adicionales (era CC/TI/RC al cargar): grupo familiar, invalidez, admin subsidios. */
   beneficioPuedeEditarExtras(index: number): boolean {
-    return this.beneficioEditableExtrasPorIndice[index] === true;
+    return this.beneficioEditableExtrasPorIndice[index] === true && !this.solicitudEstadoNoEditable;
   }
 
   /** True si el beneficiario tiene parentesco "Hijo" (único caso con sección de Padres biológicos). */
@@ -2220,7 +2228,7 @@ getRequestDetails(request_details: number) {
   /** True si al cargar el trabajador tenía CE o PPT; la sección sigue editable aunque se cambie el tipo de documento. */
   private trabajadorEditablePorCarga = false;
   get trabajadorPuedeEditar(): boolean {
-    return this.trabajadorEditablePorCarga;
+    return this.trabajadorEditablePorCarga && !this.solicitudEstadoNoEditable;
   }
 
   /** True si al cargar el trabajador no tenía estado civil registrado; la edición se mantiene aunque el usuario seleccione un valor (para que el botón Guardar siga visible). */
@@ -2253,7 +2261,7 @@ getRequestDetails(request_details: number) {
    *  (b) el trabajador no tiene estado civil registrado (el campo viene vacío y debe completarse).
    */
   get mostrarEstadoCivilEditable(): boolean {
-    return this.hayBeneficiarioConyuge || this.estadoCivilTrabajadorVacio;
+    return (this.hayBeneficiarioConyuge || this.estadoCivilTrabajadorVacio) && !this.solicitudEstadoNoEditable;
   }
 
   /** True cuando el estado civil actual es "Soltero(a)" Y existe un beneficiario Cónyuge. Solo para mostrar la alerta. */
