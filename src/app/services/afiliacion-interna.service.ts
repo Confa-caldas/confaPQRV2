@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { EndPointRoute } from '../enums/routes.enum';
 import { BodyResponse } from '../models/shared/body-response.inteface';
@@ -63,12 +63,15 @@ export class AfiliacionInternaService {
 
   /**
    * Valida trabajador y obtiene datos prellenados para la solicitud.
-   * El `Authorization` lo añade el interceptor HTTP global.
+   * Va directo al WS (mismo patrón que guardar-solicitud): la Lambda orquestadora reenvía a
+   * `p.confa.co/.../validar-trabajador`, y esa consulta puede superar los 29-30s fijos de timeout
+   * de API Gateway, devolviendo "Endpoint request timed out" aunque el WS siga procesando.
+   * El WS responde el cuerpo de negocio "plano" (success/puedeContinuar/validaciones/datosFormulario);
+   * se envuelve aquí en `BodyResponse` para no tocar los consumidores existentes.
    */
   validarTrabajador(body: ValidarTrabajadorRequestBody): Observable<BodyResponse<ValidarTrabajadorResponse>> {
-    return this.http.post<BodyResponse<ValidarTrabajadorResponse>>(
-      `${environment.API_PUBLIC}${EndPointRoute.AFILIACION_INTERNA_VALIDAR_TRABAJADOR}`,
-      body
+    return this.postDirectoWs<ValidarTrabajadorResponse>(body.idEmpresa, 'validar-trabajador', body, false).pipe(
+      map(data => ({ code: 200, message: 'OK', data }))
     );
   }
 
@@ -85,13 +88,15 @@ export class AfiliacionInternaService {
     );
   }
 
-  /** Valida beneficiario (persona a cargo) antes de agregarlo al listado. */
+  /**
+   * Valida beneficiario (persona a cargo) antes de agregarlo al listado.
+   * Igual que validarTrabajador: va directo al WS para evitar el timeout fijo de API Gateway.
+   */
   validarBeneficiario(
     body: ValidarBeneficiarioRequestBody
   ): Observable<BodyResponse<ValidarBeneficiarioResponse>> {
-    return this.http.post<BodyResponse<ValidarBeneficiarioResponse>>(
-      `${environment.API_PUBLIC}${EndPointRoute.AFILIACION_INTERNA_VALIDAR_BENEFICIARIO}`,
-      body
+    return this.postDirectoWs<ValidarBeneficiarioResponse>(body.idEmpresa, 'validar-beneficiario', body, false).pipe(
+      map(data => ({ code: 200, message: 'OK', data }))
     );
   }
 

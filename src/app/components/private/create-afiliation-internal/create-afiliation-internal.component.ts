@@ -103,7 +103,7 @@ export type PasoAfiliacionInterna = 0 | 1 | 2 | 3 | 4;
 /** Subpasos del flujo beneficiario interno (step === 3). */
 export type PasoBeneficiarioInterna = 1 | 2 | 3 | 4;
 
-const MAX_TAMANO_ADJUNTO_BYTES = 5 * 1024 * 1024;
+const MAX_TAMANO_ADJUNTO_BYTES = 4 * 1024 * 1024;
 const ID_TIPO_ADJUNTO_DOCUMENTO_IDENTIDAD = 1;
 const ID_TIPO_ADJUNTO_PERMISO_TRABAJO = 2;
 const ID_TIPO_ADJUNTO_SOPORTE_DISCAPACIDAD = 4;
@@ -3006,7 +3006,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.messageService.add({
       severity: 'warn',
       summary: 'Tamaño máximo superado',
-      detail: 'No se permite cargar archivos de más de 5 MB.',
+      detail: 'No se permite cargar archivos de más de 4 MB.',
     });
     return false;
   }

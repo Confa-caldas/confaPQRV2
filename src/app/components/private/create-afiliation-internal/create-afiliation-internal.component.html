@@ -995,7 +995,7 @@
                 <h5 class="cai-subsection__title">Documento de identidad *</h5>
                 <p class="cai-acc-intro">
                   Adjunta copia del documento de identidad para continuar. Puedes cargar hasta 3 archivos o arrastrarlos aquí.
-                  Formatos: PDF, PNG, JPG. Máximo 5 MB por archivo.
+                  Formatos: PDF, PNG, JPG. Máximo 4 MB por archivo.
                 </p>
                 <input
                   #fileInputIdentidad
@@ -1014,7 +1014,7 @@
                   tabindex="0">
                   <i class="pi pi-cloud-upload cai-upload-zone__icon" aria-hidden="true"></i>
                   <p class="cai-upload-zone__title">Arrastra el archivo aquí o haz clic para seleccionar</p>
-                  <p class="cai-upload-zone__hint">PDF, PNG, JPEG o JPG — Máx. 5 MB. Hasta 3 archivos.</p>
+                  <p class="cai-upload-zone__hint">PDF, PNG, JPEG o JPG — Máx. 4 MB. Hasta 3 archivos.</p>
                   <p-button type="button" label="Seleccionar archivo" [outlined]="true" (click)="fileInputIdentidad.click(); $event.stopPropagation()"></p-button>
                 </div>
                 <div *ngIf="archivosIdentidad.length > 0" class="cai-upload-list">
@@ -1166,7 +1166,7 @@
                 <h5 class="cai-subsection__title">Permiso de trabajo *</h5>
                 <p class="cai-acc-intro" *ngIf="mensajePermisoLaboral">{{ mensajePermisoLaboral }}</p>
                 <p class="cai-acc-intro" *ngIf="!mensajePermisoLaboral">
-                  Adjunta el permiso de trabajo del menor de edad. Hasta 3 archivos. Máximo 5 MB por archivo.
+                  Adjunta el permiso de trabajo del menor de edad. Hasta 3 archivos. Máximo 4 MB por archivo.
                 </p>
                 <input
                   #fileInputPermiso
@@ -1185,7 +1185,7 @@
                   tabindex="0">
                   <i class="pi pi-cloud-upload cai-upload-zone__icon" aria-hidden="true"></i>
                   <p class="cai-upload-zone__title">Arrastra el archivo aquí o haz clic para seleccionar</p>
-                  <p class="cai-upload-zone__hint">PDF, PNG, JPEG, JPG o DOCX — Máx. 5 MB. Hasta 3 archivos.</p>
+                  <p class="cai-upload-zone__hint">PDF, PNG, JPEG, JPG o DOCX — Máx. 4 MB. Hasta 3 archivos.</p>
                   <p-button type="button" label="Seleccionar archivo" [outlined]="true" (click)="fileInputPermiso.click(); $event.stopPropagation()"></p-button>
                 </div>
                 <div *ngIf="archivosPermisoTrabajo.length > 0" class="cai-upload-list">
