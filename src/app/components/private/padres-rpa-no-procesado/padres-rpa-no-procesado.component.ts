@@ -43,9 +43,9 @@ export class PadresRpaNoProcesadoComponent implements OnInit {
 
   visibleDialogCambiarEstado = false;
   guardandoCambioEstado = false;
-  /** Se carga desde afiliaciones.parametros_estado_gestion_persona (catálogo compartido), filtrando solo Pendiente/Procesado. */
+  /** Se carga desde afiliaciones.parametros_estado_gestion_persona (catálogo compartido completo). */
   estadoCambioOpciones: { label: string; value: string }[] = [];
-  estadoCambioSeleccionado: 'Pendiente' | 'Procesado' | null = null;
+  estadoCambioSeleccionado: string | null = null;
   radicadoOtroPadreCambio = '';
   observacionCambio = '';
 
@@ -240,12 +240,12 @@ export class PadresRpaNoProcesadoComponent implements OnInit {
     }
   }
 
-  /** Catálogo compartido afiliaciones.parametros_estado_gestion_persona; solo Pendiente/Procesado son válidos para esta acción. */
+  /** Catálogo compartido afiliaciones.parametros_estado_gestion_persona, restringido a los únicos códigos válidos para esta acción. */
   private cargarEstadosGestionPersona(): void {
     this.userService.getEstadoGestionPersonaList().subscribe({
       next: (response: BodyResponse<ParametroEstadoGestionPersona[]>) => {
         this.estadoCambioOpciones = (response.data ?? [])
-          .filter(e => e.esta_activo !== false && ['Pendiente', 'Procesado'].includes(e.codigo))
+          .filter(e => e.esta_activo !== false && ['Pendiente', 'Procesado', 'Rechazado'].includes(e.codigo))
           .map(e => ({ label: e.codigo, value: e.codigo }));
       },
       error: err => console.error(err),

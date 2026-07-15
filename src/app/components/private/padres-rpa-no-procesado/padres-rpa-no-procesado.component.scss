@@ -72,51 +72,60 @@ tr {
   cursor: not-allowed !important;
 }
 
-::ng-deep .modal-nice {
-  border-radius: 12px;
-  overflow: hidden;
+/* Estilo estándar de modales (mismo patrón que modal-assign-afiliation-selector / modal-search-person-data) */
+.modal-content {
+  background-color: $color-white;
+}
 
-  .p-dialog-header {
-    padding: 1.25rem 1.5rem 0.75rem;
-    font-weight: 600;
-  }
+.login-form-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
 
-  .p-dialog-content {
-    padding: 0.5rem 1.5rem 1.25rem;
-  }
+  &__item {
+    width: 17%;
+    height: 20px;
 
-  .p-dialog-footer {
-    padding: 0.75rem 1.5rem 1.25rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
+    &_1 {
+      background-color: $color-blue;
+    }
+    &_2 {
+      background-color: $color-green;
+    }
+    &_3 {
+      background-color: $color-yellow;
+    }
+    &_4 {
+      background-color: $color-orange;
+    }
+    &_5 {
+      background-color: $color-rosado;
+    }
+    &_6 {
+      background-color: $color-red;
+    }
   }
 }
 
-.modal-nice-field {
-  margin-bottom: 1rem;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
+.error-label {
+  color: $color-red;
+  font-size: small;
 }
 
-.modal-nice-label {
-  display: block;
-  margin-bottom: 0.4rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #495057;
+.multi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.modal-nice-required {
-  color: #e53935;
+.label {
+  color: $color-text-black;
+  font-family: $font-light;
+  font-size: 12px;
 }
 
-.modal-nice-input {
-  width: 100%;
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+.custom-input {
+  border: 1px solid #ced4da;
+  padding: 0 8px;
   box-sizing: border-box;
-  resize: vertical;
 }

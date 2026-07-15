@@ -2007,7 +2007,8 @@ export interface AsignarPadresRpaPayload {
 
 export interface CambiarEstadoMasivoPadresRpaPayload {
   idsSolicitud: number[];
-  estadoRpaPadres: 'Pendiente' | 'Procesado';
+  /** Cualquier código activo de afiliaciones.parametros_estado_gestion_persona; el backend solo acepta Pendiente/Procesado. */
+  estadoRpaPadres: string;
   observaciones?: string | null;
   radicadoOtroPadre?: string | null;
 }

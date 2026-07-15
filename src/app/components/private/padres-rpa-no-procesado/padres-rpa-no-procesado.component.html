@@ -146,82 +146,113 @@
 
 <p-toast></p-toast>
 
-<p-dialog
-  header="Asignar colaborador"
-  styleClass="modal-nice"
-  [(visible)]="visibleDialogAsignar"
-  [modal]="true"
-  [closable]="true"
-  [style]="{ width: '440px' }"
-  (onHide)="cancelarAsignar()">
-  <div class="modal-nice-field">
-    <label class="modal-nice-label">Colaborador <span class="modal-nice-required">*</span></label>
-    <p-dropdown
-      [(ngModel)]="responsableSeleccionado"
-      [options]="responsableOpciones"
-      optionLabel="nombre_usuario_red"
-      optionValue="nombre_usuario_red"
-      placeholder="Seleccione un colaborador"
-      [showClear]="true"
-      appendTo="body"
-      [style]="{ width: '100%' }"></p-dropdown>
-  </div>
-  <ng-template pTemplate="footer">
-    <p-button label="Cancelar" [styleClass]="'p-button-secondary'" (click)="cancelarAsignar()"></p-button>
-    <p-button
-      label="Guardar"
-      icon="pi pi-check"
-      [loading]="guardandoAsignacion"
-      [disabled]="guardandoAsignacion || !responsableSeleccionado"
-      (click)="confirmarAsignar()"></p-button>
+<p-dialog [(visible)]="visibleDialogAsignar" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">Asignar colaborador a beneficiarios seleccionados</div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 multi">
+          <label class="label">Colaborador</label>
+          <p-dropdown
+            [(ngModel)]="responsableSeleccionado"
+            [options]="responsableOpciones"
+            optionLabel="nombre_usuario_red"
+            optionValue="nombre_usuario_red"
+            class="selector"
+            [style]="{ height: '40px', 'align-items': 'center', width: '350px' }"
+            placeholder="Colaborador"></p-dropdown>
+          <label class="error-label">{{ !responsableSeleccionado ? 'Seleccione un colaborador' : '' }}</label>
+        </div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 d-flex justify-content-evenly">
+          <p-button label="Cancelar" severity="secondary" (click)="cancelarAsignar()"></p-button>
+          <p-button
+            label="Asignar"
+            [loading]="guardandoAsignacion"
+            [disabled]="guardandoAsignacion || !responsableSeleccionado"
+            (click)="confirmarAsignar()"></p-button>
+        </div>
+      </div>
+    </div>
   </ng-template>
 </p-dialog>
 
-<p-dialog
-  header="Cambiar estado Rpa padres"
-  styleClass="modal-nice"
-  [(visible)]="visibleDialogCambiarEstado"
-  [modal]="true"
-  [closable]="true"
-  [style]="{ width: '460px' }"
-  (onHide)="cancelarCambioEstado()">
-  <div class="modal-nice-field">
-    <label class="modal-nice-label">Estado Rpa padres <span class="modal-nice-required">*</span></label>
-    <p-dropdown
-      [(ngModel)]="estadoCambioSeleccionado"
-      [options]="estadoCambioOpciones"
-      optionLabel="label"
-      optionValue="value"
-      placeholder="Seleccione un estado"
-      [showClear]="true"
-      appendTo="body"
-      [style]="{ width: '100%' }"></p-dropdown>
-  </div>
-  <div class="modal-nice-field" *ngIf="estadoCambioSeleccionado === 'Procesado'">
-    <label class="modal-nice-label">Radicado otro padre <span class="modal-nice-required">*</span></label>
-    <input
-      pInputText
-      type="text"
-      class="modal-nice-input"
-      [(ngModel)]="radicadoOtroPadreCambio"
-      placeholder="Radicado otro padre" />
-  </div>
-  <div class="modal-nice-field">
-    <label class="modal-nice-label">Observación</label>
-    <textarea
-      pInputTextarea
-      class="modal-nice-input"
-      rows="3"
-      [(ngModel)]="observacionCambio"
-      placeholder="Observación (opcional)"></textarea>
-  </div>
-  <ng-template pTemplate="footer">
-    <p-button label="Cancelar" [styleClass]="'p-button-secondary'" (click)="cancelarCambioEstado()"></p-button>
-    <p-button
-      label="Guardar"
-      icon="pi pi-check"
-      [loading]="guardandoCambioEstado"
-      [disabled]="guardandoCambioEstado || !puedeConfirmarCambioEstado()"
-      (click)="confirmarCambioEstado()"></p-button>
+<p-dialog [(visible)]="visibleDialogCambiarEstado" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">Cambiar estado Rpa padres de beneficiarios seleccionados</div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 multi">
+          <label class="label">Estado Rpa padres</label>
+          <p-dropdown
+            [(ngModel)]="estadoCambioSeleccionado"
+            [options]="estadoCambioOpciones"
+            optionLabel="label"
+            optionValue="value"
+            class="selector"
+            [style]="{ height: '40px', 'align-items': 'center', width: '350px' }"
+            placeholder="Estado Rpa padres"></p-dropdown>
+          <label class="error-label">{{ !estadoCambioSeleccionado ? 'Seleccione un estado' : '' }}</label>
+        </div>
+      </div>
+      <div class="row my-4 px-5" *ngIf="estadoCambioSeleccionado === 'Procesado'">
+        <div class="col-12 multi">
+          <label class="label">Radicado otro padre</label>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="radicadoOtroPadreCambio"
+            [style]="{ 'border-radius': '5px', width: '350px' }"
+            class="custom-input"
+            placeholder="Radicado otro padre" />
+          <label class="error-label">{{
+            !radicadoOtroPadreCambio.trim() ? 'El radicado otro padre es obligatorio' : ''
+          }}</label>
+        </div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 multi">
+          <label class="label">Observación (opcional)</label>
+          <textarea
+            rows="3"
+            [(ngModel)]="observacionCambio"
+            [style]="{ 'border-radius': '5px', width: '350px' }"
+            class="custom-input"
+            placeholder="Escribir observación"
+            pInputTextarea></textarea>
+        </div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 d-flex justify-content-evenly">
+          <p-button label="Cancelar" severity="secondary" (click)="cancelarCambioEstado()"></p-button>
+          <p-button
+            label="Guardar"
+            [loading]="guardandoCambioEstado"
+            [disabled]="guardandoCambioEstado || !puedeConfirmarCambioEstado()"
+            (click)="confirmarCambioEstado()"></p-button>
+        </div>
+      </div>
+    </div>
   </ng-template>
 </p-dialog>
