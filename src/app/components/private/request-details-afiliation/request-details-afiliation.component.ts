@@ -816,17 +816,27 @@ export class RequestDetailsAfiliationComponent implements OnInit {
                 : ['No cumple los requisitos para gestionar el estado.'];
 
           if (!d.es_valido) {
-            const erroresRestantes = lista.filter((e) => !this.esErrorAdjuntosSinValidar(e));
+            const erroresAdjuntos = lista.filter((e) => this.esErrorAdjuntosSinValidar(e));
+            const erroresNovedadCalidad = lista.filter((e) => this.esErrorNovedadCalidadDatosPendiente(e));
+            const erroresRestantes = lista.filter(
+              (e) => !this.esErrorAdjuntosSinValidar(e) && !this.esErrorNovedadCalidadDatosPendiente(e)
+            );
             if (erroresRestantes.length === 0) {
-              // Único motivo de bloqueo: adjuntos sin validar en Sí. No bloquea: permite gestionar,
-              // pero solo hacia el estado Rechazado (ver opcionesEstadoAfiliadoModal).
+              // Únicos motivos de bloqueo: adjuntos sin validar en Sí y/o novedad de calidad de datos pendiente.
+              // Ninguno de los dos bloquea: se informa (si aplica) y se permite gestionar igual.
               this.validacionRequisitosGestionCache.set(personaId, { valido: true, errores: [] });
-              this.showSuccessMessage(
-                'info',
-                'Gestión restringida',
-                'Hay adjuntos sin validar en «Sí»: solo puede pasar esta persona a estado Rechazado.'
-              );
-              this.abrirModalGestionarEstado(contexto, indiceBeneficiario, true);
+              const soloRechazoPermitido = erroresAdjuntos.length > 0;
+              if (soloRechazoPermitido) {
+                this.showSuccessMessage(
+                  'info',
+                  'Gestión restringida',
+                  'Hay adjuntos sin validar en «Sí»: solo puede pasar esta persona a estado Rechazado.'
+                );
+              }
+              this.abrirModalGestionarEstado(contexto, indiceBeneficiario, soloRechazoPermitido);
+              if (erroresNovedadCalidad.length > 0) {
+                this.mostrarModalBloqueoRequisitosGestion(nombre, erroresNovedadCalidad, false);
+              }
               return;
             }
             this.validacionRequisitosGestionCache.set(personaId, { valido: false, errores: erroresRestantes });
@@ -858,8 +868,21 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     return t.includes('adjunt') && (t.includes('valida') || t.includes('estado diferente a si'));
   }
 
-  mostrarModalBloqueoRequisitosGestion(nombrePersona: string, errores: string[]): void {
-    this.bloqueoRequisitosGestionTitulo = `No se puede gestionar a ${nombrePersona} por los siguientes motivos:`;
+  /** True si el mensaje de error corresponde a "novedad de calidad de datos pendiente de procesar" (no bloquea, solo informa). */
+  private esErrorNovedadCalidadDatosPendiente(mensaje: string): boolean {
+    const t = (mensaje ?? '')
+      .toString()
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '');
+    return t.includes('novedad') && t.includes('calidad') && t.includes('pendiente');
+  }
+
+  mostrarModalBloqueoRequisitosGestion(nombrePersona: string, errores: string[], bloqueante: boolean = true): void {
+    this.bloqueoRequisitosGestionTitulo = bloqueante
+      ? `No se puede gestionar a ${nombrePersona} por los siguientes motivos:`
+      : `Antes de gestionar a ${nombrePersona}, ten en cuenta:`;
     this.bloqueoRequisitosGestionLista = [...errores];
     this.visibleModalBloqueoRequisitosGestion = true;
   }
