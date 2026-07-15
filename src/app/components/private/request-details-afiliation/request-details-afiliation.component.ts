@@ -1826,14 +1826,32 @@ getRequestDetails(request_details: number) {
     return texto === 'aprobada completa' || texto === 'aprobada incompleta';
   }
 
+  /** True si el estado de gestión del integrante ya es "Pendiente afiliación RPA" o "Procesado": no se permite editar sus datos ni subir adjuntos adicionales. */
+  personaGestionNoEditable(contexto: 'trabajador' | 'beneficiario', indiceBeneficiario?: number): boolean {
+    const id = this.idEstadoGestionPersonaIntegrante(contexto, indiceBeneficiario);
+    if (id == null) {
+      return false;
+    }
+    const n = Number(id);
+    return n === this.ID_ESTADO_GESTION_PENDIENTE_AFILIACION_RPA || n === this.ID_ESTADO_GESTION_PROCESADO;
+  }
+
   /** True si el beneficiario en el índice dado tiene la sección editable (era CE/PPT/CC/TI/RC al cargar; los selectores no se ocultan al cambiar). */
   beneficioPuedeEditar(index: number): boolean {
-    return this.beneficioEditablePorIndice[index] === true && !this.solicitudEstadoNoEditable;
+    return (
+      this.beneficioEditablePorIndice[index] === true &&
+      !this.solicitudEstadoNoEditable &&
+      !this.personaGestionNoEditable('beneficiario', index)
+    );
   }
 
   /** True si el beneficiario en el índice dado tiene habilitada la edición de campos adicionales (era CC/TI/RC al cargar): grupo familiar, invalidez, admin subsidios. */
   beneficioPuedeEditarExtras(index: number): boolean {
-    return this.beneficioEditableExtrasPorIndice[index] === true && !this.solicitudEstadoNoEditable;
+    return (
+      this.beneficioEditableExtrasPorIndice[index] === true &&
+      !this.solicitudEstadoNoEditable &&
+      !this.personaGestionNoEditable('beneficiario', index)
+    );
   }
 
   /** True si el beneficiario tiene parentesco "Hijo" (único caso con sección de Padres biológicos). */
@@ -2251,7 +2269,11 @@ getRequestDetails(request_details: number) {
   /** True si al cargar el trabajador tenía CE o PPT; la sección sigue editable aunque se cambie el tipo de documento. */
   private trabajadorEditablePorCarga = false;
   get trabajadorPuedeEditar(): boolean {
-    return this.trabajadorEditablePorCarga && !this.solicitudEstadoNoEditable;
+    return (
+      this.trabajadorEditablePorCarga &&
+      !this.solicitudEstadoNoEditable &&
+      !this.personaGestionNoEditable('trabajador')
+    );
   }
 
   /** True si al cargar el trabajador no tenía estado civil registrado; la edición se mantiene aunque el usuario seleccione un valor (para que el botón Guardar siga visible). */
@@ -2284,7 +2306,11 @@ getRequestDetails(request_details: number) {
    *  (b) el trabajador no tiene estado civil registrado (el campo viene vacío y debe completarse).
    */
   get mostrarEstadoCivilEditable(): boolean {
-    return (this.hayBeneficiarioConyuge || this.estadoCivilTrabajadorVacio) && !this.solicitudEstadoNoEditable;
+    return (
+      (this.hayBeneficiarioConyuge || this.estadoCivilTrabajadorVacio) &&
+      !this.solicitudEstadoNoEditable &&
+      !this.personaGestionNoEditable('trabajador')
+    );
   }
 
   /** True cuando el estado civil actual es "Soltero(a)" Y existe un beneficiario Cónyuge. Solo para mostrar la alerta. */
@@ -2767,6 +2793,21 @@ getRequestDetails(request_details: number) {
     }
 
     const esTrabajador = d.trabajador?.persona?.id === idPersona;
+    const idxBeneficiario = esTrabajador ? -1 : (d.beneficiarios?.findIndex(b => b.persona.id === idPersona) ?? -1);
+    if (
+      this.personaGestionNoEditable(
+        esTrabajador ? 'trabajador' : 'beneficiario',
+        esTrabajador || idxBeneficiario < 0 ? undefined : idxBeneficiario
+      )
+    ) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Pendiente afiliación RPA',
+        detail:
+          'Esta persona ya fue gestionada (Pendiente afiliación RPA o Procesado): no se pueden subir adjuntos adicionales.',
+      });
+      return;
+    }
     if (!esTrabajador && !idParentesco) {
       this.messageService.add({
         severity: 'warn',
@@ -2780,8 +2821,7 @@ getRequestDetails(request_details: number) {
     if (esTrabajador) {
       this.adjuntosAdicionalesPara = 'trabajador';
     } else {
-      const idx = d.beneficiarios?.findIndex(b => b.persona.id === idPersona) ?? -1;
-      this.adjuntosAdicionalesPara = idx >= 0 ? idx : 'trabajador';
+      this.adjuntosAdicionalesPara = idxBeneficiario >= 0 ? idxBeneficiario : 'trabajador';
     }
 
     this.visibleModalAdjuntosAdicionales = true;

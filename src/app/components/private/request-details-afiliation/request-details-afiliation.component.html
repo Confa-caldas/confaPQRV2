@@ -774,7 +774,9 @@
         <div class="adjuntos-section empty adjuntos-trabajador-block" *ngIf="getAdjuntosTrabajador().length === 0">
           <p class="adjuntos-empty-text">No hay archivos adjuntos para el trabajador de esta solicitud.</p>
         </div>
-        <div class="adjuntos-upload-row" *ngIf="!d.solicitud.expediente && !solicitudEnPendienteAfiliacionRpa">
+        <div
+          class="adjuntos-upload-row"
+          *ngIf="!d.solicitud.expediente && !solicitudEnPendienteAfiliacionRpa && !personaGestionNoEditable('trabajador')">
           <p-button
             label="Subir adjuntos adicionales"
             icon="pi pi-upload"
@@ -1692,7 +1694,9 @@
               <div class="adjuntos-section empty benef-adjuntos" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">
                 <p class="adjuntos-empty-text">No hay archivos adjuntos para {{ getNombreBeneficiario(b) }}.</p>
               </div>
-              <div class="adjuntos-upload-row" *ngIf="!d.solicitud.expediente && !solicitudEnPendienteAfiliacionRpa">
+              <div
+                class="adjuntos-upload-row"
+                *ngIf="!d.solicitud.expediente && !solicitudEnPendienteAfiliacionRpa && !personaGestionNoEditable('beneficiario', iBenef)">
                 <p-button
                   label="Subir adjuntos adicionales"
                   icon="pi pi-upload"
