@@ -148,19 +148,21 @@
 
 <p-dialog
   header="Asignar colaborador"
+  styleClass="modal-nice"
   [(visible)]="visibleDialogAsignar"
   [modal]="true"
   [closable]="true"
-  [style]="{ width: '420px' }"
+  [style]="{ width: '440px' }"
   (onHide)="cancelarAsignar()">
-  <div class="mb-3">
-    <label class="d-block mb-2">Colaborador</label>
+  <div class="modal-nice-field">
+    <label class="modal-nice-label">Colaborador <span class="modal-nice-required">*</span></label>
     <p-dropdown
       [(ngModel)]="responsableSeleccionado"
       [options]="responsableOpciones"
       optionLabel="nombre_usuario_red"
       optionValue="nombre_usuario_red"
       placeholder="Seleccione un colaborador"
+      [showClear]="true"
       appendTo="body"
       [style]="{ width: '100%' }"></p-dropdown>
   </div>
@@ -177,18 +179,49 @@
 
 <p-dialog
   header="Cambiar estado Rpa padres"
+  styleClass="modal-nice"
   [(visible)]="visibleDialogCambiarEstado"
   [modal]="true"
   [closable]="true"
-  [style]="{ width: '420px' }"
+  [style]="{ width: '460px' }"
   (onHide)="cancelarCambioEstado()">
-  <p>¿Confirma el cambio de Estado Rpa padres a "Pendiente" para las solicitudes seleccionadas?</p>
+  <div class="modal-nice-field">
+    <label class="modal-nice-label">Estado Rpa padres <span class="modal-nice-required">*</span></label>
+    <p-dropdown
+      [(ngModel)]="estadoCambioSeleccionado"
+      [options]="estadoCambioOpciones"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Seleccione un estado"
+      [showClear]="true"
+      appendTo="body"
+      [style]="{ width: '100%' }"></p-dropdown>
+  </div>
+  <div class="modal-nice-field" *ngIf="estadoCambioSeleccionado === 'Procesado'">
+    <label class="modal-nice-label">Radicado otro padre <span class="modal-nice-required">*</span></label>
+    <input
+      pInputText
+      type="text"
+      class="modal-nice-input"
+      [(ngModel)]="radicadoOtroPadreCambio"
+      placeholder="Radicado otro padre" />
+  </div>
+  <div class="modal-nice-field">
+    <label class="modal-nice-label">Observación</label>
+    <textarea
+      pInputTextarea
+      class="modal-nice-input"
+      rows="3"
+      [(ngModel)]="observacionCambio"
+      placeholder="Observación (opcional)"></textarea>
+  </div>
   <ng-template pTemplate="footer">
-    <p-button label="No" [styleClass]="'p-button-secondary'" (click)="cancelarCambioEstado()"></p-button>
+    <p-button label="Cancelar" [styleClass]="'p-button-secondary'" (click)="cancelarCambioEstado()"></p-button>
     <p-button
-      label="Sí"
+      label="Guardar"
       icon="pi pi-check"
       [loading]="guardandoCambioEstado"
+      [disabled]="guardandoCambioEstado || !puedeConfirmarCambioEstado()"
       (click)="confirmarCambioEstado()"></p-button>
   </ng-template>
 </p-dialog>

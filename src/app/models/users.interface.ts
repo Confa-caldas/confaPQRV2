@@ -576,6 +576,15 @@ export interface ParametroGenero {
   esta_activo: boolean;
 }
 
+/** Retorno función afiliaciones.obtener_todos_estado_gestion_persona(): id, codigo, descripcion, esta_activo, orden. */
+export interface ParametroEstadoGestionPersona {
+  id: number;
+  codigo: string;
+  descripcion: string;
+  esta_activo: boolean;
+  orden?: number;
+}
+
 /** Retorno tabla/función parentesco: id, parentesco, esta_activo */
 export interface ParametroParentesco {
   id: number;
@@ -1998,6 +2007,9 @@ export interface AsignarPadresRpaPayload {
 
 export interface CambiarEstadoMasivoPadresRpaPayload {
   idsSolicitud: number[];
+  estadoRpaPadres: 'Pendiente' | 'Procesado';
+  observaciones?: string | null;
+  radicadoOtroPadre?: string | null;
 }
 
 /** Valores válidos en BD: SI, NO, NA, PENDIENTE */

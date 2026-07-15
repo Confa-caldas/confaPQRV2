@@ -117,6 +117,7 @@ export enum EndPointRoute {
   TIPO_DOCUMENTO_PERSONA_LIST = 'db_afi/parametros_tipo_documento_persona',
   GENERO_LIST = 'db_afi/parametros_genero',
   ESTADO_CIVIL_LIST = 'db_afi/parametros_estado_civil',
+  ESTADO_GESTION_PERSONA_LIST = 'db_afi/estado_gestion_persona',
   PARENTESCO_LIST = 'db_afi/parametros_parentesco',
   /** Catálogo motivos de rechazo (gestión estado afiliado). */
   MOTIVOS_RECHAZO_AFILIACION_LIST = 'db_afi/parametros_motivo_rechazo_afiliacion',

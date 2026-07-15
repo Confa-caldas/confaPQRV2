@@ -91,6 +91,7 @@ import {
   ParametroTipoDocumentoPersona,
   ParametroEstadoCivil,
   ParametroGenero,
+  ParametroEstadoGestionPersona,
   ParametroParentesco,
   ParametroMotivoRechazoAfiliacion,
   Adjunto,
@@ -682,6 +683,13 @@ export class Users {
   getEstadoCivilList() {
     return this.http.get<BodyResponse<ParametroEstadoCivil[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.ESTADO_CIVIL_LIST}`
+    );
+  }
+
+  /** Catálogo afiliaciones.parametros_estado_gestion_persona (id, codigo, descripcion, esta_activo, orden). */
+  getEstadoGestionPersonaList() {
+    return this.http.get<BodyResponse<ParametroEstadoGestionPersona[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ESTADO_GESTION_PERSONA_LIST}`
     );
   }
 

@@ -6,6 +6,7 @@ import { Users } from '../../../services/users.service';
 import {
   FilterPadresRpaNoProcesado,
   PadreRpaNoProcesadoListItem,
+  ParametroEstadoGestionPersona,
   ResponsibleList,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
@@ -42,6 +43,11 @@ export class PadresRpaNoProcesadoComponent implements OnInit {
 
   visibleDialogCambiarEstado = false;
   guardandoCambioEstado = false;
+  /** Se carga desde afiliaciones.parametros_estado_gestion_persona (catálogo compartido), filtrando solo Pendiente/Procesado. */
+  estadoCambioOpciones: { label: string; value: string }[] = [];
+  estadoCambioSeleccionado: 'Pendiente' | 'Procesado' | null = null;
+  radicadoOtroPadreCambio = '';
+  observacionCambio = '';
 
   @ViewChild('dt') table!: Table;
 
@@ -225,18 +231,53 @@ export class PadresRpaNoProcesadoComponent implements OnInit {
       );
       return;
     }
+    this.estadoCambioSeleccionado = null;
+    this.radicadoOtroPadreCambio = '';
+    this.observacionCambio = '';
     this.visibleDialogCambiarEstado = true;
+    if (this.estadoCambioOpciones.length === 0) {
+      this.cargarEstadosGestionPersona();
+    }
+  }
+
+  /** Catálogo compartido afiliaciones.parametros_estado_gestion_persona; solo Pendiente/Procesado son válidos para esta acción. */
+  private cargarEstadosGestionPersona(): void {
+    this.userService.getEstadoGestionPersonaList().subscribe({
+      next: (response: BodyResponse<ParametroEstadoGestionPersona[]>) => {
+        this.estadoCambioOpciones = (response.data ?? [])
+          .filter(e => e.esta_activo !== false && ['Pendiente', 'Procesado'].includes(e.codigo))
+          .map(e => ({ label: e.codigo, value: e.codigo }));
+      },
+      error: err => console.error(err),
+    });
   }
 
   cancelarCambioEstado(): void {
     this.visibleDialogCambiarEstado = false;
   }
 
+  /** Observación siempre opcional; Radicado otro padre solo obligatorio si el estado elegido es Procesado. */
+  puedeConfirmarCambioEstado(): boolean {
+    if (!this.estadoCambioSeleccionado) return false;
+    if (this.estadoCambioSeleccionado === 'Procesado' && !this.radicadoOtroPadreCambio.trim()) return false;
+    return true;
+  }
+
   confirmarCambioEstado(): void {
+    if (!this.puedeConfirmarCambioEstado() || !this.estadoCambioSeleccionado) {
+      return;
+    }
     const idsSolicitud = [...new Set(this.selectedRows.map(r => r.id_solicitud))];
 
     this.guardandoCambioEstado = true;
-    this.userService.cambiarEstadoMasivoPadresRpa({ idsSolicitud }).subscribe({
+    this.userService
+      .cambiarEstadoMasivoPadresRpa({
+        idsSolicitud,
+        estadoRpaPadres: this.estadoCambioSeleccionado,
+        observaciones: this.observacionCambio.trim() || null,
+        radicadoOtroPadre: this.estadoCambioSeleccionado === 'Procesado' ? this.radicadoOtroPadreCambio.trim() : null,
+      })
+      .subscribe({
       next: (response: BodyResponse<null>) => {
         if (response.code === 200) {
           this.showMessage('success', 'Exitoso', 'Estado actualizado correctamente.');

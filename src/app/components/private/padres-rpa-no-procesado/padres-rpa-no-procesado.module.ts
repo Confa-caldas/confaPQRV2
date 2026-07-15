@@ -8,6 +8,7 @@ import { PaginatorModule } from 'primeng/paginator';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ToastModule } from 'primeng/toast';
 import { SharedModule } from '../../shared/shared.module';
 import { PadresRpaNoProcesadoComponent } from './padres-rpa-no-procesado.component';
@@ -25,6 +26,7 @@ import { PadresRpaNoProcesadoComponent } from './padres-rpa-no-procesado.compone
     DropdownModule,
     DialogModule,
     InputTextModule,
+    InputTextareaModule,
     SharedModule,
     ToastModule,
   ],
