@@ -1826,14 +1826,14 @@ getRequestDetails(request_details: number) {
     return texto === 'aprobada completa' || texto === 'aprobada incompleta';
   }
 
-  /** True si el estado de gestión del integrante ya es "Pendiente afiliación RPA" o "Procesado": no se permite editar sus datos ni subir adjuntos adicionales. */
+  /** True si el estado de gestión del integrante ya es "Procesado": no se permite editar sus datos ni subir adjuntos adicionales. */
   personaGestionNoEditable(contexto: 'trabajador' | 'beneficiario', indiceBeneficiario?: number): boolean {
     const id = this.idEstadoGestionPersonaIntegrante(contexto, indiceBeneficiario);
     if (id == null) {
       return false;
     }
     const n = Number(id);
-    return n === this.ID_ESTADO_GESTION_PENDIENTE_AFILIACION_RPA || n === this.ID_ESTADO_GESTION_PROCESADO;
+    return n === this.ID_ESTADO_GESTION_PROCESADO;
   }
 
   /** True si el beneficiario en el índice dado tiene la sección editable (era CE/PPT/CC/TI/RC al cargar; los selectores no se ocultan al cambiar). */
@@ -2802,9 +2802,8 @@ getRequestDetails(request_details: number) {
     ) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Pendiente afiliación RPA',
-        detail:
-          'Esta persona ya fue gestionada (Pendiente afiliación RPA o Procesado): no se pueden subir adjuntos adicionales.',
+        summary: 'Procesado',
+        detail: 'Esta persona ya fue procesada: no se pueden subir adjuntos adicionales.',
       });
       return;
     }
