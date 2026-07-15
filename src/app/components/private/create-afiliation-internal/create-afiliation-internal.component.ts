@@ -4321,6 +4321,9 @@ export class CreateAfiliationInternalComponent implements OnInit {
       tipoDocumento,
       numeroDocumento,
       esPrecargado: true,
+      // Preserva el grupo familiar real de Genesys (ej. cónyuge + hijastro agrupados) para no
+      // perderlo al validar otros beneficiarios ni al guardar la solicitud.
+      datosBeneficiario: p.numeroGrupoFamiliar != null ? { numeroGrupoFamiliar: p.numeroGrupoFamiliar } : undefined,
       datosPrecargados: {
         tipoDocumento,
         numeroDocumento,

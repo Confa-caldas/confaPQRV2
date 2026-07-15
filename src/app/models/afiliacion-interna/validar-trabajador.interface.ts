@@ -169,6 +169,9 @@ export interface BeneficiarioPrecargarAfiliacionInterna {
   fechaNacimiento?: string;
   fechaExpedicionDoc?: string;
   genero?: string;
+  /** Número real de grupo familiar de Genesys (clave del mapa gruposFamiliares), para no perder el
+   * agrupamiento (ej. cónyuge + hijastro) al validar otros beneficiarios ni al guardar la solicitud. */
+  numeroGrupoFamiliar?: number;
   gradoCursado?: string;
   certificadoEscolar?: string;
   fechaInicioVigenciaCertificadoEscolar?: string;
