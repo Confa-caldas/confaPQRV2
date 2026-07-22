@@ -3715,10 +3715,29 @@ export class CreateAfiliationInternalComponent implements OnInit {
         value: Number(e.idEntidad),
       }));
 
-    if (!mp || mp.mostrarCamposFormulario === false) {
+    if (!mp) {
       this.solicitudMedioPagoForm.reset(
         {
           medio_pago: '',
+          id_entidad: null,
+          tipo_cuenta: null,
+          numero_cuenta: '',
+          confirmacion_cuenta: '',
+          llave_breb: '',
+          confirmar_llave_breb: '',
+        },
+        { emitEvent: false }
+      );
+      this.opcionesTipoCuenta = [];
+      return;
+    }
+
+    if (mp.mostrarCamposFormulario === false) {
+      // No se muestran los campos (p. ej. administrador de subsidio con Transferencia ya registrada),
+      // pero el medio de pago vigente debe conservarse: solo los datos bancarios quedan vacíos.
+      this.solicitudMedioPagoForm.reset(
+        {
+          medio_pago: (mp.medioPago ?? '').trim(),
           id_entidad: null,
           tipo_cuenta: null,
           numero_cuenta: '',
