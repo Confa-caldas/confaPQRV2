@@ -166,9 +166,8 @@
                 <td>
                   <span
                     *ngIf="
-                      requestList.status_name !== 'Cerrada' &&
-                      requestList.status_name !== 'Pendiente Usuario Externo' &&
-                      PERFIL !== 'CONSULTANTE'
+                      mostrarBotonAsignarReasignar(requestList) &&
+                      requestList.status_name !== 'Pendiente Usuario Externo'
                     "
                     class="assign-btn-tooltip-wrap"
                     [pTooltip]="tooltipAsignarPorFila(requestList)"
@@ -196,11 +195,12 @@
                 <td style="text-align: center">{{ requestList.status_name || requestList.cod_estatus }}</td>
                 <td style="text-align: center">{{ requestList.assigned_user }}</td>
                 <td>
-                  <div *ngIf="requestList.status_name !== 'Cerrada' && PERFIL !== 'CONSULTANTE'" class="process-afi-actions-col">
+                  <div *ngIf="PERFIL !== 'CONSULTANTE'" class="process-afi-actions-col">
                     <span
-                    class="assign-btn-tooltip-wrap assign-btn-tooltip-wrap--block"
-                    [pTooltip]="tooltipAsignarPorFila(requestList)"
-                    [tooltipDisabled]="puedeActivarAsignar(requestList)"
+                      *ngIf="mostrarBotonAsignarReasignar(requestList)"
+                      class="assign-btn-tooltip-wrap assign-btn-tooltip-wrap--block"
+                      [pTooltip]="tooltipAsignarPorFila(requestList)"
+                      [tooltipDisabled]="puedeActivarAsignar(requestList)"
                       tooltipPosition="top"
                       tooltipStyleClass="tooltip-asignar-bloqueado">
                       <button

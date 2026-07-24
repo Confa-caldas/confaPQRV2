@@ -413,6 +413,11 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   private gestionarEstadoAfiliadoSub?: Subscription;
   /** true si el único motivo de bloqueo fue "adjuntos sin validar en Sí": solo se permite Rechazar. */
   gestionarEstadoSoloRechazoPermitido = false;
+  /**
+   * true si se gestiona desde solicitud/persona en Inconsistencias RPA:
+   * solo se permiten Pendiente afiliación RPA o Procesado.
+   */
+  gestionarEstadoDesdeInconsistenciasRpa = false;
 
   /** Ids `parametros_estado_gestion_persona.id` alineados con BD. */
   readonly ID_ESTADO_GESTION_PENDIENTE_AFILIACION_RPA = 1;
@@ -421,6 +426,9 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   readonly ID_ESTADO_GESTION_RECHAZADO = 4;
   readonly ID_ESTADO_GESTION_PENDIENTE_INICIAL = 5;
   readonly ID_ESTADO_GESTION_EN_EJECUCION_RPA = 6;
+
+  /** Id `parametros_estado_solicitud` para Inconsistencias RPA. */
+  readonly ID_ESTADO_SOLICITUD_INCONSISTENCIAS_RPA = 9;
 
   /** Catálogo completo `parametros_estado_gestion_persona` para mostrar estado por integrante. */
   private readonly catalogoEstadoGestionPersona: Readonly<
@@ -459,12 +467,23 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     { label: 'Rechazado', value: 4 },
   ];
 
-  /** Opciones a mostrar en el dropdown del modal: si hay adjuntos sin validar en Sí, solo Rechazado. */
+  /**
+   * Opciones del dropdown del modal:
+   * - Desde Inconsistencias RPA: solo Pendiente afiliación RPA o Procesado.
+   * - Adjuntos sin validar en Sí: solo Rechazado.
+   */
   get opcionesEstadoAfiliadoModal(): { label: string; value: number }[] {
-    if (!this.gestionarEstadoSoloRechazoPermitido) {
-      return this.estadoAfiliadoOpciones;
+    if (this.gestionarEstadoDesdeInconsistenciasRpa) {
+      return this.estadoAfiliadoOpciones.filter(
+        (o) =>
+          o.value === this.ID_ESTADO_GESTION_PENDIENTE_AFILIACION_RPA ||
+          o.value === this.ID_ESTADO_GESTION_PROCESADO
+      );
     }
-    return this.estadoAfiliadoOpciones.filter((o) => this.esEstadoGestionRechazado(o.value));
+    if (this.gestionarEstadoSoloRechazoPermitido) {
+      return this.estadoAfiliadoOpciones.filter((o) => this.esEstadoGestionRechazado(o.value));
+    }
+    return this.estadoAfiliadoOpciones;
   }
 
   /** Opciones del dropdown motivo de rechazo (cargadas desde BD). */
@@ -777,6 +796,19 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       return;
     }
 
+    if (
+      contexto === 'beneficiario' &&
+      this.solicitudEnInconsistenciasRpa() &&
+      this.trabajadorEnInconsistenciasRpa()
+    ) {
+      this.showSuccessMessage(
+        'warn',
+        'Gestión no permitida',
+        'Debe resolver primero el estado del trabajador (Pendiente afiliación RPA o Procesado) antes de gestionar beneficiarios.'
+      );
+      return;
+    }
+
     const personaId = this.obtenerPersonaIdParaGestionEstado(contexto, indiceBeneficiario);
     const nombre = this.nombrePersonaParaMensajeGestionEstado(contexto, indiceBeneficiario);
     if (personaId == null || !Number.isFinite(personaId)) {
@@ -825,7 +857,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
               // Únicos motivos de bloqueo: adjuntos sin validar en Sí y/o novedad de calidad de datos pendiente.
               // Ninguno de los dos bloquea: se informa (si aplica) y se permite gestionar igual.
               this.validacionRequisitosGestionCache.set(personaId, { valido: true, errores: [] });
-              const soloRechazoPermitido = erroresAdjuntos.length > 0;
+              const desdeInconsistencias = this.solicitudEnInconsistenciasRpa();
+              const soloRechazoPermitido = erroresAdjuntos.length > 0 && !desdeInconsistencias;
               if (soloRechazoPermitido) {
                 this.showSuccessMessage(
                   'info',
@@ -967,11 +1000,15 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     soloRechazoPermitido = false
   ): void {
     this.gestionarEstadoContexto = contexto;
-    this.gestionarEstadoSoloRechazoPermitido = soloRechazoPermitido;
     this.gestionarEstadoPersonaId = this.obtenerPersonaIdParaGestionEstado(
       contexto,
       indiceBeneficiario
     );
+
+    this.gestionarEstadoDesdeInconsistenciasRpa = this.solicitudEnInconsistenciasRpa();
+    // En inconsistencias RPA no aplica rechazo: solo Pendiente afiliación RPA o Procesado.
+    this.gestionarEstadoSoloRechazoPermitido =
+      this.gestionarEstadoDesdeInconsistenciasRpa ? false : soloRechazoPermitido;
 
     if (contexto === 'trabajador') {
       this.gestionarEstadoContextoLabel = 'Trabajador';
@@ -1048,6 +1085,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.gestionarEstadoPersonaId = null;
     this.gestionarEstadoContexto = 'trabajador';
     this.gestionarEstadoSoloRechazoPermitido = false;
+    this.gestionarEstadoDesdeInconsistenciasRpa = false;
   }
 
   private idEstadoGestionPersonaIntegrante(
@@ -1064,7 +1102,23 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       ?.id_estado_gestion_persona;
   }
 
-  /** Visible solo mientras el integrante sigue en Pendiente inicial (id 5) o sin estado asignado. */
+  /** True si la solicitud está en Inconsistencias RPA (id 9 / nombre del catálogo). */
+  solicitudEnInconsistenciasRpa(): boolean {
+    const id =
+      this.afiliationRequestDetails?.solicitud?.id_estado_solicitud ?? this.idEstadoSolicitudActual;
+    if (Number(id) === this.ID_ESTADO_SOLICITUD_INCONSISTENCIAS_RPA) {
+      return true;
+    }
+    const texto = this.normalizarTextoEstadoTimeline(
+      this.currentState || this.afiliationRequestDetails?.solicitud?.estado_codigo
+    );
+    return texto === 'inconsistencias rpa';
+  }
+
+  /**
+   * Visible si el integrante está en Pendiente inicial (id 5) / sin estado,
+   * o si la solicitud y el integrante están en Inconsistencias RPA.
+   */
   mostrarBotonGestionarEstadoIntegrante(
     contexto: 'trabajador' | 'beneficiario',
     indiceBeneficiario?: number
@@ -1073,7 +1127,14 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     if (id == null || id === undefined) {
       return true;
     }
-    return Number(id) === this.ID_ESTADO_GESTION_PENDIENTE_INICIAL;
+    const n = Number(id);
+    if (n === this.ID_ESTADO_GESTION_PENDIENTE_INICIAL) {
+      return true;
+    }
+    return (
+      this.solicitudEnInconsistenciasRpa() &&
+      n === this.ID_ESTADO_GESTION_INCONSISTENCIAS_RPA
+    );
   }
 
   /** Etiqueta legible del estado de gestión individual del integrante. */
@@ -1108,6 +1169,12 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       return false;
     }
     return Number(id) !== this.ID_ESTADO_GESTION_PENDIENTE_INICIAL;
+  }
+
+  /** True si el trabajador está en Inconsistencias RPA (id 2). */
+  trabajadorEnInconsistenciasRpa(): boolean {
+    const id = this.idEstadoGestionPersonaIntegrante('trabajador');
+    return id != null && Number(id) === this.ID_ESTADO_GESTION_INCONSISTENCIAS_RPA;
   }
 
   guardarGestionarEstadoAfiliado(): void {
@@ -1149,6 +1216,21 @@ export class RequestDetailsAfiliationComponent implements OnInit {
         detail: 'Seleccione un estado de afiliación válido.',
       });
       return;
+    }
+
+    if (this.gestionarEstadoDesdeInconsistenciasRpa) {
+      const permitido =
+        idEstadoGestion === this.ID_ESTADO_GESTION_PENDIENTE_AFILIACION_RPA ||
+        idEstadoGestion === this.ID_ESTADO_GESTION_PROCESADO;
+      if (!permitido) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Estado no permitido',
+          detail:
+            'Desde Inconsistencias RPA solo puede cambiar a Pendiente afiliación RPA o Procesado.',
+        });
+        return;
+      }
     }
 
     const esRechazado = this.esEstadoGestionRechazado(idEstadoGestion);

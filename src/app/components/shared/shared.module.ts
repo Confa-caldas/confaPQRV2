@@ -62,6 +62,8 @@ import { ModalGestionarActivacionEmpresaModule } from './modal-gestionar-activac
     ModalManagerSelectorModule,
     ModalReviewStateModule,
     MainNotificationModule,
+    ModalAssignSelectorModule,
+    ModalAssignAfiliationSelectorModule,
     ModalSearchPersonDataModule,
     ModalGenderModule,
     ModalMaritalStatusModule,

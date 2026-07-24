@@ -242,6 +242,30 @@ export class ProcessRequestAfiliationComponent implements OnInit {
     return afiliacionIndicadoresPermitenAsignar(row);
   }
 
+  /**
+   * Visible el botón Asignar/Reasignar solo si la solicitud no está cerrada
+   * ni en Aprobada completa / Aprobada incompleta.
+   */
+  mostrarBotonAsignarReasignar(row: RequestsListAfiliation): boolean {
+    if (this.PERFIL === 'CONSULTANTE') {
+      return false;
+    }
+    const texto = this.normalizarEstadoSolicitud(row.status_name || row.cod_estatus);
+    if (texto === 'cerrada') {
+      return false;
+    }
+    return texto !== 'aprobada completa' && texto !== 'aprobada incompleta';
+  }
+
+  private normalizarEstadoSolicitud(v: string | null | undefined): string {
+    return (v ?? '')
+      .toString()
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
   /** Misma idea que pendientes: fila seleccionable solo si aplica asignar/reasignar. */
   readonly esFilaSeleccionableParaAsignar = (ctx: {
     data: RequestsListAfiliation;
@@ -249,8 +273,7 @@ export class ProcessRequestAfiliationComponent implements OnInit {
   }): boolean => {
     const r = ctx.data;
     return (
-      this.PERFIL !== 'CONSULTANTE' &&
-      r.status_name !== 'Cerrada' &&
+      this.mostrarBotonAsignarReasignar(r) &&
       r.status_name !== 'Pendiente Usuario Externo' &&
       this.puedeActivarAsignar(r)
     );
@@ -346,6 +369,15 @@ export class ProcessRequestAfiliationComponent implements OnInit {
 
 assignRequest(request_details: RequestsListAfiliation) {
     this.isBulkAssign = false;
+
+    if (!this.mostrarBotonAsignarReasignar(request_details)) {
+      this.showSuccessMessage(
+        'warn',
+        'Asignación no disponible',
+        'No se puede asignar o reasignar solicitudes en estado Aprobada completa o Aprobada incompleta.'
+      );
+      return;
+    }
 
     if (!afiliacionIndicadoresPermitenAsignar(request_details)) {
       this.showSuccessMessage(
@@ -454,6 +486,15 @@ assignRequest(request_details: RequestsListAfiliation) {
   
   assignSelectedRequests(requests: RequestsListAfiliation[]) {
     if (!requests || requests.length === 0) {
+      return;
+    }
+    const noMostrables = requests.filter(r => !this.mostrarBotonAsignarReasignar(r));
+    if (noMostrables.length > 0) {
+      this.showSuccessMessage(
+        'warn',
+        'Asignación no disponible',
+        'No se puede asignar o reasignar solicitudes en estado Aprobada completa o Aprobada incompleta.'
+      );
       return;
     }
     const noCumplen = requests.filter(r => !this.puedeActivarAsignar(r));

@@ -22,6 +22,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
+import { ModalAssignAfiliationSelectorModule } from '../../shared/modal-assign-afiliation-selector/modal-assign-afiliation-selector.module';
 
 @NgModule({
   declarations: [RequestDetailsAfiliationComponent],
@@ -34,6 +35,7 @@ import { TagModule } from 'primeng/tag';
     DropdownModule,
     InputSwitchModule,
     SharedModule,
+    ModalAssignAfiliationSelectorModule,
     CardModule,
     TabViewModule,
     DatePipe,

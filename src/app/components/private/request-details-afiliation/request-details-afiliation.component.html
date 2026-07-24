@@ -234,6 +234,9 @@
               <small *ngIf="gestionarEstadoSoloRechazoPermitido" class="gestionar-estado-error error-label">
                 Hay adjuntos sin validar en «Sí»: solo puede pasar a estado Rechazado.
               </small>
+              <small *ngIf="gestionarEstadoDesdeInconsistenciasRpa" class="gestionar-estado-error error-label">
+                Desde Inconsistencias RPA solo puede pasar a Pendiente afiliación RPA o Procesado.
+              </small>
               <p-dropdown
                 id="estadoAfiliadoDd"
                 formControlName="estadoAfiliado"
