@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
@@ -117,7 +117,6 @@ export class ProcessRequestAfiliationComponent implements OnInit {
     this.PERFIL = sessionStorage.getItem(SessionStorageItems.PERFIL) || '';
     this.user = sessionStorage.getItem(SessionStorageItems.USER) || '';
     this.getRequestStatusList();
-    this.searhRequestsAssignedUser();
   }
 
   onPageChangeAssigned(eventAssigned1: PageEvent) {
@@ -130,8 +129,15 @@ export class ProcessRequestAfiliationComponent implements OnInit {
     this.firstAssigned = 0;
     this.pageAssigned = 1;
     this.rowsAssigned = 10;
-    this.filterFormAssigned.reset();
-    this.requestListByAssignedAfiliation = [];
+    this.selectedRequests = [];
+    this.filterFormAssigned.reset({
+      filing_number: null,
+      dates_range: null,
+      doc_id_tr: null,
+      doc_id_bn: null,
+      applicant_name_emp: null,
+      request_status_id: null,
+    });
     this.searhRequestsAssignedUser();
   }
 
@@ -296,18 +302,50 @@ export class ProcessRequestAfiliationComponent implements OnInit {
     this.userService.getRequestAfiliationStatusList().subscribe({
       next: (response: BodyResponse<RequestStatusAfiliationList[]>) => {
         if (response.code === 200) {
-          this.statusList = response.data;
+          // Normalizar id/codigo: el multiselect usa optionValue="id" y optionLabel="codigo".
+          this.statusList = (response.data ?? []).map((row) => ({
+            ...row,
+            id: row.id ?? row.request_status_id,
+            codigo: row.codigo ?? row.status_name ?? '',
+          }));
+          this.aplicarFiltroEstadoInconsistenciasRpaPorDefecto();
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
+        this.searhRequestsAssignedUser();
       },
       error: (err: any) => {
         console.log(err);
+        this.searhRequestsAssignedUser();
       },
       complete: () => {
         console.log('La suscripción ha sido completada.');
       },
     });
+  }
+
+  /** Preselecciona "Inconsistencias RPA" en el multiselect de Tipo de estado. */
+  private aplicarFiltroEstadoInconsistenciasRpaPorDefecto(): void {
+    const id = this.obtenerIdEstadoInconsistenciasRpa();
+    if (id == null) {
+      return;
+    }
+    this.filterFormAssigned.get('request_status_id')?.setValue([id], { emitEvent: false });
+  }
+
+  /** Id de catálogo para Inconsistencias RPA (`parametros_estado_solicitud`). */
+  private obtenerIdEstadoInconsistenciasRpa(): number | null {
+    const row = this.statusList.find((s) => {
+      const texto = this.normalizarEstadoSolicitud(
+        [s.codigo, s.status_name, s.descripcion, s.status_description].filter(Boolean).join(' ')
+      );
+      return texto.includes('inconsistencia') && texto.includes('rpa');
+    });
+    if (!row) {
+      return null;
+    }
+    const id = row.id ?? row.request_status_id;
+    return id != null && Number.isFinite(Number(id)) ? Number(id) : null;
   }
 
   redirectDetails(request_id: number) {
@@ -362,7 +400,20 @@ export class ProcessRequestAfiliationComponent implements OnInit {
     this.initPaginadorAssigned();
   }
 
+  /** Escape limpia filtros aunque el foco no esté en un input del formulario. */
+  @HostListener('document:keydown.escape', ['$event'])
   onEscapeFiltrosAsignadas(event: Event): void {
+    const hayOverlayAbierto =
+      !!document.querySelector('.p-overlay-visible') ||
+      !!document.querySelector('.cdk-overlay-pane') ||
+      !!document.querySelector('.p-datepicker-panel') ||
+      !!document.querySelector('.p-multiselect-panel');
+    if (hayOverlayAbierto) {
+      return;
+    }
+    if (this.visibleAssignedInput || this.visibleDialogInput || this.visibleDialogAlert) {
+      return;
+    }
     event.preventDefault();
     this.cleanFormAssigned();
   }
