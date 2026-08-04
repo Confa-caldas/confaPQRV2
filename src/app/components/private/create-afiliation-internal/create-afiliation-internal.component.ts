@@ -83,7 +83,9 @@ import { validadorSoloLetrasNombresApellido } from '../../../shared/validators/n
 import {
   cuentaParentescoExclusivoEnLista,
   existeBeneficiarioDuplicadoPorDocumentoEnLista,
+  hayHijastrosEnLista,
   mensajeParentescoExclusivoDuplicado,
+  quitarHijastrosDeLista,
   resolverCategoriaParentescoExclusivo,
 } from '../../../shared/utils/parentesco-cupo.util';
 import { AfiliacionInternaService } from '../../../services/afiliacion-interna.service';
@@ -138,6 +140,12 @@ function crearFechaFinDiaCalendario(fecha: Date): Date {
 function crearFechaInicioDiaCalendario(fecha: Date): Date {
   const d = new Date(fecha);
   d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function restarMesesFecha(fecha: Date, meses: number): Date {
+  const d = new Date(fecha);
+  d.setMonth(d.getMonth() - meses);
   return d;
 }
 
@@ -275,6 +283,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
 
   /** Referencias estables para p-calendar (evita que maxDate/minDate nuevos rompan la selección). */
   readonly fechaHoyCalendario = crearFechaFinDiaCalendario(new Date());
+  /** Fecha de recepción de documentos (solo afiliación interna): máximo hoy, mínimo 2 meses atrás. */
+  readonly fechaMinimaRecepcionDocumentos = crearFechaInicioDiaCalendario(restarMesesFecha(new Date(), 2));
   fechaExpedicionMinimaPersonal: Date | null = null;
   readonly calendarioLocaleEs = CALENDARIO_LOCALE_ES;
 
@@ -417,6 +427,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
 
     this.solicitudLaboralForm = this.fb.group({
       fecha_ingreso_empresa: [null as Date | null, Validators.required],
+      fecha_recepcion_documentos: [null as Date | null, Validators.required],
       horas_mes: [null as number | null, [Validators.required, Validators.min(1), Validators.max(240)]],
       salario_mensual: [null as number | null, Validators.required],
       cargo_desempenado: ['', Validators.required],
@@ -1253,6 +1264,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.solicitudLaboralForm.reset(
       {
         fecha_ingreso_empresa: null,
+        fecha_recepcion_documentos: null,
         horas_mes: null,
         salario_mensual: null,
         cargo_desempenado: '',
@@ -2574,15 +2586,33 @@ export class CreateAfiliationInternalComponent implements OnInit {
     if (persona?.esPrecargado) {
       return;
     }
+    const nombreParentescoEliminado = (persona?.parentesco ?? '').trim();
+    const opcionParentescoEliminado =
+      this.parentescos.find(p => p.nombre === nombreParentescoEliminado) ||
+      this.parentescos.find(p => p.nombre.trim().toLowerCase() === nombreParentescoEliminado.toLowerCase());
+    const eraConyuge = resolverCategoriaParentescoExclusivo(
+      opcionParentescoEliminado?.parentescoGenesys,
+      nombreParentescoEliminado
+    ) === 'conyuge';
+    const avisarEliminacionHijastros = eraConyuge && hayHijastrosEnLista(this.beneficiariosAgregados, this.parentescos);
+    const mensajeConfirmacion = avisarEliminacionHijastros
+      ? '¿Está seguro de eliminar este beneficiario de la lista? Al eliminar el cónyuge, los beneficiarios Hijastro agregados también se eliminarán, ya que dependen de él.'
+      : '¿Está seguro de eliminar este beneficiario de la lista?';
+
     this.mostrarConfirmacionBeneficiario(
       'Eliminar beneficiario',
-      '¿Está seguro de eliminar este beneficiario de la lista?',
-      () => this.ejecutarEliminarBeneficiario(index)
+      mensajeConfirmacion,
+      () => this.ejecutarEliminarBeneficiario(index, eraConyuge)
     );
   }
 
-  private ejecutarEliminarBeneficiario(index: number): void {
+  private ejecutarEliminarBeneficiario(index: number, eraConyuge: boolean): void {
     this.beneficiariosAgregados.splice(index, 1);
+    if (eraConyuge) {
+      // Un hijastro solo es válido si hay cónyuge; al quitar el único cónyuge de la lista, los hijastros
+      // agregados dejan de cumplir el requisito y se eliminan también.
+      this.beneficiariosAgregados = quitarHijastrosDeLista(this.beneficiariosAgregados, this.parentescos);
+    }
     if (this.indiceBeneficiarioEditando === index) {
       this.regresarFormularioPersonaACargo();
     } else if (this.indiceBeneficiarioEditando != null && this.indiceBeneficiarioEditando > index) {
@@ -4827,6 +4857,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
       observaciones: null,
       afiliacionDesdeModuloAfiliacionIndividual: true,
       origenRadicacion: 'Afiliacion interna',
+      fechaRecepcionDocumentos: this.asegurarFormatoFecha(laboral.fecha_recepcion_documentos),
       usuarioRadicacionInterno: this.obtenerUsuarioRadicacionInterno(),
     };
   }

@@ -43,6 +43,58 @@ export function resolverCategoriaParentescoExclusivo(
   return null;
 }
 
+/**
+ * True si el parentesco corresponde a Hijastro. Un hijastro solo puede afiliarse si hay un cónyuge
+ * activo (en Genesys o en la lista de esta solicitud); si ese cónyuge se elimina de la lista, los
+ * hijastros que dependían de él dejan de cumplir el requisito.
+ */
+export function esCategoriaHijastro(
+  parentescoGenesys: string | null | undefined,
+  nombreParentesco: string | null | undefined
+): boolean {
+  const g = normalizarCodigoGenesys(parentescoGenesys);
+  if (g === 'I' || g.includes('HIJASTRO')) {
+    return true;
+  }
+  const n = (nombreParentesco ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+  return n.includes('hijastro');
+}
+
+/**
+ * Quita de la lista los beneficiarios Hijastro. Usar al eliminar de la lista al cónyuge del que
+ * dependían (categoría exclusiva 'conyuge'), ya que como máximo hay un cónyuge por solicitud.
+ */
+export function quitarHijastrosDeLista<T extends { parentesco: string }>(
+  lista: T[],
+  parentescosCatalogo: ParentescoAdjuntoCatalogo[]
+): T[] {
+  return lista.filter(b => {
+    const nombre = (b.parentesco ?? '').trim();
+    const opt =
+      parentescosCatalogo.find(p => p.nombre === nombre) ||
+      parentescosCatalogo.find(p => p.nombre.trim().toLowerCase() === nombre.toLowerCase());
+    return !esCategoriaHijastro(opt?.parentescoGenesys, nombre);
+  });
+}
+
+/** True si la lista tiene al menos un beneficiario Hijastro (para avisar antes de eliminar al cónyuge). */
+export function hayHijastrosEnLista(
+  lista: { parentesco: string }[],
+  parentescosCatalogo: ParentescoAdjuntoCatalogo[]
+): boolean {
+  return lista.some(b => {
+    const nombre = (b.parentesco ?? '').trim();
+    const opt =
+      parentescosCatalogo.find(p => p.nombre === nombre) ||
+      parentescosCatalogo.find(p => p.nombre.trim().toLowerCase() === nombre.toLowerCase());
+    return esCategoriaHijastro(opt?.parentescoGenesys, nombre);
+  });
+}
+
 export function cuentaParentescoExclusivoEnLista(
   lista: { parentesco: string }[],
   parentescosCatalogo: ParentescoAdjuntoCatalogo[],
