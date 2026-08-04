@@ -148,19 +148,19 @@
                       </div>
                       <div class="cai-form-field">
                         <label class="cai-form-label" for="caiBenPn">Primer nombre *</label>
-                        <input id="caiBenPn" pInputText type="text" formControlName="primerNombre" class="cai-input-plain cai-input-plain--full" />
+                        <input id="caiBenPn" pInputText type="text" formControlName="primerNombre" maxlength="100" class="cai-input-plain cai-input-plain--full" />
                       </div>
                       <div class="cai-form-field">
                         <label class="cai-form-label" for="caiBenSn">Segundo nombre</label>
-                        <input id="caiBenSn" pInputText type="text" formControlName="segundoNombre" class="cai-input-plain cai-input-plain--full" />
+                        <input id="caiBenSn" pInputText type="text" formControlName="segundoNombre" maxlength="100" class="cai-input-plain cai-input-plain--full" />
                       </div>
                       <div class="cai-form-field">
                         <label class="cai-form-label" for="caiBenPa">Primer apellido *</label>
-                        <input id="caiBenPa" pInputText type="text" formControlName="primerApellido" class="cai-input-plain cai-input-plain--full" />
+                        <input id="caiBenPa" pInputText type="text" formControlName="primerApellido" maxlength="100" class="cai-input-plain cai-input-plain--full" />
                       </div>
                       <div class="cai-form-field">
                         <label class="cai-form-label" for="caiBenSa">Segundo apellido</label>
-                        <input id="caiBenSa" pInputText type="text" formControlName="segundoApellido" class="cai-input-plain cai-input-plain--full" />
+                        <input id="caiBenSa" pInputText type="text" formControlName="segundoApellido" maxlength="100" class="cai-input-plain cai-input-plain--full" />
                       </div>
                       <div class="cai-form-field">
                         <label class="cai-form-label" for="caiBenFn">Fecha de nacimiento *</label>
@@ -169,6 +169,8 @@
                           formControlName="fechaNacimiento"
                           dateFormat="dd/mm/yy"
                           [showIcon]="true"
+                          [readonlyInput]="false"
+                          [keepInvalid]="true"
                           appendTo="body"
                           panelStyleClass="cai-solicitud-calendar-panel"
                           [locale]="calendarioLocaleEs"
@@ -184,6 +186,8 @@
                           formControlName="fechaExpedicion"
                           dateFormat="dd/mm/yy"
                           [showIcon]="true"
+                          [readonlyInput]="false"
+                          [keepInvalid]="true"
                           appendTo="body"
                           panelStyleClass="cai-solicitud-calendar-panel"
                           [locale]="calendarioLocaleEs"
@@ -738,6 +742,7 @@
                       pInputText
                       type="text"
                       formControlName="primer_nombre"
+                      maxlength="100"
                       class="cai-input-plain cai-input-plain--full" />
                     <span class="cai-form-field__error" *ngIf="fPersonal['primer_nombre']?.invalid && fPersonal['primer_nombre']?.touched">
                       <span *ngIf="fPersonal['primer_nombre']?.errors?.['required']">El primer nombre es obligatorio.</span>
@@ -751,6 +756,7 @@
                       pInputText
                       type="text"
                       formControlName="segundo_nombre"
+                      maxlength="100"
                       class="cai-input-plain cai-input-plain--full" />
                     <span class="cai-form-field__error" *ngIf="fPersonal['segundo_nombre']?.invalid && fPersonal['segundo_nombre']?.touched">
                       <span *ngIf="fPersonal['segundo_nombre']?.errors?.['soloLetrasNombres']">Solo letras (con tildes y ñ), espacios, guion, punto o apóstrofo.</span>
@@ -763,6 +769,7 @@
                       pInputText
                       type="text"
                       formControlName="primer_apellido"
+                      maxlength="100"
                       class="cai-input-plain cai-input-plain--full" />
                     <span class="cai-form-field__error" *ngIf="fPersonal['primer_apellido']?.invalid && fPersonal['primer_apellido']?.touched">
                       <span *ngIf="fPersonal['primer_apellido']?.errors?.['required']">El primer apellido es obligatorio.</span>
@@ -776,6 +783,7 @@
                       pInputText
                       type="text"
                       formControlName="segundo_apellido"
+                      maxlength="100"
                       class="cai-input-plain cai-input-plain--full" />
                     <span class="cai-form-field__error" *ngIf="fPersonal['segundo_apellido']?.invalid && fPersonal['segundo_apellido']?.touched">
                       <span *ngIf="fPersonal['segundo_apellido']?.errors?.['soloLetrasNombres']">Solo letras (con tildes y ñ), espacios, guion, punto o apóstrofo.</span>
@@ -788,6 +796,8 @@
                       formControlName="fecha_nacimiento"
                       dateFormat="dd/mm/yy"
                       [showIcon]="true"
+                      [readonlyInput]="false"
+                      [keepInvalid]="true"
                       appendTo="body"
                       panelStyleClass="cai-solicitud-calendar-panel"
                       [locale]="calendarioLocaleEs"
@@ -806,6 +816,8 @@
                       formControlName="fecha_expedicion"
                       dateFormat="dd/mm/yy"
                       [showIcon]="true"
+                      [readonlyInput]="false"
+                      [keepInvalid]="true"
                       appendTo="body"
                       panelStyleClass="cai-solicitud-calendar-panel"
                       [locale]="calendarioLocaleEs"
@@ -873,6 +885,7 @@
                         pInputText
                         type="email"
                         formControlName="correo"
+                        maxlength="200"
                         class="cai-input-plain cai-input-plain--full cai-input-with-icon" />
                     </span>
                     <span class="cai-form-field__error" *ngIf="fPersonal['correo']?.invalid && fPersonal['correo']?.touched">
@@ -890,6 +903,7 @@
                         type="email"
                         formControlName="confirmar_correo"
                         appSinCopiarPegar
+                        maxlength="200"
                         class="cai-input-plain cai-input-plain--full cai-input-with-icon" />
                     </span>
                     <p class="cai-field-hint">Por seguridad, ingresa nuevamente el correo.</p>
@@ -1073,6 +1087,8 @@
                     formControlName="fecha_ingreso_empresa"
                     dateFormat="dd/mm/yy"
                     [showIcon]="true"
+                    [readonlyInput]="false"
+                    [keepInvalid]="true"
                     appendTo="body"
                     panelStyleClass="cai-solicitud-calendar-panel"
                     [locale]="calendarioLocaleEs"
@@ -1092,6 +1108,30 @@
                   </span>
                   <span class="cai-form-field__error" *ngIf="fLaboral['fecha_ingreso_empresa']?.touched && fLaboral['fecha_ingreso_empresa']?.valid && !esFechaIngresoLaboralEnRangoPermitido()">
                     La fecha de ingreso no cumple el rango permitido. Ajuste la fecha e intente de nuevo.
+                  </span>
+                </div>
+                <div class="cai-form-field">
+                  <label class="cai-form-label" for="caiLabFrd">Fecha de recepción de documentos *</label>
+                  <p-calendar
+                    inputId="caiLabFrd"
+                    formControlName="fecha_recepcion_documentos"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    [readonlyInput]="false"
+                    [keepInvalid]="true"
+                    appendTo="body"
+                    panelStyleClass="cai-solicitud-calendar-panel"
+                    [locale]="calendarioLocaleEs"
+                    [minDate]="fechaMinimaRecepcionDocumentos"
+                    [maxDate]="fechaHoyCalendario"
+                    [style]="{ width: '100%' }"
+                    styleClass="cai-solicitud-calendar"
+                    inputStyleClass="cai-solicitud-calendar-input"></p-calendar>
+                  <p class="cai-field-hint">
+                    Fecha en que se recibieron los documentos del trabajador. Mínimo 2 meses atrás, máximo hoy.
+                  </p>
+                  <span class="cai-form-field__error" *ngIf="fLaboral['fecha_recepcion_documentos']?.invalid && fLaboral['fecha_recepcion_documentos']?.touched">
+                    <span *ngIf="fLaboral['fecha_recepcion_documentos']?.errors?.['required']">La fecha de recepción de documentos es requerida.</span>
                   </span>
                 </div>
                 <div class="cai-form-field">
@@ -1301,10 +1341,19 @@
                       pInputText
                       type="text"
                       formControlName="numero_cuenta"
+                      maxlength="50"
                       class="cai-input-plain cai-input-plain--full"
                       placeholder="Ingrese el número de cuenta o billetera" />
-                    <span class="cai-form-field__error" *ngIf="fMedioPago['numero_cuenta']?.invalid && fMedioPago['numero_cuenta']?.touched">
+                    <span class="cai-form-field__error"
+                      *ngIf="fMedioPago['numero_cuenta']?.errors?.['required'] && fMedioPago['numero_cuenta']?.touched">
                       El número de cuenta o billetera es obligatorio.
+                    </span>
+                    <span class="cai-form-field__error"
+                      *ngIf="!fMedioPago['numero_cuenta']?.errors?.['required'] && (fMedioPago['numero_cuenta']?.errors?.['minlength'] || fMedioPago['numero_cuenta']?.errors?.['maxlength'])">
+                      El número de cuenta debe tener {{ fMedioPago['numero_cuenta']?.errors?.['minlength']?.requiredLength || fMedioPago['numero_cuenta']?.errors?.['maxlength']?.requiredLength }} dígitos para el tipo de cuenta seleccionado.
+                    </span>
+                    <span class="cai-form-field__error" *ngIf="fMedioPago['numero_cuenta']?.errors?.['secuenciaInvalida']">
+                      El número de cuenta ingresado no es válido. Por favor verifique e intente nuevamente.
                     </span>
                   </div>
                   <div class="cai-form-field" *ngIf="requiereDatosBancariosMedioPago()">
@@ -1317,11 +1366,20 @@
                       type="text"
                       formControlName="confirmacion_cuenta"
                       appSinCopiarPegar
+                      maxlength="50"
                       class="cai-input-plain cai-input-plain--full"
                       placeholder="Confirme el número de cuenta o billetera"
                       autocomplete="off" />
-                    <span class="cai-form-field__error" *ngIf="fMedioPago['confirmacion_cuenta']?.invalid && fMedioPago['confirmacion_cuenta']?.touched">
+                    <span class="cai-form-field__error"
+                      *ngIf="fMedioPago['confirmacion_cuenta']?.errors?.['required'] && fMedioPago['confirmacion_cuenta']?.touched">
                       Confirme el número de cuenta o billetera.
+                    </span>
+                    <span class="cai-form-field__error"
+                      *ngIf="!fMedioPago['confirmacion_cuenta']?.errors?.['required'] && (fMedioPago['confirmacion_cuenta']?.errors?.['minlength'] || fMedioPago['confirmacion_cuenta']?.errors?.['maxlength'])">
+                      El número de cuenta debe tener {{ fMedioPago['confirmacion_cuenta']?.errors?.['minlength']?.requiredLength || fMedioPago['confirmacion_cuenta']?.errors?.['maxlength']?.requiredLength }} dígitos para el tipo de cuenta seleccionado.
+                    </span>
+                    <span class="cai-form-field__error" *ngIf="fMedioPago['confirmacion_cuenta']?.errors?.['secuenciaInvalida']">
+                      El número de cuenta ingresado no es válido. Por favor verifique e intente nuevamente.
                     </span>
                     <span class="cai-form-field__error" *ngIf="solicitudMedioPagoForm.hasError('confirmacionNumeroCuenta') && solicitudMedioPagoForm.touched">
                       El número de cuenta y la confirmación no coinciden.
@@ -1334,6 +1392,7 @@
                       pInputText
                       type="text"
                       formControlName="llave_breb"
+                      maxlength="100"
                       class="cai-input-plain cai-input-plain--full"
                       placeholder="Ingrese la llave Bre-B asociada a la cuenta" />
                   </div>
@@ -1345,6 +1404,7 @@
                       type="text"
                       formControlName="confirmar_llave_breb"
                       appSinCopiarPegar
+                      maxlength="100"
                       class="cai-input-plain cai-input-plain--full"
                       placeholder="Confirme la llave Bre-B asociada a la cuenta"
                       autocomplete="off" />

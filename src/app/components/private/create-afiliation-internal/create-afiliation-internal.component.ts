@@ -80,10 +80,13 @@ import {
   validatorsDireccionColombiaOpcional,
 } from '../../../shared/validators/direccion-colombia.validators';
 import { validadorSoloLetrasNombresApellido } from '../../../shared/validators/nombres-apellidos.validators';
+import { validatorNumeroCuentaSecuencia } from '../../../shared/validators/numero-cuenta.validators';
 import {
   cuentaParentescoExclusivoEnLista,
   existeBeneficiarioDuplicadoPorDocumentoEnLista,
+  hayHijastrosEnLista,
   mensajeParentescoExclusivoDuplicado,
+  quitarHijastrosDeLista,
   resolverCategoriaParentescoExclusivo,
 } from '../../../shared/utils/parentesco-cupo.util';
 import { AfiliacionInternaService } from '../../../services/afiliacion-interna.service';
@@ -138,6 +141,12 @@ function crearFechaFinDiaCalendario(fecha: Date): Date {
 function crearFechaInicioDiaCalendario(fecha: Date): Date {
   const d = new Date(fecha);
   d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function restarMesesFecha(fecha: Date, meses: number): Date {
+  const d = new Date(fecha);
+  d.setMonth(d.getMonth() - meses);
   return d;
 }
 
@@ -275,6 +284,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
 
   /** Referencias estables para p-calendar (evita que maxDate/minDate nuevos rompan la selección). */
   readonly fechaHoyCalendario = crearFechaFinDiaCalendario(new Date());
+  /** Fecha de recepción de documentos (solo afiliación interna): máximo hoy, mínimo 2 meses atrás. */
+  readonly fechaMinimaRecepcionDocumentos = crearFechaInicioDiaCalendario(restarMesesFecha(new Date(), 2));
   fechaExpedicionMinimaPersonal: Date | null = null;
   readonly calendarioLocaleEs = CALENDARIO_LOCALE_ES;
 
@@ -417,6 +428,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
 
     this.solicitudLaboralForm = this.fb.group({
       fecha_ingreso_empresa: [null as Date | null, Validators.required],
+      fecha_recepcion_documentos: [null as Date | null, Validators.required],
       horas_mes: [null as number | null, [Validators.required, Validators.min(1), Validators.max(240)]],
       salario_mensual: [null as number | null, Validators.required],
       cargo_desempenado: ['', Validators.required],
@@ -1253,6 +1265,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.solicitudLaboralForm.reset(
       {
         fecha_ingreso_empresa: null,
+        fecha_recepcion_documentos: null,
         horas_mes: null,
         salario_mensual: null,
         cargo_desempenado: '',
@@ -2365,11 +2378,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const tipoBenefAgregar = opcionParentesco?.parentescoGenesys ?? null;
     const fechaNacBeneficiario = raw.fechaNacimiento;
 
-    if (this.esCodigoParentescoConyuge(tipoBenefAgregar) && this.esMenorDe18DesdeValorFecha(fechaNacBeneficiario)) {
+    if (this.esCodigoParentescoConyuge(tipoBenefAgregar) && this.esMenorDeEdad()) {
       this.messageService.add({
         severity: 'error',
         summary: 'Validación de beneficiario',
-        detail: 'No es posible afiliar a un cónyuge menor de edad.',
+        detail: 'No es posible afiliar a un cónyuge cuando el trabajador principal es menor de edad.',
       });
       return;
     }
@@ -2574,15 +2587,33 @@ export class CreateAfiliationInternalComponent implements OnInit {
     if (persona?.esPrecargado) {
       return;
     }
+    const nombreParentescoEliminado = (persona?.parentesco ?? '').trim();
+    const opcionParentescoEliminado =
+      this.parentescos.find(p => p.nombre === nombreParentescoEliminado) ||
+      this.parentescos.find(p => p.nombre.trim().toLowerCase() === nombreParentescoEliminado.toLowerCase());
+    const eraConyuge = resolverCategoriaParentescoExclusivo(
+      opcionParentescoEliminado?.parentescoGenesys,
+      nombreParentescoEliminado
+    ) === 'conyuge';
+    const avisarEliminacionHijastros = eraConyuge && hayHijastrosEnLista(this.beneficiariosAgregados, this.parentescos);
+    const mensajeConfirmacion = avisarEliminacionHijastros
+      ? '¿Está seguro de eliminar este beneficiario de la lista? Al eliminar el cónyuge, los beneficiarios Hijastro agregados también se eliminarán, ya que dependen de él.'
+      : '¿Está seguro de eliminar este beneficiario de la lista?';
+
     this.mostrarConfirmacionBeneficiario(
       'Eliminar beneficiario',
-      '¿Está seguro de eliminar este beneficiario de la lista?',
-      () => this.ejecutarEliminarBeneficiario(index)
+      mensajeConfirmacion,
+      () => this.ejecutarEliminarBeneficiario(index, eraConyuge)
     );
   }
 
-  private ejecutarEliminarBeneficiario(index: number): void {
+  private ejecutarEliminarBeneficiario(index: number, eraConyuge: boolean): void {
     this.beneficiariosAgregados.splice(index, 1);
+    if (eraConyuge) {
+      // Un hijastro solo es válido si hay cónyuge; al quitar el único cónyuge de la lista, los hijastros
+      // agregados dejan de cumplir el requisito y se eliminan también.
+      this.beneficiariosAgregados = quitarHijastrosDeLista(this.beneficiariosAgregados, this.parentescos);
+    }
     if (this.indiceBeneficiarioEditando === index) {
       this.regresarFormularioPersonaACargo();
     } else if (this.indiceBeneficiarioEditando != null && this.indiceBeneficiarioEditando > index) {
@@ -3357,8 +3388,29 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const validatorsRequeridos = esTransferencia ? [Validators.required] : [];
 
     this.solicitudMedioPagoForm.get('id_entidad')?.setValidators(validatorsRequeridos);
-    this.solicitudMedioPagoForm.get('numero_cuenta')?.setValidators(validatorsRequeridos);
-    this.solicitudMedioPagoForm.get('confirmacion_cuenta')?.setValidators(validatorsRequeridos);
+
+    // Longitud del número de cuenta según el banco + tipo de cuenta seleccionados, y bloqueo de
+    // secuencias inválidas (mismo criterio que afiliación web: tabla parametros_entidad_bancaria_cuenta).
+    const validatorsNumeroCuenta = esTransferencia
+      ? [...validatorsRequeridos, validatorNumeroCuentaSecuencia]
+      : [...validatorsRequeridos];
+    if (esTransferencia) {
+      const idTipoCuentaVal = this.solicitudMedioPagoForm.get('tipo_cuenta')?.value;
+      const tipoCuentaSeleccionada =
+        idTipoCuentaVal != null
+          ? this.entidadSeleccionadaMedioPago?.tiposCuenta?.find(
+              t => Number(t.idTipoCuenta) === Number(idTipoCuentaVal)
+            )
+          : undefined;
+      if (tipoCuentaSeleccionada?.longitudMinima) {
+        validatorsNumeroCuenta.push(Validators.minLength(tipoCuentaSeleccionada.longitudMinima));
+      }
+      if (tipoCuentaSeleccionada?.longitudMaxima) {
+        validatorsNumeroCuenta.push(Validators.maxLength(tipoCuentaSeleccionada.longitudMaxima));
+      }
+    }
+    this.solicitudMedioPagoForm.get('numero_cuenta')?.setValidators(validatorsNumeroCuenta);
+    this.solicitudMedioPagoForm.get('confirmacion_cuenta')?.setValidators(validatorsNumeroCuenta);
 
     const requiereTipoCuenta = esTransferencia && this.debeMostrarTipoCuentaMedioPago;
     this.solicitudMedioPagoForm
@@ -4598,13 +4650,38 @@ export class CreateAfiliationInternalComponent implements OnInit {
     if (!this.esNoDiscapacidad(personaDiscapacidad)) {
       return true;
     }
+    const etiqueta = this.etiquetaParentescoParaMensajeMayor23(parentescoGenesys, parentescoNombre);
     this.messageService.add({
       severity: 'info',
       summary: 'Validación de beneficiario',
-      detail:
-        'Para este parentesco, si la persona tiene más de 23 años es obligatorio indicar condición de discapacidad en Sí y adjuntar el documento soporte.',
+      detail: `Para ${etiqueta}, si la persona tiene más de 23 años es obligatorio indicar condición de discapacidad en Sí y adjuntar el documento soporte.`,
     });
     return false;
+  }
+
+  /** Etiqueta del parentesco para el mensaje de "mayor de 23 años" (igual criterio que afiliación web). */
+  private etiquetaParentescoParaMensajeMayor23(
+    parentescoGenesys: string | null | undefined,
+    parentescoNombre: string | null | undefined
+  ): string {
+    const nombre = (parentescoNombre ?? '').trim();
+    if (nombre) {
+      return nombre;
+    }
+    const g = this.normalizarTextoPlano(parentescoGenesys);
+    if (g === 'H' || g === 'HIJO' || g.startsWith('HIJO_')) {
+      return 'Hijo';
+    }
+    if (g === 'I' || g.includes('HIJASTRO')) {
+      return 'Hijastro';
+    }
+    if (g === 'E' || g.includes('HERMANO_HUERFANO')) {
+      return 'Hermano huérfano';
+    }
+    if (g.includes('CUSTODIA') || (g.includes('BENEFICIARIO') && g.includes('CUSTOD'))) {
+      return 'Beneficiario en custodia';
+    }
+    return 'este parentesco';
   }
 
   private validarPadreMadreMenorUmbralConDiscapacidadNo(
@@ -4827,6 +4904,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
       observaciones: null,
       afiliacionDesdeModuloAfiliacionIndividual: true,
       origenRadicacion: 'Afiliacion interna',
+      fechaRecepcionDocumentos: this.asegurarFormatoFecha(laboral.fecha_recepcion_documentos),
       usuarioRadicacionInterno: this.obtenerUsuarioRadicacionInterno(),
     };
   }

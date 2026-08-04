@@ -119,6 +119,8 @@ export interface GuardarSolicitudRequestInterna {
   origenRadicacion?: string;
   /** Login del gestor PQR que radica (sesión). Obligatorio en afiliación interna. */
   usuarioRadicacionInterno?: string;
+  /** Fecha de recepción de documentos (yyyy-MM-dd). Obligatoria en afiliación interna. */
+  fechaRecepcionDocumentos?: string;
 }
 
 export interface GuardarSolicitudResponseInterna {
