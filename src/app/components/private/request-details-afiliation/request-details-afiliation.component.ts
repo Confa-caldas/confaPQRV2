@@ -1908,6 +1908,16 @@ getRequestDetails(request_details: number) {
     return texto === 'aprobada completa' || texto === 'aprobada incompleta';
   }
 
+  /** True si el estado actual de la cabecera es "Aprobada completa" (pill verde como Procesado). */
+  esEstadoAprobadaCompleta(): boolean {
+    const d = this.afiliationRequestDetails;
+    if (!d?.solicitud) {
+      return false;
+    }
+    const texto = this.normalizarTextoEstadoTimeline(this.currentState || d.solicitud.estado_codigo);
+    return texto === 'aprobada completa';
+  }
+
   /** True si el estado de gestión del integrante ya es "Procesado": no se permite editar sus datos ni subir adjuntos adicionales. */
   personaGestionNoEditable(contexto: 'trabajador' | 'beneficiario', indiceBeneficiario?: number): boolean {
     const id = this.idEstadoGestionPersonaIntegrante(contexto, indiceBeneficiario);

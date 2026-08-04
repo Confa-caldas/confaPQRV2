@@ -51,8 +51,9 @@
 
           <div class="info-row">
             <span class="info-label">Estado actual</span>
-            <!-- si tienes currentState calculado, úsalo; si no, muestra el id -->
-            <span class="status-pill">
+            <span
+              class="status-pill"
+              [class.status-pill--aprobada-completa]="esEstadoAprobadaCompleta()">
               {{ currentState || d.solicitud.estado_codigo }}
             </span>
           </div>
@@ -73,7 +74,6 @@
               <p-tag
                 [value]="textoEstadoGestionIntegrante('trabajador')"
                 [severity]="severidadEstadoGestionIntegrante('trabajador')"
-                [rounded]="true"
                 styleClass="integrante-estado-gestion-tag"></p-tag>
             </span>
           </div>
@@ -501,7 +501,6 @@
             <p-tag
               [value]="textoEstadoGestionIntegrante('trabajador')"
               [severity]="severidadEstadoGestionIntegrante('trabajador')"
-              [rounded]="true"
               styleClass="integrante-estado-gestion-tag"></p-tag>
           </div>
           <div class="d-flex flex-wrap gap-2 align-items-center tab-data-header-actions">
@@ -874,7 +873,6 @@
                     <p-tag
                       [value]="textoEstadoGestionIntegrante('beneficiario', iBenef)"
                       [severity]="severidadEstadoGestionIntegrante('beneficiario', iBenef)"
-                      [rounded]="true"
                       styleClass="integrante-estado-gestion-tag"></p-tag>
                   </span>
                   <span class="benef-card-meta">{{ b.persona.tipo_documento }} {{ b.persona.numero_documento }} · {{ b.beneficiario.parentesco || '—' }}</span>

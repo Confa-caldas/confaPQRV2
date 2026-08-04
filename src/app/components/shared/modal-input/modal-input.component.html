@@ -41,12 +41,20 @@
           <div class="col-12">
             <label>{{ parameter[2] }}</label>
             <textarea
-              rows="5"
+              [rows]="textareaMaxLength != null && textareaMaxLength > 0 ? 10 : 5"
               cols="30"
               pInputTextarea
               [placeholder]="parameter[3]"
               formControlName="inputValue2"
-              class="custom-input"></textarea>
+              class="custom-input"
+              [class.custom-input--descripcion-amplia]="textareaMaxLength != null && textareaMaxLength > 0"
+              [attr.maxlength]="textareaMaxLength"></textarea>
+            <div
+              *ngIf="textareaMaxLength != null && textareaMaxLength > 0"
+              class="char-counter"
+              [class.char-counter--limit]="textareaLength >= textareaMaxLength">
+              {{ textareaLength }} / {{ textareaMaxLength }}
+            </div>
             <label class="invalid">
               {{
                 formGroup.get('inputValue2')?.hasError('required') &&
@@ -57,6 +65,11 @@
                 formGroup.get('inputValue2')?.hasError('pattern') &&
                 formGroup.get('inputValue2')?.touched
                   ? 'No es válido'
+                  : ''
+              }}{{
+                formGroup.get('inputValue2')?.hasError('maxlength') &&
+                formGroup.get('inputValue2')?.touched
+                  ? 'Máximo ' + textareaMaxLength + ' caracteres'
                   : ''
               }}
             </label>

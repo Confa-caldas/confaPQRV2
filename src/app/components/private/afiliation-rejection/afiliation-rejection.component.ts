@@ -101,6 +101,7 @@ export class AfiliationRejectionComponent implements OnInit {
   }
 
   editMotivo(row: AfiMotivoRechazoParamList): void {
+    this.motivoRechazoDetails = row;
     this.inputForm = [row.codigo_motivo ?? '', this.descripcion(row), String(row.id ?? '')];
     this.visibleDialogInput = true;
     this.enableCreate = false;
@@ -210,6 +211,10 @@ export class AfiliationRejectionComponent implements OnInit {
         });
     } else {
       const id = Number(idStr);
+      if (!Number.isFinite(id) || id <= 0) {
+        this.showSuccessMessage('error', 'Fallida', 'No se identificó el motivo a modificar.');
+        return;
+      }
       const duplicado = this.motivoRechazoList?.some(
         r =>
           r.id !== id &&
@@ -227,7 +232,7 @@ export class AfiliationRejectionComponent implements OnInit {
           id,
           codigo_motivo: codigo,
           descripcion_motivo: descripcion,
-          esta_activo: this.motivoRechazoDetails.esta_activo,
+          esta_activo: this.motivoRechazoDetails?.esta_activo ?? true,
         })
         .subscribe({
           next: (response: BodyResponse<string>) => {
