@@ -19,6 +19,26 @@
             <span class="info-value">{{ d.solicitud.numero_radicado }}</span>
           </div>
 
+          <div
+            class="info-row"
+            *ngIf="
+              (
+                d.solicitud.numero_radicado_genesys ||
+                d.trabajador?.persona?.numero_radicado_genesys ||
+                ''
+              )
+                .toString()
+                .trim()
+            ">
+            <span class="info-label">Número de radicado Genesys</span>
+            <span class="info-value">
+              {{
+                d.solicitud.numero_radicado_genesys ||
+                  d.trabajador?.persona?.numero_radicado_genesys
+              }}
+            </span>
+          </div>
+
           <div class="info-row">
             <span class="info-label">Fecha de radicación</span>
             <span class="info-value">{{ d.solicitud.fecha_radicacion | date: 'yyyy-MM-dd' }}</span>

@@ -1737,6 +1737,8 @@ export interface Solicitud {
   excluido_masiva: boolean;
   fecha_solicitud: string;
   numero_radicado: string;
+  /** Radicado Genesys (si el detalle lo trae a nivel de solicitud). */
+  numero_radicado_genesys?: string | null;
   usuario_gestion: string | null;
   fecha_radicacion: string;
   fecha_modificacion: string | null;
@@ -1836,6 +1838,8 @@ export interface Persona {
   fecha_creacion: string;
   /** Estado de gestión del integrante (parametros_estado_gestion_persona.id). */
   id_estado_gestion_persona?: number | null;
+  /** Radicado Genesys del integrante (afiliacion_solicitud_persona). */
+  numero_radicado_genesys?: string | null;
 }
 
 export interface Adjunto {
