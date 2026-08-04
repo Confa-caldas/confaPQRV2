@@ -15,6 +15,8 @@ export class ModalInputComponent implements OnInit {
   @Input() visible: boolean = false;
   @Input() oneField: boolean = false;
   @Input() inputForm: string[] = [];
+  /** Si se define, aplica maxlength y contador al textarea (campo Descripción). */
+  @Input() textareaMaxLength: number | null = null;
   @Output() setRta = new EventEmitter<boolean>();
   @Output() setRtaParameter = new EventEmitter<string[]>();
   inputValue1: string = '';
@@ -34,6 +36,13 @@ export class ModalInputComponent implements OnInit {
     });
   }
   ngOnInit(): void {
+    const validators2 = [Validators.required, Validators.pattern('^[^#$%&]+$')];
+    if (this.textareaMaxLength != null && this.textareaMaxLength > 0) {
+      validators2.push(Validators.maxLength(this.textareaMaxLength));
+    }
+    this.formGroup.get('inputValue2')?.setValidators(validators2);
+    this.formGroup.get('inputValue2')?.updateValueAndValidity({ emitEvent: false });
+
     if (this.buttonmsg != 'Crear') {
       this.formGroup.setValue({
         inputValue1: this.inputForm[0] ?? '',
@@ -44,6 +53,10 @@ export class ModalInputComponent implements OnInit {
     }
     this.initialSnapshot1 = String(this.formGroup.get('inputValue1')?.value ?? '');
     this.initialSnapshot2 = String(this.formGroup.get('inputValue2')?.value ?? '');
+  }
+
+  get textareaLength(): number {
+    return String(this.formGroup.get('inputValue2')?.value ?? '').length;
   }
 
   /** Deshabilita el botón principal si es "Modificar" y no hay cambios respecto al valor inicial. */
