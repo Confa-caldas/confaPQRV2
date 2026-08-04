@@ -216,6 +216,11 @@
                       </div>
                       <div class="cai-form-field" *ngIf="mostrarCampoPersonaDiscapacidad">
                         <label class="cai-form-label" for="caiBenDisc">¿Persona con discapacidad? *</label>
+                        <span
+                          *ngIf="requiereSoporteDiscapacidadYFaltaAdjunto() || datosBeneficiario?.obligarPersonaDiscapacidadSi || (formularioPersonaACargo.get('personaDiscapacidad')?.value === 'Si' && formularioPersonaACargo.get('personaDiscapacidad')?.enabled)"
+                          class="text-muted ms-1" [title]="getTooltipSoporteDiscapacidad()">
+                          <i class="pi pi-info-circle" style="font-size: 1.1rem;"></i>
+                        </span>
                         <p-dropdown
                           inputId="caiBenDisc"
                           formControlName="personaDiscapacidad"

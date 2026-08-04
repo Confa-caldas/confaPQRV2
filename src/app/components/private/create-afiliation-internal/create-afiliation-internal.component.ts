@@ -369,8 +369,9 @@ export class CreateAfiliationInternalComponent implements OnInit {
   laborFechaIngresoMax: Date | null = null;
   laborFechaIngresoMinimaIso = '';
   laborFechaIngresoMaximaIso = '';
-  horasLaboralesMin = 1;
-  horasLaboralesMax = 240;
+  /** Límites de horas laborales desde validar-trabajador (laborInfo). Null = sin dato del API (solo se exige min 0), igual que afiliación web. */
+  horasLaboralesMin: number | null = null;
+  horasLaboralesMax: number | null = null;
   salarioMinimoRef: number | null = null;
 
   private entidadesMedioPagoRef: EntidadDisponibleAfiliacionInterna[] = [];
@@ -429,7 +430,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.solicitudLaboralForm = this.fb.group({
       fecha_ingreso_empresa: [null as Date | null, Validators.required],
       fecha_recepcion_documentos: [null as Date | null, Validators.required],
-      horas_mes: [null as number | null, [Validators.required, Validators.min(1), Validators.max(240)]],
+      horas_mes: [null as number | null, [Validators.required, Validators.min(0)]],
       salario_mensual: [null as number | null, Validators.required],
       cargo_desempenado: ['', Validators.required],
     });
@@ -1259,8 +1260,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.laborFechaIngresoMax = null;
     this.laborFechaIngresoMinimaIso = '';
     this.laborFechaIngresoMaximaIso = '';
-    this.horasLaboralesMin = 1;
-    this.horasLaboralesMax = 240;
+    this.horasLaboralesMin = null;
+    this.horasLaboralesMax = null;
     this.salarioMinimoRef = null;
     this.solicitudLaboralForm.reset(
       {
@@ -1272,11 +1273,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
       },
       { emitEvent: false }
     );
-    this.solicitudLaboralForm.get('horas_mes')?.setValidators([
-      Validators.required,
-      Validators.min(1),
-      Validators.max(240),
-    ]);
+    this.solicitudLaboralForm.get('horas_mes')?.setValidators([Validators.required, Validators.min(0)]);
     this.solicitudLaboralForm.get('salario_mensual')?.setValidators([Validators.required]);
     this.solicitudLaboralForm.updateValueAndValidity({ emitEvent: false });
     this.solicitudMedioPagoForm.reset(
@@ -3520,11 +3517,15 @@ export class CreateAfiliationInternalComponent implements OnInit {
       return;
     }
 
-    horasControl.setValidators([
-      Validators.required,
-      Validators.min(this.horasLaboralesMin),
-      Validators.max(this.horasLaboralesMax),
-    ]);
+    if (this.horasLaboralesMin != null && this.horasLaboralesMax != null) {
+      horasControl.setValidators([
+        Validators.required,
+        Validators.min(this.horasLaboralesMin),
+        Validators.max(this.horasLaboralesMax),
+      ]);
+    } else {
+      horasControl.setValidators([Validators.required, Validators.min(0)]);
+    }
 
     if (this.salarioMinimoRef != null && !Number.isNaN(this.salarioMinimoRef)) {
       salarioControl.setValidators([Validators.required, Validators.min(this.salarioMinimoRef)]);
@@ -3712,8 +3713,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
       this.laborFechaIngresoMax = null;
       this.laborFechaIngresoMinimaIso = '';
       this.laborFechaIngresoMaximaIso = '';
-      this.horasLaboralesMin = 1;
-      this.horasLaboralesMax = 240;
+      this.horasLaboralesMin = null;
+      this.horasLaboralesMax = null;
       this.salarioMinimoRef = null;
       this.solicitudLaboralForm.patchValue(
         {
@@ -3733,8 +3734,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
       li.rangoFechaIngreso?.fechaMinima ?? null,
       li.rangoFechaIngreso?.fechaMaxima ?? null
     );
-    this.horasLaboralesMin = li.horasMinimas != null ? Number(li.horasMinimas) : 1;
-    this.horasLaboralesMax = li.horasMaximas != null ? Number(li.horasMaximas) : 240;
+    this.horasLaboralesMin = li.horasMinimas != null ? Number(li.horasMinimas) : null;
+    this.horasLaboralesMax = li.horasMaximas != null ? Number(li.horasMaximas) : null;
     this.salarioMinimoRef = li.salarioMinimo != null ? Number(li.salarioMinimo) : null;
 
     const horasDefault =
