@@ -80,6 +80,7 @@ import {
   validatorsDireccionColombiaOpcional,
 } from '../../../shared/validators/direccion-colombia.validators';
 import { validadorSoloLetrasNombresApellido } from '../../../shared/validators/nombres-apellidos.validators';
+import { validatorNumeroCuentaSecuencia } from '../../../shared/validators/numero-cuenta.validators';
 import {
   cuentaParentescoExclusivoEnLista,
   existeBeneficiarioDuplicadoPorDocumentoEnLista,
@@ -2377,11 +2378,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const tipoBenefAgregar = opcionParentesco?.parentescoGenesys ?? null;
     const fechaNacBeneficiario = raw.fechaNacimiento;
 
-    if (this.esCodigoParentescoConyuge(tipoBenefAgregar) && this.esMenorDe18DesdeValorFecha(fechaNacBeneficiario)) {
+    if (this.esCodigoParentescoConyuge(tipoBenefAgregar) && this.esMenorDeEdad()) {
       this.messageService.add({
         severity: 'error',
         summary: 'Validación de beneficiario',
-        detail: 'No es posible afiliar a un cónyuge menor de edad.',
+        detail: 'No es posible afiliar a un cónyuge cuando el trabajador principal es menor de edad.',
       });
       return;
     }
@@ -3387,8 +3388,29 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const validatorsRequeridos = esTransferencia ? [Validators.required] : [];
 
     this.solicitudMedioPagoForm.get('id_entidad')?.setValidators(validatorsRequeridos);
-    this.solicitudMedioPagoForm.get('numero_cuenta')?.setValidators(validatorsRequeridos);
-    this.solicitudMedioPagoForm.get('confirmacion_cuenta')?.setValidators(validatorsRequeridos);
+
+    // Longitud del número de cuenta según el banco + tipo de cuenta seleccionados, y bloqueo de
+    // secuencias inválidas (mismo criterio que afiliación web: tabla parametros_entidad_bancaria_cuenta).
+    const validatorsNumeroCuenta = esTransferencia
+      ? [...validatorsRequeridos, validatorNumeroCuentaSecuencia]
+      : [...validatorsRequeridos];
+    if (esTransferencia) {
+      const idTipoCuentaVal = this.solicitudMedioPagoForm.get('tipo_cuenta')?.value;
+      const tipoCuentaSeleccionada =
+        idTipoCuentaVal != null
+          ? this.entidadSeleccionadaMedioPago?.tiposCuenta?.find(
+              t => Number(t.idTipoCuenta) === Number(idTipoCuentaVal)
+            )
+          : undefined;
+      if (tipoCuentaSeleccionada?.longitudMinima) {
+        validatorsNumeroCuenta.push(Validators.minLength(tipoCuentaSeleccionada.longitudMinima));
+      }
+      if (tipoCuentaSeleccionada?.longitudMaxima) {
+        validatorsNumeroCuenta.push(Validators.maxLength(tipoCuentaSeleccionada.longitudMaxima));
+      }
+    }
+    this.solicitudMedioPagoForm.get('numero_cuenta')?.setValidators(validatorsNumeroCuenta);
+    this.solicitudMedioPagoForm.get('confirmacion_cuenta')?.setValidators(validatorsNumeroCuenta);
 
     const requiereTipoCuenta = esTransferencia && this.debeMostrarTipoCuentaMedioPago;
     this.solicitudMedioPagoForm
@@ -4628,13 +4650,38 @@ export class CreateAfiliationInternalComponent implements OnInit {
     if (!this.esNoDiscapacidad(personaDiscapacidad)) {
       return true;
     }
+    const etiqueta = this.etiquetaParentescoParaMensajeMayor23(parentescoGenesys, parentescoNombre);
     this.messageService.add({
       severity: 'info',
       summary: 'Validación de beneficiario',
-      detail:
-        'Para este parentesco, si la persona tiene más de 23 años es obligatorio indicar condición de discapacidad en Sí y adjuntar el documento soporte.',
+      detail: `Para ${etiqueta}, si la persona tiene más de 23 años es obligatorio indicar condición de discapacidad en Sí y adjuntar el documento soporte.`,
     });
     return false;
+  }
+
+  /** Etiqueta del parentesco para el mensaje de "mayor de 23 años" (igual criterio que afiliación web). */
+  private etiquetaParentescoParaMensajeMayor23(
+    parentescoGenesys: string | null | undefined,
+    parentescoNombre: string | null | undefined
+  ): string {
+    const nombre = (parentescoNombre ?? '').trim();
+    if (nombre) {
+      return nombre;
+    }
+    const g = this.normalizarTextoPlano(parentescoGenesys);
+    if (g === 'H' || g === 'HIJO' || g.startsWith('HIJO_')) {
+      return 'Hijo';
+    }
+    if (g === 'I' || g.includes('HIJASTRO')) {
+      return 'Hijastro';
+    }
+    if (g === 'E' || g.includes('HERMANO_HUERFANO')) {
+      return 'Hermano huérfano';
+    }
+    if (g.includes('CUSTODIA') || (g.includes('BENEFICIARIO') && g.includes('CUSTOD'))) {
+      return 'Beneficiario en custodia';
+    }
+    return 'este parentesco';
   }
 
   private validarPadreMadreMenorUmbralConDiscapacidadNo(

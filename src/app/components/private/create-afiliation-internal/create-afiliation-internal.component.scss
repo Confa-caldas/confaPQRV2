@@ -572,6 +572,14 @@ $cai-main-content-max: 1200px;
         0 0 0 0.15rem rgba(0, 174, 239, 0.12);
       outline: none;
     }
+
+    /* Campo precargado (dato ya trajo la Registraduría/Genesys, no editable): mismo gris que afiliación web (bg-light). */
+    &:disabled,
+    &[readonly] {
+      background: #f8f9fa;
+      color: #495057;
+      cursor: not-allowed;
+    }
   }
 
   .cai-input-icon-wrap {
