@@ -492,7 +492,8 @@
                 formControlName="numero_documento"
                 [appValidacionNumeroDocumento]="reglasDocumentoEmpresaSeleccionado"
                 class="cai-input-plain cai-input-plain--full"
-                placeholder="Número de documento" />
+                placeholder="Número de documento"
+                (keydown.enter)="$event.preventDefault(); consultarEmpresa()" />
               <div class="cai-form-field__errors" aria-live="polite">
                 <span
                   class="cai-form-field__error"
@@ -584,7 +585,8 @@
                 formControlName="numero_documento"
                 [appValidacionNumeroDocumento]="reglasDocumentoTrabajadorSeleccionado"
                 class="cai-input-plain cai-input-plain--full"
-                placeholder="Número de documento" />
+                placeholder="Número de documento"
+                (keydown.enter)="$event.preventDefault(); consultarIdentificacionTrabajador()" />
               <div class="cai-form-field__errors" aria-live="polite">
                 <span
                   class="cai-form-field__error"
