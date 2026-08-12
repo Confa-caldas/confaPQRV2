@@ -1531,7 +1531,6 @@ export class CreateAfiliationInternalComponent implements OnInit {
       direccion: 'direccion',
       departamento: 'id_departamento',
       municipio: 'id_municipio',
-      zona: 'zona',
     };
 
     const controles = [
@@ -1552,7 +1551,6 @@ export class CreateAfiliationInternalComponent implements OnInit {
       'direccion',
       'id_departamento',
       'id_municipio',
-      'zona',
     ];
 
     controles.forEach(name => {
@@ -1577,6 +1575,9 @@ export class CreateAfiliationInternalComponent implements OnInit {
         control.enable({ emitEvent: false });
       }
     });
+
+    // Zona (urbana/rural) nunca se precarga ni se deshabilita: siempre la elige la persona.
+    this.solicitudPersonalForm.get('zona')?.enable({ emitEvent: false });
   }
 
   private construirCamposPersonalesPrecargados(
@@ -1617,7 +1618,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
       direccion: v(pick('direccion', 'direccion_residencia')),
       id_departamento: false,
       id_municipio: false,
-      zona: v(pick('zona')),
+      zona: false,
     };
   }
 
@@ -3916,18 +3917,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
     return hit ? String(hit.estado_civil) : '';
   }
 
-  private resolverZonaParaFormulario(valorApi: string | null | undefined): string {
-    const raw = (valorApi ?? '').toString().trim();
-    if (!raw) {
-      return '';
-    }
-    const low = raw.toLowerCase();
-    if (low === 'rural') {
-      return 'Rural';
-    }
-    if (low === 'urbana') {
-      return 'Urbana';
-    }
+  /** No se precarga: la zona (urbana/rural) siempre la debe elegir la persona manualmente. */
+  private resolverZonaParaFormulario(_valorApi: string | null | undefined): string {
     return '';
   }
 
