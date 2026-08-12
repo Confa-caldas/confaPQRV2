@@ -13,6 +13,7 @@ import { MessageService } from 'primeng/api';
 import { PaginatorState } from 'primeng/paginator';
 import { Table } from 'primeng/table';
 import { RoutesApp } from '../../../enums/routes.enum';
+import { SessionStorageItems } from '../../../enums/session-storage-items.enum';
 
 @Component({
   selector: 'app-padres-rpa-no-procesado',
@@ -49,6 +50,9 @@ export class PadresRpaNoProcesadoComponent implements OnInit {
   radicadoOtroPadreCambio = '';
   observacionCambio = '';
 
+  /** Usuario de red logueado (sessionStorage). */
+  user = '';
+
   @ViewChild('dt') table!: Table;
 
   constructor(
@@ -58,6 +62,7 @@ export class PadresRpaNoProcesadoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.user = sessionStorage.getItem(SessionStorageItems.USER) || '';
     this.loadSavedFilters();
     this.searchRows();
   }
@@ -153,8 +158,41 @@ export class PadresRpaNoProcesadoComponent implements OnInit {
     return !!row.usuario_asignado?.trim();
   }
 
+  private normalizarUsuario(valor: string | null | undefined): string {
+    return (valor ?? '').trim().toLowerCase();
+  }
+
+  esAsignadoAlUsuarioLogueado(row: PadreRpaNoProcesadoListItem): boolean {
+    return (
+      this.estaAsignado(row) &&
+      this.normalizarUsuario(row.usuario_asignado) === this.normalizarUsuario(this.user)
+    );
+  }
+
+  /** Sin asignar → asignación; asignado al usuario logueado → cambio de estado. */
+  puedeSeleccionarFila(row: PadreRpaNoProcesadoListItem): boolean {
+    if (!this.estaAsignado(row)) {
+      return true;
+    }
+    return this.esAsignadoAlUsuarioLogueado(row);
+  }
+
+  hayFilasSeleccionables(): boolean {
+    return this.rowList.some(row => this.puedeSeleccionarFila(row));
+  }
+
+  todasSeleccionadasPuedenAsignar(): boolean {
+    return (
+      this.selectedRows.length > 0 &&
+      this.selectedRows.every(row => !this.estaAsignado(row))
+    );
+  }
+
   todasSeleccionadasPuedenCambiarEstado(): boolean {
-    return this.selectedRows.length > 0 && this.selectedRows.every(r => this.estaAsignado(r));
+    return (
+      this.selectedRows.length > 0 &&
+      this.selectedRows.every(row => this.esAsignadoAlUsuarioLogueado(row))
+    );
   }
 
   // ---------------------------------------------------------------------
@@ -163,6 +201,14 @@ export class PadresRpaNoProcesadoComponent implements OnInit {
   abrirModalAsignar(): void {
     if (this.selectedRows.length === 0) {
       this.showMessage('warn', 'Asignación no disponible', 'Debe seleccionar al menos una fila.');
+      return;
+    }
+    if (!this.todasSeleccionadasPuedenAsignar()) {
+      this.showMessage(
+        'warn',
+        'Asignación no disponible',
+        'Solo puede asignar beneficiarios que aún no tienen colaborador asignado.'
+      );
       return;
     }
     this.responsableSeleccionado = null;
@@ -227,7 +273,7 @@ export class PadresRpaNoProcesadoComponent implements OnInit {
       this.showMessage(
         'warn',
         'Cambio de estado no disponible',
-        'Solo puede cambiar el estado de beneficiarios que ya tienen colaborador asignado.'
+        'Solo puede cambiar el estado de beneficiarios asignados a su usuario.'
       );
       return;
     }
