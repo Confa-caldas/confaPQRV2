@@ -1598,6 +1598,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     };
 
     const tel = pick('celular', 'telefono');
+    const telNorm = this.normalizarCelularDesdeApi(tel);
     const correo = pick('correo', 'correo_electronico', 'correoElectronico');
 
     return {
@@ -1609,8 +1610,10 @@ export class CreateAfiliationInternalComponent implements OnInit {
       segundo_apellido: v(pick('segundo_apellido', 'segundoApellido')),
       fecha_nacimiento: v(pick('fecha_nacimiento', 'fechaNacimiento')),
       fecha_expedicion: v(pick('fecha_expedicion_doc', 'fechaExpedicion')),
-      celular: v(tel),
-      confirmar_celular: v(tel),
+      // Solo se bloquea como precargado si quedó un celular válido (10 dígitos exactos);
+      // si Genesys trae menos de 10, se deja editable para que la persona lo corrija/borre.
+      celular: telNorm.length === 10,
+      confirmar_celular: telNorm.length === 10,
       correo: v(correo),
       confirmar_correo: v(correo),
       genero: v(pick('genero')),
