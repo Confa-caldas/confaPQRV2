@@ -855,8 +855,10 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
         await this.envioArchivosServer(ruta_archivo_ws, estructura);
         console.log('Archivo registrado en base de datos correctamente');
       } catch (error) {
-        console.error('Error al enviar archivo al servidor:', error);
-        throw error;
+        console.error(
+          'Error al enviar archivo al servidor legacy (se continúa con la subida a S3):',
+          error
+        );
       }
 
       // Paso 2 y 3: presign, subir a S3 y confirmar en BD

@@ -1025,7 +1025,14 @@ async attachApplicantFiles(request_id: number) {
       })),
     };
 
-    await this.envioArchivosServer(ruta_archivo_ws, estructura, totalFiles);
+    try {
+      await this.envioArchivosServer(ruta_archivo_ws, estructura, totalFiles);
+    } catch (legacyError) {
+      console.error(
+        'Error al enviar archivos al servidor legacy (se continúa con la subida a S3):',
+        legacyError
+      );
+    }
 
     const failedFiles: string[] = [];
 
