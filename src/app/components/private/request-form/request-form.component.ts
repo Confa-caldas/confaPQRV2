@@ -9,6 +9,8 @@ import {
 } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators, ValidationErrors } from '@angular/forms';
 import { Users } from '../../../services/users.service';
+import { AttachmentUploadService, PqrsUploadError } from '../../../services/attachment-upload.service';
+import { parsePresignUploadData } from '../../../utils/s3-url.util';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import {
   ApplicantAttachments,
@@ -172,6 +174,7 @@ export class RequestFormComponent implements OnInit, OnDestroy {
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
+    private attachmentUploadService: AttachmentUploadService,
     private messageService: MessageService,
     private router: Router,
     private http: HttpClient,
@@ -873,7 +876,7 @@ export class RequestFormComponent implements OnInit, OnDestroy {
           const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'applicant'));
 
           if (response.code === 200 && response.data) {
-              return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+              return parsePresignUploadData(response.data).presigned_url;
           } else {
               console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
           }
@@ -1033,25 +1036,41 @@ async attachApplicantFiles(request_id: number) {
       let s3UploadSucceeded = false;
 
       try {
-        const preSignedUrl = await this.retry(
-          () => this.getPreSignedUrl(item, request_id),
-          3,
-          2000
-        );
-        item.preSignedUrl = preSignedUrl;
-
-        await this.retry(
-          () => this.uploadToPresignedUrl(item, request_id, index, totalFiles),
-          3,
-          3000
-        );
+        await this.attachmentUploadService.uploadPqrsFile(item, request_id, 'applicant', {
+          onProgress: event => {
+            if (event.phase === 'upload' && event.percent != null) {
+              this.updateUploadProgress(index, totalFiles, event.percent, 's3');
+            }
+          },
+          onUploadError: (file, reqId, errorDetails) =>
+            this.handleUploadFailure(file, reqId, {
+              status: errorDetails.status,
+              statusText: errorDetails.statusText,
+              message: errorDetails.message,
+              url: errorDetails.url,
+            }),
+        });
         s3UploadSucceeded = true;
       } catch (s3Error) {
         console.error(`Subida S3 falló para ${item.source_name}:`, s3Error);
 
         if (this.canUploadViaSdk(item)) {
           try {
-            await this.retry(() => this.uploadViaLambda(item, request_id), 3, 3000);
+            const presign =
+              s3Error instanceof PqrsUploadError && s3Error.phase === 'upload'
+                ? s3Error.presign
+                : undefined;
+            await this.retry(
+              () =>
+                this.attachmentUploadService.uploadPqrsFileViaSdk(
+                  item,
+                  request_id,
+                  'applicant',
+                  presign
+                ),
+              3,
+              3000
+            );
             s3UploadSucceeded = true;
             console.warn(`Subida SDK usada como respaldo para ${item.source_name}.`);
           } catch (sdkError) {

@@ -599,6 +599,13 @@ export interface AdjuntoTipoPorParentesco {
   formatos_permitidos?: string | null;
 }
 
+export interface PresignUploadData {
+  presigned_url: string;
+  s3_key: string;
+  location: string;
+  file_type?: string;
+}
+
 /** Respuesta típica de POST generar-url (pre-signed S3 + fila adjunto ya persistida). */
 /** Paso 1 — generar-url: URL de subida S3 y clave del objeto (sin fila definitiva en BD). */
 export interface PresignAdjuntoAdicionalData {

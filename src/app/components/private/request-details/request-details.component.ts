@@ -1,7 +1,9 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
+import { AttachmentUploadService } from '../../../services/attachment-upload.service';
+import { parsePresignUploadData } from '../../../utils/s3-url.util';
 import {
   ApplicantAttach,
   ApplicantAttachments,
@@ -77,6 +79,7 @@ export class RequestDetailsComponent implements OnInit {
   ApplicantAttach: ApplicantAttach[] = [];
   AssignedAttach: ApplicantAttach[] = [];
   informative: boolean = false;
+  hasPendingChanges: boolean = false;
   severity = '';
   errorExtensionFile!: boolean;
   errorSizeFile!: boolean;
@@ -212,6 +215,7 @@ loadingFile = false;
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
+    private attachmentUploadService: AttachmentUploadService,
     private router: Router,
     private route: ActivatedRoute,
     private messageService: MessageService,
@@ -242,6 +246,14 @@ loadingFile = false;
     this.additionalRequestForm = this.fb.group({
       hasFiles: this.fb.control(false, { validators: Validators.requiredTrue })
     });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any): void {
+    // Si hay una subida de adjuntos en curso, se muestra la advertencia
+    if (this.hasPendingChanges) {
+      $event.returnValue = 'Tienes un proceso en curso. ¿Estás seguro de que quieres salir?';
+    }
   }
 
   ngOnInit() {
@@ -1008,7 +1020,7 @@ calcularDiferenciaFechas(
     
 
     this.userService.answerRequest(payloadAnswer).subscribe({
-      next: (response: BodyResponse<string>) => {
+      next: async (response: BodyResponse<string>) => {
         if (response.code === 200) {
           this.requestProcess.reset();
           if (this.getAssigned().length == 0) {
@@ -1016,7 +1028,13 @@ calcularDiferenciaFechas(
             this.router.navigate([RoutesApp.PROCESS_REQUEST]);
           } else {
             //this.attachAssignedFiles();
-            this.uploadAllFiles();
+            // Espera a que termine toda la subida ANTES de navegar/mostrar éxito
+            this.hasPendingChanges = true;
+            try {
+              await this.uploadAllFiles();
+            } finally {
+              this.hasPendingChanges = false;
+            }
             this.router.navigate([RoutesApp.PROCESS_REQUEST]);
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
           }
@@ -1080,7 +1098,7 @@ calcularDiferenciaFechas(
         const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'assigned'));
 
         if (response.code === 200 && response.data) {
-          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          return parsePresignUploadData(response.data).presigned_url;
           //file.preSignedUrl = response.data;
           //this.uploadToPresignedUrl(file);
         } else {
@@ -1145,7 +1163,7 @@ calcularDiferenciaFechas(
         const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'pending'));
 
         if (response.code === 200 && response.data) {
-          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          return parsePresignUploadData(response.data).presigned_url;
         } else {
           console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
         }
@@ -1260,37 +1278,54 @@ calcularDiferenciaFechas(
   }
 
   async uploadAllFiles() {
-    await this.attachAssignedFiles(); // Espera que se obtengan todas las URLs
-
-    // Subimos los archivos
+    const failed: string[] = [];
     for (const file of this.arrayAssignedAttachment) {
-      await this.uploadToPresignedUrl(file);
+      try {
+        await this.attachmentUploadService.uploadPqrsFile(
+          file,
+          this.request_id,
+          'assigned',
+          {
+            onUploadError: (f, id, err) =>
+              this.attachmentUploadService.logUploadError(f, id, err),
+          }
+        );
+      } catch {
+        failed.push(file.source_name);
+      }
+    }
+    if (failed.length > 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Adjuntos',
+        detail: `No se pudieron subir: ${failed.join(', ')}`,
+      });
     }
   }
 
-  /*
-  async attachAssignedFilesPending() {
-    await Promise.all(
-      this.arrayAssignedAttachmentPending.map(async item => {
-        await this.getPreSignedUrlPending(item);
-      })
-    );
-  } */
-
-  async attachAssignedFilesPending() {
-    await Promise.all(
-      this.arrayAssignedAttachmentPending.map(async item => {
-        item.preSignedUrl = await this.getPreSignedUrlPending(item);
-      })
-    );
-  }
-
   async uploadAllFilesPending() {
-    await this.attachAssignedFilesPending(); // Espera que se obtengan todas las URLs
-
-    // Subimos los archivos
+    const failed: string[] = [];
     for (const file of this.arrayAssignedAttachmentPending) {
-      await this.uploadToPresignedUrl(file);
+      try {
+        await this.attachmentUploadService.uploadPqrsFile(
+          file,
+          this.request_id,
+          'pending',
+          {
+            onUploadError: (f, id, err) =>
+              this.attachmentUploadService.logUploadError(f, id, err),
+          }
+        );
+      } catch {
+        failed.push(file.source_name);
+      }
+    }
+    if (failed.length > 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Adjuntos pendientes',
+        detail: `No se pudieron subir: ${failed.join(', ')}`,
+      });
     }
   }
   ///////////////////////////////////////////////////////////////////////////////
@@ -1438,9 +1473,9 @@ calcularDiferenciaFechas(
   async getPreSignedUrlToDownload(url: string, file_name: string, is_download: boolean) {
     const payload = { url: url };
     this.userService.getUrlSigned(payload, 'download').subscribe({
-      next: (response: BodyResponse<string>): void => {
+      next: (response): void => {
         if (response.code === 200) {
-          this.preSignedUrlDownload = response.data;
+          this.preSignedUrlDownload = parsePresignUploadData(response.data).presigned_url;
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -2189,7 +2224,7 @@ consultarEmpresaWs(document: string) {
       //console.log(payload);
 
       this.userService.registerPendingRequest(payload).subscribe({
-        next: (response: BodyResponse<string>) => {
+        next: async (response: BodyResponse<string>) => {
           if (response.code === 200) {
             if (this.getAssignedPending().length == 0) {
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
@@ -2197,7 +2232,13 @@ consultarEmpresaWs(document: string) {
               this.ngOnInit();
             } else {
               //this.attachAssignedFilesPending();
-              this.uploadAllFilesPending();
+              // Espera a que termine toda la subida ANTES de navegar/mostrar éxito
+              this.hasPendingChanges = true;
+              try {
+                await this.uploadAllFilesPending();
+              } finally {
+                this.hasPendingChanges = false;
+              }
               this.router.navigate([RoutesApp.PROCESS_REQUEST]);
               this.ngOnInit();
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
@@ -2520,9 +2561,9 @@ consultarEmpresaWs(document: string) {
     return new Promise((resolve, reject) => {
       const payload = { url: url };
       this.userService.getUrlSigned(payload, 'download').subscribe({
-        next: (response: BodyResponse<string>) => {
+        next: (response) => {
           if (response.code === 200) {
-            resolve(response.data);  // Resolvemos con la URL prefirmada
+            resolve(parsePresignUploadData(response.data).presigned_url);  // Resolvemos con la URL prefirmada
           } else {
             reject('Operación fallida');
           }
@@ -2730,8 +2771,13 @@ onSubmitAdditional(): void {
         return;
       }
 
-      // 👇 Espera a que termine toda la subida ANTES de cerrar/limpiar
-      await this.uploadAllFilesAdditional();
+      // Espera a que termine toda la subida ANTES de cerrar/limpiar
+      this.hasPendingChanges = true;
+      try {
+        await this.uploadAllFilesAdditional();
+      } finally {
+        this.hasPendingChanges = false;
+      }
 
       this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
       this.closeDialogAdditional(); // pasa true para limpiar arrays
@@ -2752,16 +2798,28 @@ onSubmitAdditional(): void {
   }
 
   async uploadAllFilesAdditional() {
-    await this.attachAssignedFilesAdditional(); // Espera que se obtengan todas las URLs
-    console.log('Array listo?', this.arrayAssignedAttachmentAdditional);
-    console.log('Largo:', this.arrayAssignedAttachmentAdditional?.length);
-
-
-    console.log("LLEGOOOOOOOOO --->");
-    // Subimos los archivos
+    const failed: string[] = [];
     for (const file of this.arrayAssignedAttachmentAdditional) {
-      console.log("LLEGOOOOOOOOO FOR--->");
-      await this.uploadToPresignedUrl(file);
+      try {
+        await this.attachmentUploadService.uploadPqrsFile(
+          file,
+          this.request_id,
+          'additional',
+          {
+            onUploadError: (f, id, err) =>
+              this.attachmentUploadService.logUploadError(f, id, err),
+          }
+        );
+      } catch {
+        failed.push(file.source_name);
+      }
+    }
+    if (failed.length > 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Adjuntos adicionales',
+        detail: `No se pudieron subir: ${failed.join(', ')}`,
+      });
     }
   }
 
@@ -2782,7 +2840,7 @@ onSubmitAdditional(): void {
         const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'additional'));
 
         if (response.code === 200 && response.data) {
-          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          return parsePresignUploadData(response.data).presigned_url;
         } else {
           console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
         }
@@ -2882,7 +2940,7 @@ async openPreviewCarousel(): Promise<void> {
   this.currentIndex = 0;
   await this.loadCurrentAttachment();
 
-  // 👇 Aquí abrimos el p-dialog correcto (del carrusel)
+  // Aquí abrimos el p-dialog correcto (del carrusel)
   this.isPreviewCarouselVisible = true;
 }
 
@@ -2961,7 +3019,7 @@ async openPreviewCarouselAdditional(): Promise<void> {
   this.currentIndex = 0;
   await this.loadCurrentAttachmentAdditional();
 
-  // 👇 Aquí abrimos el p-dialog correcto (del carrusel)
+  // Aquí abrimos el p-dialog correcto (del carrusel)
   this.isPreviewCarouselVisible = true;
 }
 

@@ -97,6 +97,7 @@ import {
   Adjunto,
   AdjuntoTipoPorParentesco,
   PresignAdjuntoAdicionalData,
+  PresignUploadData,
   ActualizarEstadoGestionAfiliacionPayload,
   AfiliationIntegranteHistoriaGestionRow,
   FilterRequestsMassive,
@@ -834,8 +835,23 @@ export class Users {
     );
   }
   getUrlSigned(payload: PreSignedAttach, attachment_owner: string) {
-    return this.http.post<BodyResponse<string>>(
+    return this.http.post<BodyResponse<string | PresignUploadData>>(
       `${environment.API_PUBLIC}${EndPointRoute.URL_SIGNER}/${attachment_owner}`,
+      payload
+    );
+  }
+
+  confirmPqrsAttachment(
+    attachment_owner: string,
+    payload: {
+      request_id: number;
+      s3_key: string;
+      location: string;
+      tamanio_bytes?: number;
+    }
+  ) {
+    return this.http.post<BodyResponse<{ location: string }>>(
+      `${environment.API_PUBLIC}${EndPointRoute.URL_SIGNER_CONFIRM}/${attachment_owner}`,
       payload
     );
   }
@@ -1125,8 +1141,23 @@ export class Users {
   }
 
   getUrlSignedCompany(payload: PreSignedAttach, type_docoument: string) {
-    return this.http.post<BodyResponse<string>>(
+    return this.http.post<BodyResponse<string | PresignUploadData>>(
       `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES}/${type_docoument}`,
+      payload
+    );
+  }
+
+  confirmCompanyAttachment(
+    documentType: string,
+    payload: {
+      request_id: number;
+      s3_key: string;
+      location: string;
+      tamanio_bytes?: number;
+    }
+  ) {
+    return this.http.post<BodyResponse<{ location: string }>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES_CONFIRM}/${documentType}`,
       payload
     );
   }
@@ -2032,8 +2063,23 @@ export class Users {
   }
 
   getUrlSignedPaymentMethodRequest(payload: PreSignedAttach, type: string) {
-    return this.http.post<BodyResponse<string>>(
+    return this.http.post<BodyResponse<string | PresignUploadData>>(
       `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_PAYMENT_METHOD_FILES}/${type}`,
+      payload
+    );
+  }
+
+  confirmPaymentMethodAttachment(
+    type: string,
+    payload: {
+      request_id: number;
+      s3_key: string;
+      location: string;
+      tamanio_bytes?: number;
+    }
+  ) {
+    return this.http.post<BodyResponse<{ location: string }>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_PAYMENT_METHOD_FILES_CONFIRM}/${type}`,
       payload
     );
   }

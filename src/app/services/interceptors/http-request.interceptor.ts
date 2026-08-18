@@ -6,15 +6,16 @@ import {
   HttpInterceptor,
   HttpRequest,
 } from '@angular/common/http';
-import { Observable, throwError, retry, catchError, finalize } from 'rxjs';
+import { Observable, throwError, catchError, finalize } from 'rxjs';
+import { retry } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
 
 import { SessionStorageItems } from '../../enums/session-storage-items.enum';
 import { RoutesApp } from '../../enums/routes.enum';
 import { NgxSpinnerService } from 'ngx-spinner';
-
 import { MessageService } from 'primeng/api';
+import { isS3PresignedRequest } from '../../utils/s3-url.util';
 
 interface JwtPayload {
   exp: number;
@@ -32,14 +33,18 @@ export class HttpRequestInterceptor implements HttpInterceptor {
   ) {}
 
   intercept(requestIn: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    this.beginRequest();
+    const isS3Upload = isS3PresignedRequest(requestIn.url);
+
+    if (!isS3Upload) {
+      this.beginRequest();
+    }
 
     const sessionToken = sessionStorage.getItem(SessionStorageItems.SESSION);
     const token = sessionToken || '';
 
-    const isTokenExpired = (token: string): boolean => {
+    const isTokenExpired = (tokenValue: string): boolean => {
       try {
-        const { exp } = jwtDecode<JwtPayload>(token);
+        const { exp } = jwtDecode<JwtPayload>(tokenValue);
         const now = Math.floor(Date.now() / 1000);
         return exp < now;
       } catch (e) {
@@ -48,7 +53,9 @@ export class HttpRequestInterceptor implements HttpInterceptor {
     };
 
     if (token && isTokenExpired(token)) {
-      this.endRequest();
+      if (!isS3Upload) {
+        this.endRequest();
+      }
       this.messageService.add({
         severity: 'warn',
         summary: 'Sesión expirada',
@@ -63,12 +70,19 @@ export class HttpRequestInterceptor implements HttpInterceptor {
     let requestOut = requestIn;
     const esWsAfiliacionEmpresa =
       requestOut.url.includes('afiliacion-empresa-ws') || requestOut.url.includes('p.confa.co/afiliacion');
-    if (token && !requestOut.url.includes('.s3.amazonaws.com')) {
+
+    if (token && !isS3Upload) {
       if (!requestOut.headers.has('Authorization')) {
         requestOut = requestOut.clone({
           headers: requestOut.headers.set('Authorization', `${token}`),
         });
       }
+    }
+
+    if (isS3Upload) {
+      return next.handle(requestOut).pipe(
+        catchError((error: HttpErrorResponse) => throwError(() => error))
+      );
     }
 
     return next.handle(requestOut).pipe(
@@ -115,62 +129,3 @@ export class HttpRequestInterceptor implements HttpInterceptor {
     }, 500);
   }
 }
-
-
- /*import { Router } from '@angular/router';
-import {
-  HttpErrorResponse,
-  HttpEvent,
-  HttpHandler,
-  HttpInterceptor,
-  HttpRequest,
-} from '@angular/common/http';
-import { Injectable } from '@angular/core';
-
-import { catchError, finalize, Observable, retry, throwError } from 'rxjs';
-
-import { NgxSpinnerService } from 'ngx-spinner';
-import { SessionStorageItems } from '../../enums/session-storage-items.enum';
-import { RoutesApp } from '../../enums/routes.enum';
-
-@Injectable()
-export class HttpRequestInterceptor implements HttpInterceptor {
-  constructor(
-    private router: Router,
-    private spinner: NgxSpinnerService
-  ) {}
-
-  intercept(requestIn: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    this.spinner.show();
-    const sessionToken = sessionStorage.getItem(SessionStorageItems.SESSION);
-    let token;
-    if (sessionToken) {
-      token = sessionToken;
-    }
-    let requestOut = requestIn;
-    if (token && !requestOut.url.includes('.s3.amazonaws.com')) {
-      requestOut = requestOut.clone({
-        headers: requestOut.headers.set('Authorization', `${token}`),
-      });
-    }
-
-    return next.handle(requestOut).pipe(
-      retry({ count: 2, delay: 1000 }),
-      catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          this.spinner.hide();
-          sessionStorage.clear();
-          localStorage.clear();
-          this.router.navigate([RoutesApp.LOGOUT]);
-        }
-        return throwError(() => new Error('The Error'));
-      }),
-      finalize(() => {
-        setTimeout(() => {
-          this.spinner.hide();
-        }, 500);
-      })
-    );
-  }
-}
-*/
