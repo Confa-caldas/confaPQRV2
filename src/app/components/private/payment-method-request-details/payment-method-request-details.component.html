@@ -126,6 +126,17 @@
                 <li class="process-container-text">{{ requestDetails.worker_full_name }}</li>
               </div>
               <div class="process-container-col">
+                <label class="process-container-label"> Datos contacto trabajador </label>
+                <li class="process-container-text">
+                  {{ requestDetails.worker_email }} - {{ requestDetails.worker_cellphone }}
+                </li>
+              </div>
+              <div class="process-container-col"></div>
+              <div class="process-container-col"></div>
+            </div>
+
+            <div class="process-container-row">
+              <div class="process-container-col">
                 <label class="process-container-label"> Administrador documento </label>
                 <li class="process-container-text">
                   {{ requestDetails.admin_document_type }}
@@ -136,6 +147,13 @@
                 <label class="process-container-label"> Administrador nombre </label>
                 <li class="process-container-text">{{ requestDetails.admin_full_name }}</li>
               </div>
+              <div class="process-container-col">
+                <label class="process-container-label"> Datos contacto administrador </label>
+                <li class="process-container-text">
+                  {{ requestDetails.admin_email }} - {{ requestDetails.admin_cellphone }}
+                </li>
+              </div>
+              <div class="process-container-col"></div>
               <div class="process-container-col"></div>
             </div>
 

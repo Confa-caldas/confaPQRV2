@@ -40,6 +40,7 @@ import { ModalEntityModule } from './modal-entity/modal-entity.module';
 import { ModalEntityAccountTypeModule } from './modal-entity-account-type/modal-entity-account-type.module';
 import { ModalAssignUserModule } from './modal-assign-user/modal-assign-user.module';
 import { ModalGestionarActivacionEmpresaModule } from './modal-gestionar-activacion-empresa/modal-gestionar-activacion-empresa.module';
+import { ModalSuccessfulTransferModule } from './modal-successful-transfer/modal-successful-transfer.module';
 
 @NgModule({
   declarations: [
@@ -88,6 +89,7 @@ import { ModalGestionarActivacionEmpresaModule } from './modal-gestionar-activac
     ModalEntityAccountTypeModule,
     ModalAssignUserModule,
     ModalGestionarActivacionEmpresaModule,
+    ModalSuccessfulTransferModule,
   ],
   exports: [
     ModalDinamicModule,
@@ -129,6 +131,7 @@ import { ModalGestionarActivacionEmpresaModule } from './modal-gestionar-activac
     ModalEntityAccountTypeModule,
     ModalAssignUserModule,
     ModalGestionarActivacionEmpresaModule,
+    ModalSuccessfulTransferModule,
   ],
 })
 export class SharedModule {}

@@ -29,7 +29,7 @@ export class ModalEntityComponent {
   ) {
     this.formGroup = this.formBuilder.group({
       entity_code: ['', [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$')]],
-      entity_name: ['', [Validators.required, Validators.pattern('^[^#$%&+-/*]+$')]],
+      entity_name: ['', [Validators.required, Validators.pattern('^[^#$%*/]+$')]],
       entity_type_id: ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
     });
   }
