@@ -3428,9 +3428,15 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.solicitudMedioPagoForm.updateValueAndValidity({ emitEvent: false });
   }
 
+  /**
+   * Aun cuando todo el grupo quede deshabilitado por precarga, se exige que la dirección tenga
+   * contenido: no puede quedar vacía aunque el control esté deshabilitado por un desfase en el
+   * flag de precarga.
+   */
   private esFormularioPersonalCompletoParaAvanzar(): boolean {
     const g = this.solicitudPersonalForm;
-    return g.valid || g.disabled || g.status === 'DISABLED';
+    const direccionValida = (g.getRawValue()?.direccion ?? '').toString().trim() !== '';
+    return (g.valid || g.disabled || g.status === 'DISABLED') && direccionValida;
   }
 
   get fPersonal(): { [key: string]: AbstractControl } {
@@ -5145,16 +5151,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
 
     const tipoAdm = s(db?.['tipoIdentificacionAdministradorSubsidio']);
     const numAdm = s(db?.['numeroIdentificacionAdministradorSubsidio']);
-    let nomAdm = s(db?.['nombreCompletoAdministradorSubsidio']);
-    if (tipoAdm && numAdm) {
-      if (!nomAdm) {
-        nomAdm = this.nombreCompletoTrabajadorParaAdminSubsidio();
-      }
-      if (nomAdm) {
-        ext.tipoIdentificacionAdministradorSubsidio = tipoAdm;
-        ext.numeroIdentificacionAdministradorSubsidio = numAdm;
-        ext.nombreCompletoAdministradorSubsidio = nomAdm;
-      }
+    const nomAdm = s(db?.['nombreCompletoAdministradorSubsidio']);
+    if (tipoAdm && numAdm && nomAdm) {
+      ext.tipoIdentificacionAdministradorSubsidio = tipoAdm;
+      ext.numeroIdentificacionAdministradorSubsidio = numAdm;
+      ext.nombreCompletoAdministradorSubsidio = nomAdm;
     }
 
     const tel = s(pi?.telefono);
@@ -5207,50 +5208,6 @@ export class CreateAfiliationInternalComponent implements OnInit {
     }
 
     return { ...base, ...ext };
-  }
-
-  private nombreCompletoTrabajadorParaAdminSubsidio(): string {
-    if (this.esFlujoBeneficiarioTrabajadorActivoInterno && this.trabajadorActivoBeneficiario) {
-      const t = this.trabajadorActivoBeneficiario;
-      const nc = (t.nombreCompleto ?? '').toString().trim();
-      if (nc) {
-        return nc;
-      }
-      return [t.primerNombre, t.segundoNombre, t.primerApellido, t.segundoApellido]
-        .map(v => (v != null && String(v).trim() !== '' ? String(v).trim() : ''))
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-    }
-    const g = this.solicitudPersonalForm?.getRawValue();
-    if (g) {
-      const desdeFormulario = [g.primer_nombre, g.segundo_nombre, g.primer_apellido, g.segundo_apellido]
-        .map(v => (v != null && String(v).trim() !== '' ? String(v).trim() : ''))
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-      if (desdeFormulario) {
-        return desdeFormulario;
-      }
-    }
-    const pi = this.respuestaValidarTrabajador?.datosFormulario?.personalInfo;
-    if (pi) {
-      const nc = (pi.nombreCompleto ?? '').toString().trim();
-      if (nc) {
-        return nc;
-      }
-      return [
-        pi.primerNombre ?? pi.primer_nombre,
-        pi.segundoNombre ?? pi.segundo_nombre,
-        pi.primerApellido ?? pi.primer_apellido,
-        pi.segundoApellido ?? pi.segundo_apellido,
-      ]
-        .map(v => (v != null && String(v).trim() !== '' ? String(v).trim() : ''))
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-    }
-    return '';
   }
 
   private obtenerDireccionTrabajadorParaBeneficiario(): string {

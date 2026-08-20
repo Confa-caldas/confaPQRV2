@@ -31,7 +31,7 @@ export interface SlotAdjuntoBeneficiario {
   esRequerido: boolean;
 }
 
-const ID_FALLBACK_REGISTRO_CIVIL = 3;
+const ID_FALLBACK_REGISTRO_CIVIL = 7;
 const ID_FALLBACK_DOCUMENTO_SOPORTE = 5;
 
 export function resolverSlotsAdjuntosBeneficiario(
