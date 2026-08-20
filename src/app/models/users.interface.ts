@@ -599,6 +599,13 @@ export interface AdjuntoTipoPorParentesco {
   formatos_permitidos?: string | null;
 }
 
+export interface PresignUploadData {
+  presigned_url: string;
+  s3_key: string;
+  location: string;
+  file_type?: string;
+}
+
 /** Respuesta típica de POST generar-url (pre-signed S3 + fila adjunto ya persistida). */
 /** Paso 1 — generar-url: URL de subida S3 y clave del objeto (sin fila definitiva en BD). */
 export interface PresignAdjuntoAdicionalData {
@@ -2045,6 +2052,7 @@ export interface PaymentMethodRequestList {
   payment_method_process_status_name: string;
   transfer_process_status_id: number;
   transfer_process_status_name: string;
+  transfer_status_name: string | null;
 }
 
 export interface PaymentMethodRequestDetails {
@@ -2053,9 +2061,13 @@ export interface PaymentMethodRequestDetails {
   worker_document_type: string;
   worker_document_number: string;
   worker_full_name: string;
+  worker_email: string;
+  worker_cellphone: string;
   admin_document_type: string;
   admin_document_number: string;
   admin_full_name: string;
+  admin_email: string;
+  admin_cellphone: string;
   previous_payment_method: string;
   new_payment_method: string;
   change_reason: string;
@@ -2098,6 +2110,7 @@ export interface FilterPaymentMethodRequests {
   status_id?: number | number[] | null;
   payment_method_status_id?: number | number[] | null;
   transfer_process_status_id?: number | number[] | null;
+  transfer_status_id?: number | number[] | null;
   page?: number;
   page_size?: number;
 }
@@ -2204,4 +2217,7 @@ export interface ActivacionEmpresaGestionResultado {
   id_empresa?: number;
   cantidad_solicitudes?: number;
   ids_solicitudes?: number[];
+}
+export interface SuccessfulTransferBulk {
+  request_id: number[];
 }

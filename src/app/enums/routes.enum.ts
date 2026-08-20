@@ -151,6 +151,7 @@ export enum EndPointRoute {
   NOVEDAD_BY_FILTER = 'novedad-afiliation/filter',
   REFRESH_TOKEN = 'token/refresh',
   URL_SIGNER = 'url/signer',
+  URL_SIGNER_CONFIRM = 'url/signer/confirm',
   REQUEST_REPORT_DETAIL_ALL = 'requests/report/all',
   REQUEST_REPORT_STATUS = 'requests/report/status',
   REQUEST_REPORT_FOR_STATUS = 'requests/report/for_status',
@@ -177,6 +178,7 @@ export enum EndPointRoute {
   ATTACHMENTS_FILES_SDK = 'attachments/sdk',
   UPDATE_COMPANY_FORM = 'company/create_company_update',
   UPLOAD_COMPANY_FILES = 'company/url_signer_company',
+  UPLOAD_COMPANY_FILES_CONFIRM = 'company/url_signer_company/confirm',
   COMPANY_UPDATE_BY_FILTER = 'company/filter',
   COMPANY_UPDATE_EXPORT = 'company/export',
   COMPANY_UPDATE_MANAGEMENT = 'company/followup',
@@ -342,5 +344,7 @@ export enum EndPointRoute {
   ANSWER_PAYMENT_METHOD_REQUEST = 'payment_method_request/answer',
   PAYMENT_METHOD_REQUEST_HISTORIC = 'payment_method_request/historic',
   UPLOAD_PAYMENT_METHOD_FILES = 'payment_method_request/url_signer',
+  UPLOAD_PAYMENT_METHOD_FILES_CONFIRM = 'payment_method_request/url_signer/confirm',
   TRANSFER_STATUS = 'db/transfer_status',
+  SUCCESSFUL_TRANSFER = 'payment_method_request/successful_transfer',
 }

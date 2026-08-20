@@ -10,9 +10,10 @@ import { SharedModule } from '../../shared/shared.module';
 import { PaymentMethodRequestComponent } from './payment-method-request.component';
 import { ToastModule } from 'primeng/toast';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CalendarModule } from 'primeng/calendar';
 import { TooltipModule } from 'primeng/tooltip';
+import { CheckboxModule } from 'primeng/checkbox';
 
 @NgModule({
   declarations: [PaymentMethodRequestComponent],
@@ -28,8 +29,10 @@ import { TooltipModule } from 'primeng/tooltip';
     ToastModule,
     MultiSelectModule,
     ReactiveFormsModule,
+    FormsModule,
     CalendarModule,
     TooltipModule,
+    CheckboxModule,
   ],
   exports: [PaymentMethodRequestComponent],
 })

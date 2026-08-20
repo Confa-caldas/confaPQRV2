@@ -1,8 +1,10 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
+import { AttachmentUploadService } from '../../../services/attachment-upload.service';
+import { parsePresignUploadData } from '../../../utils/s3-url.util';
 import {
   ApplicantAttach,
   ApplicantAttachments,
@@ -155,6 +157,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   ApplicantAttach: ApplicantAttach[] = [];
   AssignedAttach: ApplicantAttach[] = [];
   informative: boolean = false;
+  hasPendingChanges: boolean = false;
   severity = '';
   errorExtensionFile!: boolean;
   errorSizeFile!: boolean;
@@ -512,6 +515,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
+    private attachmentUploadService: AttachmentUploadService,
     private router: Router,
     private route: ActivatedRoute,
     private messageService: MessageService,
@@ -547,6 +551,14 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.adjuntoForm = this.fb.group({
       id_tipo_adjunto: [null as number | null, Validators.required],
     });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any): void {
+    // Si hay una subida de adjuntos en curso, se muestra la advertencia
+    if (this.hasPendingChanges) {
+      $event.returnValue = 'Tienes un proceso en curso. ¿Estás seguro de que quieres salir?';
+    }
   }
 
   /** Id de parentesco "Titular" en catálogo (para trabajador). */
@@ -3052,57 +3064,16 @@ getRequestDetails(request_details: number) {
     }
 
     const file = this.archivoSeleccionado;
-    const contentType = (file.type ?? '').trim() || 'application/octet-stream';
-
-    /** Paso 1: solo datos mínimos para firmar la URL en S3. */
-    const payloadGenerarUrl: Record<string, unknown> = {
-      id_persona: idPersona,
-      nombre_archivo: file.name,
-      content_type: contentType,
-    };
+    const idTipo = this.adjuntoForm.get('id_tipo_adjunto')?.value;
 
     try {
       this.subiendoAdjuntosAdicionales = true;
+      this.hasPendingChanges = true;
 
-      const resPaso1 = await lastValueFrom(this.userService.obtenerUrlPresignadaS3(payloadGenerarUrl));
-      if (resPaso1?.code !== 200 || !resPaso1.data) {
-        throw new Error(resPaso1?.message || 'No se pudo obtener la URL de carga.');
-      }
-      const data1 = resPaso1.data as PresignAdjuntoAdicionalData;
-      const urlPresignada =
-        data1.url_presignada ??
-        data1.url ??
-        data1.upload_url ??
-        data1.presigned_url ??
-        data1.presignedUrl ??
-        '';
-      const s3Key = (data1.s3_key ?? data1.s3Key ?? '').trim();
-      if (!urlPresignada.trim() || !s3Key) {
-        throw new Error('La respuesta no incluye url_presignada o s3_key.');
-      }
-
-      await lastValueFrom(this.userService.subirArchivoAS3(urlPresignada, file));
-
-      const payloadConfirmacion: Record<string, unknown> = {
-        id_persona: idPersona,
-        nombre_archivo: file.name,
-        content_type: contentType,
-        tamanio_bytes: file.size,
-        s3_key: s3Key,
-      };
-      const idTipo = this.adjuntoForm.get('id_tipo_adjunto')?.value;
-      if (idTipo != null && idTipo !== '') {
-        payloadConfirmacion['id_tipo_adjunto'] = idTipo;
-      }
-
-      const resPaso3 = await lastValueFrom(this.userService.confirmarAdjuntoS3(payloadConfirmacion));
-      if (resPaso3?.code !== 200 || !resPaso3.data) {
-        throw new Error(resPaso3?.message || 'No se pudo confirmar el adjunto.');
-      }
-      const adjuntoGuardado = resPaso3.data as Adjunto;
-      if (!adjuntoGuardado?.id) {
-        throw new Error('La confirmación no devolvió un adjunto válido.');
-      }
+      const adjuntoGuardado = await this.attachmentUploadService.uploadAfiliationAdditional(file, {
+        idPersona,
+        idTipoAdjunto: idTipo,
+      });
 
       const nuevos = [
         {
@@ -3125,12 +3096,16 @@ getRequestDetails(request_details: number) {
       });
       this.closeModalAdjuntosAdicionales();
       this.subiendoAdjuntosAdicionales = false;
-    } catch (_error: unknown) {
+      this.hasPendingChanges = false;
+    } catch (error: unknown) {
       this.subiendoAdjuntosAdicionales = false;
+      this.hasPendingChanges = false;
+      const detail =
+        error instanceof Error ? error.message : 'Error al subir los archivos.';
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Error al subir los archivos.',
+        detail,
       });
     }
   }
@@ -4200,7 +4175,7 @@ get empresaDocumento(): string {
     
 
     this.userService.answerRequest(payloadAnswer).subscribe({
-      next: (response: BodyResponse<string>) => {
+      next: async (response: BodyResponse<string>) => {
         if (response.code === 200) {
           this.requestProcess.reset();
           if (this.getAssigned().length == 0) {
@@ -4208,7 +4183,13 @@ get empresaDocumento(): string {
             this.router.navigate([RoutesApp.PROCESS_REQUEST]);
           } else {
             //this.attachAssignedFiles();
-            this.uploadAllFiles();
+            // Espera a que termine toda la subida ANTES de navegar/mostrar éxito
+            this.hasPendingChanges = true;
+            try {
+              await this.uploadAllFiles();
+            } finally {
+              this.hasPendingChanges = false;
+            }
             this.router.navigate([RoutesApp.PROCESS_REQUEST]);
             this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
           }
@@ -4245,7 +4226,7 @@ get empresaDocumento(): string {
         const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'assigned'));
 
         if (response.code === 200 && response.data) {
-          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          return parsePresignUploadData(response.data).presigned_url;
           //file.preSignedUrl = response.data;
           //this.uploadToPresignedUrl(file);
         } else {
@@ -4282,7 +4263,7 @@ get empresaDocumento(): string {
         const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'pending'));
 
         if (response.code === 200 && response.data) {
-          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          return parsePresignUploadData(response.data).presigned_url;
         } else {
           console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
         }
@@ -4374,28 +4355,54 @@ get empresaDocumento(): string {
   }
 
   async uploadAllFiles() {
-    await this.attachAssignedFiles(); // Espera que se obtengan todas las URLs
-
-    // Subimos los archivos
+    const failed: string[] = [];
     for (const file of this.arrayAssignedAttachment) {
-      await this.uploadToPresignedUrl(file);
+      try {
+        await this.attachmentUploadService.uploadPqrsFile(
+          file,
+          this.request_id,
+          'assigned',
+          {
+            onUploadError: (f, id, err) =>
+              this.attachmentUploadService.logUploadError(f, id, err),
+          }
+        );
+      } catch {
+        failed.push(file.source_name);
+      }
+    }
+    if (failed.length > 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Adjuntos',
+        detail: `No se pudieron subir: ${failed.join(', ')}`,
+      });
     }
   }
 
-  async attachAssignedFilesPending() {
-    await Promise.all(
-      this.arrayAssignedAttachmentPending.map(async item => {
-        item.preSignedUrl = await this.getPreSignedUrlPending(item);
-      })
-    );
-  }
-
   async uploadAllFilesPending() {
-    await this.attachAssignedFilesPending(); // Espera que se obtengan todas las URLs
-
-    // Subimos los archivos
+    const failed: string[] = [];
     for (const file of this.arrayAssignedAttachmentPending) {
-      await this.uploadToPresignedUrl(file);
+      try {
+        await this.attachmentUploadService.uploadPqrsFile(
+          file,
+          this.request_id,
+          'pending',
+          {
+            onUploadError: (f, id, err) =>
+              this.attachmentUploadService.logUploadError(f, id, err),
+          }
+        );
+      } catch {
+        failed.push(file.source_name);
+      }
+    }
+    if (failed.length > 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Adjuntos pendientes',
+        detail: `No se pudieron subir: ${failed.join(', ')}`,
+      });
     }
   }
   ///////////////////////////////////////////////////////////////////////////////
@@ -4515,9 +4522,9 @@ get empresaDocumento(): string {
   async getPreSignedUrlToDownload(url: string, file_name: string, is_download: boolean) {
     const payload = { url: url };
     this.userService.getUrlSigned(payload, 'download').subscribe({
-      next: (response: BodyResponse<string>): void => {
+      next: (response): void => {
         if (response.code === 200) {
-          this.preSignedUrlDownload = response.data;
+          this.preSignedUrlDownload = parsePresignUploadData(response.data).presigned_url;
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -4988,7 +4995,7 @@ get empresaDocumento(): string {
       //console.log(payload);
 
       this.userService.registerPendingRequest(payload).subscribe({
-        next: (response: BodyResponse<string>) => {
+        next: async (response: BodyResponse<string>) => {
           if (response.code === 200) {
             if (this.getAssignedPending().length == 0) {
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
@@ -4996,7 +5003,13 @@ get empresaDocumento(): string {
               this.ngOnInit();
             } else {
               //this.attachAssignedFilesPending();
-              this.uploadAllFilesPending();
+              // Espera a que termine toda la subida ANTES de navegar/mostrar éxito
+              this.hasPendingChanges = true;
+              try {
+                await this.uploadAllFilesPending();
+              } finally {
+                this.hasPendingChanges = false;
+              }
               this.router.navigate([RoutesApp.PROCESS_REQUEST]);
               this.ngOnInit();
               this.showSuccessMessage('success', 'Exitoso', 'Operación exitosa!');
@@ -5265,9 +5278,9 @@ get empresaDocumento(): string {
     return new Promise((resolve, reject) => {
       const payload = { url: url };
       this.userService.getUrlSigned(payload, 'download').subscribe({
-        next: (response: BodyResponse<string>) => {
+        next: (response) => {
           if (response.code === 200) {
-            resolve(response.data);  // Resolvemos con la URL prefirmada
+            resolve(parsePresignUploadData(response.data).presigned_url);  // Resolvemos con la URL prefirmada
           } else {
             reject('Operación fallida');
           }
