@@ -1357,7 +1357,7 @@
                     </span>
                     <span class="cai-form-field__error"
                       *ngIf="!fMedioPago['numero_cuenta']?.errors?.['required'] && (fMedioPago['numero_cuenta']?.errors?.['minlength'] || fMedioPago['numero_cuenta']?.errors?.['maxlength'])">
-                      El número de cuenta debe tener {{ fMedioPago['numero_cuenta'].errors?.['minlength']?.requiredLength || fMedioPago['numero_cuenta'].errors?.['maxlength']?.requiredLength }} dígitos para el tipo de cuenta seleccionado.
+                      {{ mensajeLongitudNumeroCuenta }}
                     </span>
                     <span class="cai-form-field__error" *ngIf="fMedioPago['numero_cuenta']?.errors?.['secuenciaInvalida']">
                       El número de cuenta ingresado no es válido. Por favor verifique e intente nuevamente.
@@ -1383,7 +1383,7 @@
                     </span>
                     <span class="cai-form-field__error"
                       *ngIf="!fMedioPago['confirmacion_cuenta']?.errors?.['required'] && (fMedioPago['confirmacion_cuenta']?.errors?.['minlength'] || fMedioPago['confirmacion_cuenta']?.errors?.['maxlength'])">
-                      El número de cuenta debe tener {{ fMedioPago['confirmacion_cuenta'].errors?.['minlength']?.requiredLength || fMedioPago['confirmacion_cuenta'].errors?.['maxlength']?.requiredLength }} dígitos para el tipo de cuenta seleccionado.
+                      {{ mensajeLongitudNumeroCuenta }}
                     </span>
                     <span class="cai-form-field__error" *ngIf="fMedioPago['confirmacion_cuenta']?.errors?.['secuenciaInvalida']">
                       El número de cuenta ingresado no es válido. Por favor verifique e intente nuevamente.

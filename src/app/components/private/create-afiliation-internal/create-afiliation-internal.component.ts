@@ -24,6 +24,7 @@ import {
   DatosBeneficiarioAfiliacionInterna,
   DatosFormularioAfiliacionInterna,
   EntidadDisponibleAfiliacionInterna,
+  TipoCuentaEntidadAfiliacionInterna,
   LaborInfoAfiliacionInterna,
   MedioPagoAfiliacionInterna,
   PersonalInfoAfiliacionInterna,
@@ -3384,6 +3385,28 @@ export class CreateAfiliationInternalComponent implements OnInit {
     return this.solicitudMedioPagoForm?.controls ?? {};
   }
 
+  /** Tipo de cuenta actualmente seleccionado en medio de pago (para leer longitudMinima/Maxima en la plantilla). */
+  get tipoCuentaSeleccionadaMedioPago(): TipoCuentaEntidadAfiliacionInterna | undefined {
+    const idTipoCuentaVal = this.solicitudMedioPagoForm.get('tipo_cuenta')?.value;
+    return idTipoCuentaVal != null
+      ? this.entidadSeleccionadaMedioPago?.tiposCuenta?.find(
+          t => Number(t.idTipoCuenta) === Number(idTipoCuentaVal)
+        )
+      : undefined;
+  }
+
+  /** Mensaje de error de longitud del número de cuenta, mostrando el rango real (min/max) del tipo de cuenta. */
+  get mensajeLongitudNumeroCuenta(): string {
+    const tipo = this.tipoCuentaSeleccionadaMedioPago;
+    const min = tipo?.longitudMinima;
+    const max = tipo?.longitudMaxima;
+    if (min && max && min !== max) {
+      return `El número de cuenta debe tener entre ${min} y ${max} dígitos para el tipo de cuenta seleccionado.`;
+    }
+    const longitud = max ?? min;
+    return `El número de cuenta debe tener ${longitud} dígitos para el tipo de cuenta seleccionado.`;
+  }
+
   private aplicarValidadoresMedioPagoSegunEstado(): void {
     const esTransferencia = this.requiereDatosBancariosMedioPago();
     const validatorsRequeridos = esTransferencia ? [Validators.required] : [];
@@ -3396,13 +3419,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
       ? [...validatorsRequeridos, validatorNumeroCuentaSecuencia]
       : [...validatorsRequeridos];
     if (esTransferencia) {
-      const idTipoCuentaVal = this.solicitudMedioPagoForm.get('tipo_cuenta')?.value;
-      const tipoCuentaSeleccionada =
-        idTipoCuentaVal != null
-          ? this.entidadSeleccionadaMedioPago?.tiposCuenta?.find(
-              t => Number(t.idTipoCuenta) === Number(idTipoCuentaVal)
-            )
-          : undefined;
+      const tipoCuentaSeleccionada = this.tipoCuentaSeleccionadaMedioPago;
       if (tipoCuentaSeleccionada?.longitudMinima) {
         validatorsNumeroCuenta.push(Validators.minLength(tipoCuentaSeleccionada.longitudMinima));
       }

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { AccountTypeListAfi, AssociateBankAccountList, BankList, CategoryList, DepartmentList, ModalityList, MunicipalityList } from '../../../models/users.interface';
 import { Users } from '../../../services/users.service';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
@@ -33,19 +33,35 @@ export class ModalBankAccountAssociationComponent {
     private userService: Users,
     private formBuilder: FormBuilder
   ) {
-    this.formGroup = new FormGroup({
-      id: new FormControl(null), 
-      id_entidad: new FormControl(null, [Validators.required]),
-      id_tipo_cuenta: new FormControl(null, [Validators.required]),
-      
-       //requerido + numérico + rango 1..20
-      longitud_cuenta: new FormControl<number | null>(null, [Validators.required,Validators.pattern('^[0-9]{1,2}$'),
-        Validators.min(1),Validators.max(20),]),
+    this.formGroup = new FormGroup(
+      {
+        id: new FormControl(null),
+        id_entidad: new FormControl(null, [Validators.required]),
+        id_tipo_cuenta: new FormControl(null, [Validators.required]),
 
-      //texto libre con límite
-      observacion: new FormControl<string | null>(null, [Validators.maxLength(100),
-        Validators.pattern('^[^#$%&]*$')]),
-    });
+        //requerido + numérico + rango 1..25
+        longitud_minima: new FormControl<number | null>(null, [Validators.required,Validators.pattern('^[0-9]{1,2}$'),
+          Validators.min(1),Validators.max(25),]),
+
+        //requerido + numérico + rango 1..25
+        longitud_maxima: new FormControl<number | null>(null, [Validators.required,Validators.pattern('^[0-9]{1,2}$'),
+          Validators.min(1),Validators.max(25),]),
+
+        //texto libre con límite
+        observacion: new FormControl<string | null>(null, [Validators.maxLength(100),
+          Validators.pattern('^[^#$%&]*$')]),
+      },
+      { validators: ModalBankAccountAssociationComponent.rangoLongitudValidator }
+    );
+  }
+
+  private static rangoLongitudValidator(group: AbstractControl): ValidationErrors | null {
+    const min = group.get('longitud_minima')?.value;
+    const max = group.get('longitud_maxima')?.value;
+    if (min != null && max != null && min !== '' && max !== '' && Number(min) > Number(max)) {
+      return { rangoInvalido: true };
+    }
+    return null;
   }
   ngOnInit(): void {
     this.getBankTable();
@@ -103,7 +119,8 @@ export class ModalBankAccountAssociationComponent {
       id: this.formGroup.controls['id'].value,
       id_entidad: this.formGroup.controls['id_entidad'].value,
       id_tipo_cuenta: this.formGroup.controls['id_tipo_cuenta'].value,
-      longitud_cuenta: this.formGroup.controls['longitud_cuenta'].value,
+      longitud_minima: this.formGroup.controls['longitud_minima'].value,
+      longitud_maxima: this.formGroup.controls['longitud_maxima'].value,
       observacion: this.formGroup.controls['observacion'].value,
     };
     this.setRtaParameter.emit(payload);

@@ -25,7 +25,7 @@
           </th>
           <th style="width: 20%">Entidad bancaria</th>
           <th style="width: 20%; max-width: 50px">Tipo de cuenta</th>
-          <th style="width: 10%">Longitud</th>
+          <th style="width: 10%">Longitud mín - máx</th>
           <th style="width: 20%">Observación</th>
           <th style="width: 10%">Estado</th>
           <th style="width: 3%"></th>
@@ -37,7 +37,7 @@
           <td [ngStyle]="{ 'text-align': 'center' }">{{ associateBankAccountList.id }}</td>
           <td [ngStyle]="{ 'text-align': 'center' }">{{ associateBankAccountList.nombre_entidad }}</td>
           <td [ngStyle]="{ 'text-align': 'center' }">{{ associateBankAccountList.nombre_tipo_cuenta }}</td>
-          <td [ngStyle]="{ 'text-align': 'center' }">{{ associateBankAccountList.longitud_cuenta }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ associateBankAccountList.longitud_minima }} - {{ associateBankAccountList.longitud_maxima }}</td>
           <td [ngStyle]="{ 'text-align': 'center' }">{{ associateBankAccountList.observacion }}</td>
 
           <td [ngStyle]="{ 'text-align': 'center' }">

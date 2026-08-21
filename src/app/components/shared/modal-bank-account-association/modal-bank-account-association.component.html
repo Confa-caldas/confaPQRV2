@@ -13,41 +13,80 @@
       <form [formGroup]="formGroup">
         <div class="px-5">
           <div class="row my-4 g-3">
-          <div class="col-12">
-            <label> *Longitud cuenta </label>
+          <div class="col-6">
+            <label> *Longitud mínima </label>
             <input
               maxlength="2"
-              [readonly]="this.buttonmsg !== 'Crear' ? true : false"
-              formControlName="longitud_cuenta"
+              [readonly]="read_only"
+              formControlName="longitud_minima"
               pInputText
               pKeyFilter="integer"
               placeholder="01" />
             <label class="invalid">
               {{
-                formGroup.get('longitud_cuenta')?.hasError('required') &&
-                formGroup.get('longitud_cuenta')?.touched
+                formGroup.get('longitud_minima')?.hasError('required') &&
+                formGroup.get('longitud_minima')?.touched
                   ? 'Campo requerido'
                   : ''
               }}
               {{
-                formGroup.get('longitud_cuenta')?.hasError('min') &&
-                formGroup.get('longitud_cuenta')?.touched
+                formGroup.get('longitud_minima')?.hasError('min') &&
+                formGroup.get('longitud_minima')?.touched
                 ? 'Debe ser mínimo 1'
                 : ''
               }}
               {{
-                formGroup.get('longitud_cuenta')?.hasError('max') &&
-                formGroup.get('longitud_cuenta')?.touched
-                ? 'Debe ser máximo 20'
+                formGroup.get('longitud_minima')?.hasError('max') &&
+                formGroup.get('longitud_minima')?.touched
+                ? 'Debe ser máximo 25'
                 : ''
               }}
               {{
-                formGroup.get('longitud_cuenta')?.hasError('pattern') &&
-                formGroup.get('longitud_cuenta')?.touched
+                formGroup.get('longitud_minima')?.hasError('pattern') &&
+                formGroup.get('longitud_minima')?.touched
                   ? 'Solo ingrese numeros'
                   : ''
               }}</label
             >
+          </div>
+          <div class="col-6">
+            <label> *Longitud máxima </label>
+            <input
+              maxlength="2"
+              [readonly]="read_only"
+              formControlName="longitud_maxima"
+              pInputText
+              pKeyFilter="integer"
+              placeholder="17" />
+            <label class="invalid">
+              {{
+                formGroup.get('longitud_maxima')?.hasError('required') &&
+                formGroup.get('longitud_maxima')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('longitud_maxima')?.hasError('min') &&
+                formGroup.get('longitud_maxima')?.touched
+                ? 'Debe ser mínimo 1'
+                : ''
+              }}
+              {{
+                formGroup.get('longitud_maxima')?.hasError('max') &&
+                formGroup.get('longitud_maxima')?.touched
+                ? 'Debe ser máximo 25'
+                : ''
+              }}
+              {{
+                formGroup.get('longitud_maxima')?.hasError('pattern') &&
+                formGroup.get('longitud_maxima')?.touched
+                  ? 'Solo ingrese numeros'
+                  : ''
+              }}</label
+            >
+          </div>
+          <div class="col-12" *ngIf="formGroup.hasError('rangoInvalido')">
+            <label class="invalid">La longitud mínima no puede ser mayor que la máxima</label>
           </div>
           <div class="col-12">
             <label> Observación </label>

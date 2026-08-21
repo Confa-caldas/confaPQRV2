@@ -1664,7 +1664,10 @@ export interface AssociateBankAccountList {
   nombre_entidad?: string;
   id_tipo_cuenta: number;
   nombre_tipo_cuenta?: string;
-  longitud_cuenta: number;
+  /** @deprecated Reemplazada por longitud_minima/longitud_maxima; se conserva por compatibilidad. */
+  longitud_cuenta?: number;
+  longitud_minima: number;
+  longitud_maxima: number;
   observacion?: string;
   esta_activo?: boolean;
 }
