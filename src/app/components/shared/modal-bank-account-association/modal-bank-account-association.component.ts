@@ -119,8 +119,8 @@ export class ModalBankAccountAssociationComponent {
       id: this.formGroup.controls['id'].value,
       id_entidad: this.formGroup.controls['id_entidad'].value,
       id_tipo_cuenta: this.formGroup.controls['id_tipo_cuenta'].value,
-      longitud_minima: this.formGroup.controls['longitud_minima'].value,
-      longitud_maxima: this.formGroup.controls['longitud_maxima'].value,
+      longitud_minima: Number(this.formGroup.controls['longitud_minima'].value),
+      longitud_maxima: Number(this.formGroup.controls['longitud_maxima'].value),
       observacion: this.formGroup.controls['observacion'].value,
     };
     this.setRtaParameter.emit(payload);
