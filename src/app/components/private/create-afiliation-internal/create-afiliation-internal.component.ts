@@ -4419,6 +4419,27 @@ export class CreateAfiliationInternalComponent implements OnInit {
       (p.tipoDocumento ?? '').toString().trim() || this.tipoDocPrecargarATipoDocumento(p.tipoDoc);
     const numeroDocumento = (p.documento ?? '').toString().trim();
     const parentesco = (p.parentesco ?? '').toString().trim() || 'Sin especificar';
+    const esc = (v: unknown): string | undefined => {
+      const t = v == null ? '' : String(v).trim();
+      return t !== '' ? t : undefined;
+    };
+
+    // Administrador del subsidio real (Genesys) de este beneficiario precargado; viene directo de Genesys
+    // junto con el resto de la precarga, independiente de si esa persona también es miembro del grupo
+    // familiar. Si no viene completo se deja sin enviar y el backend usa al trabajador como administrador
+    // por defecto (mismo comportamiento que antes de este campo).
+    const tipoAdmPago = esc(p.tipoDocBeneficiarioPago);
+    const numAdmPago = esc(p.docBeneficiarioPago);
+    const nomAdmPago = esc(p.nombreBeneficiarioPago);
+    const administradorSubsidioPrecarga =
+      tipoAdmPago && numAdmPago && nomAdmPago
+        ? {
+            tipoIdentificacionAdministradorSubsidio: this.tipoDocPrecargarATipoDocumento(tipoAdmPago),
+            numeroIdentificacionAdministradorSubsidio: numAdmPago,
+            nombreCompletoAdministradorSubsidio: nomAdmPago,
+          }
+        : undefined;
+
     return {
       parentesco,
       tipoDocumento,
@@ -4426,7 +4447,13 @@ export class CreateAfiliationInternalComponent implements OnInit {
       esPrecargado: true,
       // Preserva el grupo familiar real de Genesys (ej. cónyuge + hijastro agrupados) para no
       // perderlo al validar otros beneficiarios ni al guardar la solicitud.
-      datosBeneficiario: p.numeroGrupoFamiliar != null ? { numeroGrupoFamiliar: p.numeroGrupoFamiliar } : undefined,
+      datosBeneficiario:
+        p.numeroGrupoFamiliar != null || administradorSubsidioPrecarga
+          ? {
+              numeroGrupoFamiliar: p.numeroGrupoFamiliar ?? undefined,
+              ...(administradorSubsidioPrecarga ?? {}),
+            }
+          : undefined,
       datosPrecargados: {
         tipoDocumento,
         numeroDocumento,
