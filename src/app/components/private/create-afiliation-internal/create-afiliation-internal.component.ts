@@ -219,6 +219,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
   consultaEmpresaBeneficiarioForm: FormGroup;
   /** Flujo beneficiario interno: identificación del trabajador activo. */
   identificacionTrabajadorBeneficiarioForm: FormGroup;
+  /** Flujo beneficiario interno: fecha de recepción de documentos (obligatoria, solo afiliación interna). */
+  fechaRecepcionDocumentosBeneficiarioForm: FormGroup;
   /** Formulario principal de la solicitud (pestaña Información personal). */
   solicitudPersonalForm!: FormGroup;
   solicitudLaboralForm!: FormGroup;
@@ -402,6 +404,10 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.identificacionTrabajadorBeneficiarioForm = this.fb.group({
       tipo_documento: [null, Validators.required],
       numero_documento: ['', Validators.required],
+    });
+
+    this.fechaRecepcionDocumentosBeneficiarioForm = this.fb.group({
+      fecha_recepcion_documentos: [null as Date | null, Validators.required],
     });
 
     this.solicitudPersonalForm = this.fb.group(
@@ -664,6 +670,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     });
     this.identificacionTrabajadorBeneficiarioForm.enable({ emitEvent: false });
     this.identificacionTrabajadorBeneficiarioBloqueada = false;
+    this.fechaRecepcionDocumentosBeneficiarioForm.reset({ fecha_recepcion_documentos: null });
   }
 
   private reiniciarFlujoBeneficiarioInterno(): void {
@@ -847,6 +854,10 @@ export class CreateAfiliationInternalComponent implements OnInit {
     if (!this.trabajadorBeneficiarioValidado || !this.trabajadorActivoBeneficiario) {
       return;
     }
+    this.fechaRecepcionDocumentosBeneficiarioForm.markAllAsTouched();
+    if (this.fechaRecepcionDocumentosBeneficiarioForm.invalid) {
+      return;
+    }
     this.beneficiariosAgregados = [];
     this.reiniciarFormularioBeneficiarioInterno();
     this.pasoBeneficiarioSub = 3;
@@ -1013,6 +1024,9 @@ export class CreateAfiliationInternalComponent implements OnInit {
       observaciones: null,
       origenRadicacion: 'Afiliacion interna',
       usuarioRadicacionInterno: this.obtenerUsuarioRadicacionInterno(),
+      fechaRecepcionDocumentos: this.asegurarFormatoFecha(
+        this.fechaRecepcionDocumentosBeneficiarioForm.value.fecha_recepcion_documentos
+      ),
     };
   }
 

@@ -94,6 +94,8 @@ export interface AgregarBeneficiarioTrabajadorActivoRequestInterna {
   origenRadicacion?: string;
   /** Login del gestor PQR que radica (sesión). Obligatorio en afiliación interna. */
   usuarioRadicacionInterno?: string;
+  /** Fecha de recepción de documentos (ISO yyyy-MM-dd). Obligatoria solo en afiliación interna. */
+  fechaRecepcionDocumentos?: string;
 }
 
 export interface SolicitudCreadaBeneficiarioInterna {
