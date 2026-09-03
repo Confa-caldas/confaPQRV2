@@ -2224,3 +2224,70 @@ export interface ActivacionEmpresaGestionResultado {
 export interface SuccessfulTransferBulk {
   request_id: number[];
 }
+
+/* ==== Reportes de afiliaciones (report-details-afiliations) ==== */
+
+export interface FilterReporteAfiliacionFecha {
+  i_date: string | null;
+  f_date: string | null;
+}
+
+export interface FilterReporteValidacionesDiariasAfiliacion extends FilterReporteAfiliacionFecha {
+  status_id?: number[] | null;
+  page?: number;
+  page_size?: number;
+}
+
+export interface FilterReporteEstadoAfiliacion extends FilterReporteAfiliacionFecha {
+  tipo_formulario?: 'INDIVIDUAL' | 'MASIVA' | null;
+}
+
+/** Fila del reporte de validaciones diarias */
+export interface ReporteValidacionesDiariasRow {
+  diaMesAfiliacion?: string;
+  numeroRadicado?: string;
+  numeroDocumentoTrabajador?: string;
+  tipoFormulario?: string;
+  estadoSolicitud?: string;
+  fechaProcesamientoAfiliacion?: string;
+  fechaAsignacionRevision?: string;
+  observacionFinal?: string;
+}
+
+/** Fila del reporte por auxiliares */
+export interface ReporteAuxiliaresRow {
+  responsable?: string;
+  cantidadAsignadas?: number;
+  cantidadReasignadas?: number;
+}
+
+/** Fila: solicitudes sin asignar por fecha */
+export interface ReporteSinAsignarRow {
+  fechaSolicitud?: string;
+  cantidadPendienteAsignacion?: number;
+}
+
+/** Fila: solicitudes por estado afiliado */
+export interface ReportePorEstadoAfiliadoRow {
+  estado?: string;
+  cantidad?: number;
+}
+
+/** Fila: afiliación individual por estado */
+export interface ReporteIndividualPorEstadoRow {
+  estado?: string;
+  cantidad?: number;
+}
+
+/** Fila: afiliación masiva por estado */
+export interface ReporteMasivaPorEstadoRow {
+  estado?: string;
+  cantidad?: number;
+}
+
+/** Fila del reporte RPA */
+export interface ReporteRpaRow {
+  fecha?: string;
+  cantidadProcesadasAutomaticamente?: number;
+  cantidadDevueltasPorErrorRpa?: number;
+}
