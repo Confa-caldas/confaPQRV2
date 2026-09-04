@@ -1,0 +1,176 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Consultar de novedades de calidad de datos</div>
+  </div>
+  <div class="col-2 text-end">
+    <p-button
+      label="Crear nueva novedad"
+      icon="pi pi-user"
+      (onClick)="openModalSearchPerson()"
+      [style]="{ 'border-radius': '6px' }"></p-button>
+  </div>
+</div>
+
+<app-modal-search-person-data
+  [visible]="visibleModalSearchPerson"
+  (guardarNovedad)="onGuardarNovedad()"
+  (cerrar)="closeModalSearchPerson()"></app-modal-search-person-data>
+  
+<form [formGroup]="formGroup" (keydown.enter)="initPaginador()" (keydown.escape)="cleanForm()">
+  <div class="position-relative">
+    <div class="card flex justify-content-center absolute-center">
+        <div class="filters-grid">
+            <div class="filters-cell">
+            <input
+                pInputText
+                class="filters-input"
+                pKeyFilter="int"
+                placeholder="Número de radicado"
+                formControlName="filing_number" />
+            </div>
+            <div class="filters-cell">
+            <p-calendar
+                formControlName="dates_range"
+                selectionMode="range"
+                [readonlyInput]="true"
+                [style]="{ 'align-items': 'center', 'border-radius': '5px' }"
+                [iconDisplay]="'input'"
+                [showIcon]="true"
+                placeholder="Rango de fechas"
+                class="calendar"></p-calendar>
+            </div>
+            <div class="filters-cell">
+            <input
+                pInputText
+                pKeyFilter="text"
+                class="filters-input"
+                placeholder="Documento afiliado"
+                formControlName="doc_id" />
+            </div>
+            <div class="filters-cell">
+            <input
+                pInputText
+                pKeyFilter="text"
+                class="filters-input"
+                placeholder="Nombre afiliado"
+                formControlName="applicant_name" />
+            </div>
+            <div class="filters-cell">
+            <p-multiSelect
+                formControlName="novedad_status_id"
+                [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                [options]="novedadStatusList"
+                optionLabel="nombre"
+                optionValue="id"
+                placeholder="Estado de la novedad"></p-multiSelect>
+            </div>
+            <div class="filters-cell filters-actions">
+            <p-button
+                icon="pi pi-trash"
+                [styleClass]="'btn-icon-info'"
+                (click)="cleanForm()"></p-button>
+            <p-button
+                icon="pi pi-search"
+                [styleClass]="'btn-icon-info'"
+                (click)="initPaginador()"></p-button>
+            </div>
+        </div>
+    </div>
+  </div>
+</form>
+
+<div class="mt-auto">
+  <p-table
+    #dt
+    [value]="novedadList"
+    dataKey="id_novedad"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    [loading]="loading"
+    [paginator]="false"
+    currentPageReportTemplate="{first} de {totalRecords}"
+    [tableStyle]="{ 'min-width': '60rem' }"
+    [scrollable]="true"
+    scrollHeight="500px"
+    [virtualScroll]="false"
+    [virtualScrollItemSize]="80"
+    [(selection)]="selectedRequests"
+    [exportHeader]="'customExportHeader'">
+    <ng-template pTemplate="header">
+      <tr [style]="{ height: '50px' }">
+        <th style="width: 5%">Detalle</th>
+        <th pSortableColumn="id_novedad" style="min-width: 7rem">
+          Id Novedad<p-sortIcon field="id_novedad"></p-sortIcon>
+        </th>
+        <th pSortableColumn="filing_date" style="min-width: 8rem">
+          Fecha Novedad<p-sortIcon field="filing_date"></p-sortIcon>
+        </th>
+        <th pSortableColumn="numero_radicado" style="min-width: 7rem">
+          N° Radicado<p-sortIcon field="numero_radicado"></p-sortIcon>
+        </th>
+        <th pSortableColumn="tipo_documento_genesys" style="min-width: 10rem">
+          Tipo Documento Afiliado<p-sortIcon style="margin: 0 5px" field="tipo_documento_genesys"></p-sortIcon>
+        </th>
+        <th pSortableColumn="numero_documento_genesys" style="min-width: 10rem">
+          N° Documento Afiliado<p-sortIcon style="margin: 0 5px" field="numero_documento_genesys"></p-sortIcon>
+        </th>
+        <th style="min-width: 15rem">Nombre Afiliado</th>
+        <th pSortableColumn="estado" style="min-width: 11rem">
+          Estado<p-sortIcon field="estado"></p-sortIcon>
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td style="text-align: center">
+          <p-button
+            icon="pi pi-eye"
+            [styleClass]="'btn-icon-info'"
+            (click)="redirectDetails(row.id_novedad)"></p-button>
+        </td>
+        <td style="text-align: center">{{ row.id_novedad }}</td>
+        <td style="text-align: center">{{ row.filing_date || (row.fecha_hora_registro | date: 'shortDate') }}</td>
+        <td style="text-align: center">{{ row.numero_radicado }}</td>
+        <td style="text-align: center">{{ row.tipo_documento_genesys }}</td>
+        <td style="text-align: center">{{ row.numero_documento_genesys }}</td>
+        <td style="text-align: center">{{ getNombreCompletoNovedad(row) }}</td>
+        <td style="text-align: center">{{ row.estado_nombre }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-paginator
+    (onPageChange)="onPageChange($event)"
+    [first]="first"
+    [rows]="rows"
+    [totalRecords]="totalRows"
+    [rowsPerPageOptions]="[10, 20, 30]">
+  </p-paginator>
+</div>
+
+<p-toast></p-toast>
+<app-modal-dinamic
+  *ngIf="visibleDialog"
+  [select]="true"
+  [visible]="visibleDialog"
+  [message]="message"
+  (setRta)="closeDialog($event)"></app-modal-dinamic>
+
+<app-modal-assign-selector
+  *ngIf="visibleDialogInput"
+  [visible]="visibleDialogInput"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [parameter]="parameter"
+  (setRta)="closeDialogInput($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-assign-selector>
+
+<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [message2]="message2"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>

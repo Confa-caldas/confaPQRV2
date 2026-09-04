@@ -1,0 +1,94 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '40vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="my-4 px-5 text-center">{{ message }}</div>
+      <form [formGroup]="formGroup">
+        <div class="px-5">
+          <div class="row my-4 g-3">
+            <div class="col-12">
+              <label> *Nombre variable</label>
+              <input
+                [readonly]="read_only"
+                formControlName="nombre_variable"
+                pInputText
+                pKeyFilter="string"
+                placeholder="Escriba el nombre de la variable" />
+              <label class="invalid">
+                {{
+                  formGroup.get('nombre_variable')?.hasError('required') &&
+                  formGroup.get('nombre_variable')?.touched
+                    ? 'Campo requerido'
+                    : ''
+                }}
+                {{
+                  formGroup.get('nombre_variable')?.hasError('pattern') &&
+                  formGroup.get('nombre_variable')?.touched
+                    ? 'Solo ingrese texto'
+                    : ''
+                }}</label
+              >
+            </div>
+            <div class="col-12">
+              <label> *Valor variable</label>
+              <input
+                [readonly]="read_only"
+                formControlName="valor_variable"
+                pInputText
+                pKeyFilter="string"
+                placeholder="Escriba el valor de la variable" />
+              <label class="invalid">
+                {{
+                  formGroup.get('valor_variable')?.hasError('required') &&
+                  formGroup.get('valor_variable')?.touched
+                    ? 'Campo requerido'
+                    : ''
+                }}
+                {{
+                  formGroup.get('valor_variable')?.hasError('pattern') &&
+                  formGroup.get('valor_variable')?.touched
+                    ? 'Solo ingrese texto'
+                    : ''
+                }}</label
+              >
+            </div>
+            <div class="col-12">
+              <label> Descripción</label>
+              <input
+                [readonly]="read_only"
+                formControlName="descripcion"
+                pInputText
+                pKeyFilter="string"
+                placeholder="Escriba una descripción" />
+              <label class="invalid">
+                {{
+                  formGroup.get('descripcion')?.hasError('pattern') &&
+                  formGroup.get('descripcion')?.touched
+                    ? 'Solo ingrese texto'
+                    : ''
+                }}</label
+              >
+            </div>
+          </div>
+        </div>
+      </form>
+      <div *ngIf="read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+      </div>
+      <div *ngIf="!read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button
+          [label]="buttonmsg"
+          [disabled]="formGroup.invalid"
+          (click)="closeDialog(true)"></p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

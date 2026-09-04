@@ -1,0 +1,40 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+.modal-content {
+  background-color: $color-white;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.error-label {
+  color: $color-red;
+}
+
+.invalid {
+  color: $color-red;
+  font-size: small;
+}
+.custom-input {
+  font-size: inherit;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  color: #66798d;
+  /* Agrega cualquier otro estilo necesario */
+}
+
+.radio-group {
+  display: flex;
+  gap: 2.5rem;
+  margin-top: 0.5rem;
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.radio-item label {
+  margin: 0;
+  cursor: pointer;
+}

@@ -9,7 +9,7 @@ import {
 } from '../models/shared/body-response.inteface';
 import { EndPointRoute } from '../enums/routes.enum';
 import { map, catchError } from 'rxjs/operators';
-import { of, Observable } from 'rxjs';
+import { of, Observable, throwError } from 'rxjs';
 import { from } from 'rxjs';
 import {
   ApplicantTypeList,
@@ -66,6 +66,67 @@ import {
   FilterCompanyUpdate,
   CompanyUpdateRecord,
   SimilarRequest,
+  FilterRequestsAfiliation,
+  FilterRpaAfiInconsistency,
+  RpaAfiInconsistencyListItem,
+  BulkChangeRpaStatusPayload,
+  RequestsListAfiliation,
+  AfiliacionRequestDetailsData,
+  PadreBiologicoRecord,
+  GuardarPadreBiologicoPayload,
+  CambiarEstadoRpaPadreBiologicoPayload,
+  PadreRpaNoProcesadoListItem,
+  FilterPadresRpaNoProcesado,
+  AsignarPadresRpaPayload,
+  CambiarEstadoMasivoPadresRpaPayload,
+  RequestStatusAfiliationList,
+  UserListAfiliation,
+  NovedadCalidadDatosDetalle,
+  ConsultarPersonaNovedadPayload,
+  ConsultarPersonaNovedadRespuesta,
+  GuardarNovedadCalidadDatosPayload,
+  FilterNovedad,
+  NovedadList,
+  NovedadStatusList,
+  ParametroTipoDocumentoPersona,
+  ParametroEstadoCivil,
+  ParametroGenero,
+  ParametroEstadoGestionPersona,
+  ParametroParentesco,
+  ParametroMotivoRechazoAfiliacion,
+  Adjunto,
+  AdjuntoTipoPorParentesco,
+  PresignAdjuntoAdicionalData,
+  PresignUploadData,
+  ActualizarEstadoGestionAfiliacionPayload,
+  AfiliationIntegranteHistoriaGestionRow,
+  FilterRequestsMassive,
+  RequestsMassiveAfiliationListItem,
+  ValidarRequisitosGestionPersonaData,
+  ActivacionEmpresaConsultaFila,
+  ActivacionEmpresaGestionPayload,
+  ActivacionEmpresaGestionResultado,
+  ConsultarActivacionEmpresaPayload,
+  GenderList,
+  MaritalStatusList,
+  SystemVariableList,
+  AfiTemplateValidationList,
+  AfiliationCompanyList,
+  DocumentTypeCompanyList,
+  DocumentTypePersonList,
+  DepartmentList,
+  MunicipalityList,
+  AttachmentTypeList,
+  RelationshipList,
+  ResponsibleList,
+  AfiNotificationList,
+  AfiCertificateList,
+  BankList,
+  AccountTypeListAfi,
+  AssociateBankAccountList,
+  AfiOccupationList,
+  AfiMotivoRechazoParamList,
+  AfiMotivoGestionManualList,
   DocumentTypeList,
   CreateDocumentType,
   AdditionalDocsRequest,
@@ -86,6 +147,14 @@ import {
   RequestHistoricPaymentMethodRequest,
   TransferStatusList,
   SuccessfulTransferBulk,
+  FilterReporteAfiliacionFecha,
+  FilterReporteValidacionesDiariasAfiliacion,
+  FilterReporteEstadoAfiliacion,
+  ReporteValidacionesDiariasRow,
+  ReporteAuxiliaresRow,
+  ReporteSinAsignarRow,
+  ReportePorEstadoAfiliadoRow,
+  ReporteRpaRow,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -106,6 +175,11 @@ export class Users {
       `${environment.API_PUBLIC}${EndPointRoute.USERS_LIST}`
     );
   }
+  getUsersListAfiliaciones() {
+    return this.http.get<BodyResponse<UserList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.USERS_LIST_AFILIACIONES}`
+    );
+  }
   getUsersListPagination(payload: Pagination) {
     return this.http.post<BodyResponse<UserList[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.USER_LIST_PAGINATION}`,
@@ -118,14 +192,234 @@ export class Users {
       payload
     );
   }
+  getRequestListByAssignedUserAfiliation(assigned_user: string, payload: FilterRequestsAfiliation) {
+    return this.http.post<BodyResponse<RequestsListAfiliation[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ALL_REQUESTS_BY_ASSIGNED_USER_AFILIATION}/${assigned_user}`,
+      payload
+    );
+  }
   getRequestDetails(payload: number) {
     return this.http.get<BodyResponse<RequestsDetails>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_DETAILS}/${payload}`
     );
   }
+  getRequestDetailsAfiliation(payload: number) {
+    return this.http.get<BodyResponse<AfiliacionRequestDetailsData>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_DETAILS_AFILIATION}/${payload}`
+    );
+  }
+
+  /** Consulta padre/madre biológicos registrados para un beneficiario Hijo (afiliaciones.padres_biologicos). */
+  getPadresBiologicosByPersona(idSolicitudPersona: number) {
+    return this.http.post<BodyResponse<PadreBiologicoRecord[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_BIOLOGICOS_CONSULTAR}`,
+      { idSolicitudPersona }
+    );
+  }
+
+  /** Agrega (id null/omitido) o completa (id presente) un padre/madre biológico. */
+  guardarPadreBiologico(payload: GuardarPadreBiologicoPayload) {
+    return this.http.post<BodyResponse<{ id: number | null }>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_BIOLOGICOS_GUARDAR}`,
+      payload
+    );
+  }
+
+  /** Cambia estado_rpa_padres de "No procesado" a "Pendiente" o "Procesado". */
+  cambiarEstadoRpaPadreBiologico(payload: CambiarEstadoRpaPadreBiologicoPayload) {
+    return this.http.post<BodyResponse<null>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_BIOLOGICOS_CAMBIAR_ESTADO_RPA}`,
+      payload
+    );
+  }
+
+  /** Menú: beneficiarios con padres biológicos en estado_rpa_padres = No procesado. */
+  getPadresRpaNoProcesadosByFilter(payload: FilterPadresRpaNoProcesado) {
+    return this.http.post<BodyResponse<PadreRpaNoProcesadoListItem[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_RPA_NO_PROCESADO_FILTRAR}`,
+      payload
+    );
+  }
+
+  /** Asigna (masivamente) un colaborador a la gestión de padres biológicos de uno o varios beneficiarios. */
+  asignarUsuarioPadresRpa(payload: AsignarPadresRpaPayload) {
+    return this.http.post<BodyResponse<null>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_RPA_NO_PROCESADO_ASIGNAR}`,
+      payload
+    );
+  }
+
+  /** Cambia estado_rpa_padres de No procesado -> Pendiente para las solicitudes seleccionadas. */
+  cambiarEstadoMasivoPadresRpa(payload: CambiarEstadoMasivoPadresRpaPayload) {
+    return this.http.post<BodyResponse<null>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PADRES_RPA_NO_PROCESADO_CAMBIAR_ESTADO_MASIVO}`,
+      payload
+    );
+  }
+
+  /** Actualiza datos de la persona trabajador en solicitud de afiliación (CE/PPT) y/o estado civil (alerta Soltero/Cónyuge). */
+  updatePersonaTrabajadorSolicitud(payload: {
+    id_persona: number;
+    id_solicitud: number;
+    tipo_documento: string;
+    numero_documento: string;
+    primer_apellido: string;
+    segundo_apellido: string | null;
+    primer_nombre: string;
+    segundo_nombre: string | null;
+    fecha_expedicion_doc: string | null;
+    fecha_nacimiento: string | null;
+    genero: string | null;
+    estado_civil?: string | null;
+  }) {
+    return this.http.put<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_UPDATE_PERSONA}`,
+      payload
+    );
+  }
+
+  /** Actualiza datos de la persona beneficiario (CE/PPT): persona + parentesco + dirección. */
+  updatePersonaBeneficiarioSolicitud(payload: {
+    id_persona: number;
+    id_solicitud?: number;
+    tipo_documento: string;
+    numero_documento: string;
+    primer_apellido: string;
+    segundo_apellido: string | null;
+    primer_nombre: string;
+    segundo_nombre: string | null;
+    fecha_expedicion_doc?: string | null;
+    fecha_nacimiento: string | null;
+    genero: string | null;
+    parentesco?: string | null;
+    direccion_corresponde_trabajador?: string | null;
+    direccion?: string | null;
+    nuevo_beneficiario?: string | null;
+    nuevo_grupo_familiar?: string | null;
+    numero_grupo_familiar?: number | null;
+    fecha_inicio_invalidez?: string | null;
+    fecha_reporte_invalidez?: string | null;
+    tipo_identificacion_administrador_subsidio?: string | null;
+    numero_identificacion_administrador_subsidio?: string | null;
+    nombre_completo_administrador_subsidio?: string | null;
+    fecha_nacimiento_administrador_subsidio?: string | null;
+  }) {
+    return this.http.put<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_UPDATE_PERSONA}`,
+      payload
+    );
+  }
+
+  /** Valida un adjunto de solicitud de afiliación (actualiza estado_validacion, observacion_validacion, usuario que validó en afiliacion_solicitud_adjunto). */
+  validarAdjuntoAfiliacion(payload: {
+    id: number;
+    id_persona: number;
+    estado_validacion: string;
+    observacion_validacion?: string | null;
+  }) {
+    return this.http.put<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_VALIDAR_ADJUNTO}`,
+      payload
+    );
+  }
+
+  /** Sube uno o más adjuntos adicionales para una persona (trabajador o beneficiario) en solicitud de afiliación. FormData: id_solicitud, id_persona, archivos (file[]). */
+  uploadAdjuntosAfiliacion(formData: FormData) {
+    return this.http.post<BodyResponse<Adjunto[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_UPLOAD_ADJUNTO}`,
+      formData
+    );
+  }
+
+  /**
+   * URL firmada de lectura (Lambda dual).
+   * Body: { ruta_archivo, nombre_descarga? } — sin nombre_descarga → inline; con nombre_descarga → attachment.
+   */
+  getAdjuntoAfiliacionUrl(ruta_archivo: string, nombre_descarga?: string | null) {
+    const body: { ruta_archivo: string; nombre_descarga?: string } = { ruta_archivo };
+    const nd = nombre_descarga != null ? String(nombre_descarga).trim() : '';
+    if (nd !== '') {
+      body.nombre_descarga = nd;
+    }
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_ADJUNTO_URL}`,
+      body
+    );
+  }
+
+  /** Genera o regenera el expediente (PDF unificado). Body: { id_solicitud }. */
+  generarExpedienteAfiliacion(id_solicitud: number) {
+    return this.http.post<BodyResponse<Adjunto>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_GENERAR_EXPEDIENTE}`,
+      { id_solicitud }
+    );
+  }
+
+  /** Actualiza el estado de gestión de la solicitud de afiliación (modal Gestionar estado). */
+  actualizarEstadoGestionSolicitudAfiliacion(payload: ActualizarEstadoGestionAfiliacionPayload) {
+    return this.http.put<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_ACTUALIZAR_ESTADO_GESTION}`,
+      payload
+    );
+  }
+
+  /** Valida requisitos de gestión por persona antes de abrir el modal «Gestionar estado». */
+  validarRequisitosGestionPersona(personaId: number) {
+    return this.http.post<BodyResponse<ValidarRequisitosGestionPersonaData>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_VALIDAR_REQUISITOS_GESTION_PERSONA}`,
+      { persona_id: personaId }
+    );
+  }
+
+  /** Obtiene el detalle de una novedad de calidad de datos por id_novedad. */
+  getNovedadCalidadDatosDetalleById(idNovedad: number) {
+    return this.http.get<BodyResponse<NovedadCalidadDatosDetalle>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_DETALLE}/${idNovedad}`
+    );
+  }
+
+  /**
+   * Consulta información de persona asociada a novedades de calidad de datos (por documento).
+   * Sustituye la consulta al WS de subsidios; el backend debe exponer la ruta en API_PUBLIC.
+   */
+  consultarPersonaNovedadCalidadDatos(payload: ConsultarPersonaNovedadPayload) {
+    return this.http.post<
+      BodyResponse<ConsultarPersonaNovedadRespuesta | ConsultarPersonaNovedadRespuesta[] | null>
+    >(`${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_CONSULTAR_PERSONA}`, payload);
+  }
+
+  guardarNovedadCalidadDatos(payload: GuardarNovedadCalidadDatosPayload) {
+    return this.http.post<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_GUARDAR}`,
+      payload
+    );
+  }
+
   getRequestHistoric(payload: Pagination) {
     return this.http.post<BodyResponse<RequestHistoric[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC}`,
+      payload
+    );
+  }
+  /**
+   * Lambda → PL `afiliaciones.obtener_solicitud_historia_pagination` (page, page_size).
+   * `BodyResponse.total_count` opcional; por defecto filas `RequestHistoric[]` (otros módulos).
+   */
+  getRequestHistoricAfiliation<T = RequestHistoric[]>(payload: Pagination) {
+    return this.http.post<BodyResponse<T>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION}`,
+      payload
+    );
+  }
+  /**
+   * Lambda → PL `afiliaciones.obtener_solicitud_persona_historia_pagination` (page, page_size).
+   * Histórico de cambios de estado por integrante (trabajador / beneficiarios).
+   */
+  getRequestHistoricAfiliationIntegrantes(
+    payload: Pagination
+  ) {
+    return this.http.post<BodyResponse<AfiliationIntegranteHistoriaGestionRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION_INTEGRANTES}`,
       payload
     );
   }
@@ -138,6 +432,12 @@ export class Users {
   assignUserToRequest(payload: AssignUserRequest) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.ASSIGN_USER_TO_REQUEST}`,
+      payload
+    );
+  }
+  assignUserToRequestAfiliation(payload: RequestsListAfiliation) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ASSIGN_USER_TO_REQUEST_AFILIATION}`,
       payload
     );
   }
@@ -369,6 +669,95 @@ export class Users {
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_STATUS}`
     );
   }
+  getRequestAfiliationStatusList() {
+    return this.http.get<BodyResponse<RequestStatusAfiliationList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_STATUS_AFILIATION}`
+    );
+  }
+
+  /** Lista de tipos de documento de persona (tabla parametros_tipo_documento_persona, solo activos). */
+  getTipoDocumentoPersonaList() {
+    return this.http.get<BodyResponse<ParametroTipoDocumentoPersona[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.TIPO_DOCUMENTO_PERSONA_LIST}`
+    );
+  }
+
+  /** Lista de géneros (RETURNS TABLE(id, genero, esta_activo)). */
+  getGeneroList() {
+    return this.http.get<BodyResponse<ParametroGenero[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GENERO_LIST}`
+    );
+  }
+
+  /** Lista de estados civiles (RETURNS TABLE(id, estado_civil, esta_activo)). */
+  getEstadoCivilList() {
+    return this.http.get<BodyResponse<ParametroEstadoCivil[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ESTADO_CIVIL_LIST}`
+    );
+  }
+
+  /** Catálogo afiliaciones.parametros_estado_gestion_persona (id, codigo, descripcion, esta_activo, orden). */
+  getEstadoGestionPersonaList() {
+    return this.http.get<BodyResponse<ParametroEstadoGestionPersona[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ESTADO_GESTION_PERSONA_LIST}`
+    );
+  }
+
+  /** Lista de parentescos (parametros_parentesco: id, parentesco, esta_activo). */
+  getParentescoList() {
+    return this.http.get<BodyResponse<ParametroParentesco[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.PARENTESCO_LIST}`
+    );
+  }
+
+  /** Tipos de adjunto según parentesco (Cambiado a POST para integración con AWS). */
+  obtenerAdjuntosPorParentesco(idParentesco: number) {
+    // Creamos el payload que nuestra Lambda de Python está esperando leer del 'body'
+    const payload = { 
+      id_parentesco: idParentesco 
+    };
+
+    return this.http.post<BodyResponse<AdjuntoTipoPorParentesco[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ADJUNTOS_POR_PARENTESCO}`,
+      payload
+    );
+  }
+
+  /** Paso 1: solicita URL pre-firmada y s3_key (POST generar-url). */
+  obtenerUrlPresignadaS3(payload: Record<string, unknown>) {
+    return this.http.post<BodyResponse<PresignAdjuntoAdicionalData>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ADJUNTOS_ADICIONALES_GENERAR_URL}`,
+      payload
+    );
+  }
+
+  /** Paso 2: PUT directo a S3; body = archivo, header Content-Type = tipo del file. */
+  subirArchivoAS3(url: string, file: File) {
+    return this.http.put(url, file, {
+      headers: { 'Content-Type': file.type },
+    });
+  }
+
+  /** Paso 3: confirma en BD el adjunto asociado a la clave S3 subida. */
+  confirmarAdjuntoS3(payload: Record<string, unknown>) {
+    return this.http.post<BodyResponse<Adjunto>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ADJUNTOS_ADICIONALES_CONFIRMAR}`,
+      payload
+    );
+  }
+
+  /** Lista de motivos de rechazo para gestión de estado de afiliado (solo catálogo desde BD). */
+  getMotivosRechazoAfiliacionList() {
+    return this.http.get<BodyResponse<ParametroMotivoRechazoAfiliacion[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.MOTIVOS_RECHAZO_AFILIACION_LIST}`
+    );
+  }
+
+  getNovedadStatusList() {
+    return this.http.get<BodyResponse<NovedadStatusList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_STATUS_LIST}`
+    );
+  }
   createNotification(payload: NotificationList) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.CREATE_NOTIFICATION}`,
@@ -424,14 +813,66 @@ export class Users {
       payload
     );
   }
-  getUrlSigned(payload: PreSignedAttach, attachment_owner: string) {
+  getRequestMassiveListByFilter(payload: FilterRequestsMassive) {
+    return this.http.post<BodyResponse<RequestsMassiveAfiliationListItem[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_MASSIVE_BY_FILTER}`,
+      payload
+    );
+  }
+  getRequestAfiliationListByFilter(payload: FilterRequestsAfiliation) {
+    return this.http.post<BodyResponse<RequestsListAfiliation[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_AFILIATION_BY_FILTER}`,
+      payload
+    );
+  }
+  getRpaAfiInconsistencyListByFilter(payload: FilterRpaAfiInconsistency) {
+    return this.http.post<BodyResponse<RpaAfiInconsistencyListItem[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.RPA_AFI_INCONSISTENCY_BY_FILTER}`,
+      payload
+    );
+  }
+  bulkChangeRpaAfiInconsistencyStatus(payload: BulkChangeRpaStatusPayload) {
     return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.RPA_AFI_INCONSISTENCY_BULK_STATUS}`,
+      payload
+    );
+  }
+  getNovedadListByFilter(payload: FilterNovedad) {
+    return this.http.post<BodyResponse<NovedadCalidadDatosDetalle[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_BY_FILTER}`,
+      payload
+    );
+  }
+  getUrlSigned(payload: PreSignedAttach, attachment_owner: string) {
+    return this.http.post<BodyResponse<string | PresignUploadData>>(
       `${environment.API_PUBLIC}${EndPointRoute.URL_SIGNER}/${attachment_owner}`,
       payload
     );
   }
+
+  confirmPqrsAttachment(
+    attachment_owner: string,
+    payload: {
+      request_id: number;
+      s3_key: string;
+      location: string;
+      tamanio_bytes?: number;
+    }
+  ) {
+    return this.http.post<BodyResponse<{ location: string }>>(
+      `${environment.API_PUBLIC}${EndPointRoute.URL_SIGNER_CONFIRM}/${attachment_owner}`,
+      payload
+    );
+  }
   downloadFileFromS3(preSignedUrl: string): Observable<Blob> {
-    return this.http.get(preSignedUrl, { responseType: 'blob' });
+    const url =
+      typeof preSignedUrl === 'string'
+        ? preSignedUrl
+        : (preSignedUrl as any)?.url ?? (preSignedUrl as any)?.signedUrl ?? (preSignedUrl as any)?.href ?? '';
+    if (!url || typeof url !== 'string') {
+      return throwError(() => new Error('URL de descarga no válida'));
+    }
+    return this.http.get(url, { responseType: 'blob' });
   }
 
   respuestaIaWs(requestDescription?: string): Observable<any> {
@@ -627,6 +1068,15 @@ export class Users {
     );
   }
 
+  /*
+  getHistoryRequestAfiliation(payload: requestHistoryRequest) {
+    return this.http.post<BodyResponse<historyRequest[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC_AFILIATION}`,
+      payload
+    );
+  }
+  */
+
   getRequestPendingByToken(payload: Token) {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.post<BodyResponse<PendingRequest>>(
@@ -700,8 +1150,23 @@ export class Users {
   }
 
   getUrlSignedCompany(payload: PreSignedAttach, type_docoument: string) {
-    return this.http.post<BodyResponse<string>>(
+    return this.http.post<BodyResponse<string | PresignUploadData>>(
       `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES}/${type_docoument}`,
+      payload
+    );
+  }
+
+  confirmCompanyAttachment(
+    documentType: string,
+    payload: {
+      request_id: number;
+      s3_key: string;
+      location: string;
+      tamanio_bytes?: number;
+    }
+  ) {
+    return this.http.post<BodyResponse<{ location: string }>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_COMPANY_FILES_CONFIRM}/${documentType}`,
       payload
     );
   }
@@ -832,6 +1297,279 @@ export class Users {
       })
     );
   }
+  ///Parametrizacion genero
+   getGenderListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<GenderList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.GENDER_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createGender(payload: GenderList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_GENDER}`,
+      payload
+    );
+  }
+  modifyGender(payload: GenderList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_GENDER}`,
+      payload
+    );
+  }
+  inactivateGender(payload: GenderList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_GENDER}`,
+      payload
+    );
+  }
+   ///Parametrizacion estado civil
+   getMaritalStatusListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<MaritalStatusList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.MARITAL_STATUS_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createMaritalStatus(payload: MaritalStatusList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_MARITAL_STATUS}`,
+      payload
+    );
+  }
+  modifyMaterialStatus(payload: MaritalStatusList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_MARITAL_STATUS}`,
+      payload
+    );
+  }
+  inactivateMaritalStaus(payload: MaritalStatusList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_MARITAL_STATUS}`,
+      payload
+    );
+  }
+   ///Parametrizacion genero
+   getSystemVariablesListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<SystemVariableList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.SYSTEM_VARIABLE_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createSystemVariable(payload: SystemVariableList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_SYSTEM_VARIABLE}`,
+      payload
+    );
+  }
+  modifySystemVariable(payload: SystemVariableList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_SYSTEM_VARIABLE}`,
+      payload
+    );
+  }
+  ///Parametrizacion malla validacion afiliacion masiva
+   getAfiliationTemplateValidationsListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiTemplateValidationList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_TEMPLATE_VALIDATION_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiTemplateValidation(payload: AfiTemplateValidationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_TEMPLATE_VALIDATION}`,
+      payload
+    );
+  }
+  modifyAfiTemplateValidation(payload: AfiTemplateValidationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_TEMPLATE_VALIDATION}`,
+      payload
+    );
+  }
+  inactivateAfiTemplateValidation(payload: AfiTemplateValidationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_TEMPLATE_VALIDATION}`,
+      payload
+    );
+  }
+  ///Parametrizacion empresas afiliacion
+  getAfiliationCompanyListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiliationCompanyList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_COMPANY_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiCompanyValidation(payload: AfiliationCompanyList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_COMPANY}`,
+      payload
+    );
+  }
+  inactivateAfiCompany(payload: AfiliationCompanyList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_COMPANY}`,
+      payload
+    );
+  }
+  ///Parametrizacion tipos documentos empresas
+  getDocumentoTypeCompanyListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<DocumentTypeCompanyList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_COMPANY_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createDocumentoTypeCompany(payload: DocumentTypeCompanyList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_DOCUMENT_TYPE_COMPANY}`,
+      payload
+    );
+  }
+  modifyDocumentoTypeCompany(payload: DocumentTypeCompanyList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_DOCUMENT_TYPE_COMPANY}`,
+      payload
+    );
+  }
+  inactivateDocumentoTypeCompany(payload: DocumentTypeCompanyList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_DOCUMENT_TYPE_COMPANY}`,
+      payload
+    );
+  }
+  ///Parametrizacion tipos documentos para trabajadores y beneficiarios
+  getDocumentoTypePersonListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<DocumentTypePersonList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_PERSON_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createDocumentoTypePerson(payload: DocumentTypePersonList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_DOCUMENT_TYPE_PERSON}`,
+      payload
+    );
+  }
+  modifyDocumentoTypePerson(payload: DocumentTypePersonList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_DOCUMENT_TYPE_PERSON}`,
+      payload
+    );
+  }
+  inactivateDocumentoTypePerson(payload: DocumentTypePersonList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_DOCUMENT_TYPE_PERSON}`,
+      payload
+    );
+  }
+  ///Parametrizacion departamento
+  getDepartmentListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<DepartmentList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.DEPARTMENT_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createDepartment(payload: DepartmentList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_DEPARTMENT}`,
+      payload
+    );
+  }
+  modifyDepartment(payload: DepartmentList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_DEPARTMENT}`,
+      payload
+    );
+  }
+  inactivateDepartment(payload: DepartmentList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_DEPARTMENT}`,
+      payload
+    );
+  }
+  ///Parametrizacion muncipio
+  getMunicipalityListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<MunicipalityList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.MUNICIPALITY_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createMunicipality(payload: MunicipalityList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_MUNICIPALITY}`,
+      payload
+    );
+  }
+  modifyMunicipality(payload: MunicipalityList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_MUNICIPALITY}`,
+      payload
+    );
+  }
+  inactivateMunicipality(payload: MunicipalityList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_MUNICIPALITY}`,
+      payload
+    );
+  }
+  getDepartmentList() {
+    return this.http.get<BodyResponse<DepartmentList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.DEPARTMENT_LIST}`
+    );
+  }
+  ///Parametrizacion tipos documentos empresas
+  getAttachmentTypeListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AttachmentTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ATTACHEMENT_TYPE_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAttachmentType(payload: AttachmentTypeList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_ATTACHEMENT_TYPE}`,
+      payload
+    );
+  }
+  modifyAttachmentType(payload: AttachmentTypeList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_ATTACHEMENT_TYPE}`,
+      payload
+    );
+  }
+  inactivateAttachmentType(payload: AttachmentTypeList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_ATTACHEMENT_TYPE}`,
+      payload
+    );
+  }
+  ///Parametrizacion parentesco
+  getRelationshipListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<RelationshipList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.RELATIONSHIP_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  getAttachmentList() {
+    return this.http.get<BodyResponse<AttachmentTypeList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ATTACHMENT_LIST}`
+    );
+  }
+  createRelationship(payload: RelationshipList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_RELATIONSHIP}`,
+      payload
+    );
+  }
+  modifyRelationship(payload: RelationshipList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_RELATIONSHIP}`,
+      payload
+    );
+  }
+  inactivateRelationship(payload: RelationshipList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_RELATIONSHIP}`,
+      payload
+    );
+  }
   getDocumentTypesListPagination(payload: Pagination) {
     return this.http.post<BodyResponse<DocumentTypeList[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST_PAGINATION}`,
@@ -869,6 +1607,132 @@ export class Users {
     );
   }
 
+
+  //Parametrizacion responsables
+  getResponsibleListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<ResponsibleList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.RESPONSIBLE_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createResponsible(payload: ResponsibleList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_RESPONSIBLE}`,
+      payload
+    );
+  }
+  modifyResponsible(payload: ResponsibleList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_RESPONSIBLE}`,
+      payload
+    );
+  }
+  inactivateResponsible(payload: ResponsibleList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_RESPONSIBLE}`,
+      payload
+    );
+  }
+  ///Parametrizacion notificaciones
+  getAfiNotificationListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiNotificationList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_NOTIFICATION_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiNotification(payload: AfiNotificationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_NOTIFICATION}`,
+      payload
+    );
+  }
+  modifyAfiNotification(payload: AfiNotificationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_NOTIFICATION}`,
+      payload
+    );
+  }
+  inactivateAfiNotification(payload: AfiNotificationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_NOTIFICATION}`,
+      payload
+    );
+  }
+  ///Parametrizacion afiliacion certificado
+  getAfiCertificateListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiCertificateList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_CERTIFICATE_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiCertificate(payload: AfiCertificateList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_CERTIFICATE}`,
+      payload
+    );
+  }
+  modifyAfiCertificate(payload: AfiCertificateList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_CERTIFICATE}`,
+      payload
+    );
+  }
+  inactivateAfiCertificate(payload: AfiCertificateList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_CERTIFICATE}`,
+      payload
+    );
+  }
+  ///Parametrizacion banco
+   getBankListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<BankList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.BANK_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createBank(payload: BankList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_BANK}`,
+      payload
+    );
+  }
+  modifyBank(payload: BankList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_BANK}`,
+      payload
+    );
+  }
+  inactivateBank(payload: BankList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_BANK}`,
+      payload
+    );
+  }
+  ///Parametrizacion tipo cuenta
+   getAccountTypeListPaginationAfi(payload: Pagination) {
+    return this.http.post<BodyResponse<AccountTypeListAfi[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST_PAGINATION_AFI}`,
+      payload
+    );
+  }
+  createAccountTypeAfi(payload: AccountTypeListAfi) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_ACCOUNT_TYPE_AFI}`,
+      payload
+    );
+  }
+  modifyAccountTypeAfi(payload: AccountTypeListAfi) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_ACCOUNT_TYPE_AFI}`,
+      payload
+    );
+  }
+  inactivateAccountTypeAfi(payload: AccountTypeListAfi) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_ACCOUNT_TYPE_AFI}`,
+      payload
+    );
+  }
   getRequestTypeDocuments(selectedRequestTypeId?: number) {
     return this.http.get<BodyResponse<RequestTypeList[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.DOCUMENT_TYPE_LIST}`
@@ -894,6 +1758,67 @@ export class Users {
     );
   }
 
+  ///Asociacion bancos y tipos
+  getAssociateBankAccountListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AssociateBankAccountList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ASSOCIATE_BANK_ACCOUNT_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAssociateBankAccount(payload: AssociateBankAccountList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_ASSOCIATE_BANK_ACCOUNT}`,
+      payload
+    );
+  }
+  modifyAssociateBankAccount(payload: AssociateBankAccountList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_ASSOCIATE_BANK_ACCOUNT}`,
+      payload
+    );
+  }
+  inactivateAssociateBankAccount(payload: AssociateBankAccountList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_ASSOCIATE_BANK_ACCOUNT}`,
+      payload
+    );
+  }
+  getBankList() {
+    return this.http.get<BodyResponse<BankList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.BANK_LIST}`
+    );
+  }
+  getAccountTypeListAfi() {
+    return this.http.get<BodyResponse<AccountTypeListAfi[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ACCOUNT_TYPE_LIST_AFI}`
+    );
+  }
+
+  ///Parametrizacion ocupaciones
+  getAfiOccupationListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiOccupationList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_OCCUPATION_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiOccupation(payload: AfiOccupationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_OCCUPATION}`,
+      payload
+    );
+  }
+  modifyAfiOccupation(payload: AfiOccupationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_OCCUPATION}`,
+      payload
+    );
+  }
+  inactivateAfiOccupation(payload: AfiOccupationList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_OCCUPATION}`,
+      payload
+    );
+  }
   getReasonAccountUpdateList() {
     return this.http.get<BodyResponse<ReasonAccountUpdateList[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REASON_ACCOUNT_UPDATE_LIST}`
@@ -907,6 +1832,57 @@ export class Users {
     );
   }
 
+  /// Parametrización motivos de rechazo afiliación
+  getAfiMotivoRechazoListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiMotivoRechazoParamList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_MOTIVO_RECHAZO_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiMotivoRechazo(payload: AfiMotivoRechazoParamList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_MOTIVO_RECHAZO}`,
+      payload
+    );
+  }
+  modifyAfiMotivoRechazo(payload: AfiMotivoRechazoParamList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_MOTIVO_RECHAZO}`,
+      payload
+    );
+  }
+  inactivateAfiMotivoRechazo(payload: AfiMotivoRechazoParamList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_MOTIVO_RECHAZO}`,
+      payload
+    );
+  }
+
+  /// Parametrización motivos de afiliación manual
+  getAfiMotivoGestionManualListPagination(payload: Pagination) {
+    return this.http.post<BodyResponse<AfiMotivoGestionManualList[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFI_MOTIVO_GESTION_MANUAL_LIST_PAGINATION}`,
+      payload
+    );
+  }
+  createAfiMotivoGestionManual(payload: AfiMotivoGestionManualList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.CREATE_AFI_MOTIVO_GESTION_MANUAL}`,
+      payload
+    );
+  }
+  modifyAfiMotivoGestionManual(payload: AfiMotivoGestionManualList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPDATE_AFI_MOTIVO_GESTION_MANUAL}`,
+      payload
+    );
+  }
+  inactivateAfiMotivoGestionManual(payload: AfiMotivoGestionManualList) {
+    return this.http.post<BodyResponse<string>>(
+      `${environment.API_PUBLIC}${EndPointRoute.INACTIVATE_AFI_MOTIVO_GESTION_MANUAL}`,
+      payload
+    );
+  }
   createReasonAccountUpdateList(payload: ReasonAccountUpdateList) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.CREATE_REASON_ACCOUNT_UPDATE}`,
@@ -1096,8 +2072,23 @@ export class Users {
   }
 
   getUrlSignedPaymentMethodRequest(payload: PreSignedAttach, type: string) {
-    return this.http.post<BodyResponse<string>>(
+    return this.http.post<BodyResponse<string | PresignUploadData>>(
       `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_PAYMENT_METHOD_FILES}/${type}`,
+      payload
+    );
+  }
+
+  confirmPaymentMethodAttachment(
+    type: string,
+    payload: {
+      request_id: number;
+      s3_key: string;
+      location: string;
+      tamanio_bytes?: number;
+    }
+  ) {
+    return this.http.post<BodyResponse<{ location: string }>>(
+      `${environment.API_PUBLIC}${EndPointRoute.UPLOAD_PAYMENT_METHOD_FILES_CONFIRM}/${type}`,
       payload
     );
   }
@@ -1108,9 +2099,63 @@ export class Users {
     );
   }
 
+  consultarActivacionEmpresa(payload: ConsultarActivacionEmpresaPayload) {
+    return this.http.post<BodyResponse<ActivacionEmpresaConsultaFila[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ACTIVACION_EMPRESA_CONSULTAR}`,
+      payload
+    );
+  }
+
+  gestionarActivacionEmpresa(payload: ActivacionEmpresaGestionPayload) {
+    return this.http.post<BodyResponse<ActivacionEmpresaGestionResultado>>(
+      `${environment.API_PUBLIC}${EndPointRoute.ACTIVACION_EMPRESA_GESTIONAR}`,
+      payload
+    );
+  }
+  
   markSuccessfulTransfer(payload: SuccessfulTransferBulk) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.SUCCESSFUL_TRANSFER}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: validaciones diarias (paginado). */
+  getReporteValidacionesDiariasAfiliacion(payload: FilterReporteValidacionesDiariasAfiliacion) {
+    return this.http.post<BodyResponse<ReporteValidacionesDiariasRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_VALIDACIONES_DIARIAS}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: validaciones por responsable. */
+  getReportePorResponsableAfiliacion(payload: FilterReporteAfiliacionFecha) {
+    return this.http.post<BodyResponse<ReporteAuxiliaresRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_POR_RESPONSABLE}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: solicitudes sin asignar por fecha. */
+  getReporteSinAsignarAfiliacion(payload: FilterReporteAfiliacionFecha) {
+    return this.http.post<BodyResponse<ReporteSinAsignarRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_SIN_ASIGNAR}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: solicitudes por estado (se reusa para combinado/individual/masiva variando tipo_formulario). */
+  getReportePorEstadoAfiliacion(payload: FilterReporteEstadoAfiliacion) {
+    return this.http.post<BodyResponse<ReportePorEstadoAfiliadoRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_POR_ESTADO}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: procesamiento automático RPA. */
+  getReporteRpaAfiliacion(payload: FilterReporteAfiliacionFecha) {
+    return this.http.post<BodyResponse<ReporteRpaRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_RPA}`,
       payload
     );
   }

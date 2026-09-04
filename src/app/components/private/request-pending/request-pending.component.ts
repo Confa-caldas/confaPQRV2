@@ -1,6 +1,8 @@
 import { Component, ElementRef, OnInit, ViewChild, HostListener } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { Users } from '../../../services/users.service';
+import { AttachmentUploadService, PqrsUploadError } from '../../../services/attachment-upload.service';
+import { parsePresignUploadData } from '../../../utils/s3-url.util';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import {
   ApplicantAttachments,
@@ -128,6 +130,7 @@ export class RequestPendingComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
+    private attachmentUploadService: AttachmentUploadService,
     private messageService: MessageService,
     private router: Router,
     private http: HttpClient,
@@ -485,7 +488,7 @@ export class RequestPendingComponent implements OnInit {
           const response = await firstValueFrom(this.userService.getUrlSigned(payload, 'pending_ext'));
 
           if (response.code === 200 && response.data) {
-            return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+            return parsePresignUploadData(response.data).presigned_url;
           } else {
               console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
           }
@@ -853,26 +856,15 @@ async attachApplicantFiles(request_id: number) {
     // Paso 2: Subir archivos por ambos métodos (URL prefirmada y SDK vía Lambda)
     for (const item of this.arrayApplicantAttachment) {
         try {
-            // Obtener URL prefirmada
-            const preSignedUrl = await this.retry(
-                () => this.getPreSignedUrl(item, request_id),
-                1, // Intentos
-                2000 // Retraso entre intentos
+            await this.attachmentUploadService.uploadPqrsFile(
+              item,
+              request_id,
+              'pending_ext',
+              {
+                onUploadError: (f, id, err) =>
+                  this.attachmentUploadService.logUploadError(f, id, err),
+              }
             );
-
-            if (!preSignedUrl) {
-                console.error(`No se pudo obtener la URL prefirmada para: ${item.source_name}`);
-                continue;
-            }
-
-            // Asignar la URL al archivo
-            item.preSignedUrl = preSignedUrl;
-
-            // Subir en paralelo a S3 (preSignedUrl) y al backend (Lambda con SDK)
-            await Promise.all([
-                this.retry(() => this.uploadToPresignedUrl(item, request_id), 3, 3000),
-                this.retry(() => this.uploadViaLambda(item, request_id), 3, 3000)
-            ]);
 
             uploadedFiles++;
             this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
@@ -880,6 +872,28 @@ async attachApplicantFiles(request_id: number) {
 
         } catch (error) {
             console.error(`Error al procesar el archivo ${item.source_name}:`, error);
+            try {
+              const presign =
+                error instanceof PqrsUploadError && error.phase === 'upload'
+                  ? error.presign
+                  : undefined;
+              await this.retry(
+                () =>
+                  this.attachmentUploadService.uploadPqrsFileViaSdk(
+                    item,
+                    request_id,
+                    'pending_ext',
+                    presign
+                  ),
+                3,
+                3000
+              );
+              uploadedFiles++;
+              this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+              this.changeDetectorRef.detectChanges();
+            } catch (sdkError) {
+              console.error(`Respaldo SDK falló para ${item.source_name}:`, sdkError);
+            }
         }
       }
 
@@ -900,25 +914,6 @@ async attachApplicantFiles(request_id: number) {
           this.hasPendingChanges = false;
           this.uploadProgress = 0;
       }, 500);
-  }
-}
-
-async uploadViaLambda(file: any, request_id: number) {
-  try {
-      const payload = {
-          file: file.base64file, // Archivo en Base64
-          filename: file.source_name,
-          source_name: file.source_name,
-          request_id: request_id
-      };
-
-      // Llamado a la API de la Lambda a través de userService
-      const response = await this.userService.uploadPostSdk(payload).toPromise();
-      console.log('Subida a S3 vía SDK exitosa:', response);
-
-  } catch (error) {
-      console.error('Error subiendo archivo vía Lambda:', error);
-      throw error;
   }
 }
 

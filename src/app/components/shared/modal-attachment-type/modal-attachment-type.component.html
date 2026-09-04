@@ -1,0 +1,114 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="my-4 px-5 text-center">{{ message }}</div>
+      <form [formGroup]="formGroup">
+        <div class="my-4 px-5">
+            <input type="hidden" formControlName="id" />
+            
+            <label> *Nombre documento</label>
+            <input
+              [readonly]="read_only"
+              formControlName="nombre_documento"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba el nombre del documento" />
+            <label class="invalid">
+              {{
+                formGroup.get('nombre_documento')?.hasError('required') &&
+                formGroup.get('nombre_documento')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('nombre_documento')?.hasError('pattern') &&
+                formGroup.get('nombre_documento')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+
+            <label> *Formatos</label>
+            <input
+              [readonly]="read_only"
+              formControlName="formatos_permitidos"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba los formatos" />
+            <label class="invalid">
+              {{
+                formGroup.get('formatos_permitidos')?.hasError('required') &&
+                formGroup.get('formatos_permitidos')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              
+              {{
+                formGroup.get('formatos_permitidos')?.hasError('formatosInvalidos') &&
+                formGroup.get('formatos_permitidos')?.touched
+                    ? 'Formato inválido. Ej: jpg,png,jpeg,pdf'
+                    : ''
+              }}
+              {{
+                formGroup.get('formatos_permitidos')?.hasError('formatosNoPermitidos') &&
+                formGroup.get('formatos_permitidos')?.touched
+                    ? ('No permitidos: ' + (formGroup.get('formatos_permitidos')?.getError('formatosNoPermitidos') || []).join(', '))
+                    : ''
+              }}
+              {{
+                formGroup.get('formatos_permitidos')?.hasError('pattern') &&
+                formGroup.get('formatos_permitidos')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+
+            <label> *Requerido</label>
+            <div class="radio-group">
+              <div class="p-field-radiobutton">
+                <p-radioButton
+                  inputId="reqSi"
+                  name="es_requerido"
+                  value="S"
+                  formControlName="es_requerido">
+                </p-radioButton>
+              <label for="reqSi">Sí</label>
+              </div>
+
+              <div class="p-field-radiobutton">
+                <p-radioButton
+                  inputId="reqNo"
+                  name="es_requerido"
+                  value="N"
+                  formControlName="es_requerido">
+                </p-radioButton>
+              <label for="reqNo">No</label>
+              </div>
+            </div>
+
+        </div>
+      </form>
+      <div *ngIf="read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+      </div>
+      <div *ngIf="!read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button
+          [label]="buttonmsg"
+          [disabled]="formGroup.invalid"
+          (click)="closeDialog(true)"></p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+
+

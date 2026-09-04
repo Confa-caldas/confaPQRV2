@@ -9,6 +9,8 @@ import {
   ValidationErrors,
 } from '@angular/forms';
 import { Users } from '../../../services/users.service';
+import { AttachmentUploadService } from '../../../services/attachment-upload.service';
+import { parsePresignUploadData } from '../../../utils/s3-url.util';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import {
   ApplicantAttachments,
@@ -1387,6 +1389,7 @@ export class FormCompanyComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private userService: Users,
+    private attachmentUploadService: AttachmentUploadService,
     private messageService: MessageService,
     private router: Router,
     private http: HttpClient,
@@ -1789,7 +1792,7 @@ export class FormCompanyComponent implements OnInit {
         );
 
         if (response.code === 200 && response.data) {
-          return response.data; // Retornar la URL sin asignarla a this.preSignedUrl
+          return parsePresignUploadData(response.data).presigned_url;
         } else {
           console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
         }
@@ -2725,31 +2728,24 @@ Tipo de Solicitud: Afiliación empresa`,
 
       for (const item of allAttachments) {
         try {
-          // Obtener URL prefirmada con reintentos
-          const preSignedUrl = await this.retry(
-            () => this.getPreSignedUrl(item, request_id, item.type),
-            1, // Intentos
-            2000 // Retraso entre intentos
+          await this.attachmentUploadService.uploadCompanyDocument(
+            item,
+            request_id,
+            item.type,
+            {
+              onUploadError: (f, id, err) =>
+                this.handleUploadFailure(f, id, {
+                  status: err.status,
+                  statusText: err.statusText,
+                  message: err.message,
+                  url: err.url,
+                }),
+            }
           );
-
-          if (!preSignedUrl) {
-            console.error(`No se pudo obtener la URL prefirmada para: ${item.source_name}`);
-            continue;
-          }
-
-          item.preSignedUrl = preSignedUrl;
-
-          await this.retry(() => this.uploadToPresignedUrl(item, request_id), 3, 3000);
 
           uploadedFiles++;
           this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
           this.changeDetectorRef.detectChanges();
-
-          if (item.type === 'legal_representative_document') {
-            console.log('Archivo de representante legal subido correctamente.');
-          } else if (item.type === 'economic_activity_rut') {
-            console.log('Archivo de actividad económica subido correctamente.');
-          }
         } catch (error) {
           console.error(`Error al procesar el archivo ${item.source_name} (${item.type}):`, error);
         }

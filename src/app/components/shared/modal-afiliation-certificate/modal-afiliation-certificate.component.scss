@@ -1,0 +1,48 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+.modal-content {
+  background-color: $color-white;
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding-bottom: 10px;
+}
+
+.error-label {
+  color: $color-red;
+}
+
+.invalid {
+  color: $color-red;
+  font-size: small;
+}
+.custom-input {
+  font-size: inherit;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  color: #66798d;
+  /* Agrega cualquier otro estilo necesario */
+}
+
+.form-container {
+  /* Sin max-height/overflow: evita doble barra con .p-dialog-content */
+  max-width: 100%;
+}
+
+label {
+  font-weight: 500;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+textarea,
+input,
+.p-dropdown {
+  width: 100%;
+}
+
+.invalid {
+  font-size: 12px;
+  color: #c62828;
+  margin-top: 2px;
+}

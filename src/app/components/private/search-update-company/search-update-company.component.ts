@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
+import { parsePresignUploadData } from '../../../utils/s3-url.util';
 import {
   ApplicantTypeList,
   FilterRequests,
@@ -395,9 +396,9 @@ export class SearchUpdateCompanyComponent implements OnInit {
     const payload = { url: url };
 
     this.userService.getUrlSigned(payload, 'download').subscribe({
-      next: (response: BodyResponse<string>): void => {
+      next: (response): void => {
         if (response.code === 200) {
-          this.preSignedUrlDownload = response.data;
+          this.preSignedUrlDownload = parsePresignUploadData(response.data).presigned_url;
 
           if (this.preSignedUrlDownload) {
             this.viewerType = this.getViewerType(file_name);
@@ -565,9 +566,10 @@ export class SearchUpdateCompanyComponent implements OnInit {
         console.log('Nombre archivo: ' + attachment.fileName);
 
         this.userService.getUrlSigned(payload, 'download').subscribe({
-          next: (response: BodyResponse<string>): void => {
-            if (response.code === 200 && response.data) {
-              this.downloadFileS3(response.data, attachment.fileName)
+          next: (response): void => {
+            const presignedUrl = response.code === 200 ? parsePresignUploadData(response.data).presigned_url : '';
+            if (response.code === 200 && presignedUrl) {
+              this.downloadFileS3(presignedUrl, attachment.fileName)
                 .then(() => resolve())
                 .catch(err => reject(err));
             } else {

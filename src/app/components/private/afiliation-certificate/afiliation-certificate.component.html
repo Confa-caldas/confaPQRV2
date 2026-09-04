@@ -1,0 +1,106 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Parametrizar textos, imagenes certificado de afiliación</div>
+  </div>
+  <div class="col-2">
+    <p-button label="Crear nueva" (click)="createGender()"></p-button>
+  </div>
+</div>
+<div class="row mt-auto">
+  <div class="col-12">
+    <p-table
+      [value]="afiCertificateList"
+      [scrollable]="true"
+      scrollHeight="600px"
+      selectionMode="single"
+      [paginator]="false"
+      [rows]="20"
+      [showCurrentPageReport]="true"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      currentPageReportTemplate="{first} de {totalRecords}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id" style="width: 3%">
+            Código<p-sortIcon field="id"></p-sortIcon>
+          </th>
+          <th style="width: 20%">Tipo certificado</th>
+          <th style="width: 20%">Encabezado</th>
+          <th style="width: 20%">Tipo solicitante</th>
+          <th style="width: 20%">Nombre responsable firma</th>
+          <th style="width: 20%">Cargo responsable firma</th>
+          <th style="width: 10%">Estado</th>
+          <th style="width: 3%"></th>
+          <th style="width: 3%"></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-afiCertificateList>
+        <tr>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiCertificateList.id }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiCertificateList.tipo_certificado }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiCertificateList.encabezado }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiCertificateList.tipo_solicitante }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiCertificateList.nombre_responsable_firma }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ afiCertificateList.cargo_responsable_firma }}</td>
+
+          <td [ngStyle]="{ 'text-align': 'center' }">
+            <div class="d-flex flex-column align-items-center gap-1">
+              <p-inputSwitch
+                [(ngModel)]="afiCertificateList.esta_activo"
+                (onChange)="inActiveGender(afiCertificateList)">
+              </p-inputSwitch>
+              <div [ngClass]="{ 'input-switch-label': afiCertificateList.esta_activo }">
+                {{ afiCertificateList.esta_activo ? 'Activo' : 'Inactivo' }}
+              </div>
+            </div>
+          </td>
+
+          <td [ngStyle]="{ 'text-align': 'center' }">
+            <p-button
+              icon="pi pi-pencil"
+              [styleClass]="'btn-icon-warning'"
+              (click)="editGender(afiCertificateList)"></p-button>
+          </td>
+          <td [ngStyle]="{ 'text-align': 'center' }">
+            <p-button
+              icon="pi pi-eye"
+              [styleClass]="'btn-icon-info'"
+              (click)="displayGender(afiCertificateList)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <p-paginator
+      (onPageChange)="onPageChange($event)"
+      [first]="first"
+      [rows]="rows"
+      [totalRecords]="totalRows"
+      [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+  </div>
+</div>
+<p-toast></p-toast>
+<app-modal-dinamic
+  *ngIf="visibleDialog"
+  [select]="true"
+  [visible]="visibleDialog"
+  [message]="message"
+  (setRta)="closeDialog($event)"></app-modal-dinamic>
+
+  <app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>
+
+  <app-modal-afiliation-certificate
+  *ngIf="visibleDialogCategory"
+  [visible]="visibleDialogCategory"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [read_only]="read_only"
+  [afiCertificateForm]="afiCertificateList_details"
+  (setRta)="closeDialogGender($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-afiliation-certificate>
+  

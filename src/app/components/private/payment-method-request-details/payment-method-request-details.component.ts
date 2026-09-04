@@ -5,6 +5,8 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { BodyResponse } from '../../../models/shared/body-response.inteface';
 import { Users } from '../../../services/users.service';
+import { AttachmentUploadService } from '../../../services/attachment-upload.service';
+import { parsePresignUploadData } from '../../../utils/s3-url.util';
 import {
   PaymentMethodRequestDetails,
   RequestPaymentMethodStatusList,
@@ -85,6 +87,7 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
 
   constructor(
     private userService: Users,
+    private attachmentUploadService: AttachmentUploadService,
     private route: ActivatedRoute,
     private messageService: MessageService,
     private fb: FormBuilder,
@@ -703,7 +706,7 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
         );
 
         if (response.code === 200 && response.data) {
-          return response.data;
+          return parsePresignUploadData(response.data).presigned_url;
         } else {
           console.error(`Intento ${attempts + 1}: Error al obtener URL prefirmada`, response);
         }
@@ -852,27 +855,25 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
         await this.envioArchivosServer(ruta_archivo_ws, estructura);
         console.log('Archivo registrado en base de datos correctamente');
       } catch (error) {
-        console.error('Error al enviar archivo al servidor:', error);
-        throw error;
+        console.error(
+          'Error al enviar archivo al servidor legacy (se continúa con la subida a S3):',
+          error
+        );
       }
 
-      // Paso 2: Obtener URL prefirmada
-      const preSignedUrl = await this.retry(
-        () => this.getPreSignedUrlPayment(fileAttachment, request_id),
-        1,
-        2000
+      // Paso 2 y 3: presign, subir a S3 y confirmar en BD
+      await this.attachmentUploadService.uploadPaymentMethodDocument(
+        fileAttachment,
+        request_id,
+        {
+          onProgress: event => {
+            if (event.phase === 'upload' && event.percent != null) {
+              this.uploadProgress = Math.round(50 + event.percent / 2);
+              this.changeDetectorRef.detectChanges();
+            }
+          },
+        }
       );
-
-      console.log('URL prefirmada obtenida:', preSignedUrl);
-
-      if (!preSignedUrl) {
-        throw new Error('No se pudo obtener la URL prefirmada');
-      }
-
-      fileAttachment.preSignedUrl = preSignedUrl;
-
-      // Paso 3: Subir archivo a S3 con preSigned URL
-      await this.retry(() => this.uploadToPresignedUrlPayment(fileAttachment, request_id), 3, 3000);
 
       this.uploadProgress = 100;
       this.changeDetectorRef.detectChanges();
@@ -980,9 +981,9 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     const payload = { url: url };
 
     this.userService.getUrlSignedPaymentMethodRequest(payload, 'download').subscribe({
-      next: (response: BodyResponse<string>): void => {
+      next: (response): void => {
         if (response.code === 200) {
-          this.preSignedUrlDownload = response.data;
+          this.preSignedUrlDownload = parsePresignUploadData(response.data).presigned_url;
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }

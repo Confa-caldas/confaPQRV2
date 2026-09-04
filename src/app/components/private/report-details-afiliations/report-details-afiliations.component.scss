@@ -1,0 +1,171 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+.report-afiliations-page {
+  padding: 0 1rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.title-row {
+  margin-bottom: 0.5rem;
+}
+
+.title-page {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color, #333);
+  margin: 0;
+}
+
+.page-description {
+  margin-bottom: 1.5rem;
+  color: var(--text-color-secondary, #666);
+  font-size: 0.95rem;
+}
+
+.report-filters-form {
+  margin-bottom: 1.5rem;
+}
+
+.filters-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filters-col {
+  display: flex;
+}
+
+.filters-colButtons {
+  display: flex;
+  align-items: center;
+}
+
+:host ::ng-deep {
+  .p-accordion .p-accordion-header .p-accordion-header-link {
+    background-color: #1ba2de;
+    color: #fff;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .p-accordion .p-accordion-content {
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--surface-border, #dee2e6);
+    border-top: none;
+  }
+}
+
+.accordion-header-title {
+  font-weight: 600;
+}
+
+.accordion-description {
+  margin-bottom: 1rem;
+  color: var(--text-color-secondary, #666);
+  font-size: 0.9rem;
+}
+
+.report-section {
+  padding: 1rem 0;
+  min-height: 80px;
+}
+
+.loading-text,
+.empty-text {
+  color: var(--text-color-secondary, #666);
+  font-style: italic;
+  margin: 0;
+}
+
+.sub-report {
+  margin-bottom: 1.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.sub-report-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color, #333);
+}
+
+.sub-report-desc {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary, #666);
+  margin: 0 0 0.75rem 0;
+}
+
+/* Contenedor de tablas: borde, sombra y espaciado para mejor lectura */
+.report-table-wrapper {
+  border: 1px solid var(--surface-border, #dee2e6);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  background: var(--surface-card, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Estilos de tablas para legibilidad */
+:host ::ng-deep .report-table {
+  .p-datatable-header {
+    background: var(--surface-100, #f8f9fa);
+    border-bottom: 2px solid var(--surface-border, #dee2e6);
+  }
+
+  .p-datatable-thead > tr > th {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-color, #333);
+    background: var(--surface-100, #f8f9fa);
+    border: 1px solid var(--surface-border, #dee2e6);
+    white-space: nowrap;
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-color, #333);
+    border: 1px solid var(--surface-border, #dee2e6);
+    vertical-align: middle;
+  }
+
+  .p-datatable-tbody > tr:nth-child(even) {
+    background: var(--surface-50, #fafafa);
+  }
+
+  .p-datatable-tbody > tr:hover {
+    background: var(--surface-100, #f0f4f8);
+  }
+
+  .p-paginator {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--surface-border, #dee2e6);
+    background: var(--surface-50, #fafafa);
+  }
+}
+
+tr {
+  position: relative;
+}
+
+td {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media screen and (max-width: 768px) {
+  .report-afiliations-page {
+    padding: 0 0.5rem 1rem;
+  }
+
+  .title-page {
+    font-size: 1.25rem;
+  }
+}

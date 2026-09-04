@@ -1,0 +1,99 @@
+.filter-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  align-items: flex-end;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.filter-item--estado {
+  min-width: 220px;
+}
+
+.filter-item--tipo {
+  width: 160px;
+}
+
+.filter-item--numero {
+  flex: 1;
+  min-width: 220px;
+}
+
+.filter-label {
+  display: block;
+  font-size: 0.85rem;
+  margin: 0;
+  color: #4b5563;
+}
+
+.estado-gestion-opciones {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  min-height: 42px;
+  padding-top: 0.15rem;
+}
+
+.estado-gestion-opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  min-width: 88px;
+}
+
+.estado-gestion-opcion-label {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.15;
+  color: #374151;
+  cursor: pointer;
+}
+
+:host ::ng-deep .estado-gestion-opcion .p-radiobutton {
+  justify-content: center;
+}
+
+:host ::ng-deep .filter-control,
+:host ::ng-deep .filter-control .p-inputtext {
+  height: 42px !important;
+  width: 100%;
+}
+
+:host ::ng-deep .filter-btn .p-button {
+  height: 42px !important;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+@media (max-width: 1200px) {
+  .filter-bar {
+    flex-wrap: wrap;
+  }
+
+  .filter-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+.fecha-gestion-cell {
+  white-space: nowrap;
+}

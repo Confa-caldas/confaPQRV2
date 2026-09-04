@@ -1,0 +1,250 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+/* Contenedor del diálogo sin padding para que la barra vaya a borde */
+:host ::ng-deep .p-dialog .p-dialog-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+.modal-content {
+  background-color: $color-white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Margen interno: todo el contenido (título, filtros, datos, botones) separado del borde */
+.modal-body {
+  padding: 1.5rem 2rem 2rem 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Barra de colores a ancho completo */
+.login-form-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  &__item {
+    width: 17%;
+    height: 20px;
+    &_1 { background-color: $color-blue; }
+    &_2 { background-color: $color-green; }
+    &_3 { background-color: $color-yellow; }
+    &_4 { background-color: $color-orange; }
+    &_5 { background-color: $color-rosado; }
+    &_6 { background-color: $color-red; }
+  }
+}
+
+.modal-title-row {
+  text-align: center;
+  margin: 1.5rem 0 1.25rem;
+}
+
+.modal-title {
+  font-size: 1rem;
+  color: $color-text-black;
+  font-family: $font-light;
+}
+
+.modal-search-person {
+  padding: 0;
+  width: 100%;
+}
+
+.search-section {
+  width: 100%;
+}
+
+/* Filtros: mismo criterio que search-updates-data */
+.filters-grid {
+  display: grid;
+  gap: 1rem 1.25rem;
+  width: 100%;
+  align-items: center;
+  grid-template-columns: 1fr 1fr auto;
+}
+
+.filters-cell {
+  min-width: 0;
+
+  .filters-input,
+  ::ng-deep .p-dropdown {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  &.filters-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.filters-input {
+  height: 28px;
+  padding-left: 8px;
+  border-radius: 5px;
+}
+
+::ng-deep .filters-dropdown.p-dropdown,
+.filters-cell ::ng-deep .p-dropdown {
+  width: 100%;
+  height: 28px;
+  .p-dropdown-label,
+  .p-dropdown-trigger {
+    height: 28px;
+  }
+  .p-inputtext {
+    padding: 0 8px;
+    border-radius: 5px;
+  }
+}
+
+/* Sección datos: dos columnas (BD solo lectura | edición) */
+.data-section {
+  border-top: 1px solid #dee2e6;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.data-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: $color-text-black;
+  font-family: $font-light;
+  margin: 0 0 1rem 0;
+}
+
+.data-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.5rem;
+  align-items: start;
+  width: 100%;
+}
+
+.data-column {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.data-column--readonly {
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+}
+
+.data-column-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #495057;
+  font-family: $font-light;
+}
+
+.data-readonly-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.data-readonly-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.data-readonly-row .data-label {
+  margin-bottom: 0;
+  color: #6c757d;
+  font-size: 11px;
+}
+
+.data-value {
+  font-size: 13px;
+  color: $color-text-black;
+  font-family: $font-light;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.data-form-row {
+  margin-bottom: 0.75rem;
+  width: 100%;
+}
+
+.data-form-row:last-child {
+  margin-bottom: 0;
+}
+
+.data-label {
+  display: block;
+  color: $color-text-black;
+  font-family: $font-light;
+  font-size: 12px;
+  margin-bottom: 0.25rem;
+}
+
+.data-input {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.data-form {
+  width: 100%;
+}
+
+.modal-footer-actions {
+  width: 100%;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.footer-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .data-columns {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .data-column--readonly {
+    order: 0;
+  }
+
+  .data-column--edit {
+    order: 1;
+  }
+}
+
+@media (max-width: 576px) {
+  :host ::ng-deep .p-dialog {
+    width: 92vw !important;
+    max-width: 92vw;
+  }
+  .filters-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .filters-actions {
+    justify-content: flex-start;
+  }
+}

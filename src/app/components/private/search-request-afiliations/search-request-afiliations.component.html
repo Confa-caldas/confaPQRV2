@@ -1,0 +1,227 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Consultar solicitudes de Afiliación</div>
+  </div>
+</div>
+<form [formGroup]="formGroup" (keydown.enter)="initPaginador()"
+(keydown.escape)="cleanForm()">
+  <div class="position-relative">
+    <div class="card flex justify-content-center absolute-center">
+      <div class="filters-grid">
+        <div class="filters-cell">
+          <input
+            pInputText
+            class="filters-input"
+            pKeyFilter="int"
+            placeholder="Número de radicado"
+            formControlName="filing_number" />
+        </div>
+        <div class="filters-cell">
+          <p-calendar
+            formControlName="dates_range"
+            selectionMode="range"
+            [readonlyInput]="true"
+            [style]="{ 'align-items': 'center', 'border-radius': '5px' }"
+            [iconDisplay]="'input'"
+            [showIcon]="true"
+            placeholder="Rango de fechas"
+            class="calendar"></p-calendar>
+        </div>
+        <div class="filters-cell">
+          <input
+            pInputText
+            pKeyFilter="text"
+            class="filters-input"
+            placeholder="Documento trabajador"
+            formControlName="doc_id_tr" />
+        </div>
+        <div class="filters-cell">
+          <input
+            pInputText
+            pKeyFilter="text"
+            class="filters-input"
+            placeholder="Documento Beneficiario"
+            formControlName="doc_id_bn" />
+        </div>
+        <div class="filters-cell">
+          <input
+            pInputText
+            pKeyFilter="text"
+            class="filters-input"
+            placeholder="Nombre empresa"
+            formControlName="applicant_name_emp" />
+        </div>
+        <div class="filters-cell">
+          <p-multiSelect
+            formControlName="request_status_id"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="statusList"
+            optionLabel="codigo"
+            optionValue="id"
+            placeholder="Tipo de estado"></p-multiSelect>
+        </div>
+        <div class="filters-cell">
+          <p-multiSelect
+            formControlName="assigned_user"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="userList"
+            optionLabel="user_name_completed"
+            optionValue="user_name"
+            placeholder="Responsable solicitud"></p-multiSelect>
+        </div>
+        <div class="filters-cell">
+          <p-multiSelect
+            formControlName="indicador_gestion"
+            [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+            [options]="indicadorGestionOpciones"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Tipo novedad"
+            [filter]="true"
+            filterPlaceHolder="Buscar tipo"
+            [showToggleAll]="true"
+            [maxSelectedLabels]="2"
+            selectedItemsLabel="{0} tipos"></p-multiSelect>
+        </div>
+        <div class="filters-cell filters-actions">
+          <p-button
+            icon="pi pi-trash"
+            [styleClass]="'btn-icon-info'"
+            (click)="cleanForm()"></p-button>
+          <p-button
+            icon="pi pi-search"
+            [styleClass]="'btn-icon-info'"
+            (click)="initPaginador()"></p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<!--
+<button
+  *ngIf="selectedRequests.length > 0"
+  pButton
+  type="button"
+  label="Asignar seleccionadas"
+  icon="pi pi-users"
+  class="p-button-success"
+  (click)="assignSelectedRequests(selectedRequests)"
+  [disabled]="!selectedRequests || selectedRequests.length === 0">
+</button>
+-->
+
+<div class="mt-auto">
+  <p-table
+    #dt
+    [value]="requestList"
+    dataKey="request_id"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    [loading]="loading"
+    [paginator]="false"
+    currentPageReportTemplate="{first} de {totalRecords}"
+    [tableStyle]="{ 'min-width': '60rem' }"
+    [scrollable]="true"
+    scrollHeight="500px"
+    [virtualScroll]="false"
+    [virtualScrollItemSize]="80"
+    [(selection)]="selectedRequests"
+    [exportHeader]="'customExportHeader'">
+    <ng-template pTemplate="header">
+      <tr [style]="{ height: '50px' }">
+        <th style="width: 5%"></th>
+        <th pSortableColumn="filing_number" style="min-width: 7rem">
+          Radicado<p-sortIcon field="filing_number"></p-sortIcon>
+        </th>
+        <th pSortableColumn="filing_date" style="min-width: 8rem">
+          Fecha<p-sortIcon field="filing_date"></p-sortIcon>
+        </th>
+        <th pSortableColumn="doc_id" style="min-width: 10rem">
+          Documento trabajador<p-sortIcon style="margin: 0 5px" field="doc_id_tr"></p-sortIcon>
+        </th>
+        <th pSortableColumn="applicant_name" style="min-width: 15rem">
+          Nombre Trabajador<p-sortIcon field="applicant_name_tr"></p-sortIcon>
+        </th>
+        <th pSortableColumn="doc_bene_id" style="min-width: 10rem">
+          Documentos beneficiarios<p-sortIcon style="margin: 0 5px" field="doc_id_bn"></p-sortIcon>
+        </th>
+        <th pSortableColumn="applicant_name_bene" style="min-width: 15rem">
+          Nombres Beneficiarios<p-sortIcon field="applicant_name_bene"></p-sortIcon>
+        </th>
+        <th pSortableColumn="empresa_name" style="min-width: 15rem">
+          Nombre Empresa<p-sortIcon field="empresa_name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="status_name" style="min-width: 11rem">
+          Estado<p-sortIcon field="status_name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="assigned_user" style="min-width: 15rem">
+          Responsable<p-sortIcon field="assigned_user"></p-sortIcon>
+        </th>
+        <th style="min-width: 14rem">Novedad</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-requestList>
+      <tr >
+        <td>
+          <p-button
+            icon="pi pi-eye"
+            [styleClass]="'btn-icon-info'"
+            (click)="redirectDetails(requestList.request_id)"></p-button>
+        </td>
+        <td style="text-align: center">{{ requestList.filing_number }}</td>
+        <td style="text-align: center">{{ requestList.filing_date | date }}</td>
+        <td style="text-align: center">{{ requestList.doc_trabajador }}</td>
+        <td style="text-align: center">{{ requestList.name_trabajador }}</td>
+        <td style="text-align: center">{{ requestList.documents_beneficiarios }}</td>
+        <td style="text-align: center">{{ requestList.names_beneficiarios }}</td>
+        <td style="text-align: center">{{ requestList.name_empresa }}</td>
+        <td style="text-align: center">{{ requestList.cod_estatus }}</td>
+        <td style="text-align: center">{{ requestList.assigned_user }}</td>
+        <td style="text-align: center; font-size: 0.85rem">
+          {{ columnaIndicadoresGestion(requestList) }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+  <!-- <p-paginator
+    (onPageChange)="onPageChange($event)"
+    [first]="first"
+    [rows]="rows"
+    [totalRecords]="totalRows"
+    [rowsPerPageOptions]="[10, 20, 30]"></p-paginator> -->
+  <p-paginator
+    (onPageChange)="onPageChange($event)"
+    [first]="first"
+    [rows]="rows"
+    [totalRecords]="totalRows"
+    [rowsPerPageOptions]="[10, 20, 30]">
+  </p-paginator>
+</div>
+
+<p-toast></p-toast>
+<app-modal-dinamic
+  *ngIf="visibleDialog"
+  [select]="true"
+  [visible]="visibleDialog"
+  [message]="message"
+  (setRta)="closeDialog($event)"></app-modal-dinamic>
+
+<app-modal-assign-selector
+  *ngIf="visibleDialogInput"
+  [visible]="visibleDialogInput"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [parameter]="parameter"
+  (setRta)="closeDialogInput($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-assign-selector>
+
+<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [message2]="message2"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>

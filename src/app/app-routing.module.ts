@@ -210,6 +210,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.PROCESS_REQUEST_AFILIATION,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/process-request-afiliation/process-request-afiliation.module').then(
+        m => m.ProcessRequestAfiliationModule
+      ),
+  },
+  {
     path: RoutesApp.CREATE_REQUEST,
     //canActivate: [sessionGuard],
     component: LayoutRequestComponent,
@@ -287,6 +296,247 @@ const routes: Routes = [
     loadChildren: () =>
       import('./components/private/intern-search-request/intern-search-request.module').then(
         m => m.InternSearchRequestModule
+      ),
+  },
+  {
+    path: RoutesApp.SEARCH_REQUEST_AFILIATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-request-afiliations/search-request-afiliations.module').then(
+        m => m.SearchRequestAfiliationsModule
+      ),
+  },
+  {
+    path: RoutesApp.SEARCH_REQUEST_AFI_MASSIVE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-request-afi-massive/search-request-afi-massive.module').then(
+        m => m.SearchRequestAfiMassiveModule
+      ),
+  },
+  {
+    path: RoutesApp.SEARCH_REQUEST_AFI_PENDING,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-request-afi-pending/search-request-afi-pending.module').then(
+        m => m.SearchRequestAfiPendingModule
+      ),
+  },
+  {
+    path: RoutesApp.SEARCH_RPA_AFI_INCONSISTENCY,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-rpa-afi-inconsistency/search-rpa-afi-inconsistency.module').then(
+        m => m.SearchRpaAfiInconsistencyModule
+      ),
+  },
+  {
+    path: RoutesApp.PADRES_RPA_NO_PROCESADO,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/padres-rpa-no-procesado/padres-rpa-no-procesado.module').then(
+        m => m.PadresRpaNoProcesadoModule
+      ),
+  },
+  {
+    path: RoutesApp.SEARCH_UPDATES_DATA,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/search-updates-data/search-updates-data.module').then(
+        m => m.SearchUpdatesDataModule
+      ),
+  },
+  {
+    path: RoutesApp.CREATE_AFFILIATION_INTERNAL,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/create-afiliation-internal/create-afiliation-internal.module').then(
+        m => m.CreateAfiliationInternalModule
+      ),
+  },
+  {
+    path: RoutesApp.REQUEST_DETAILS_AFILIATION + '/:id',
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/request-details-afiliation/request-details-afiliation.module').then(
+        m => m.RequestDetailsAfiliationModule
+      ),
+  },
+  {
+    path: RoutesApp.UPDATES_DATA_DETAILS + '/:id',
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/updates-data-details/updates-data-details.module').then(
+        m => m.UpdatesDataDetailsModule
+      ),
+  },
+  {
+    path: RoutesApp.REPORT_DETAILS_AFILIATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/report-details-afiliations/report-details-afiliations.module').then(
+        m => m.ReportDetailsAfiliationsModule
+      ),
+  },
+  {
+    path: RoutesApp.GENDER,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/gender/gender.module').then(m => m.GenderModule),
+  },
+  {
+    path: RoutesApp.MARITAL_STATUS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/marital-status/marital-status.module').then(m => m.MaritalStatusModule),
+  },
+  {
+    path: RoutesApp.SYSTEM_VARIABLES,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/system-variables/system-variables.module').then(m => m.SystemVariablesModule),
+  },
+  {
+    path: RoutesApp.AFI_TEMPLATE_VALIDATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-template-validations/afiliation-template-validations.module').then(m => m.AfiliationTemplateValidationsModule),
+  },
+  {
+    path: RoutesApp.AFI_COMPANY_VALIDATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-company/afiliaton-company.module').then(m => m.AfiliationCompanyModule),
+  },
+  {
+    path: RoutesApp.AFI_COMPANY_ACTIVATION,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-company-activation/afiliation-company-activation.module').then(
+        m => m.AfiliationCompanyActivationModule
+      ),
+  },
+  {
+    path: RoutesApp.AFILIATION_DOCUMENT_TYPE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-document-type/afiliation-document-type.module').then(m => m.AfiliationDocumentTypeModule),
+  },
+  {
+    path: RoutesApp.AFILIATION_DOCUMENT_TYPE_PERSON,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-document-type-person/afiliation-document-type-person.module').then(m => m.AfiliationDocumentTypePersonModule),
+  },
+  {
+    path: RoutesApp.DEPARTMENT,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/department/department.module').then(m => m.DepartmentModule),
+  },
+  {
+    path: RoutesApp.MUNICIPALITY,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/municipality/municipality.module').then(m => m.MunicipalityModule),
+  },
+  {
+    path: RoutesApp.ATTACHMENT_TYPE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/attachment-type/attachment-type.module').then(m => m.AttachmentTypeModule),
+  },
+  {
+    path: RoutesApp.RELATIONSHIP,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/relationship/relationship.module').then(m => m.RelationshipModule),
+  },
+  {
+    path: RoutesApp.RESPONSIBLE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/responsible/responsible.module').then(m => m.ResponsibleModule),
+  },
+  {
+    path: RoutesApp.AFI_NOTIFICATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-notifications/afiliation-notifications.module').then(m => m.AfiliationNotificationsModule),
+  },
+  {
+    path: RoutesApp.AFI_CERTIFICATE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-certificate/afiliation-certificate.module').then(m => m.AfiliationCertificateModule),
+  },
+  {
+    path: RoutesApp.BANK,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/bank/bank.module').then(m => m.BankModule),
+  },
+  {
+    path: RoutesApp.AFILIATION_ACCOUNT_TYPE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-account-type/afiliation-account-type.module').then(m => m.AfiliationAccountTypeModule),
+  },
+  {
+    path: RoutesApp.BANK_ACCOUNT_ASSOCIATE,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/bank-account-association/bank-account-association.module').then(m => m.BankAccountAssociationModule),
+  },
+  {
+    path: RoutesApp.AFI_OCCUPATIONS,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-occupations/afiliation-occupations.module').then(m => m.AfiliationOccupationsModule),
+  },
+  {
+    path: RoutesApp.AFI_REJECTION,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-rejection/afiliation-rejection.module').then(m => m.AfiliationRejectionModule),
+  },
+  {
+    path: RoutesApp.AFI_MANUAL_MANAGEMENT,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/afiliation-manual-management/afiliation-manual-management.module').then(
+        m => m.AfiliationManualManagementModule
       ),
   },
   {

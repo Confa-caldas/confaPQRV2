@@ -1,0 +1,205 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+
+      <div class="my-4 px-5 text-center">{{ message }}</div>
+
+      <form [formGroup]="formGroup">
+        <div class="px-4 py-3">
+        <div class="row form-container">
+          <div class="col-12">
+            <input type="hidden" formControlName="id" />
+
+            <label>*Tipo certificado</label>
+            <p-dropdown
+              formControlName="tipo_certificado"
+              [options]="tipoCertificadoOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione una opción">
+            </p-dropdown>
+            <label class="invalid">
+              {{
+                formGroup.get('tipo_certificado')?.hasError('required') &&
+                formGroup.get('tipo_certificado')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+            </label>
+
+            <label class="mt-3">*Encabezado</label>
+            <textarea
+              [readonly]="read_only"
+              formControlName="encabezado"
+              rows="2"
+              pInputTextarea
+              placeholder="Escriba el encabezado">
+            </textarea>
+            <label class="invalid">
+              {{
+                formGroup.get('encabezado')?.hasError('required') &&
+                formGroup.get('encabezado')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+            </label>
+
+            <label class="mt-3">*Textos fijos</label>
+            <textarea
+              [readonly]="read_only"
+              formControlName="textos_fijos"
+              rows="3"
+              pInputTextarea
+              placeholder="Escriba los textos fijos">
+            </textarea>
+            <label class="invalid">
+              {{
+                formGroup.get('textos_fijos')?.hasError('required') &&
+                formGroup.get('textos_fijos')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+            </label>
+
+            <label class="mt-3">*Clausulas legales</label>
+            <textarea
+              [readonly]="read_only"
+              formControlName="clausulas_legales"
+              rows="3"
+              pInputTextarea
+              placeholder="Escriba las clausulas legales">
+            </textarea>
+            <label class="invalid">
+              {{
+                formGroup.get('clausulas_legales')?.hasError('required') &&
+                formGroup.get('clausulas_legales')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+            </label>
+
+            <label class="mt-3">*Tipo solicitante</label>
+            <p-dropdown
+              formControlName="tipo_solicitante"
+              [options]="tipoSolicitanteOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione una opción">
+            </p-dropdown>
+            <label class="invalid">
+              {{
+                formGroup.get('tipo_solicitante')?.hasError('required') &&
+                formGroup.get('tipo_solicitante')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+            </label>
+
+            <label class="mt-3">*Texto justificación</label>
+            <textarea
+              [readonly]="read_only"
+              formControlName="texto_justificacion"
+              rows="3"
+              pInputTextarea
+              placeholder="Escriba la justificación">
+            </textarea>
+            <label class="invalid">
+              {{
+                formGroup.get('texto_justificacion')?.hasError('required') &&
+                formGroup.get('texto_justificacion')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+            </label>
+
+            <!-- Fila responsable (sin row Bootstrap para evitar overflow horizontal) -->
+            <div class="d-flex flex-column flex-md-row gap-3 mt-3">
+              <div class="flex-fill min-w-0">
+                <label>*Nombre responsable firma</label>
+                <input
+                  [readonly]="read_only"
+                  formControlName="nombre_responsable_firma"
+                  pInputText
+                  placeholder="Nombre responsable"
+                  class="w-100" />
+                <label class="invalid">
+                  {{
+                    formGroup.get('nombre_responsable_firma')?.hasError('required') &&
+                    formGroup.get('nombre_responsable_firma')?.touched
+                      ? 'Campo requerido'
+                      : ''
+                  }}
+                </label>
+              </div>
+              <div class="flex-fill min-w-0">
+                <label>*Cargo responsable firma</label>
+                <input
+                  [readonly]="read_only"
+                  formControlName="cargo_responsable_firma"
+                  pInputText
+                  placeholder="Cargo responsable"
+                  class="w-100" />
+                <label class="invalid">
+                  {{
+                    formGroup.get('cargo_responsable_firma')?.hasError('required') &&
+                    formGroup.get('cargo_responsable_firma')?.touched
+                      ? 'Campo requerido'
+                      : ''
+                  }}
+                </label>
+              </div>
+            </div>
+
+
+            <label class="mt-3">*Adjuntar firma (JPG/PNG)</label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              [disabled]="read_only"
+              (change)="onFileSelected($event)" />
+
+            <small class="invalid" *ngIf="fileError">
+              {{ fileError }}
+            </small>
+
+            <small class="invalid" *ngIf="formGroup.get('firma_byte')?.touched && formGroup.get('firma_byte')?.hasError('required')">
+              Firma requerida
+            </small>
+
+            <small class="d-block mt-1" *ngIf="!fileError && formGroup.get('firma_byte')?.value">
+              ✅ Firma cargada (puedes reemplazarla seleccionando otro archivo)
+            </small>
+            
+            <!-- preview opcional -->
+            <div class="mt-2" *ngIf="firmaPreview">
+              <img [src]="firmaPreview" style="max-width: 180px; max-height: 120px; border-radius: 6px;" />
+            </div>
+
+          </div>
+        </div>
+        </div>
+      </form>
+
+      <div *ngIf="read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+      </div>
+
+      <div *ngIf="!read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button
+          [label]="buttonmsg"
+          [disabled]="formGroup.invalid || !!fileError"
+          (click)="closeDialog(true)"></p-button>
+      </div>
+
+    </div>
+  </ng-template>
+</p-dialog>

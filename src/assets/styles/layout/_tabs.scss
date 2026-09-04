@@ -132,6 +132,34 @@
     }
   }
 
+  &-5 {
+    font-weight: 600;
+    font-size: 13px;
+    color: $color-black;
+    border: 1.5px solid $color-light-gray;
+    border-radius: 5px;
+
+    &>.p-tabview-nav-link[aria-selected='true'] {
+      background-color: $color-ceil;
+      color: $color-black;
+      border: 0;
+    }
+  }
+
+  &-6 {
+    font-weight: 600;
+    font-size: 13px;
+    color: $color-black;
+    border: 1.5px solid $color-blue-subtitle;
+    border-radius: 5px;
+
+    &>.p-tabview-nav-link[aria-selected='true'] {
+      background-color: $color-blue-subtitle;
+      color: $color-white;
+      border: 0;
+    }
+  }
+
   &-sub {
     border: none;
     font-weight: 600;

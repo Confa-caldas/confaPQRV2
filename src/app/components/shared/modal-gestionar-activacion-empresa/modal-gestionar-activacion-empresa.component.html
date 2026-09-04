@@ -1,0 +1,75 @@
+<p-dialog
+  [(visible)]="dialogVisible"
+  (onHide)="onDialogHide()"
+  [style]="{ width: '45vw', 'max-width': '560px' }"
+  [modal]="true"
+  [closable]="true"
+  [closeOnEscape]="true"
+  [dismissableMask]="false">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+
+      <div class="modal-title">Gestionar activación de empresa</div>
+
+      <div class="empresa-resumen px-5" *ngIf="empresa">
+        <div class="empresa-resumen-doc">
+          <strong>{{ empresa.tipo_documento }} {{ empresa.numero_documento }}</strong>
+        </div>
+        <div>{{ empresa.razon_social }}</div>
+        <div>Solicitudes pendientes: {{ empresa.cantidad_solicitudes }}</div>
+      </div>
+
+      <form [formGroup]="formGroup" class="px-5">
+        <div class="modal-field">
+          <label class="modal-field-label" for="numeroRadicadoActivacionEmpresa">
+            *Número radicado (mínimo 15 caracteres)
+          </label>
+          <input
+            id="numeroRadicadoActivacionEmpresa"
+            formControlName="numero_radicado"
+            pInputText
+            class="w-100"
+            placeholder="Radicado Genesys" />
+          <span class="invalid">
+            {{
+              formGroup.get('numero_radicado')?.hasError('required') &&
+              formGroup.get('numero_radicado')?.touched
+                ? 'Campo requerido'
+                : ''
+            }}
+            {{
+              formGroup.get('numero_radicado')?.hasError('minlength') &&
+              formGroup.get('numero_radicado')?.touched
+                ? 'Mínimo 15 caracteres'
+                : ''
+            }}
+          </span>
+        </div>
+
+        <div class="modal-field">
+          <label class="modal-field-label" for="observacionesActivacionEmpresa">Observaciones</label>
+          <textarea
+            id="observacionesActivacionEmpresa"
+            formControlName="observaciones"
+            pInputTextarea
+            rows="3"
+            class="w-100"
+            placeholder="Opcional"></textarea>
+        </div>
+      </form>
+
+      <div class="modal-actions px-5">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button label="Guardar" [disabled]="formGroup.invalid" (click)="closeDialog(true)"></p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,188 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="my-4 px-5 text-center">{{ message }}</div>
+      <form [formGroup]="formGroup">
+        <div class="my-4 px-5">
+            <input type="hidden" formControlName="id" />
+            
+            <label> *Tipo documento </label>
+            <input
+              [readonly]="read_only"
+              formControlName="tipo_documento"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba el tipo de documento" />
+            <label class="invalid">
+              {{
+                formGroup.get('tipo_documento')?.hasError('required') &&
+                formGroup.get('tipo_documento')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('tipo_documento')?.hasError('pattern') &&
+                formGroup.get('tipo_documento')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+
+            <label> *Tipo documento Genesys</label>
+            <input
+              [readonly]="read_only"
+              formControlName="tipo_documento_genesys"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba el tipo documento genesys" />
+            <label class="invalid">
+              {{
+                formGroup.get('tipo_documento_genesys')?.hasError('required') &&
+                formGroup.get('tipo_documento_genesys')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('tipo_documento_genesys')?.hasError('pattern') &&
+                formGroup.get('tipo_documento_genesys')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+
+            <label> *Digitos mínimos</label>
+            <input
+              [readonly]="read_only"
+              formControlName="digitos_minimos"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba los digitos mínimos" />
+            <label class="invalid">
+              {{
+                formGroup.get('digitos_minimos')?.hasError('required') &&
+                formGroup.get('digitos_minimos')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('digitos_minimos')?.hasError('pattern') &&
+                formGroup.get('digitos_minimos')?.touched
+                  ? 'Solo ingrese numeros'
+                  : ''
+              }}</label
+            >
+
+            <label> *Digitos máximos</label>
+            <input
+              [readonly]="read_only"
+              formControlName="digitos_maximos"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba los digitos máximos" />
+            <label class="invalid">
+              {{
+                formGroup.get('digitos_maximos')?.hasError('required') &&
+                formGroup.get('digitos_maximos')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('digitos_maximos')?.hasError('pattern') &&
+                formGroup.get('digitos_maximos')?.touched
+                  ? 'Solo ingrese numeros'
+                  : ''
+              }}</label
+            >
+            
+            <label> *Permite letras</label>
+            <div class="radio-group">
+              <div class="p-field-radiobutton">
+                <p-radioButton
+                  inputId="reqSi"
+                  name="permite_letras"
+                  value="S"
+                  formControlName="permite_letras">
+                </p-radioButton>
+              <label for="reqSi">Sí</label>
+              </div>
+
+              <div class="p-field-radiobutton">
+                <p-radioButton
+                  inputId="reqNo"
+                  name="permite_letras"
+                  value="N"
+                  formControlName="permite_letras">
+                </p-radioButton>
+              <label for="reqNo">No</label>
+              </div>
+            </div>
+            
+             <label> *Cantidad letras</label>
+            <input
+              [readonly]="read_only"
+              formControlName="cantidad_letras"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba la cantidad de letras" />
+            <label class="invalid">
+              {{
+                formGroup.get('cantidad_letras')?.hasError('required') &&
+                formGroup.get('cantidad_letras')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('cantidad_letras')?.hasError('pattern') &&
+                formGroup.get('cantidad_letras')?.touched
+                  ? 'Solo ingrese numero'
+                  : ''
+              }}</label
+            >
+
+            <label> *Requiere adjunto</label>
+            <div class="radio-group">
+              <div class="p-field-radiobutton">
+                <p-radioButton
+                  inputId="reqSi"
+                  name="requiere_adjunto"
+                  value="S"
+                  formControlName="requiere_adjunto">
+                </p-radioButton>
+              <label for="reqSi">Sí</label>
+              </div>
+
+              <div class="p-field-radiobutton">
+                <p-radioButton
+                  inputId="reqNo"
+                  name="requiere_adjunto"
+                  value="N"
+                  formControlName="requiere_adjunto">
+                </p-radioButton>
+              <label for="reqNo">No</label>
+              </div>
+            </div>
+
+        </div>
+      </form>
+      <div *ngIf="read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+      </div>
+      <div *ngIf="!read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button
+          [label]="buttonmsg"
+          [disabled]="formGroup.invalid"
+          (click)="closeDialog(true)"></p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+

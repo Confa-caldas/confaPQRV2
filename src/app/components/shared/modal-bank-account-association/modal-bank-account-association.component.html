@@ -1,0 +1,176 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="my-4 px-5 text-center">{{ message }}</div>
+      <form [formGroup]="formGroup">
+        <div class="px-5">
+          <div class="row my-4 g-3">
+          <div class="col-6">
+            <label> *Longitud mínima </label>
+            <input
+              maxlength="2"
+              [readonly]="read_only"
+              formControlName="longitud_minima"
+              pInputText
+              pKeyFilter="integer"
+              placeholder="01" />
+            <label class="invalid">
+              {{
+                formGroup.get('longitud_minima')?.hasError('required') &&
+                formGroup.get('longitud_minima')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('longitud_minima')?.hasError('min') &&
+                formGroup.get('longitud_minima')?.touched
+                ? 'Debe ser mínimo 1'
+                : ''
+              }}
+              {{
+                formGroup.get('longitud_minima')?.hasError('max') &&
+                formGroup.get('longitud_minima')?.touched
+                ? 'Debe ser máximo 25'
+                : ''
+              }}
+              {{
+                formGroup.get('longitud_minima')?.hasError('pattern') &&
+                formGroup.get('longitud_minima')?.touched
+                  ? 'Solo ingrese numeros'
+                  : ''
+              }}</label
+            >
+          </div>
+          <div class="col-6">
+            <label> *Longitud máxima </label>
+            <input
+              maxlength="2"
+              [readonly]="read_only"
+              formControlName="longitud_maxima"
+              pInputText
+              pKeyFilter="integer"
+              placeholder="17" />
+            <label class="invalid">
+              {{
+                formGroup.get('longitud_maxima')?.hasError('required') &&
+                formGroup.get('longitud_maxima')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('longitud_maxima')?.hasError('min') &&
+                formGroup.get('longitud_maxima')?.touched
+                ? 'Debe ser mínimo 1'
+                : ''
+              }}
+              {{
+                formGroup.get('longitud_maxima')?.hasError('max') &&
+                formGroup.get('longitud_maxima')?.touched
+                ? 'Debe ser máximo 25'
+                : ''
+              }}
+              {{
+                formGroup.get('longitud_maxima')?.hasError('pattern') &&
+                formGroup.get('longitud_maxima')?.touched
+                  ? 'Solo ingrese numeros'
+                  : ''
+              }}</label
+            >
+          </div>
+          <div class="col-12" *ngIf="formGroup.hasError('rangoInvalido')">
+            <label class="invalid">La longitud mínima no puede ser mayor que la máxima</label>
+          </div>
+          <div class="col-12">
+            <label> Observación </label>
+            <textarea
+              [readonly]="read_only"
+              formControlName="observacion"
+              rows="4"
+              pInputTextarea
+              placeholder="Escriba la observación">
+            </textarea>
+            <label class="invalid">
+                {{
+                  formGroup.get('observacion')?.hasError('maxlength') &&
+                  formGroup.get('observacion')?.touched
+                  ? 'Máximo 100 caracteres'
+                  : ''
+              }}
+              {{
+                formGroup.get('observacion')?.hasError('pattern') &&
+                formGroup.get('observacion')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+          </div>
+          <div class="col-12" [style]="{ display: 'flex', 'flex-direction': 'column' }">
+            <label> *Banco </label>
+            <p-dropdown
+              formControlName="id_entidad"
+              [options]="bankList"
+              optionLabel="nombre_entidad"
+              optionValue="id_entidad"
+              placeholder="Seleccione una opción"
+              appendTo="body"
+              [style]="{ width: '100%' }">
+            </p-dropdown>
+
+            <label class="invalid">
+              {{
+                formGroup.get('id_entidad')?.hasError('required') &&
+                formGroup.get('id_entidad')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}</label
+            >
+          </div>
+
+          <div class="col-12" [style]="{ display: 'flex', 'flex-direction': 'column' }">
+            <label> *Tipo cuenta </label>
+            <p-dropdown
+              formControlName="id_tipo_cuenta"
+              [options]="accountTypeListAfi"
+              optionLabel="nombre_tipo_cuenta"
+              optionValue="id_tipo_cuenta"
+              placeholder="Seleccione una opción"
+              appendTo="body"
+              [style]="{ width: '100%' }">
+            </p-dropdown>
+
+            <label class="invalid">
+              {{
+                formGroup.get('id_tipo_cuenta')?.hasError('required') &&
+                formGroup.get('id_tipo_cuenta')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}</label
+            >
+          </div>
+
+          </div>
+        </div>
+      </form>
+      <div *ngIf="read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+      </div>
+      <div *ngIf="!read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button
+          [label]="buttonmsg"
+          [disabled]="formGroup.invalid"
+          (click)="closeDialog(true)"></p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+

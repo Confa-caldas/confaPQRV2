@@ -19,3 +19,24 @@
   color: #66798d;
   /* Agrega cualquier otro estilo necesario */
 }
+
+.custom-input--descripcion-amplia {
+  min-height: 180px;
+  width: 100%;
+  resize: vertical;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.char-counter {
+  display: block;
+  text-align: right;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #66798d;
+}
+
+.char-counter--limit {
+  color: $color-red;
+  font-weight: 600;
+}

@@ -1,0 +1,259 @@
+<div class="row mb-2">
+  <div class="col-10">
+    <div class="title-page">Beneficiarios con padres biológicos RPA No procesado</div>
+  </div>
+</div>
+
+<form [formGroup]="formGroup" (keydown.enter)="initPaginador()" (keydown.escape)="cleanForm()">
+  <div class="position-relative">
+    <div class="card flex justify-content-center absolute-center">
+      <div class="filters-grid">
+        <div class="filters-cell">
+          <input
+            pInputText
+            class="filters-input"
+            placeholder="Tipo documento beneficiario"
+            formControlName="tipoDocumentoBeneficiario" />
+        </div>
+        <div class="filters-cell">
+          <input
+            pInputText
+            class="filters-input"
+            placeholder="Número documento beneficiario"
+            formControlName="numeroDocumentoBeneficiario" />
+        </div>
+        <div class="filters-cell">
+          <input
+            pInputText
+            class="filters-input"
+            placeholder="Tipo documento trabajador"
+            formControlName="tipoDocumentoTrabajador" />
+        </div>
+        <div class="filters-cell">
+          <input
+            pInputText
+            class="filters-input"
+            placeholder="Número documento trabajador"
+            formControlName="numeroDocumentoTrabajador" />
+        </div>
+        <div class="filters-cell filters-actions">
+          <p-button icon="pi pi-trash" [styleClass]="'btn-icon-info'" (click)="cleanForm()"></p-button>
+          <p-button icon="pi pi-search" [styleClass]="'btn-icon-info'" (click)="initPaginador()"></p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="bulk-actions" *ngIf="selectedRows.length > 0">
+  <button
+    pButton
+    type="button"
+    label="Asignar seleccionados"
+    icon="pi pi-users"
+    class="p-button-success assign-bulk-btn"
+    (click)="abrirModalAsignar()"
+    [disabled]="!todasSeleccionadasPuedenAsignar()"></button>
+
+  <button
+    pButton
+    type="button"
+    label="Cambiar estado Rpa padres"
+    icon="pi pi-sync"
+    class="p-button-warning assign-bulk-btn ms-2"
+    (click)="abrirModalCambiarEstado()"
+    [disabled]="!todasSeleccionadasPuedenCambiarEstado()"></button>
+</div>
+
+<div class="mt-auto">
+  <p-table
+    #dt
+    [value]="rowList"
+    dataKey="id_padre_biologico"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    [loading]="loading"
+    [paginator]="false"
+    currentPageReportTemplate="{first} de {totalRecords}"
+    [tableStyle]="{ 'min-width': '90rem' }"
+    [scrollable]="true"
+    scrollHeight="500px"
+    [(selection)]="selectedRows">
+    <ng-template pTemplate="header">
+      <tr [style]="{ height: '50px' }">
+        <th style="width: 4%">
+          <p-tableHeaderCheckbox [disabled]="!hayFilasSeleccionables()"></p-tableHeaderCheckbox>
+        </th>
+        <th style="width: 4%"></th>
+        <th style="min-width: 8rem">Número radicado</th>
+        <th style="min-width: 8rem">Fecha solicitud</th>
+        <th style="min-width: 10rem">Tipo documento beneficiario</th>
+        <th style="min-width: 10rem">Número documento beneficiario</th>
+        <th style="min-width: 10rem">Tipo documento trabajador</th>
+        <th style="min-width: 10rem">Número documento trabajador</th>
+        <th style="min-width: 8rem">Es madre o padre</th>
+        <th style="min-width: 8rem">Tipo documento</th>
+        <th style="min-width: 10rem">Número documento</th>
+        <th style="min-width: 8rem">Primer nombre</th>
+        <th style="min-width: 8rem">Segundo nombre</th>
+        <th style="min-width: 8rem">Primer apellido</th>
+        <th style="min-width: 8rem">Segundo apellido</th>
+        <th style="min-width: 12rem">Observaciones Rpa padres</th>
+        <th style="min-width: 10rem">Pantalla error</th>
+        <th style="min-width: 10rem">Radicado otro padre</th>
+        <th style="min-width: 10rem">Usuario asignado</th>
+        <th style="width: 6%"></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>
+          <p-tableCheckbox [value]="row" [disabled]="!puedeSeleccionarFila(row)"></p-tableCheckbox>
+        </td>
+        <td>
+          <p-button
+            icon="pi pi-eye"
+            [styleClass]="'btn-icon-info'"
+            (click)="redirectDetails(row)"></p-button>
+        </td>
+        <td style="text-align: center">{{ row.numero_radicado_solicitud }}</td>
+        <td style="text-align: center">{{ row.fecha_solicitud | date }}</td>
+        <td style="text-align: center">{{ row.tipo_documento_beneficiario }}</td>
+        <td style="text-align: center">{{ row.numero_documento_beneficiario }}</td>
+        <td style="text-align: center">{{ row.tipo_documento_trabajador }}</td>
+        <td style="text-align: center">{{ row.numero_documento_trabajador }}</td>
+        <td style="text-align: center">{{ row.es_madre_o_padre }}</td>
+        <td style="text-align: center">{{ row.tipo_documento }}</td>
+        <td style="text-align: center">{{ row.numero_documento }}</td>
+        <td style="text-align: center">{{ row.primer_nombre }}</td>
+        <td style="text-align: center">{{ row.segundo_nombre || '—' }}</td>
+        <td style="text-align: center">{{ row.primer_apellido }}</td>
+        <td style="text-align: center">{{ row.segundo_apellido || '—' }}</td>
+        <td style="text-align: center">{{ row.observaciones_rpa_padres || '—' }}</td>
+        <td style="text-align: center">{{ row.pantalla_error || '—' }}</td>
+        <td style="text-align: center">{{ row.radicado_otro_padre || '—' }}</td>
+        <td style="text-align: center">{{ row.usuario_asignado || '—' }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-paginator
+    (onPageChange)="onPageChange($event)"
+    [first]="first"
+    [rows]="rows"
+    [totalRecords]="totalRows"
+    [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+</div>
+
+<p-toast></p-toast>
+
+<p-dialog [(visible)]="visibleDialogAsignar" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">Asignar colaborador a beneficiarios seleccionados</div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 multi">
+          <label class="label">Colaborador</label>
+          <p-dropdown
+            [(ngModel)]="responsableSeleccionado"
+            [options]="responsableOpciones"
+            optionLabel="nombre_usuario_red"
+            optionValue="nombre_usuario_red"
+            class="selector"
+            [style]="{ height: '40px', 'align-items': 'center', width: '350px' }"
+            placeholder="Colaborador"></p-dropdown>
+          <label class="error-label">{{ !responsableSeleccionado ? 'Seleccione un colaborador' : '' }}</label>
+        </div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 d-flex justify-content-evenly">
+          <p-button label="Cancelar" severity="secondary" (click)="cancelarAsignar()"></p-button>
+          <p-button
+            label="Asignar"
+            [loading]="guardandoAsignacion"
+            [disabled]="guardandoAsignacion || !responsableSeleccionado"
+            (click)="confirmarAsignar()"></p-button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog [(visible)]="visibleDialogCambiarEstado" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">Cambiar estado Rpa padres de beneficiarios seleccionados</div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 multi">
+          <label class="label">Estado Rpa padres</label>
+          <p-dropdown
+            [(ngModel)]="estadoCambioSeleccionado"
+            [options]="estadoCambioOpciones"
+            optionLabel="label"
+            optionValue="value"
+            class="selector"
+            [style]="{ height: '40px', 'align-items': 'center', width: '350px' }"
+            placeholder="Estado Rpa padres"></p-dropdown>
+          <label class="error-label">{{ !estadoCambioSeleccionado ? 'Seleccione un estado' : '' }}</label>
+        </div>
+      </div>
+      <div class="row my-4 px-5" *ngIf="estadoCambioSeleccionado === 'Procesado'">
+        <div class="col-12 multi">
+          <label class="label">Radicado otro padre</label>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="radicadoOtroPadreCambio"
+            [style]="{ 'border-radius': '5px', width: '350px' }"
+            class="custom-input"
+            placeholder="Radicado otro padre" />
+          <label class="error-label">{{
+            !radicadoOtroPadreCambio.trim() ? 'El radicado otro padre es obligatorio' : ''
+          }}</label>
+        </div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 multi">
+          <label class="label">Observación (opcional)</label>
+          <textarea
+            rows="3"
+            [(ngModel)]="observacionCambio"
+            [style]="{ 'border-radius': '5px', width: '350px' }"
+            class="custom-input"
+            placeholder="Escribir observación"
+            pInputTextarea></textarea>
+        </div>
+      </div>
+      <div class="row my-4 px-5">
+        <div class="col-12 d-flex justify-content-evenly">
+          <p-button label="Cancelar" severity="secondary" (click)="cancelarCambioEstado()"></p-button>
+          <p-button
+            label="Guardar"
+            [loading]="guardandoCambioEstado"
+            [disabled]="guardandoCambioEstado || !puedeConfirmarCambioEstado()"
+            (click)="confirmarCambioEstado()"></p-button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

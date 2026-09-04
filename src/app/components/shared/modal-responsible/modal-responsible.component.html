@@ -1,0 +1,52 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '40vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="my-4 px-5 text-center">{{ message }}</div>
+      <form [formGroup]="formGroup">
+        <div class="my-4 px-5">
+            <input type="hidden" formControlName="id" />
+            
+            <label> *Responsable</label>
+            <input
+              [readonly]="read_only"
+              formControlName="nombre_usuario_red"
+              pInputText
+              pKeyFilter="string"
+              placeholder="Escriba el nombre de red" />
+            <label class="invalid">
+              {{
+                formGroup.get('nombre_usuario_red')?.hasError('required') &&
+                formGroup.get('nombre_usuario_red')?.touched
+                  ? 'Campo requerido'
+                  : ''
+              }}
+              {{
+                formGroup.get('nombre_usuario_red')?.hasError('pattern') &&
+                formGroup.get('nombre_usuario_red')?.touched
+                  ? 'Solo ingrese texto'
+                  : ''
+              }}</label
+            >
+        </div>
+      </form>
+      <div *ngIf="read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+      </div>
+      <div *ngIf="!read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button
+          [label]="buttonmsg"
+          [disabled]="formGroup.invalid"
+          (click)="closeDialog(true)"></p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

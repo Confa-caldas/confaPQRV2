@@ -1,0 +1,2730 @@
+<div *ngIf="isSpinnerVisible" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
+<div class="row mb-2">
+  <div class="title">{{ showProcessTab() ? 'Tramitar solicitudes' : 'Consultar solicitudes' }}</div>
+</div>
+@if (afiliationRequestDetails) {
+  <ng-container *ngIf="afiliationRequestDetails as d">
+    <div class="details-grid">
+      <!-- 1) Información Solicitud -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="card-title">Información Solicitud</div>
+        </ng-template>
+
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Número de radicado</span>
+            <span class="info-value">{{ d.solicitud.numero_radicado }}</span>
+          </div>
+
+          <div
+            class="info-row"
+            *ngIf="
+              (
+                d.solicitud.numero_radicado_genesys ||
+                d.trabajador?.persona?.numero_radicado_genesys ||
+                ''
+              )
+                .toString()
+                .trim()
+            ">
+            <span class="info-label">Número de radicado Genesys</span>
+            <span class="info-value">
+              {{
+                d.solicitud.numero_radicado_genesys ||
+                  d.trabajador.persona.numero_radicado_genesys
+              }}
+            </span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Fecha de radicación</span>
+            <span class="info-value">{{ d.solicitud.fecha_radicacion | date: 'yyyy-MM-dd' }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Transacción</span>
+            <span class="info-value">{{ d.solicitud.transaccion }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Estado actual</span>
+            <span
+              class="status-pill"
+              [class.status-pill--aprobada-completa]="esEstadoAprobadaCompleta()">
+              {{ currentState || d.solicitud.estado_codigo }}
+            </span>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- 2) Solicitante (Trabajador) -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="card-title">Solicitante</div>
+        </ng-template>
+
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Nombre completo</span>
+            <span class="info-value info-value--with-estado">
+              {{ trabajadorNombreCompleto }}
+              <p-tag
+                [value]="textoEstadoGestionIntegrante('trabajador')"
+                [severity]="severidadEstadoGestionIntegrante('trabajador')"
+                styleClass="integrante-estado-gestion-tag"></p-tag>
+            </span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Tipo documento</span>
+            <span class="info-value">{{ d.trabajador.persona.tipo_documento }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Número documento</span>
+            <span class="info-value">{{ d.trabajador.persona.numero_documento }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ d.trabajador.trabajador.correo_electronico || '—' }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Teléfono</span>
+            <span class="info-value">{{ d.trabajador.trabajador.telefono || '—' }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Empresa</span>
+            <span class="info-value">{{ empresaNombre }}</span>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- 3) Asignado a -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="card-title">Asignado a</div>
+        </ng-template>
+
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">Responsable</span>
+            <span class="info-value">
+              {{ d.solicitud.usuario_gestion || '—' }}
+            </span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Días en gestión</span>
+            <span class="info-value">—</span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Última actualización</span>
+            <span class="info-value">
+              {{
+                d.solicitud.fecha_modificacion || d.solicitud.fecha_creacion
+                  | date: 'yyyy-MM-dd HH:mm'
+              }}
+            </span>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Timeline debajo, como lo tenías -->
+    <div class="timeline-container">
+      <p-timeline
+        [value]="events"
+        layout="horizontal"
+        styleClass="afi-estados-timeline"
+        [style.--timeline-steps]="events.length > 0 ? events.length : 1">
+        <!-- Texto arriba del marcador (slot opposite) evita column-reverse y alinea iconos -->
+        <ng-template pTemplate="opposite" let-event>
+          <div class="timeline-event-header">
+            <div class="timeline-event-state">
+              {{ event.state }}
+            </div>
+            <div class="timeline-event-label">
+              <span *ngIf="isValidDate(event.label); else noDate">
+                {{ event.label | date: 'shortDate' }}
+              </span>
+              <ng-template #noDate>
+                <span *ngIf="event.label && event.label !== '—'">{{ event.label }}</span>
+              </ng-template>
+            </div>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content" let-event>
+          <div class="timeline-event-content-spacer" aria-hidden="true"></div>
+        </ng-template>
+        <ng-template pTemplate="marker" let-event let-i="index">
+          <span
+            class="timeline-marker"
+            [ngClass]="{
+              'active-marker': idEstadoSolicitudActual === event.idEstado,
+              'previous-marker': i <= currentIndex
+            }">
+            <i [ngClass]="iconoTimelineClase(event)"></i>
+          </span>
+        </ng-template>
+      </p-timeline>
+    </div>
+  </ng-container>
+
+  <p-toast />
+  <br />
+
+  <!--
+  <div
+    *ngIf="afiliationRequestDetails.solicitud.id_estado_solicitud === 1"
+    style="text-align: right; margin-right: 10px">
+    <p-menu #menu [model]="items" [popup]="true"></p-menu>
+    <p-button (click)="menu.toggle($event)" icon="pi pi-ellipsis-v"></p-button>
+  </div>
+  -->
+
+  <div class="process-container-row-generals">
+    <div class="container-button container-button--actions">
+      <span
+        *ngIf="afiliationRequestDetails.solicitud.id_estado_solicitud === 1"
+        class="assign-afiliacion-tooltip-wrap"
+        [pTooltip]="tooltipAsignarPorFila(afiliationRequestDetails.solicitud)"
+        [tooltipDisabled]="puedeActivarBotonAsignarAfiliacion()"
+        tooltipPosition="top"
+        tooltipStyleClass="tooltip-asignar-bloqueado">
+        <p-button
+          [label]="
+            afiliationRequestDetails.solicitud.usuario_gestion?.trim()
+              ? 'Reasignar'
+              : 'Asignar'
+          "
+          [disabled]="!puedeActivarBotonAsignarAfiliacion()"
+          (click)="assignRequestAfiliation(afiliationRequestDetails)"
+          [style]="{ 'border-radius': '10px' }"></p-button>
+      </span>
+    </div>
+  </div>
+
+  <p-dialog
+    [(visible)]="visibleGestionarEstadoModal"
+    [modal]="true"
+    [style]="{ width: 'min(520px, 96vw)' }"
+    [closable]="true"
+    [styleClass]="'gestionar-estado-dialog-modal'"
+    (onHide)="cerrarModalGestionarEstado()">
+    <ng-template pTemplate="headless">
+      <div class="modal-content gestionar-estado-modal-content">
+        <div class="login-form-header gestionar-estado-login-bar">
+          <div class="login-form-header__item login-form-header__item_1"></div>
+          <div class="login-form-header__item login-form-header__item_2"></div>
+          <div class="login-form-header__item login-form-header__item_3"></div>
+          <div class="login-form-header__item login-form-header__item_4"></div>
+          <div class="login-form-header__item login-form-header__item_5"></div>
+          <div class="login-form-header__item login-form-header__item_6"></div>
+        </div>
+
+        <div class="row my-4 px-5">
+          <div class="col-12 text-center gestionar-estado-modal-title">
+            Gestionar estado de afiliado
+            <div *ngIf="gestionarEstadoContextoLabel" class="gestionar-estado-modal-context">
+              {{ gestionarEstadoContextoLabel }}
+            </div>
+          </div>
+        </div>
+
+        <div class="gestionar-estado-modal-body px-5 pb-4">
+          <p class="gestionar-estado-section-title">Restricciones</p>
+          <div class="gestionar-estado-tags">
+            <p-tag [value]="textoTagNovedadRestrictiva()" [severity]="severidadTagNovedadRestrictiva()"></p-tag>
+            <p-tag [value]="textoTagPendienteDireccion()" [severity]="severidadTagPendienteDireccion()"></p-tag>
+            <p-tag
+              [value]="textoTagPendienteActivarEmpresa()"
+              [severity]="severidadTagPendienteActivarEmpresa()"></p-tag>
+          </div>
+
+          <form [formGroup]="gestionarEstadoAfiliadoForm" class="gestionar-estado-form gestionar-estado-form--modal">
+            <div class="gestionar-estado-field multi">
+              <label class="label" for="estadoAfiliadoDd">Estado afiliación <span class="req">*</span></label>
+              <small *ngIf="gestionarEstadoSoloRechazoPermitido" class="gestionar-estado-error error-label">
+                Hay adjuntos sin validar en «Sí»: solo puede pasar a estado Rechazado.
+              </small>
+              <small *ngIf="gestionarEstadoDesdeInconsistenciasRpa" class="gestionar-estado-error error-label">
+                Desde Inconsistencias RPA solo puede pasar a Pendiente afiliación RPA o Procesado.
+              </small>
+              <p-dropdown
+                id="estadoAfiliadoDd"
+                formControlName="estadoAfiliado"
+                [options]="opcionesEstadoAfiliadoModal"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione estado"
+                [showClear]="true"
+                class="selector gestionar-estado-dropdown-wrap"
+                styleClass="gestionar-estado-dropdown"
+                [style]="{ width: '100%' }"
+                appendTo="body"></p-dropdown>
+              <small
+                *ngIf="
+                  gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.invalid &&
+                  gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.touched
+                "
+                class="gestionar-estado-error error-label">
+                Estado es obligatorio.
+              </small>
+            </div>
+
+            <div class="gestionar-estado-field multi" *ngIf="mostrarMotivoRechazoGestion">
+              <label class="label" for="motivoRechazoDd">Motivo de rechazo <span class="req">*</span></label>
+              <p-dropdown
+                id="motivoRechazoDd"
+                formControlName="motivoRechazo"
+                [options]="motivoRechazoOpciones"
+                optionLabel="label"
+                optionValue="value"
+                [placeholder]="cargandoMotivosRechazo ? 'Cargando motivos...' : 'Seleccione motivo'"
+                [loading]="cargandoMotivosRechazo"
+                [disabled]="cargandoMotivosRechazo"
+                [showClear]="true"
+                class="selector gestionar-estado-dropdown-wrap"
+                styleClass="gestionar-estado-dropdown"
+                [style]="{ width: '100%' }"
+                appendTo="body">
+                <ng-template pTemplate="selectedItem" let-item>
+                  <ng-container *ngIf="item">
+                    <span *ngIf="item.codigo_motivo" class="gestionar-estado-motivo-codigo">{{ item.codigo_motivo }}</span>
+                    <span *ngIf="item.codigo_motivo && item.label" class="gestionar-estado-motivo-sep"> — </span>
+                    <span *ngIf="item.label" class="gestionar-estado-motivo-desc">{{ item.label }}</span>
+                  </ng-container>
+                </ng-template>
+                <ng-template pTemplate="item" let-item>
+                  <div class="gestionar-estado-motivo-item">
+                    <span *ngIf="item.codigo_motivo" class="gestionar-estado-motivo-codigo">{{ item.codigo_motivo }}</span>
+                    <span *ngIf="item.codigo_motivo && item.label" class="gestionar-estado-motivo-sep"> — </span>
+                    <span *ngIf="item.label" class="gestionar-estado-motivo-desc">{{ item.label }}</span>
+                  </div>
+                </ng-template>
+              </p-dropdown>
+              <small
+                *ngIf="
+                  gestionarEstadoAfiliadoForm.get('motivoRechazo')?.invalid &&
+                  gestionarEstadoAfiliadoForm.get('motivoRechazo')?.touched
+                "
+                class="gestionar-estado-error error-label">
+                Motivo es obligatorio cuando el estado es Rechazado.
+              </small>
+            </div>
+          </form>
+        </div>
+
+        <div class="row my-4 px-5 pb-4">
+          <div class="col-12 d-flex justify-content-evenly flex-wrap gap-3 gestionar-estado-modal-actions">
+            <p-button
+              label="Cancelar"
+              severity="secondary"
+              [disabled]="guardandoEstadoGestionSolicitud"
+              (onClick)="cerrarModalGestionarEstado()"></p-button>
+            <p-button
+              label="Guardar"
+              [loading]="guardandoEstadoGestionSolicitud"
+              [disabled]="guardandoEstadoGestionSolicitud"
+              (onClick)="guardarGestionarEstadoAfiliado()"></p-button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog
+    [(visible)]="visibleModalBloqueoRequisitosGestion"
+    header="Requisitos de gestión"
+    [modal]="true"
+    [closable]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: 'min(34rem, 94vw)' }"
+    styleClass="custom-dialog bloqueo-requisitos-gestion-dialog"
+    (onHide)="cerrarModalBloqueoRequisitosGestion()">
+    <div class="bloqueo-requisitos-gestion-body">
+      <p class="bloqueo-requisitos-gestion-intro mb-3">{{ bloqueoRequisitosGestionTitulo }}</p>
+      <ul class="bloqueo-requisitos-gestion-lista mb-0 ps-3">
+        <li *ngFor="let item of bloqueoRequisitosGestionLista">{{ item }}</li>
+      </ul>
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Entendido"
+        icon="pi pi-check"
+        iconPos="left"
+        severity="secondary"
+        styleClass="bloqueo-requisitos-entendido-btn"
+        (onClick)="cerrarModalBloqueoRequisitosGestion()"></p-button>
+    </ng-template>
+  </p-dialog>
+
+  <ng-container *ngIf="afiliationRequestDetails as d">
+    <div class="p-tabview request-details-tabview">
+      <p-tabView class="p-tabview-nav">
+
+    <!-- ===================== SOLICITUD ===================== -->
+    <p-tabPanel header="Solicitud" headerStyleClass="p-tabview-nav-link-1 ">
+      <div class="tab-data-view">
+        <h3 class="tab-data-section-title">Datos de la solicitud</h3>
+        <div class="process-container">
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Número de radicado</label>
+              <div class="process-container-text">{{ d.solicitud.numero_radicado }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha solicitud</label>
+              <div class="process-container-text">{{ d.solicitud.fecha_solicitud | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha radicación</label>
+              <div class="process-container-text">{{ d.solicitud.fecha_radicacion | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Transacción</label>
+              <div class="process-container-text">{{ d.solicitud.transaccion || '—' }}</div>
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Estado y gestión</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Estado</label>
+              <div class="process-container-text">{{ currentState || d.solicitud.estado_codigo }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Usuario asignado</label>
+              <div class="process-container-text">{{ d.solicitud.usuario_gestion || 'Sin asignar' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Última modificación</label>
+              <div class="process-container-text">{{ (d.solicitud.fecha_modificacion || d.solicitud.fecha_creacion) | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Observaciones</h3>
+          <div class="process-container-row">
+            <div class="process-container-col-description">
+              <label class="process-container-label">Comentarios o notas</label>
+              <div class="process-container-text process-container-text-area" [ngStyle]="{ 'white-space': 'pre-line' }">{{ d.solicitud.observaciones || '—' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <!-- ===================== EMPRESA ===================== -->
+    <p-tabPanel header="Empresa" headerStyleClass="p-tabview-nav-link-2">
+      <div class="tab-data-view">
+        <h3 class="tab-data-section-title">Identificación</h3>
+        <div class="process-container">
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">ID empresa</label>
+              <div class="process-container-text">{{ d.empresa.id_empresa }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Documento</label>
+              <div class="process-container-text">{{ d.empresa.tipo_documento }} {{ d.empresa.numero_documento }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Razón social</label>
+              <div class="process-container-text">{{ d.empresa.razon_social || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Nombre comercial</label>
+              <div class="process-container-text">{{ d.empresa.nombre_comercial || '—' }}</div>
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Contacto</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Persona de contacto</label>
+              <div class="process-container-text">{{ d.empresa.contacto || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Representante legal</label>
+              <div class="process-container-text">{{ d.empresa.representante_legal || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Correo electrónico</label>
+              <div class="process-container-text">{{ d.empresa.correo_electronico || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Teléfono</label>
+              <div class="process-container-text">{{ d.empresa.telefono || '—' }}</div>
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Ubicación</h3>
+          <div class="process-container-row">
+            <div class="process-container-col-description">
+              <label class="process-container-label">Dirección</label>
+              <div class="process-container-text process-container-text-area">{{ d.empresa.direccion || '—' }}</div>
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Estado de la empresa</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Activa</label>
+              <div class="process-container-text">{{ d.empresa.esta_activa ? 'Sí' : 'No' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Permite afiliaciones masivas</label>
+              <div class="process-container-text">{{ d.empresa.permite_afiliaciones_masivas ? 'Sí' : 'No' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Estado afiliación</label>
+              <div class="process-container-text">{{ d.empresa.estado_afiliacion || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Motivo desafiliación</label>
+              <div class="process-container-text">{{ d.empresa.motivo_desafiliacion || '—' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <!-- ===================== TRABAJADOR ===================== -->
+    <p-tabPanel header="Trabajador" headerStyleClass="p-tabview-nav-link-3">
+      <div class="tab-data-view">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2 tab-data-title-actions">
+          <div class="tab-data-title-with-estado">
+            <h3 class="tab-data-section-title mb-0">Datos del afiliado</h3>
+            <p-tag
+              [value]="textoEstadoGestionIntegrante('trabajador')"
+              [severity]="severidadEstadoGestionIntegrante('trabajador')"
+              styleClass="integrante-estado-gestion-tag"></p-tag>
+          </div>
+          <div class="d-flex flex-wrap gap-2 align-items-center tab-data-header-actions">
+            <p-button
+              label="Ver Datos adicionales"
+              icon="pi pi-list"
+              styleClass="p-button-sm btn-ver-datos-adicionales"
+              pTooltip="Muestra datos adicionales del trabajador recibidos del servicio de detalle"
+              tooltipPosition="top"
+              (onClick)="abrirResumenIntegranteAfiliacionWs('trabajador')"
+              [style]="{ 'border-radius': '10px' }"></p-button>
+            <span
+              *ngIf="mostrarBotonGestionarEstadoIntegrante('trabajador')"
+              class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
+              <p-button
+                label="Gestionar estado"
+                icon="pi pi-cog"
+                [loading]="cargaValidacionRequisitosGestion('trabajador')"
+                [disabled]="cargaValidacionRequisitosGestion('trabajador')"
+                (onClick)="onClicGestionarEstado('trabajador')"
+                [style]="{ 'border-radius': '10px' }"></p-button>
+              <i
+                class="pi pi-exclamation-circle gestionar-estado-requisitos-alerta"
+                *ngIf="muestraIconoAlertaRequisitosGestion('trabajador')"
+                pTooltip="La última validación indicó requisitos pendientes; corrija antes de gestionar el estado."
+                tooltipPosition="top"
+                aria-hidden="true"></i>
+            </span>
+          </div>
+        </div>
+        <div class="process-container">
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">ID persona</label>
+              <div class="process-container-text">{{ d.trabajador.persona.id }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Tipo de documento</label>
+              <p-dropdown
+                *ngIf="trabajadorPuedeEditar"
+                [options]="opcionesTipoDocumento"
+                [(ngModel)]="d.trabajador.persona.tipo_documento"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione"
+                appendTo="body"
+                [style]="{ width: '100%' }"
+                styleClass="data-field-dropdown" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.tipo_documento || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Número de documento</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.numero_documento"
+                placeholder="Número de documento" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.numero_documento || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha expedición del documento</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="date"
+                class="data-field-input"
+                [ngModel]="d.trabajador.persona.fecha_expedicion_doc"
+                (ngModelChange)="d.trabajador.persona.fecha_expedicion_doc = $event || null" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.fecha_expedicion_doc || '—' }}</div>
+            </div>
+          </div>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Primer nombre</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.primer_nombre"
+                placeholder="Primer nombre" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.primer_nombre || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Segundo nombre</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.segundo_nombre"
+                placeholder="Segundo nombre" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.segundo_nombre || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Primer apellido</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.primer_apellido"
+                placeholder="Primer apellido" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.primer_apellido || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Segundo apellido</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="text"
+                class="data-field-input"
+                [(ngModel)]="d.trabajador.persona.segundo_apellido"
+                placeholder="Segundo apellido" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.segundo_apellido || '—' }}</div>
+            </div>
+          </div>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha de nacimiento</label>
+              <input
+                *ngIf="trabajadorPuedeEditar"
+                type="date"
+                class="data-field-input"
+                [ngModel]="d.trabajador.persona.fecha_nacimiento"
+                (ngModelChange)="d.trabajador.persona.fecha_nacimiento = $event || null" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.fecha_nacimiento || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Género</label>
+              <p-dropdown
+                *ngIf="trabajadorPuedeEditar"
+                [options]="opcionesGenero"
+                [(ngModel)]="d.trabajador.persona.genero"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione"
+                appendTo="body"
+                [style]="{ width: '100%' }"
+                styleClass="data-field-dropdown" />
+              <div *ngIf="!trabajadorPuedeEditar" class="process-container-text">{{ d.trabajador.persona.genero || '—' }}</div>
+            </div>
+            <div class="process-container-col" [class.estado-civil-editable-col]="mostrarEstadoCivilEditable">
+              <label class="process-container-label">Estado civil</label>
+              <ng-container *ngIf="mostrarEstadoCivilEditable; else estadoCivilSoloLectura">
+                <p-message
+                  *ngIf="tieneAlertaEstadoCivil"
+                  severity="warn"
+                  styleClass="estado-civil-alerta"
+                  [text]="mensajeAlertaEstadoCivil" />
+                <p-dropdown
+                  [options]="opcionesEstadoCivil"
+                  [(ngModel)]="d.trabajador.trabajador.estado_civil"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccione estado civil"
+                  appendTo="body"
+                  [style]="{ width: '100%' }"
+                  styleClass="estado-civil-dropdown" />
+              </ng-container>
+              <ng-template #estadoCivilSoloLectura>
+                <div class="process-container-text">{{ d.trabajador.trabajador.estado_civil || '—' }}</div>
+              </ng-template>
+            </div>
+          </div>
+          <div class="process-container-row tab-data-save-row" *ngIf="trabajadorPuedeEditar || mostrarEstadoCivilEditable">
+            <div class="process-container-col">
+              <p-button
+                label="Guardar cambios"
+                icon="pi pi-check"
+                (onClick)="abrirConfirmacionGuardarTrabajador()"
+                [loading]="guardandoDatosTrabajador"
+                [disabled]="guardandoDatosTrabajador || !hayCambiosEnDatosTrabajador"
+                severity="primary"
+                [style]="{ 'border-radius': '6px' }" />
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Contacto y datos personales</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Correo electrónico</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.correo_electronico || '—' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Teléfono</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.telefono || '—' }}</div>
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Datos laborales</h3>
+          <div class="process-container-row">
+            <div class="process-container-col">
+              <label class="process-container-label">Salario mensual</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.salario_mensual | number:'1.0-0' }}</div>
+            </div>
+            <div class="process-container-col">
+              <label class="process-container-label">Fecha ingreso a la empresa</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.fecha_ingreso_empresa || '—' }}</div>
+            </div>
+          </div>
+        <h3 class="tab-data-section-title">Domicilio</h3>
+          <div class="process-container-row domicilio-data-row">
+            <div class="process-container-col process-container-col-domicilio-direccion">
+              <label class="process-container-label">Dirección</label>
+              <div class="process-container-text process-container-text-area">{{ d.trabajador.persona.direccion || '—' }}</div>
+            </div>
+            <div class="process-container-col process-container-col-domicilio-zona">
+              <label class="process-container-label">Zona</label>
+              <div class="process-container-text">{{ d.trabajador.trabajador.zona || '—' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="tab-data-section-title">Archivos adjuntos del trabajador</h3>
+        <div class="adjuntos-section adjuntos-trabajador-block" *ngIf="getAdjuntosTrabajador().length > 0">
+          <p class="adjuntos-block-intro">Los siguientes archivos corresponden al <strong>trabajador</strong> de la solicitud.</p>
+          <div class="adjuntos-table-wrapper">
+            <p-table
+              [value]="getAdjuntosTrabajador()"
+              [tableStyle]="{ 'min-width': '44rem' }"
+              styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 22%">Archivo</th>
+                  <th style="width: 18%">Tipo de adjunto</th>
+                  <th style="width: 14%">Validación</th>
+                  <th style="width: 30%">Descripción (si aplica)</th>
+                  <th class="adjuntos-col-acciones">Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>{{ item.adjunto.nombre_archivo }}</td>
+                  <td>{{ item.adjunto.nombre_tipo_adjunto || '—' }}</td>
+                  <td>
+                    <p-dropdown
+                      *ngIf="esAdjuntoPendienteValidacion(item)"
+                      [options]="valoracionOpciones"
+                      [(ngModel)]="item.valoracion"
+                      placeholder="Seleccione"
+                      appendTo="body"
+                      [style]="{ width: '100%' }"
+                      optionLabel="label"
+                      optionValue="value" />
+                    <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ getLabelValoracionAdjunto(item) }}</div>
+                  </td>
+                  <td>
+                    <ng-container *ngIf="esAdjuntoPendienteValidacion(item)">
+                      <textarea
+                        *ngIf="showDescripcionValoracion(item.valoracion)"
+                        [(ngModel)]="item.descripcion"
+                        class="adjunto-descripcion-input"
+                        rows="2"
+                        placeholder="Indique el motivo o descripción"></textarea>
+                      <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                    </ng-container>
+                    <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
+                  </td>
+                  <td>
+                    <div class="adjuntos-actions">
+                      <p-button
+                        icon="pi pi-eye"
+                        pTooltip="Previsualizar"
+                        tooltipPosition="top"
+                        severity="secondary"
+                        [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only p-button-outlined'"
+                        [style]="{ 'border-radius': '6px' }"
+                        [attr.aria-label]="'Previsualizar adjunto'"
+                        (onClick)="abrirAdjunto(item.adjunto)"></p-button>
+                      <p-button
+                        icon="pi pi-download"
+                        pTooltip="Descargar"
+                        tooltipPosition="top"
+                        severity="secondary"
+                        [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only p-button-outlined'"
+                        [style]="{ 'border-radius': '6px' }"
+                        [attr.aria-label]="'Descargar adjunto'"
+                        (onClick)="descargarAdjunto(item.adjunto)"></p-button>
+                      <p-button
+                        *ngIf="esAdjuntoPendienteValidacion(item)"
+                        icon="pi pi-check"
+                        pTooltip="Validar adjunto"
+                        tooltipPosition="top"
+                        [loading]="validandoAdjuntoId === item.adjunto.id"
+                        [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion"
+                        severity="success"
+                        [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only'"
+                        [style]="{ 'border-radius': '6px' }"
+                        [attr.aria-label]="'Validar adjunto'"
+                        (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+        <div class="adjuntos-section empty adjuntos-trabajador-block" *ngIf="getAdjuntosTrabajador().length === 0">
+          <p class="adjuntos-empty-text">No hay archivos adjuntos para el trabajador de esta solicitud.</p>
+        </div>
+        <div
+          class="adjuntos-upload-row"
+          *ngIf="!d.solicitud.expediente && !solicitudEnPendienteAfiliacionRpa && !personaGestionNoEditable('trabajador')">
+          <p-button
+            label="Subir adjuntos adicionales"
+            icon="pi pi-upload"
+            severity="success"
+            [styleClass]="'adjunto-action-btn'"
+            [style]="{ 'border-radius': '6px' }"
+            (onClick)="abrirModalAdjuntos(d.trabajador.persona.id, idParentescoTitular)"></p-button>
+        </div>
+
+        <div class="expediente-generacion-block">
+          <h3 class="tab-data-section-title expediente-generacion-title">Generación del expediente</h3>
+          <p-message
+            *ngIf="hayAdjuntosSinValidarTrabajadorOBeneficiarios && !d.solicitud.expediente"
+            severity="warn"
+            styleClass="expediente-adjuntos-pendientes-msg"
+            [text]="'No es posible generar el expediente hasta que todos los adjuntos del trabajador y de los beneficiarios estén validados en «Sí».'" />
+          <div *ngIf="d.solicitud.expediente as exp" class="expediente-unificado-card">
+            <div class="expediente-unificado-msg-inner">
+              <span class="expediente-unificado-filename"><strong>Expediente unificado:</strong> {{ exp.nombre_archivo }}</span>
+              <div class="expediente-unificado-actions">
+                <p-button
+                  icon="pi pi-eye"
+                  severity="secondary"
+                  [outlined]="true"
+                  [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only'"
+                  [style]="{ 'border-radius': '6px' }"
+                  pTooltip="Previsualizar"
+                  tooltipPosition="top"
+                  [attr.aria-label]="'Previsualizar expediente'"
+                  (onClick)="previsualizarAdjunto(exp)"></p-button>
+                <p-button
+                  icon="pi pi-download"
+                  severity="secondary"
+                  [outlined]="true"
+                  [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only'"
+                  [style]="{ 'border-radius': '6px' }"
+                  pTooltip="Descargar"
+                  tooltipPosition="top"
+                  [attr.aria-label]="'Descargar expediente'"
+                  (onClick)="descargarAdjunto(exp)"></p-button>
+              </div>
+            </div>
+          </div>
+          <div class="expediente-generacion-actions" *ngIf="!d.solicitud.expediente">
+            <p-button
+              label="Generar expediente"
+              icon="pi pi-file-pdf"
+              severity="primary"
+              [styleClass]="'adjunto-action-btn'"
+              [style]="{ 'border-radius': '6px' }"
+              pTooltip="Genera un PDF con todos los adjuntos (trabajador y beneficiarios) validados en Sí. Solo se permite un expediente por solicitud."
+              tooltipPosition="top"
+              [loading]="generandoExpediente"
+              [disabled]="generandoExpediente || !todosAdjuntosValidadosEnSi"
+              (onClick)="generarExpediente()"></p-button>
+          </div>
+        </div>
+
+      </div>
+    </p-tabPanel>
+
+    <!-- ===================== BENEFICIARIOS ===================== -->
+    <p-tabPanel header="Beneficiarios" headerStyleClass="p-tabview-nav-link-4">
+      <div class="tab-data-view">
+        <ng-container *ngIf="d.beneficiarios.length; else noBenef">
+          <div class="benef-list">
+            <div class="benef-card" *ngFor="let b of d.beneficiarios; let iBenef = index">
+              <div class="benef-card-header">
+                <div class="benef-card-header-main">
+                  <span class="benef-card-title-row">
+                    <span class="benef-card-title">Beneficiario {{ iBenef + 1 }}: {{ getNombreBeneficiario(b) }}</span>
+                    <p-tag
+                      [value]="textoEstadoGestionIntegrante('beneficiario', iBenef)"
+                      [severity]="severidadEstadoGestionIntegrante('beneficiario', iBenef)"
+                      styleClass="integrante-estado-gestion-tag"></p-tag>
+                  </span>
+                  <span class="benef-card-meta">{{ b.persona.tipo_documento }} {{ b.persona.numero_documento }} · {{ b.beneficiario.parentesco || '—' }}</span>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center benef-card-header-actions">
+                  <p-button
+                    label="Ver Datos adicionales"
+                    icon="pi pi-list"
+                    styleClass="p-button-sm btn-ver-datos-adicionales"
+                    pTooltip="Muestra datos adicionales del beneficiario recibidos del servicio de detalle"
+                    tooltipPosition="top"
+                    (onClick)="abrirResumenIntegranteAfiliacionWs('beneficiario', iBenef)"
+                    [style]="{ 'border-radius': '10px' }"></p-button>
+                  <span
+                    *ngIf="mostrarBotonGestionarEstadoIntegrante('beneficiario', iBenef)"
+                    class="d-inline-flex align-items-center gap-2 flex-wrap gestionar-estado-acciones">
+                    <p-button
+                      label="Gestionar estado"
+                      icon="pi pi-cog"
+                      styleClass="p-button-sm benef-gestionar-estado-btn"
+                      [loading]="cargaValidacionRequisitosGestion('beneficiario', iBenef)"
+                      [disabled]="cargaValidacionRequisitosGestion('beneficiario', iBenef)"
+                      (onClick)="onClicGestionarEstado('beneficiario', iBenef)"
+                      [style]="{ 'border-radius': '10px' }"></p-button>
+                    <i
+                      class="pi pi-exclamation-circle gestionar-estado-requisitos-alerta"
+                      *ngIf="muestraIconoAlertaRequisitosGestion('beneficiario', iBenef)"
+                      pTooltip="La última validación indicó requisitos pendientes; corrija antes de gestionar el estado."
+                      tooltipPosition="top"
+                      aria-hidden="true"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="benef-card-body">
+                <h4 class="tab-data-section-subtitle">Datos del beneficiario</h4>
+                <div class="process-container">
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">Parentesco</label>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        [options]="getOpcionesParentescoBeneficiario(b)"
+                        [(ngModel)]="b.beneficiario.parentesco"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.beneficiario.parentesco || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Tipo de documento</label>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        [options]="opcionesTipoDocumento"
+                        [(ngModel)]="b.persona.tipo_documento"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.tipo_documento || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Número de documento</label>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.numero_documento"
+                        placeholder="Número de documento" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.numero_documento || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha expedición del documento</label>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.persona.fecha_expedicion_doc"
+                        (ngModelChange)="b.persona.fecha_expedicion_doc = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.persona.fecha_expedicion_doc) || '—' }}</div>
+                    </div>
+                  </div>
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">Primer nombre</label>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.primer_nombre"
+                        placeholder="Primer nombre" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.primer_nombre || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Segundo nombre</label>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.segundo_nombre"
+                        placeholder="Segundo nombre" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.segundo_nombre || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Primer apellido</label>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.primer_apellido"
+                        placeholder="Primer apellido" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.primer_apellido || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Segundo apellido</label>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.segundo_apellido"
+                        placeholder="Segundo apellido" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.segundo_apellido || '—' }}</div>
+                    </div>
+                  </div>
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha de nacimiento (dd/mm/aaaa)</label>
+                      <input
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.persona.fecha_nacimiento"
+                        (ngModelChange)="b.persona.fecha_nacimiento = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.persona.fecha_nacimiento) || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Género</label>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditar(iBenef)"
+                        [options]="opcionesGenero"
+                        [(ngModel)]="b.persona.genero"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditar(iBenef)" class="process-container-text">{{ b.persona.genero || '—' }}</div>
+                    </div>
+                  </div>
+                  <!-- Dirección beneficiario: Si/No si es misma del trabajador; si No, campo requerido -->
+                  <div class="process-container-row" *ngIf="beneficioPuedeEditar(iBenef)">
+                    <div class="process-container-col process-container-col-description">
+                      <label class="process-container-label">La dirección corresponde a la misma del trabajador</label>
+                      <p-dropdown
+                        [options]="opcionesDireccionTrabajador"
+                        [(ngModel)]="b.beneficiario.direccion_corresponde_trabajador"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%', maxWidth: '200px' }"
+                        styleClass="data-field-dropdown" />
+                    </div>
+                  </div>
+                  <div class="process-container-row" *ngIf="beneficioPuedeEditar(iBenef) && direccionCorrespondeTrabajadorEsSi(b)">
+                    <div class="process-container-col process-container-col-description">
+                      <label class="process-container-label">Dirección (del trabajador)</label>
+                      <div class="process-container-text">{{ getDireccionTrabajador() || '—' }}</div>
+                    </div>
+                  </div>
+                  <div class="process-container-row" *ngIf="beneficioPuedeEditar(iBenef) && direccionCorrespondeTrabajadorEsNo(b)">
+                    <div class="process-container-col process-container-col-description">
+                      <label class="process-container-label">Dirección del beneficiario <span class="required-asterisk">*</span></label>
+                      <input
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.persona.direccion"
+                        placeholder="Ingrese la dirección"
+                        [class.ng-invalid]="!direccionBeneficiarioRequeridaValida(b, iBenef)" />
+                      <small *ngIf="!direccionBeneficiarioRequeridaValida(b, iBenef)" class="error-message">La dirección es requerida cuando no corresponde a la del trabajador.</small>
+                    </div>
+                  </div>
+                  <!-- Guardar cambios para CE/PPT: se muestra aquí porque no hay campos editables adicionales abajo. -->
+                  <div class="process-container-row tab-data-save-row" *ngIf="beneficioPuedeEditar(iBenef) && !beneficioPuedeEditarExtras(iBenef)">
+                    <div class="process-container-col">
+                      <p-button
+                        label="Guardar cambios"
+                        icon="pi pi-check"
+                        (onClick)="abrirConfirmacionGuardarBeneficiario(b, iBenef)"
+                        [loading]="guardandoBeneficiarioIndex === iBenef"
+                        [disabled]="guardandoBeneficiarioIndex === iBenef || !hayCambiosBeneficiario(iBenef) || !direccionBeneficiarioRequeridaValida(b, iBenef)"
+                        severity="primary"
+                        [style]="{ 'border-radius': '6px' }" />
+                    </div>
+                  </div>
+                  <!-- Campos solo lectura cuando no tiene sección editable (no era CE/PPT/CC/TI/RC al cargar) -->
+                  <ng-container *ngIf="!beneficioPuedeEditar(iBenef)">
+                    <div class="process-container-row">
+                      <div class="process-container-col">
+                        <label class="process-container-label">Cónyuge labora</label>
+                        <div class="process-container-text">{{ b.beneficiario.conyuge_labora || '—' }}</div>
+                      </div>
+                      <div class="process-container-col">
+                        <label class="process-container-label">Nivel educativo</label>
+                        <div class="process-container-text">{{ b.beneficiario.nivel_educativo || '—' }}</div>
+                      </div>
+                    </div>
+                    <div class="process-container-row">
+                      <div class="process-container-col">
+                        <label class="process-container-label">Dirección corresponde al trabajador</label>
+                        <div class="process-container-text">{{ b.beneficiario.direccion_corresponde_trabajador || '—' }}</div>
+                      </div>
+                      <div class="process-container-col">
+                        <label class="process-container-label">Dirección</label>
+                        <div class="process-container-text">{{ b.persona.direccion || '—' }}</div>
+                      </div>
+                    </div>
+                  </ng-container>
+                  <!-- Datos adicionales de servicio: nuevo beneficiario, grupo familiar e invalidez (editables solo si CC/TI/RC) -->
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">¿Nuevo Beneficiario?</label>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        [options]="opcionesSiNo"
+                        [(ngModel)]="b.beneficiario.nuevo_beneficiario"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.nuevo_beneficiario || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">¿Nuevo grupo familiar?</label>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        [options]="opcionesSiNo"
+                        [(ngModel)]="b.beneficiario.nuevo_grupo_familiar"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.nuevo_grupo_familiar || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Número de grupo familiar</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="number"
+                        class="data-field-input"
+                        [ngModel]="b.beneficiario.numero_grupo_familiar"
+                        (ngModelChange)="b.beneficiario.numero_grupo_familiar = ($event === null || $event === '' ? null : +$event)"
+                        placeholder="Número de grupo familiar" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.numero_grupo_familiar ?? '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Persona en situación de discapacidad</label>
+                      <div class="process-container-text">{{ b.beneficiario.persona_discapacidad || '—' }}</div>
+                    </div>
+                  </div>
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha de inicio de invalidez (dd/mm/aaaa)</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.beneficiario.fecha_inicio_invalidez"
+                        (ngModelChange)="b.beneficiario.fecha_inicio_invalidez = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.beneficiario.fecha_inicio_invalidez) || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha de reporte de invalidez (dd/mm/aaaa)</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.beneficiario.fecha_reporte_invalidez"
+                        (ngModelChange)="b.beneficiario.fecha_reporte_invalidez = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.beneficiario.fecha_reporte_invalidez) || '—' }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Información del administrador de subsidios (editable solo si CC/TI/RC) -->
+                <h4 class="tab-data-section-subtitle">Información del administrador de subsidios</h4>
+                <div class="process-container">
+                  <div class="process-container-row">
+                    <div class="process-container-col">
+                      <label class="process-container-label">Tipo de identificación</label>
+                      <p-dropdown
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        [options]="opcionesTipoDocumento"
+                        [(ngModel)]="b.beneficiario.tipo_identificacion_administrador_subsidio"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione"
+                        appendTo="body"
+                        [style]="{ width: '100%' }"
+                        styleClass="data-field-dropdown" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.tipo_identificacion_administrador_subsidio || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Número de identificación</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.beneficiario.numero_identificacion_administrador_subsidio"
+                        placeholder="Número de identificación" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.numero_identificacion_administrador_subsidio || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Nombre completo</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="text"
+                        class="data-field-input"
+                        [(ngModel)]="b.beneficiario.nombre_completo_administrador_subsidio"
+                        placeholder="Nombre completo" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ b.beneficiario.nombre_completo_administrador_subsidio || '—' }}</div>
+                    </div>
+                    <div class="process-container-col">
+                      <label class="process-container-label">Fecha de nacimiento (dd/mm/aaaa)</label>
+                      <input
+                        *ngIf="beneficioPuedeEditarExtras(iBenef)"
+                        type="date"
+                        class="data-field-input"
+                        [ngModel]="b.beneficiario.fecha_nacimiento_administrador_subsidio"
+                        (ngModelChange)="b.beneficiario.fecha_nacimiento_administrador_subsidio = $event || null" />
+                      <div *ngIf="!beneficioPuedeEditarExtras(iBenef)" class="process-container-text">{{ formatFechaDDMMYYYY(b.beneficiario.fecha_nacimiento_administrador_subsidio) || '—' }}</div>
+                    </div>
+                  </div>
+                  <!-- Guardar cambios para CC/TI/RC: se muestra al final porque incluye los campos extras editables. -->
+                  <div class="process-container-row tab-data-save-row" *ngIf="beneficioPuedeEditarExtras(iBenef)">
+                    <div class="process-container-col">
+                      <p-button
+                        label="Guardar cambios"
+                        icon="pi pi-check"
+                        (onClick)="abrirConfirmacionGuardarBeneficiario(b, iBenef)"
+                        [loading]="guardandoBeneficiarioIndex === iBenef"
+                        [disabled]="guardandoBeneficiarioIndex === iBenef || !hayCambiosBeneficiario(iBenef) || !direccionBeneficiarioRequeridaValida(b, iBenef)"
+                        severity="primary"
+                        [style]="{ 'border-radius': '6px' }" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Padres biológicos (solo beneficiarios con parentesco Hijo) -->
+                <div class="process-container" *ngIf="esBeneficiarioHijo(b)">
+                  <h4 class="tab-data-section-subtitle">Padres biológicos</h4>
+
+                  <p-message *ngIf="padresBiologicosCargando(iBenef)" severity="info" text="Cargando información de los padres..."></p-message>
+
+                  <ng-container *ngIf="!padresBiologicosCargando(iBenef)">
+                    <h5 class="tab-data-section-subtitle">Información del Padre</h5>
+                    <ng-container *ngIf="getPadreBiologico(iBenef) as padre; else formPadre">
+                      <div class="process-container-row">
+                        <div class="process-container-col">
+                          <label class="process-container-label">Tipo documento</label>
+                          <p-dropdown
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.tipo_documento"
+                            [options]="opcionesTipoDocumento"
+                            [(ngModel)]="padre.tipo_documento"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            styleClass="data-field-dropdown" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.tipo_documento)" class="process-container-text">{{ padre.tipo_documento || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Número documento</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.numero_documento"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.numero_documento"
+                            placeholder="Número documento" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.numero_documento)" class="process-container-text">{{ padre.numero_documento || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Primer nombre</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.primer_nombre"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.primer_nombre"
+                            placeholder="Primer nombre" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.primer_nombre)" class="process-container-text">{{ padre.primer_nombre || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Segundo nombre</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.segundo_nombre"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.segundo_nombre"
+                            placeholder="Segundo nombre" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.segundo_nombre)" class="process-container-text">{{ padre.segundo_nombre || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Primer apellido</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.primer_apellido"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.primer_apellido"
+                            placeholder="Primer apellido" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.primer_apellido)" class="process-container-text">{{ padre.primer_apellido || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Segundo apellido</label>
+                          <input
+                            *ngIf="padre.pendiente_completar === 'Si' && !padre.segundo_apellido"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="padre.segundo_apellido"
+                            placeholder="Segundo apellido" />
+                          <div *ngIf="!(padre.pendiente_completar === 'Si' && !padre.segundo_apellido)" class="process-container-text">{{ padre.segundo_apellido || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Pendiente completar</label>
+                          <div class="process-container-text">{{ padre.pendiente_completar }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Estado Rpa padres</label>
+                          <div class="process-container-text">{{ getLabelEstadoRpaPadres(padre.estado_rpa_padres) }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Radicado otro padre</label>
+                          <div class="process-container-text">{{ padre.radicado_otro_padre || '—' }}</div>
+                        </div>
+                      </div>
+                      <div class="process-container-row tab-data-save-row" *ngIf="padre.pendiente_completar === 'Si'">
+                        <div class="process-container-col">
+                          <p-button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            (onClick)="completarPadreBiologico(padre, b, iBenef, 'padre')"
+                            [loading]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre')"
+                            [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre') || !puedeGuardarCompletarPadreBiologico(padre)"
+                            severity="primary"
+                            [style]="{ 'border-radius': '6px' }" />
+                        </div>
+                      </div>
+
+                      <!-- Gestión de estado Rpa padres: solo accionable si está en "No procesado" -->
+                      <div class="process-container-row" *ngIf="padre.estado_rpa_padres === 'No procesado'">
+                        <div class="process-container-col">
+                          <label class="process-container-label">Cambiar estado Rpa padres</label>
+                          <p-dropdown
+                            [options]="[{ label: 'Pendiente', value: 'Pendiente' }, { label: 'Procesado', value: 'Procesado' }]"
+                            [(ngModel)]="estadoRpaModel(padre.id).nuevoEstado"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            styleClass="data-field-dropdown" />
+                        </div>
+                        <div class="process-container-col" *ngIf="estadoRpaModel(padre.id).nuevoEstado === 'Procesado'">
+                          <label class="process-container-label">Radicado otro padre</label>
+                          <input
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="estadoRpaModel(padre.id).radicado"
+                            placeholder="Radicado otro padre" />
+                        </div>
+                        <div class="process-container-col">
+                          <p-button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            (onClick)="guardarEstadoRpaPadreBiologico(padre, iBenef, b)"
+                            [loading]="guardandoEstadoRpaPadresId === padre.id"
+                            [disabled]="guardandoEstadoRpaPadresId === padre.id || !puedeGuardarEstadoRpaPadreBiologico(padre.id)"
+                            severity="primary"
+                            [style]="{ 'border-radius': '6px' }" />
+                        </div>
+                      </div>
+                    </ng-container>
+                    <ng-template #formPadre>
+                      <p-button
+                        *ngIf="!formularioPadreBiologicoAbierto[keyPadreBiologico(iBenef, 'padre')]"
+                        label="Agregar padre"
+                        icon="pi pi-plus"
+                        severity="success"
+                        [style]="{ 'border-radius': '6px' }"
+                        (onClick)="abrirAgregarPadreBiologico(iBenef, 'padre')"></p-button>
+                      <ng-container *ngIf="formularioPadreBiologicoAbierto[keyPadreBiologico(iBenef, 'padre')]">
+                        <div class="process-container-row">
+                          <div class="process-container-col">
+                            <label class="process-container-label">Tipo documento</label>
+                            <p-dropdown
+                              [options]="opcionesTipoDocumento"
+                              [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].tipo_documento"
+                              optionLabel="label"
+                              optionValue="value"
+                              placeholder="Seleccione"
+                              appendTo="body"
+                              [style]="{ width: '100%' }"
+                              styleClass="data-field-dropdown" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Número documento</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].numero_documento" placeholder="Número documento" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Primer nombre</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].primer_nombre" placeholder="Primer nombre" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Segundo nombre</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].segundo_nombre" placeholder="Segundo nombre" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Primer apellido</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].primer_apellido" placeholder="Primer apellido" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Segundo apellido</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'padre')].segundo_apellido" placeholder="Segundo apellido" />
+                          </div>
+                        </div>
+                        <div class="process-container-row tab-data-save-row">
+                          <div class="process-container-col">
+                            <p-button
+                              label="Guardar"
+                              icon="pi pi-check"
+                              (onClick)="guardarNuevoPadreBiologico(b, iBenef, 'padre')"
+                              [loading]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre')"
+                              [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre') || !puedeGuardarNuevoPadreBiologico(iBenef, 'padre')"
+                              severity="primary"
+                              [style]="{ 'border-radius': '6px' }" />
+                          </div>
+                          <div class="process-container-col">
+                            <p-button
+                              label="Cancelar"
+                              icon="pi pi-times"
+                              severity="secondary"
+                              [style]="{ 'border-radius': '6px' }"
+                              [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'padre')"
+                              (onClick)="cancelarAgregarPadreBiologico(iBenef, 'padre')"></p-button>
+                          </div>
+                        </div>
+                      </ng-container>
+                    </ng-template>
+
+                    <h5 class="tab-data-section-subtitle">Información de la Madre</h5>
+                    <ng-container *ngIf="getMadreBiologica(iBenef) as madre; else formMadre">
+                      <div class="process-container-row">
+                        <div class="process-container-col">
+                          <label class="process-container-label">Tipo documento</label>
+                          <p-dropdown
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.tipo_documento"
+                            [options]="opcionesTipoDocumento"
+                            [(ngModel)]="madre.tipo_documento"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            styleClass="data-field-dropdown" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.tipo_documento)" class="process-container-text">{{ madre.tipo_documento || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Número documento</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.numero_documento"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.numero_documento"
+                            placeholder="Número documento" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.numero_documento)" class="process-container-text">{{ madre.numero_documento || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Primer nombre</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.primer_nombre"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.primer_nombre"
+                            placeholder="Primer nombre" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.primer_nombre)" class="process-container-text">{{ madre.primer_nombre || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Segundo nombre</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.segundo_nombre"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.segundo_nombre"
+                            placeholder="Segundo nombre" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.segundo_nombre)" class="process-container-text">{{ madre.segundo_nombre || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Primer apellido</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.primer_apellido"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.primer_apellido"
+                            placeholder="Primer apellido" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.primer_apellido)" class="process-container-text">{{ madre.primer_apellido || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Segundo apellido</label>
+                          <input
+                            *ngIf="madre.pendiente_completar === 'Si' && !madre.segundo_apellido"
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="madre.segundo_apellido"
+                            placeholder="Segundo apellido" />
+                          <div *ngIf="!(madre.pendiente_completar === 'Si' && !madre.segundo_apellido)" class="process-container-text">{{ madre.segundo_apellido || '—' }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Pendiente completar</label>
+                          <div class="process-container-text">{{ madre.pendiente_completar }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Estado Rpa padres</label>
+                          <div class="process-container-text">{{ getLabelEstadoRpaPadres(madre.estado_rpa_padres) }}</div>
+                        </div>
+                        <div class="process-container-col">
+                          <label class="process-container-label">Radicado otro padre</label>
+                          <div class="process-container-text">{{ madre.radicado_otro_padre || '—' }}</div>
+                        </div>
+                      </div>
+                      <div class="process-container-row tab-data-save-row" *ngIf="madre.pendiente_completar === 'Si'">
+                        <div class="process-container-col">
+                          <p-button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            (onClick)="completarPadreBiologico(madre, b, iBenef, 'madre')"
+                            [loading]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre')"
+                            [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre') || !puedeGuardarCompletarPadreBiologico(madre)"
+                            severity="primary"
+                            [style]="{ 'border-radius': '6px' }" />
+                        </div>
+                      </div>
+
+                      <!-- Gestión de estado Rpa padres: solo accionable si está en "No procesado" -->
+                      <div class="process-container-row" *ngIf="madre.estado_rpa_padres === 'No procesado'">
+                        <div class="process-container-col">
+                          <label class="process-container-label">Cambiar estado Rpa padres</label>
+                          <p-dropdown
+                            [options]="[{ label: 'Pendiente', value: 'Pendiente' }, { label: 'Procesado', value: 'Procesado' }]"
+                            [(ngModel)]="estadoRpaModel(madre.id).nuevoEstado"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            styleClass="data-field-dropdown" />
+                        </div>
+                        <div class="process-container-col" *ngIf="estadoRpaModel(madre.id).nuevoEstado === 'Procesado'">
+                          <label class="process-container-label">Radicado otro padre</label>
+                          <input
+                            type="text"
+                            class="data-field-input"
+                            [(ngModel)]="estadoRpaModel(madre.id).radicado"
+                            placeholder="Radicado otro padre" />
+                        </div>
+                        <div class="process-container-col">
+                          <p-button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            (onClick)="guardarEstadoRpaPadreBiologico(madre, iBenef, b)"
+                            [loading]="guardandoEstadoRpaPadresId === madre.id"
+                            [disabled]="guardandoEstadoRpaPadresId === madre.id || !puedeGuardarEstadoRpaPadreBiologico(madre.id)"
+                            severity="primary"
+                            [style]="{ 'border-radius': '6px' }" />
+                        </div>
+                      </div>
+                    </ng-container>
+                    <ng-template #formMadre>
+                      <p-button
+                        *ngIf="!formularioPadreBiologicoAbierto[keyPadreBiologico(iBenef, 'madre')]"
+                        label="Agregar madre"
+                        icon="pi pi-plus"
+                        severity="success"
+                        [style]="{ 'border-radius': '6px' }"
+                        (onClick)="abrirAgregarPadreBiologico(iBenef, 'madre')"></p-button>
+                      <ng-container *ngIf="formularioPadreBiologicoAbierto[keyPadreBiologico(iBenef, 'madre')]">
+                        <div class="process-container-row">
+                          <div class="process-container-col">
+                            <label class="process-container-label">Tipo documento</label>
+                            <p-dropdown
+                              [options]="opcionesTipoDocumento"
+                              [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].tipo_documento"
+                              optionLabel="label"
+                              optionValue="value"
+                              placeholder="Seleccione"
+                              appendTo="body"
+                              [style]="{ width: '100%' }"
+                              styleClass="data-field-dropdown" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Número documento</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].numero_documento" placeholder="Número documento" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Primer nombre</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].primer_nombre" placeholder="Primer nombre" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Segundo nombre</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].segundo_nombre" placeholder="Segundo nombre" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Primer apellido</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].primer_apellido" placeholder="Primer apellido" />
+                          </div>
+                          <div class="process-container-col">
+                            <label class="process-container-label">Segundo apellido</label>
+                            <input type="text" class="data-field-input" [(ngModel)]="formPadreBiologico[keyPadreBiologico(iBenef, 'madre')].segundo_apellido" placeholder="Segundo apellido" />
+                          </div>
+                        </div>
+                        <div class="process-container-row tab-data-save-row">
+                          <div class="process-container-col">
+                            <p-button
+                              label="Guardar"
+                              icon="pi pi-check"
+                              (onClick)="guardarNuevoPadreBiologico(b, iBenef, 'madre')"
+                              [loading]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre')"
+                              [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre') || !puedeGuardarNuevoPadreBiologico(iBenef, 'madre')"
+                              severity="primary"
+                              [style]="{ 'border-radius': '6px' }" />
+                          </div>
+                          <div class="process-container-col">
+                            <p-button
+                              label="Cancelar"
+                              icon="pi pi-times"
+                              severity="secondary"
+                              [style]="{ 'border-radius': '6px' }"
+                              [disabled]="guardandoPadreBiologicoKey === keyPadreBiologico(iBenef, 'madre')"
+                              (onClick)="cancelarAgregarPadreBiologico(iBenef, 'madre')"></p-button>
+                          </div>
+                        </div>
+                      </ng-container>
+                    </ng-template>
+                  </ng-container>
+                </div>
+              </div>
+
+              <!-- Archivos adjuntos del beneficiario -->
+              <div class="adjuntos-section benef-adjuntos" *ngIf="getAdjuntosBeneficiario(iBenef).length > 0">
+                <h4 class="adjuntos-section-title">Archivos adjuntos de {{ getNombreBeneficiario(b) }}</h4>
+                <div class="adjuntos-table-wrapper">
+                  <p-table
+                    [value]="getAdjuntosBeneficiario(iBenef)"
+                    [tableStyle]="{ 'min-width': '44rem' }"
+                    styleClass="p-datatable-sm p-datatable-striped adjuntos-table">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th style="width: 22%">Archivo</th>
+                        <th style="width: 18%">Tipo de adjunto</th>
+                        <th style="width: 14%">Validación</th>
+                        <th style="width: 30%">Descripción (si aplica)</th>
+                        <th class="adjuntos-col-acciones">Acciones</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item>
+                      <tr>
+                        <td>{{ item.adjunto.nombre_archivo }}</td>
+                        <td>{{ item.adjunto.nombre_tipo_adjunto || '—' }}</td>
+                        <td>
+                          <p-dropdown
+                            *ngIf="esAdjuntoPendienteValidacion(item)"
+                            [options]="valoracionOpciones"
+                            [(ngModel)]="item.valoracion"
+                            placeholder="Seleccione"
+                            appendTo="body"
+                            [style]="{ width: '100%' }"
+                            optionLabel="label"
+                            optionValue="value" />
+                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ getLabelValoracionAdjunto(item) }}</div>
+                        </td>
+                        <td>
+                          <ng-container *ngIf="esAdjuntoPendienteValidacion(item)">
+                            <textarea
+                              *ngIf="showDescripcionValoracion(item.valoracion)"
+                              [(ngModel)]="item.descripcion"
+                              class="adjunto-descripcion-input"
+                              rows="2"
+                              placeholder="Indique el motivo o descripción"></textarea>
+                            <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
+                          </ng-container>
+                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
+                        </td>
+                        <td>
+                          <div class="adjuntos-actions">
+                            <p-button
+                              icon="pi pi-eye"
+                              pTooltip="Previsualizar"
+                              tooltipPosition="top"
+                              severity="secondary"
+                              [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only p-button-outlined'"
+                              [style]="{ 'border-radius': '6px' }"
+                              [attr.aria-label]="'Previsualizar adjunto'"
+                              (onClick)="abrirAdjunto(item.adjunto)"></p-button>
+                            <p-button
+                              icon="pi pi-download"
+                              pTooltip="Descargar"
+                              tooltipPosition="top"
+                              severity="secondary"
+                              [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only p-button-outlined'"
+                              [style]="{ 'border-radius': '6px' }"
+                              [attr.aria-label]="'Descargar adjunto'"
+                              (onClick)="descargarAdjunto(item.adjunto)"></p-button>
+                            <p-button
+                              *ngIf="esAdjuntoPendienteValidacion(item)"
+                              icon="pi pi-check"
+                              pTooltip="Validar adjunto"
+                              tooltipPosition="top"
+                              [loading]="validandoAdjuntoId === item.adjunto.id"
+                              [disabled]="validandoAdjuntoId === item.adjunto.id || !item.valoracion"
+                              severity="success"
+                              [styleClass]="'adjunto-action-btn adjunto-action-btn--icon-only'"
+                              [style]="{ 'border-radius': '6px' }"
+                              [attr.aria-label]="'Validar adjunto'"
+                              (onClick)="openConfirmacionValidarAdjunto(item)"></p-button>
+                          </div>
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+              </div>
+              <div class="adjuntos-section empty benef-adjuntos" *ngIf="getAdjuntosBeneficiario(iBenef).length === 0">
+                <p class="adjuntos-empty-text">No hay archivos adjuntos para {{ getNombreBeneficiario(b) }}.</p>
+              </div>
+              <div
+                class="adjuntos-upload-row"
+                *ngIf="!d.solicitud.expediente && !solicitudEnPendienteAfiliacionRpa && !personaGestionNoEditable('beneficiario', iBenef)">
+                <p-button
+                  label="Subir adjuntos adicionales"
+                  icon="pi pi-upload"
+                  severity="success"
+                  [styleClass]="'adjunto-action-btn'"
+                  [style]="{ 'border-radius': '6px' }"
+                  (onClick)="abrirModalAdjuntos(b.persona.id, getIdParentescoBeneficiario(b))"></p-button>
+              </div>
+            </div>
+          </div>
+
+        </ng-container>
+
+        <ng-template #noBenef>
+          <p-message severity="info" text="No hay beneficiarios asociados."></p-message>
+        </ng-template>
+
+      </div>
+    </p-tabPanel>
+
+    <!-- ===================== NOVEDADES (visibilidad por integrantes: trabajador/beneficiario.novedades.calidad_datos) ===================== -->
+    <p-tabPanel
+      *ngIf="tieneNovedadesDeCalidad()"
+      header="Novedades"
+      headerStyleClass="p-tabview-nav-link-1">
+      <div class="tab-data-view">
+        <h3 class="tab-data-section-title">Novedades por calidad de datos (Registraduría)</h3>
+        <div class="novedades-calidad-root">
+          <div class="novedad-calidad-registro" *ngFor="let entrada of novedadesAMostrar">
+            <div class="novedad-calidad-registro-titulo">
+              <span class="novedad-calidad-nombre">{{ entrada.nombrePersona }}</span>
+              <span class="novedad-calidad-rol">({{ etiquetaRolNovedadCalidad(entrada.rol) }})</span>
+            </div>
+            <div class="novedad-calidad-registro-header">
+              <span class="novedad-calidad-estado-label">Estado</span>
+              <p-tag
+                [value]="textoEstadoNovedadCalidad(entrada.estadoId)"
+                [severity]="severidadEstadoNovedadCalidad(entrada.estadoId)"></p-tag>
+              <span class="novedad-calidad-fecha-reg" *ngIf="entrada.fechaRegistro">
+                Registro: {{ entrada.fechaRegistro }}
+              </span>
+            </div>
+            <p-table
+              *ngIf="entrada.filas.length > 0"
+              [value]="entrada.filas"
+              styleClass="p-datatable-sm p-datatable-striped novedades-calidad-tabla"
+              [tableStyle]="{ 'min-width': '100%' }">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 18%">Campo</th>
+                  <th style="width: 27%">Registraduría</th>
+                  <th style="width: 27%">Genesys</th>
+                  <th style="width: 28%">Novedad</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-fila>
+                <tr>
+                  <td class="novedad-col-campo">{{ fila.campoLabel }}</td>
+                  <td class="novedad-col-reg">{{ fila.registraduria }}</td>
+                  <td class="novedad-col-genesys">{{ fila.genesys }}</td>
+                  <td class="novedad-col-novedad">{{ fila.novedad }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+            <p *ngIf="entrada.filas.length === 0" class="novedades-calidad-sin-filas">
+              No hay llaves en <strong>diferencias</strong> para armar filas comparativas en esta novedad.
+            </p>
+          </div>
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <!-- ===================== HISTORICO GESTION ===================== -->
+    <p-tabPanel header="Histórico Gestión" headerStyleClass="p-tabview-nav-link-2">
+      <div class="tab-data-view historial-gestion-tab">
+        <h4 class="tab-data-section-subtitle mb-3">Histórico solicitud general</h4>
+        <p-table
+          [value]="requestHistoric"
+          [loading]="cargandoHistorialGestion"
+          [scrollable]="true"
+          scrollHeight="420px"
+          styleClass="p-datatable-sm historial-gestion-table"
+          responsiveLayout="stack"
+          [paginator]="false"
+          [tableStyle]="{ 'min-width': '40rem' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col" style="min-width: 9.5rem">Fecha / hora</th>
+              <th scope="col" style="min-width: 6rem">Estado</th>
+              <th scope="col" style="min-width: 8rem">Responsable asignado</th>
+              <th scope="col" style="min-width: 14rem">Observaciones / detalle</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+            <tr>
+              <td>
+                <span class="p-column-title">Fecha / hora</span>
+                <span class="historial-celda-valor">{{ historialFechaHoraMostrar(row) }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Estado</span>
+                <span class="historial-celda-valor">{{ estadoHistorialCodigo(row) || '—' }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Responsable asignado</span>
+                <span class="historial-celda-valor">{{
+                  row.responsable_asignado || row.user_name_completed || '—'
+                }}</span>
+              </td>
+              <td class="historial-td-obs">
+                <span class="p-column-title">Observaciones / detalle</span>
+                <div class="historial-obs-wrap">
+                  <ng-container *ngIf="row.detalle_observacion?.trim(); else sinObsTpl">
+                    <div
+                      class="historial-obs-texto"
+                      [class.historial-obs-texto--collapsed]="
+                        observacionHistorialLarga(row) && !isHistorialObsExpandido(rowIndex)
+                      ">
+                      {{ row.detalle_observacion }}
+                    </div>
+                    <button
+                      *ngIf="observacionHistorialLarga(row)"
+                      type="button"
+                      class="historial-obs-toggle"
+                      (click)="toggleHistorialObs(rowIndex)">
+                      {{ isHistorialObsExpandido(rowIndex) ? 'Ver menos' : 'Ver más' }}
+                    </button>
+                  </ng-container>
+                  <ng-template #sinObsTpl>
+                    <span class="historial-sin-obs">Sin observaciones</span>
+                  </ng-template>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4" class="historial-empty">
+                <ng-container *ngIf="!cargandoHistorialGestion">
+                  No hay registros disponibles en el histórico de gestión.
+                </ng-container>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <p-paginator
+          (onPageChange)="onPageChangeHistoric($event)"
+          [first]="firstHistoric"
+          [rows]="rowsHistoric"
+          [totalRecords]="totalRowsHistoric"
+          [rowsPerPageOptions]="[10, 20, 30]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"></p-paginator>
+
+        <h4 class="tab-data-section-subtitle mt-4 mb-3">Histórico integrantes</h4>
+        <p-table
+          [value]="requestHistoricIntegrantes"
+          [loading]="cargandoHistorialGestionIntegrantes"
+          [scrollable]="true"
+          scrollHeight="420px"
+          styleClass="p-datatable-sm historial-gestion-table"
+          responsiveLayout="stack"
+          [paginator]="false"
+          [tableStyle]="{ 'min-width': '48rem' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col" style="min-width: 9.5rem">Fecha / hora</th>
+              <th scope="col" style="min-width: 10rem">Integrante</th>
+              <th scope="col" style="min-width: 9rem">Identificación</th>
+              <th scope="col" style="min-width: 6rem">Estado</th>
+              <th scope="col" style="min-width: 8rem">Responsable asignado</th>
+              <th scope="col" style="min-width: 14rem">Observaciones / detalle</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+            <tr>
+              <td>
+                <span class="p-column-title">Fecha / hora</span>
+                <span class="historial-celda-valor">{{ historialFechaHoraMostrar(row) }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Integrante</span>
+                <span class="historial-celda-valor">{{ nombreIntegranteHistorial(row) }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Identificación</span>
+                <span class="historial-celda-valor">{{ identificacionIntegranteHistorial(row) }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Estado</span>
+                <span class="historial-celda-valor">{{ estadoHistorialCodigo(row) || '—' }}</span>
+              </td>
+              <td>
+                <span class="p-column-title">Responsable asignado</span>
+                <span class="historial-celda-valor">{{
+                  row.responsable_asignado || row.user_name_completed || '—'
+                }}</span>
+              </td>
+              <td class="historial-td-obs">
+                <span class="p-column-title">Observaciones / detalle</span>
+                <div class="historial-obs-wrap">
+                  <ng-container *ngIf="row.detalle_observacion?.trim(); else sinObsIntegranteTpl">
+                    <div
+                      class="historial-obs-texto"
+                      [class.historial-obs-texto--collapsed]="
+                        observacionHistorialLarga(row) && !isHistorialObsExpandidoIntegrante(rowIndex)
+                      ">
+                      {{ row.detalle_observacion }}
+                    </div>
+                    <button
+                      *ngIf="observacionHistorialLarga(row)"
+                      type="button"
+                      class="historial-obs-toggle"
+                      (click)="toggleHistorialObsIntegrante(rowIndex)">
+                      {{ isHistorialObsExpandidoIntegrante(rowIndex) ? 'Ver menos' : 'Ver más' }}
+                    </button>
+                  </ng-container>
+                  <ng-template #sinObsIntegranteTpl>
+                    <span class="historial-sin-obs">Sin observaciones</span>
+                  </ng-template>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="historial-empty">
+                <ng-container *ngIf="!cargandoHistorialGestionIntegrantes">
+                  No hay registros disponibles en el histórico de integrantes.
+                </ng-container>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <p-paginator
+          (onPageChange)="onPageChangeHistoricIntegrantes($event)"
+          [first]="firstHistoricIntegrantes"
+          [rows]="rowsHistoricIntegrantes"
+          [totalRecords]="totalRowsHistoricIntegrantes"
+          [rowsPerPageOptions]="[10, 20, 30]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"></p-paginator>
+      </div>
+    </p-tabPanel>
+
+      </p-tabView>
+    </div>
+  </ng-container>
+
+  <p-dialog
+    header="{{ dialogHeader }}"
+    [(visible)]="isDialogVisible"
+    [modal]="true"
+    [style]="{ width: '60vw' }"
+    [contentStyle]="{ padding: '1em' }"
+    [responsive]="true"
+    [styleClass]="'custom-dialog'">
+    <p class="mb-5" [ngStyle]="{ 'white-space': 'pre-line' }">
+      {{ dialogContent }}
+    </p>
+  </p-dialog>
+
+  <p-dialog
+    [header]="resumenDatosWsTitulo"
+    [(visible)]="visibleResumenDatosWs"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: 'min(1320px, 98vw)' }"
+    [contentStyle]="{ padding: '0.75rem 1rem 1rem' }"
+    [styleClass]="'custom-dialog resumen-ws-dialog'"
+    (onHide)="resumenDatosWsFilas = []">
+    <div class="info-list resumen-ws-info-list" *ngIf="resumenDatosWsFilas.length > 0; else resumenWsVacio">
+      <div class="info-row" *ngFor="let fila of resumenDatosWsFilas">
+        <span class="info-label" [attr.title]="fila.clave">{{ fila.etiqueta }}</span>
+        <span class="info-value">{{ fila.valor }}</span>
+      </div>
+    </div>
+    <ng-template #resumenWsVacio>
+      <p class="resumen-ws-sin-datos">sin información</p>
+    </ng-template>
+  </p-dialog>
+}
+<p-toast></p-toast>
+
+<!-- Modal subir adjuntos adicionales -->
+<p-dialog
+  [header]="getTituloModalAdjuntosAdicionales()"
+  [(visible)]="visibleModalAdjuntosAdicionales"
+  [modal]="true"
+  [style]="{ width: '480px', 'max-width': '95vw', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="closeModalAdjuntosAdicionales()">
+  <div class="dialog-content">
+    <form [formGroup]="adjuntoForm" class="adjuntos-adicionales-form">
+      <div class="form-group">
+        <label class="process-container-label" for="tipoAdjuntoAdicional">Tipo de documento</label>
+        <p-dropdown
+          inputId="tipoAdjuntoAdicional"
+          formControlName="id_tipo_adjunto"
+          [options]="listaTiposAdjunto"
+          optionLabel="nombre_documento"
+          optionValue="id"
+          placeholder="Seleccione tipo"
+          appendTo="body"
+          [loading]="cargandoCatalogoAdjuntosPorParentesco"
+          [disabled]="cargandoCatalogoAdjuntosPorParentesco || listaTiposAdjunto.length === 0"
+          (onChange)="onTipoDocumentoChange($event)"
+          [style]="{ width: '100%' }"
+          styleClass="w-full"></p-dropdown>
+        <small *ngIf="listaTiposAdjunto.length === 0 && !cargandoCatalogoAdjuntosPorParentesco" class="adjuntos-adicionales-hint">
+          No hay tipos de adjunto para este parentesco.
+        </small>
+      </div>
+
+      <div class="form-group" *ngIf="adjuntoForm.get('id_tipo_adjunto')?.value">
+        <label class="process-container-label">Archivo</label>
+        <div class="custom-file-upload">
+          <input
+            type="file"
+            #fileInputAdjuntosAdicionales
+            [attr.accept]="formatosPermitidosActuales || null"
+            (change)="onFileSelectedAdjuntosAdicionales($event)" />
+          <label class="upload-label" (click)="fileInputAdjuntosAdicionales.click()">
+            Elegir archivo <i class="pi pi-upload"></i>
+          </label>
+        </div>
+        <small class="adjuntos-adicionales-formatos">
+          Formatos permitidos: {{ formatosPermitidosActuales || '—' }}
+        </small>
+        <p class="adjuntos-adicionales-count" *ngIf="archivoSeleccionado">
+          {{ archivoSeleccionado.name }}
+        </p>
+      </div>
+    </form>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Subir"
+        icon="pi pi-upload"
+        severity="success"
+        [loading]="subiendoAdjuntosAdicionales"
+        [disabled]="subiendoAdjuntosAdicionales || adjuntoForm.invalid || !archivoSeleccionado"
+        (onClick)="subirAdjuntosAdicionales()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        [disabled]="subiendoAdjuntosAdicionales"
+        (onClick)="closeModalAdjuntosAdicionales()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmación rechazo trabajador (cascade integrantes + solicitud Rechazada) -->
+<p-dialog
+  header="Confirmar rechazo del trabajador"
+  [(visible)]="visibleConfirmarRechazoTrabajador"
+  [modal]="true"
+  [style]="{ width: '460px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarConfirmacionRechazoTrabajador()">
+  <div class="dialog-content">
+    <p class="confirmation-text">
+      Al rechazar al trabajador, todos los integrantes pasarán a estado <strong>Rechazado</strong>
+      y la solicitud quedará en <strong>Rechazada</strong>. ¿Desea continuar?
+    </p>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Sí, rechazar"
+        icon="pi pi-check"
+        severity="danger"
+        [loading]="guardandoEstadoGestionSolicitud"
+        [disabled]="guardandoEstadoGestionSolicitud"
+        (onClick)="confirmarRechazoTrabajadorGestionEstado()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        [disabled]="guardandoEstadoGestionSolicitud"
+        (onClick)="cerrarConfirmacionRechazoTrabajador()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmación guardar datos del trabajador -->
+<p-dialog
+  header="Confirmar guardar cambios"
+  [(visible)]="visibleConfirmarGuardarTrabajador"
+  [modal]="true"
+  [style]="{ width: '420px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarConfirmacionGuardarTrabajador()">
+  <div class="dialog-content">
+    <p class="confirmation-text">
+      ¿Está seguro de guardar los cambios en los datos del afiliado?
+    </p>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Sí, guardar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="confirmarGuardarTrabajador()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="cerrarConfirmacionGuardarTrabajador()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmación guardar datos del beneficiario -->
+<p-dialog
+  header="Confirmar guardar cambios"
+  [(visible)]="visibleConfirmarGuardarBeneficiario"
+  [modal]="true"
+  [style]="{ width: '420px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarConfirmacionGuardarBeneficiario()">
+  <div class="dialog-content">
+    <p class="confirmation-text" *ngIf="beneficiarioAGuardar">
+      ¿Está seguro de guardar los cambios en los datos del beneficiario <strong>{{ getNombreBeneficiario(beneficiarioAGuardar.b) }}</strong>?
+    </p>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Sí, guardar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="confirmarGuardarBeneficiario()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="cerrarConfirmacionGuardarBeneficiario()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmación validar adjunto -->
+<p-dialog
+  header="Confirmar validación"
+  [(visible)]="visibleConfirmarValidarAdjunto"
+  [modal]="true"
+  [style]="{ width: '420px', 'border-radius': '12px' }"
+  [contentStyle]="{ padding: '1.25rem' }"
+  [closable]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarConfirmacionValidarAdjunto()">
+  <div class="dialog-content">
+    <p class="confirmation-text" *ngIf="adjuntoAValidar">
+      ¿Está seguro de validar el adjunto <strong>{{ adjuntoAValidar.adjunto.nombre_archivo }}</strong> con la valoración seleccionada?
+    </p>
+    <div class="dialog-buttons" style="margin-top: 1rem;">
+      <p-button
+        label="Sí, validar"
+        icon="pi pi-check"
+        severity="success"
+        (onClick)="confirmarValidarAdjunto()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="cerrarConfirmacionValidarAdjunto()"
+        [style]="{ 'border-radius': '6px' }"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Previsualización"
+  [(visible)]="displayModal"
+  [modal]="true"
+  [style]="{ width: 'min(95vw, 900px)' }"
+  [breakpoints]="{ '960px': '90vw', '640px': '98vw' }"
+  [contentStyle]="{ padding: '0.75rem' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarModalPrevisualizacionImagen()">
+  <img
+    *ngIf="urlImagenPreview"
+    [src]="urlImagenPreview"
+    alt="Vista previa del adjunto"
+    style="width: 100%; height: auto; max-height: 80vh; object-fit: contain; display: block" />
+</p-dialog>
+
+<p-dialog
+  header="Previsualización PDF"
+  [(visible)]="displayModalPdf"
+  [modal]="true"
+  [style]="{ width: 'min(96vw, 1100px)' }"
+  [breakpoints]="{ '960px': '95vw', '640px': '100vw' }"
+  [contentStyle]="{ padding: 0, overflow: 'hidden' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="cerrarModalPrevisualizacionPdf()">
+  <iframe
+    *ngIf="urlPdfPreview"
+    [src]="urlPdfPreview"
+    title="Vista previa del PDF"
+    class="pdf-preview-iframe-adjunto"></iframe>
+</p-dialog>
+
+<p-dialog
+  header="Previsualización del Documento"
+  [(visible)]="displayPreviewModal"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  (onHide)="displayPreviewModal = false">
+  <div *ngIf="viewerType === 'google'">
+    <ngx-doc-viewer
+      [url]="preSignedUrlDownload"
+      viewer="google"
+      style="width: 100%; height: 500px"></ngx-doc-viewer>
+  </div>
+
+  <div *ngIf="viewerType === 'office'">
+    <ngx-doc-viewer
+      [url]="preSignedUrlDownload"
+      viewer="office"
+      style="width: 100%; height: 500px"></ngx-doc-viewer>
+  </div>
+
+  <div *ngIf="viewerType === 'image'" class="image-container">
+    <img [src]="preSignedUrlDownload" alt="Preview" class="image-preview" />
+  </div>
+
+  <div *ngIf="viewerType === 'pdf'">
+    <ngx-doc-viewer
+      [url]="preSignedUrlDownload"
+      viewer="google"
+      style="width: 100%; height: 500px"></ngx-doc-viewer>
+  </div>
+</p-dialog>
+
+<app-modal-dinamic
+  *ngIf="visibleDialog"
+  [select]="true"
+  [visible]="visibleDialog"
+  [message]="message"
+  (setRta)="closeDialog($event)"></app-modal-dinamic>
+
+<app-modal-assign-afiliation-selector
+  *ngIf="visibleDialogInput"
+  [visible]="visibleDialogInput"
+  [message]="message"
+  [buttonmsg]="buttonmsg"
+  [parameter]="parameter"
+  (setRta)="closeDialogInput($event)"
+  (setRtaParameter)="setParameter($event)"></app-modal-assign-afiliation-selector>
+
+<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [message2]="message2"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="closeDialogAlert($event)"></app-modal-alert>
+
+<app-modal-characterization
+  *ngIf="visibleCharacterization"
+  [select]="true"
+  [visible]="visibleCharacterization"
+  [message]="message"
+  [request_details]="request_details"
+  (setRta)="closeDialogCharacterization($event)"
+  (setRtaParameter)="setParameterCharacterization($event)"></app-modal-characterization>
+
+<p-dialog
+  header="Respuesta sugerida por IA"
+  [(visible)]="visibleDialogIa"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'">
+  <ng-template pTemplate="header">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <img
+        src="../../../../assets/images/ia_.gif"
+        alt="GIF animado"
+        style="width: 40px; height: 40px; border-radius: 50%" />
+      <span>Respuesta sugerida por IA</span>
+    </div>
+  </ng-template>
+
+  <div class="dialog-content">
+    <span class="disclaimer">
+      El asistente de IA puede cometer errores. Comprueba siempre la información importante.
+    </span>
+    <br />
+    <p><strong>Categoría:</strong> {{ categoria }}</p>
+    <p>
+      <strong>Respuesta sugerida:</strong> <br />
+      <textarea id="respuesta-corregida" class="custom-textarea" readonly>
+      Hola, buen día!
+      {{ respuestaPredefinida }}
+      </textarea>
+    </p>
+    <div class="confirmation-text">
+      <p>¿Desea usar esta respuesta para la solicitud?</p>
+    </div>
+    <div class="dialog-buttons">
+      <button type="button" class="btn btn-yes" (click)="confirmarRespuesta()">Sí</button>
+      <button type="button" class="btn btn-no" (click)="cancelar()">No</button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Corrección de ortografía sugerida por IA"
+  [(visible)]="visibleCorreccionIa"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'">
+  <ng-template pTemplate="header">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <img
+        src="../../../../assets/images/ia_.gif"
+        alt="GIF animado"
+        style="width: 40px; height: 40px; border-radius: 50%" />
+      <span>Corrección de ortografía sugerida por IA</span>
+    </div>
+  </ng-template>
+
+  <div class="dialog-content">
+    <span class="disclaimer">
+      El asistente de IA puede cometer errores. Comprueba siempre la información importante.
+    </span>
+    <br />
+    <!-- Respuesta original -->
+    <div class="form-group">
+      <label for="respuesta-original">Respuesta original:</label>
+      <textarea id="respuesta-original" class="custom-textarea" readonly>{{
+        respuestaSolicitud
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Respuesta corregida -->
+    <div class="form-group">
+      <label for="respuesta-corregida">Respuesta corregida por IA:</label>
+      <textarea id="respuesta-corregida" class="custom-textarea" readonly>{{
+        respuestaCorregida
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Palabras corregidas -->
+    <div class="form-group">
+      <label for="palabras-error">Palabras corregidas por IA:</label>
+      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{
+        palabrasError
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Pregunta de confirmación -->
+    <div class="confirmation-text">
+      <p>¿Desea usar esta respuesta para la solicitud?</p>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button
+        type="button"
+        class="btn btn-yes"
+        (click)="borradorRespuesta(requestDetails?.request_id)">
+        Sí
+      </button>
+      <button
+        type="button"
+        class="btn btn-no"
+        (click)="borradorRespuestaNoCorregida(requestDetails!)">
+        No
+      </button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Corrección de ortografía sugerida por IA"
+  [(visible)]="visibleCorreccionIaEnviar"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'">
+  <ng-template pTemplate="header">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <img
+        src="../../../../assets/images/ia_.gif"
+        alt="GIF animado"
+        style="width: 40px; height: 40px; border-radius: 50%" />
+      <span>Corrección de ortografía sugerida por IA</span>
+    </div>
+  </ng-template>
+
+  <div class="dialog-content">
+    <span class="disclaimer">
+      El asistente de IA puede cometer errores. Comprueba siempre la información importante.
+    </span>
+    <br />
+    <!-- Respuesta original -->
+    <div class="form-group">
+      <label for="respuesta-original">Respuesta original:</label>
+      <textarea id="respuesta-original" class="custom-textarea" readonly>{{
+        respuestaSolicitud
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Respuesta corregida -->
+    <div class="form-group">
+      <label for="respuesta-corregida">Respuesta corregida por IA:</label>
+      <textarea id="respuesta-corregida" class="custom-textarea" readonly>{{
+        respuestaCorregida
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Palabras corregidas -->
+    <div class="form-group">
+      <label for="palabras-error">Palabras corregidas por IA:</label>
+      <textarea id="palabras-error" class="custom-textareaErrores" readonly>{{
+        palabrasError
+      }}</textarea>
+    </div>
+    <br />
+    <!-- Pregunta de confirmación -->
+    <div class="confirmation-text">
+      <p>¿Desea usar esta respuesta para la solicitud?</p>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="button" class="btn btn-yes" (click)="characterizeRequestIA(requestDetails!)">
+        Sí
+      </button>
+      <button
+        type="button"
+        class="btn btn-no"
+        (click)="characterizeRequestNoCorreccion(requestDetails!)">
+        No
+      </button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="visibleSolicitudPendiente"
+  [modal]="true"
+  [showHeader]="false"
+  [style]="{ width: '50vw', 'border-radius': '12px', 'max-width': '600px' }"
+  [contentStyle]="{ padding: '2em' }"
+  [closable]="false"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false">
+  <!-- Encabezado personalizado -->
+  <div class="custom-dialog-header">
+    <i class="pi pi-clock custom-icon"></i>
+    <h2>Solicitud Pendiente</h2>
+  </div>
+
+  <!-- Formulario -->
+  <form [formGroup]="pendingRequestForm" (ngSubmit)="onSubmit()">
+    <!-- Mensaje -->
+    <div class="form-group">
+      <label for="message">Mensaje</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        rows="4"
+        class="form-control"
+        placeholder="Escribe tu mensaje aquí"
+        required>
+      </textarea>
+    </div>
+
+    <!-- Archivos adjuntos -->
+    <div class="form-group">
+      <label for="file">Archivos adjuntos</label>
+      <div class="custom-file-upload">
+        <input
+          id="file"
+          type="file"
+          #archive_request_pending
+          name="archive_request_pending"
+          (change)="onFileSelectedPending($event)"
+          accept=".jpeg,.jpg,.png,.pdf,.xls,.xlsx,.doc,.docx"
+          maxFileSize="20971520"
+          multiple />
+        <label class="upload-label" (click)="openFileInputPending()">
+          Seleccionar Archivo <i class="pi pi-upload"></i>
+        </label>
+      </div>
+
+      <!-- Mensajes de error -->
+      <p class="error-message" *ngIf="errorSizeFile || errorExtensionFile || errorRepeatFile">
+        {{ errorSizeFile ? errorMensajeFile : '' }}
+        {{ errorExtensionFile ? errorMensajeFile : '' }}
+        {{ errorRepeatFile ? errorMensajeFile : '' }}
+      </p>
+    </div>
+
+    <!-- Lista de archivos seleccionados -->
+    <div class="file-list" *ngFor="let fileNameP of fileNameListPending; let i = index">
+      <p class="file-name">{{ fileNameP }}</p>
+      <i (click)="clearFileInputPending(i)" class="pi pi-times remove-file"></i>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-primary" [disabled]="pendingRequestForm.invalid">
+        Enviar
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="closeDialogPending()">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</p-dialog>
+
+<!-- masivo envio de respuesta -->
+<p-dialog
+  header="Envio de respuesta masivo"
+  [(visible)]="visibleSolicitudEnvioMasivo"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Envio respuesta masivo</span>
+    </div>
+  </ng-template>
+
+  <!-- Formulario -->
+
+  <form [formGroup]="envioMasivoForm" (ngSubmit)="onSubmitRepuestaMasivo()">
+    <!-- Mensaje de error -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Agregar correo -->
+    <div class="form-group">
+      <label> Número de Radicado </label>
+      <li>{{ requestDetails?.request_id }}</li>
+      <br />
+      <label for="email">Correo Electrónico</label>
+      <div class="email-input-group">
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-control input-short"
+          placeholder="Introduce un correo"
+          required />
+        <button type="button" class="btn btn-add" (click)="addEmail()">+</button>
+      </div>
+    </div>
+
+    <!-- Lista de correos -->
+    <div *ngIf="emailList.length > 0" class="email-list">
+      <ul class="horizontal-list">
+        <li *ngFor="let email of emailList; let i = index" class="horizontal-item">
+          {{ email }}
+          <button type="button" class="btn btn-remove" (click)="removeEmail(i)">X</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Mensaje -->
+    <br />
+    <div class="form-group">
+      <label for="message">Mensaje cierre solicitud</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        rows="4"
+        class="form-control"
+        placeholder="{{ requestDetails?.request_answer }}"
+        readonly
+        required>
+      </textarea>
+    </div>
+
+    <!-- Botones -->
+    <div class="dialog-buttons">
+      <button type="submit" class="btn btn-yes">Enviar</button>
+      <button type="button" class="btn btn-cancel" (click)="closeDialogenvioCorreoMasivo()">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</p-dialog>
+
+<!-- pop up historia respuestas -->
+<p-dialog
+  header="Historia"
+  [(visible)]="visibleHistory"
+  [modal]="true"
+  [ngStyle]="{ 'white-space': 'pre-line' }"
+  [style]="{ width: '60vw' }"
+  [contentStyle]="{ padding: '1em' }"
+  [responsive]="true"
+  [styleClass]="'custom-dialog'"
+  [closable]="false">
+  <!-- Encabezado personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <span id="dialog-title">Historia</span>
+    </div>
+  </ng-template>
+
+  <!-- Contenido -->
+  <div *ngFor="let item of historyData; let i = index" class="history-item">
+    <div
+      class="chat-bubble"
+      [ngClass]="{
+        'user-internal': item.usuario === 'usuario interno',
+        'user-external': item.usuario === 'usuario externo'
+      }">
+      <div class="chat-header">
+        <span> {{ item.usuario }} {{ item.fecha }}</span>
+      </div>
+      <div class="chat-header">
+        <span><strong>Mensaje</strong> </span>
+      </div>
+      <div class="chat-message">
+        {{ item.observacion }}
+      </div>
+      <br />
+      <div class="chat-header">
+        <span><strong>Archivos</strong> </span>
+      </div>
+
+      <p-table
+        *ngIf="item.processed_attachments && item.processed_attachments.length > 0"
+        [value]="item.processed_attachments"
+        [scrollable]="true"
+        scrollHeight="100px"
+        selectionMode="single"
+        [paginator]="false"
+        [rows]="2"
+        [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '52rem' }">
+        <ng-template pTemplate="header">
+          <tr style="height: 20px">
+            <th style="width: 20%">Archivo</th>
+            <th style="width: 5%">Previsualizar</th>
+            <th style="width: 5%">Descargar</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-attachment>
+          <tr>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              {{ attachment.file_name }}
+            </td>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              <p-button
+                icon="pi pi-eye"
+                [styleClass]="'btn-icon-info'"
+                (click)="getPreSignedUrlToDownload(attachment.url, attachment.file_name, false)">
+              </p-button>
+            </td>
+            <td [ngStyle]="{ 'text-align': 'center' }">
+              <p-button
+                icon="pi pi-download"
+                [styleClass]="'btn-icon-info'"
+                (click)="getPreSignedUrlToDownload(attachment.url, attachment.file_name, true)">
+              </p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <!-- Mostrar mensaje si no hay archivos -->
+      <div *ngIf="!item.processed_attachments || item.processed_attachments.length === 0">
+        <p>No hay archivos disponibles.</p>
+      </div>
+    </div>
+  </div>
+  <!-- Botones -->
+  <div class="dialog-buttons">
+    <button type="button" class="btn btn-cancel" (click)="closeDialogHistory()">Cerrar</button>
+  </div>
+</p-dialog>

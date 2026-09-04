@@ -1,0 +1,32 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+.modal-content {
+  background-color: $color-white;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.error-label {
+  color: $color-red;
+}
+
+.invalid {
+  color: $color-red;
+  font-size: small;
+}
+.custom-input {
+  font-size: inherit;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  color: #66798d;
+  /* Agrega cualquier otro estilo necesario */
+}
+
+label.invalid {
+  display: block;
+  margin-top: 4px;
+  margin-bottom: 10px; /* separa del siguiente label */
+  color: $color-red;
+  font-size: 0.85rem;
+  line-height: 1.1;
+}

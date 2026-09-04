@@ -1,0 +1,149 @@
+<div class="row mb-2">
+  <div class="col-12">
+    <div class="title-page">Gestión activación empresa</div>
+  </div>
+</div>
+
+<div class="filter-bar mb-3">
+  <div class="filter-item filter-item--estado">
+    <span class="filter-label">Estado gestión</span>
+    <div class="estado-gestion-opciones">
+      <div class="estado-gestion-opcion" *ngFor="let op of estadoGestionOpciones">
+        <p-radioButton
+          name="estadoGestionActivacion"
+          [inputId]="'estado-gestion-' + op.value"
+          [value]="op.value"
+          [(ngModel)]="estadoGestion"
+          (ngModelChange)="onEstadoGestionChange()">
+        </p-radioButton>
+        <label [for]="'estado-gestion-' + op.value" class="estado-gestion-opcion-label">
+          {{ op.label }}
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-item filter-item--tipo">
+    <label class="filter-label">Tipo documento empresa</label>
+    <input
+      pInputText
+      [(ngModel)]="tipoDocumentoEmpresa"
+      placeholder="Ej. NIT, CC"
+      class="filter-control w-100" />
+  </div>
+
+  <div class="filter-item filter-item--numero">
+    <label class="filter-label">Número documento empresa</label>
+    <input
+      pInputText
+      [(ngModel)]="numeroDocumentoEmpresa"
+      placeholder="Digite número de documento"
+      class="filter-control w-100" />
+  </div>
+
+  <div class="filter-actions">
+    <p-button
+      label="Buscar"
+      icon="pi pi-search"
+      styleClass="filter-btn"
+      (click)="applyFilter()">
+    </p-button>
+    <p-button
+      label="Limpiar"
+      icon="pi pi-times"
+      severity="secondary"
+      styleClass="filter-btn"
+      (click)="clearFilter()">
+    </p-button>
+  </div>
+</div>
+
+<div class="row mt-auto">
+  <div class="col-12">
+    <p-table
+      [value]="registros"
+      [scrollable]="true"
+      scrollHeight="600px"
+      selectionMode="single"
+      [paginator]="false"
+      [tableStyle]="{ 'min-width': '60rem' }">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 8%">Tipo doc.</th>
+          <th style="width: 12%">Número doc.</th>
+          <th style="width: 18%">Razón social</th>
+          <th style="width: 10%">Pendiente activar</th>
+          <th style="width: 8%">Cant. solicitudes</th>
+          <th *ngIf="!esPorGestionar" style="width: 12%">Número radicado</th>
+          <th *ngIf="!esPorGestionar" style="width: 15%">Observaciones</th>
+          <th *ngIf="!esPorGestionar" style="width: 10%">Usuario</th>
+          <th *ngIf="!esPorGestionar" style="width: 12%">Fecha gestión</th>
+          <th *ngIf="esPorGestionar" style="width: 8%"></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ row.tipo_documento }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ row.numero_documento }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ row.razon_social }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ row.pendiente_activar_empresa }}</td>
+          <td [ngStyle]="{ 'text-align': 'center' }">{{ row.cantidad_solicitudes }}</td>
+          <td *ngIf="!esPorGestionar" [ngStyle]="{ 'text-align': 'center' }">{{ row.numero_radicado }}</td>
+          <td *ngIf="!esPorGestionar" [ngStyle]="{ 'text-align': 'center' }">{{ row.observaciones }}</td>
+          <td *ngIf="!esPorGestionar" [ngStyle]="{ 'text-align': 'center' }">{{ row.sinc_usuario }}</td>
+          <td *ngIf="!esPorGestionar" class="fecha-gestion-cell" [ngStyle]="{ 'text-align': 'center' }">{{ textoFechaGestion(row) }}</td>
+          <td *ngIf="esPorGestionar" [ngStyle]="{ 'text-align': 'center' }">
+            <p-button
+              *ngIf="row.puede_gestionar"
+              label="Gestionar"
+              icon="pi pi-check"
+              (click)="abrirGestionar(row)">
+            </p-button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="esPorGestionar ? 6 : 9" class="text-center">
+            No hay registros para mostrar.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p-paginator
+      (onPageChange)="onPageChange($event)"
+      [first]="first"
+      [rows]="rows"
+      [totalRecords]="totalRows"
+      [rowsPerPageOptions]="[10, 20, 30]">
+    </p-paginator>
+  </div>
+</div>
+
+<p-toast></p-toast>
+
+<app-modal-gestionar-activacion-empresa
+  [visible]="visibleDialogGestionar"
+  [empresa]="empresaSeleccionada"
+  (setRta)="cerrarModalGestionar($event)"
+  (setRtaParameter)="recibirDatosGestion($event)">
+</app-modal-gestionar-activacion-empresa>
+
+<app-modal-dinamic
+  *ngIf="visibleDialogConfirmacion"
+  [select]="true"
+  [visible]="visibleDialogConfirmacion"
+  [message]="message"
+  (setRta)="cerrarConfirmacion($event)">
+</app-modal-dinamic>
+
+<app-modal-alert
+  *ngIf="visibleDialogAlert"
+  [select]="true"
+  [visible]="visibleDialogAlert"
+  [message]="message"
+  [informative]="informative"
+  [severity]="severity"
+  (setRta)="cerrarAlerta()">
+</app-modal-alert>

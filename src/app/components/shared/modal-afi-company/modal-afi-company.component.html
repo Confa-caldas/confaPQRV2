@@ -1,0 +1,134 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+
+      <div class="my-4 px-5 text-center">{{ message }}</div>
+
+      <form [formGroup]="formGroup">
+        <div class="px-5">
+          <input type="hidden" formControlName="id_empresa" />
+          <input type="hidden" formControlName="contacto" />
+          <input type="hidden" formControlName="permite_afiliaciones_masivas" />
+
+          <div class="row my-3">
+          <!-- Tipo doc + Documento + Consultar -->
+          <div class="col-4">
+            <label>*Tipo documento</label>
+            <p-dropdown
+              [options]="tipoDocOptions"
+              formControlName="tipo_documento"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione">
+            </p-dropdown>
+            <small class="invalid" *ngIf="formGroup.get('tipo_documento')?.touched && formGroup.get('tipo_documento')?.invalid">
+              Campo requerido
+            </small>
+          </div>
+
+          <div class="col-5">
+            <label>*Documento</label>
+            <input
+              pInputText
+              formControlName="numero_documento"
+              placeholder="Ingrese documento"
+              [readonly]="read_only" />
+            <small class="invalid" *ngIf="formGroup.get('numero_documento')?.touched && formGroup.get('numero_documento')?.invalid">
+              Campo requerido
+            </small>
+          </div>
+
+          <div class="col-3 d-flex align-items-end">
+            <p-button
+              label="Consultar"
+              icon="pi pi-search"
+              [disabled]="read_only || consultDisabled"
+              (click)="consultarEmpresa()">
+            </p-button>
+          </div>
+          </div>
+        </div>
+
+        <!-- Datos que pinta la consulta -->
+        <div class="px-5">
+          <div class="row my-3">
+          <div class="col-6">
+            <label>Nombre comercial</label>
+            <input pInputText formControlName="nombre_comercial" [readonly]="true" />
+          </div>
+
+          <div class="col-6">
+            <label>Razón social</label>
+            <input pInputText formControlName="razonSocial" [readonly]="true" />
+          </div>
+          </div>
+        </div>
+
+        <div class="px-5">
+          <div class="row my-3">
+          <div class="col-6">
+            <label>Email</label>
+            <input pInputText formControlName="email" [readonly]="true" />
+          </div>
+
+          <div class="col-6">
+            <label>Teléfono</label>
+            <input pInputText formControlName="telefono" [readonly]="true" />
+          </div>
+          </div>
+        </div>
+
+        <div class="px-5">
+          <div class="row my-3">
+          <div class="col-12">
+            <label>Dirección</label>
+            <input pInputText formControlName="direccion" [readonly]="true" />
+          </div>
+          </div>
+        </div>
+
+        <div class="px-5">
+          <div class="row my-3">
+          <div class="col-12">
+            <label>Representante legal</label>
+            <input pInputText formControlName="representante_legal" [readonly]="true" />
+          </div>
+          </div>
+        </div>
+        
+        <div class="px-5">
+          <div class="row my-3">
+          <div class="col-6">
+            <label>Estado afiliación</label>
+            <input pInputText formControlName="estado_afiliacion" [readonly]="true" />
+          </div>
+          </div>
+        </div>
+
+   
+      </form>
+
+      <!-- Botones -->
+      <div *ngIf="read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cerrar" severity="secondary" (click)="closeDialog(false)"></p-button>
+      </div>
+
+      <div *ngIf="!read_only" class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" (click)="closeDialog(false)"></p-button>
+        <p-button
+          label="Guardar"
+          [disabled]="saveDisabled"
+          (click)="guardar()">
+        </p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
