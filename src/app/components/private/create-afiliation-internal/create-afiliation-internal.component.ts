@@ -1579,7 +1579,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
         this.camposPersonalesPrecargados[name] === true;
 
       for (const [camel, snake] of Object.entries(mapVisibilidad)) {
-        if (snake === name && camposVisibles[camel] === false) {
+        // Solo deshabilitar por camposVisibles=false si el control realmente quedó con un valor
+        // (el backend puede marcar un campo como "resuelto" sin haber traído el dato; si lo
+        // deshabilitáramos igual, quedaría bloqueado, vacío y obligatorio a la vez, y el usuario
+        // no podría completarlo ni ver el error hasta que el backend lo rechace al guardar).
+        if (snake === name && camposVisibles[camel] === false && this.tieneTexto(control.value)) {
           deshabilitar = true;
         }
       }
