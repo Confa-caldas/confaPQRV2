@@ -4574,14 +4574,20 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.aplicarEstadoGeneroPersonaACargo();
   }
 
-  /** Igual que afiliacion-beneficiarios: si Genesys trae el género, no se exige en pantalla. */
+  /**
+   * Igual que afiliacion-beneficiarios: si Genesys trae el género, no se exige en pantalla. Pero si
+   * Genesys reporta datos disponibles y aun así el género específico llegó vacío, se deja
+   * visible/editable (evita que quede oculto, vacío y sin forma de completarlo).
+   */
   private aplicarEstadoGeneroPersonaACargo(): void {
-    this.mostrarCampoGeneroPersonaACargo = !this.datosGenesysDisponiblesBeneficiario;
     const genero = this.formularioPersonaACargo.get('genero');
+    const tieneGeneroReal = this.tieneTexto(genero?.value);
+    const ocultarYBloquear = this.datosGenesysDisponiblesBeneficiario && tieneGeneroReal;
+    this.mostrarCampoGeneroPersonaACargo = !ocultarYBloquear;
     if (!genero) {
       return;
     }
-    if (this.datosGenesysDisponiblesBeneficiario) {
+    if (ocultarYBloquear) {
       genero.disable({ emitEvent: false });
       return;
     }
