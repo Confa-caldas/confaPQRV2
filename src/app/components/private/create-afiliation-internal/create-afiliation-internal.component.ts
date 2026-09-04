@@ -4562,7 +4562,10 @@ export class CreateAfiliationInternalComponent implements OnInit {
     };
     Object.entries(map).forEach(([apiKey, controlName]) => {
       const control = this.formularioPersonaACargo.get(controlName);
-      if (control && camposVisibles[apiKey] === false) {
+      // Igual que en aplicarVisibilidadFormularioPersonal: solo deshabilitar por camposVisibles=false
+      // si el control realmente quedó con un valor; si el backend lo marca como "resuelto" sin traer
+      // el dato, se deja habilitado para que la persona lo pueda completar.
+      if (control && camposVisibles[apiKey] === false && this.tieneTexto(control.value)) {
         control.disable({ emitEvent: false });
       } else if (control && controlName !== 'genero') {
         control.enable({ emitEvent: false });
