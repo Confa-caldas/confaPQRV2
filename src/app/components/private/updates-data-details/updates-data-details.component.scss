@@ -61,6 +61,25 @@
     margin: 0 -10px;
     border-radius: 4px;
   }
+  &.comparison-row-duplicado {
+    background-color: #f8d7da;
+    border: 1px solid #f5c2c7;
+    padding: 8px 10px;
+    margin: 0 -10px;
+    border-radius: 4px;
+  }
+}
+.comparison-duplicado-banner {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 0 16px 0;
+  padding: 10px 16px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  color: #842029;
+  font-weight: 700;
+  text-align: center;
 }
 .comparison-label {
   font-size: 0.8rem;

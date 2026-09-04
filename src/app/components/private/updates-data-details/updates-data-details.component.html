@@ -8,11 +8,19 @@
   <p class="comparison-loading" *ngIf="loading && !novedadDetalle">Cargando detalle de la novedad...</p>
   <p class="comparison-empty" *ngIf="!loading && !novedadDetalle">No hay datos de novedad para mostrar. Verifique el identificador o regrese al listado.</p>
 
+  <div class="comparison-duplicado-banner" *ngIf="novedadDetalle && !loading && esDuplicado()">
+    Duplicado
+  </div>
+
   <div class="comparison-grid" *ngIf="novedadDetalle && !loading">
     <!-- Columna izquierda: Datos de Genesys (solo lectura, igual que Registraduría) -->
     <div class="comparison-column comparison-column-genesys">
       <h2 class="comparison-column-title">Datos de Genesys</h2>
       <div class="comparison-readonly">
+        <div class="comparison-row" [class.comparison-row-duplicado]="isFieldDifferent('tipoDocumento')">
+          <label class="comparison-label">Tipo de documento</label>
+          <span class="comparison-value">{{ comparisonForm.get('tipoDocumento')?.value || '—' }}</span>
+        </div>
         <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('primerNombre')">
           <label class="comparison-label">Primer nombre</label>
           <span class="comparison-value">{{ comparisonForm.get('primerNombre')?.value || '—' }}</span>
@@ -44,6 +52,10 @@
     <div class="comparison-column comparison-column-registraduria">
       <h2 class="comparison-column-title">Datos de Registraduría</h2>
       <div class="comparison-readonly">
+        <div class="comparison-row" [class.comparison-row-duplicado]="isFieldDifferent('tipoDocumento')">
+          <label class="comparison-label">Tipo de documento</label>
+          <span class="comparison-value">{{ datosRegistraduria.tipoDocumento || '—' }}</span>
+        </div>
         <div class="comparison-row" [class.comparison-row-different]="isFieldDifferent('primerNombre')">
           <label class="comparison-label">Primer nombre</label>
           <span class="comparison-value">{{ datosRegistraduria.primerNombre || '—' }}</span>

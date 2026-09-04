@@ -189,6 +189,7 @@ export class UpdatesDataDetailsComponent implements OnInit {
     segundoApellido: string;
     fechaExpedicionDoc: string | null;
     fechaNacimiento: string | null;
+    tipoDocumento: string | null;
   } = {
     primerNombre: '',
     segundoNombre: '',
@@ -196,6 +197,7 @@ export class UpdatesDataDetailsComponent implements OnInit {
     segundoApellido: '',
     fechaExpedicionDoc: null,
     fechaNacimiento: null,
+    tipoDocumento: null,
   };
 
   constructor(
@@ -235,6 +237,7 @@ export class UpdatesDataDetailsComponent implements OnInit {
       segundoApellido: [''],
       fechaExpedicionDoc: [null as string | null],
       fechaNacimiento: [null as string | null],
+      tipoDocumento: [null as string | null],
     });
   }
 
@@ -509,6 +512,7 @@ loading = false;
       segundoApellido: n.segundo_apellido_genesys ?? '',
       fechaExpedicionDoc: toDateInput(n.fecha_expedicion_genesys),
       fechaNacimiento: toDateInput(n.fecha_nacimiento_genesys),
+      tipoDocumento: n.tipo_documento_genesys ?? null,
     });
     this.datosRegistraduria = {
       primerNombre: n.primer_nombre_reg ?? '',
@@ -517,6 +521,7 @@ loading = false;
       segundoApellido: n.segundo_apellido_reg ?? '',
       fechaExpedicionDoc: n.fecha_expedicion_reg ?? null,
       fechaNacimiento: n.fecha_nacimiento_reg ?? null,
+      tipoDocumento: n.tipo_documento_reg ?? null,
     };
   }
 
@@ -550,17 +555,23 @@ loading = false;
         segundoApellido: p.segundo_apellido ?? '',
         fechaExpedicionDoc: p.fecha_expedicion_doc ?? null,
         fechaNacimiento: p.fecha_nacimiento ?? null,
+        tipoDocumento: p.tipo_documento ?? null,
       };
     }
     // TODO: llamar a tu servicio de Registraduría y asignar this.datosRegistraduria con la respuesta
   }
 
   /** Indica si el valor del campo en Genesys es distinto al de Registraduría (para resaltar). */
-  isFieldDifferent(field: 'primerNombre' | 'segundoNombre' | 'primerApellido' | 'segundoApellido' | 'fechaExpedicionDoc' | 'fechaNacimiento'): boolean {
+  isFieldDifferent(field: 'primerNombre' | 'segundoNombre' | 'primerApellido' | 'segundoApellido' | 'fechaExpedicionDoc' | 'fechaNacimiento' | 'tipoDocumento'): boolean {
     const formVal = this.comparisonForm.get(field)?.value;
     const regVal = this.datosRegistraduria[field];
     const n = (v: unknown) => (v == null || v === '' ? '' : String(v).trim());
     return n(formVal) !== n(regVal);
+  }
+
+  /** True si el tipo de documento de Genesys difiere del de Registraduría (aviso informativo de posible duplicado). */
+  esDuplicado(): boolean {
+    return this.isFieldDifferent('tipoDocumento');
   }
 
   /** True si hay al menos una diferencia entre Genesys y Registraduría (habilita el botón Generar novedad). */

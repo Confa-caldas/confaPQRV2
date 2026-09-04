@@ -147,6 +147,14 @@ import {
   RequestHistoricPaymentMethodRequest,
   TransferStatusList,
   SuccessfulTransferBulk,
+  FilterReporteAfiliacionFecha,
+  FilterReporteValidacionesDiariasAfiliacion,
+  FilterReporteEstadoAfiliacion,
+  ReporteValidacionesDiariasRow,
+  ReporteAuxiliaresRow,
+  ReporteSinAsignarRow,
+  ReportePorEstadoAfiliadoRow,
+  ReporteRpaRow,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -2108,6 +2116,46 @@ export class Users {
   markSuccessfulTransfer(payload: SuccessfulTransferBulk) {
     return this.http.post<BodyResponse<string>>(
       `${environment.API_PUBLIC}${EndPointRoute.SUCCESSFUL_TRANSFER}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: validaciones diarias (paginado). */
+  getReporteValidacionesDiariasAfiliacion(payload: FilterReporteValidacionesDiariasAfiliacion) {
+    return this.http.post<BodyResponse<ReporteValidacionesDiariasRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_VALIDACIONES_DIARIAS}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: validaciones por responsable. */
+  getReportePorResponsableAfiliacion(payload: FilterReporteAfiliacionFecha) {
+    return this.http.post<BodyResponse<ReporteAuxiliaresRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_POR_RESPONSABLE}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: solicitudes sin asignar por fecha. */
+  getReporteSinAsignarAfiliacion(payload: FilterReporteAfiliacionFecha) {
+    return this.http.post<BodyResponse<ReporteSinAsignarRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_SIN_ASIGNAR}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: solicitudes por estado (se reusa para combinado/individual/masiva variando tipo_formulario). */
+  getReportePorEstadoAfiliacion(payload: FilterReporteEstadoAfiliacion) {
+    return this.http.post<BodyResponse<ReportePorEstadoAfiliadoRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_POR_ESTADO}`,
+      payload
+    );
+  }
+
+  /** Reporte de afiliaciones: procesamiento automático RPA. */
+  getReporteRpaAfiliacion(payload: FilterReporteAfiliacionFecha) {
+    return this.http.post<BodyResponse<ReporteRpaRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_RPA}`,
       payload
     );
   }

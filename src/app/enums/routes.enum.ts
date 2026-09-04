@@ -347,4 +347,10 @@ export enum EndPointRoute {
   UPLOAD_PAYMENT_METHOD_FILES_CONFIRM = 'payment_method_request/url_signer/confirm',
   TRANSFER_STATUS = 'db/transfer_status',
   SUCCESSFUL_TRANSFER = 'payment_method_request/successful_transfer',
+  /** Reportes de afiliaciones (report-details-afiliations). */
+  REPORT_AFI_VALIDACIONES_DIARIAS = 'reportes-afiliacion/validaciones-diarias/filter',
+  REPORT_AFI_POR_RESPONSABLE = 'reportes-afiliacion/por-responsable/filter',
+  REPORT_AFI_SIN_ASIGNAR = 'reportes-afiliacion/sin-asignar-por-fecha/filter',
+  REPORT_AFI_POR_ESTADO = 'reportes-afiliacion/por-estado/filter',
+  REPORT_AFI_RPA = 'reportes-afiliacion/rpa/filter',
 }

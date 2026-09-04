@@ -6,6 +6,32 @@
     Generación y consulta de reportes de validaciones diarias, por auxiliares y procesamiento RPA.
   </p>
 
+  <form [formGroup]="formGroup" class="report-filters-form">
+    <div class="filters-row">
+      <div class="filters-col">
+        <p-calendar
+          formControlName="dates_range"
+          selectionMode="range"
+          [readonlyInput]="true"
+          [showIcon]="true"
+          placeholder="Rango de fechas"
+          class="calendar"></p-calendar>
+      </div>
+      <div class="filters-colButtons">
+        <p-button
+          icon="pi pi-search"
+          [styleClass]="'btn-icon-info'"
+          (click)="buscarReportes()"></p-button>
+      </div>
+      <div class="filters-colButtons">
+        <p-button
+          icon="pi pi-trash"
+          [styleClass]="'btn-icon-info'"
+          (click)="cleanForm()"></p-button>
+      </div>
+    </div>
+  </form>
+
   <p-accordion [multiple]="true">
     <!-- Reporte 1: Validaciones Diarias -->
     <p-accordionTab>
@@ -24,9 +50,7 @@
       <div class="report-table-wrapper" *ngIf="!loadingReporte1 && reporteValidacionesDiarias.length > 0">
         <p-table
           [value]="reporteValidacionesDiarias"
-          [paginator]="true"
-          [rows]="10"
-          [rowsPerPageOptions]="[10, 25, 50]"
+          [paginator]="false"
           [tableStyle]="{ 'min-width': '50rem' }"
           styleClass="p-datatable-striped report-table"
           [scrollable]="true"
@@ -36,7 +60,6 @@
               <th>Día y mes de afiliación</th>
               <th>Número de radicado</th>
               <th>Número de documento del trabajador</th>
-              <th>Procedencia del formulario</th>
               <th>Tipo de formulario</th>
               <th>Estado de la solicitud</th>
               <th>Fecha de procesamiento</th>
@@ -49,7 +72,6 @@
               <td>{{ row.diaMesAfiliacion }}</td>
               <td>{{ row.numeroRadicado }}</td>
               <td>{{ row.numeroDocumentoTrabajador }}</td>
-              <td>{{ row.procedenciaFormulario }}</td>
               <td>{{ row.tipoFormulario }}</td>
               <td>{{ row.estadoSolicitud }}</td>
               <td>{{ row.fechaProcesamientoAfiliacion }}</td>
@@ -58,6 +80,12 @@
             </tr>
           </ng-template>
         </p-table>
+        <p-paginator
+          (onPageChange)="onPageChangeReporte1($event)"
+          [first]="first"
+          [rows]="rows"
+          [totalRecords]="totalRowsReporte1"
+          [rowsPerPageOptions]="[10, 25, 50]"></p-paginator>
       </div>
     </p-accordionTab>
 
@@ -254,4 +282,6 @@
       </div>
     </p-accordionTab>
   </p-accordion>
+
+  <p-toast></p-toast>
 </div>

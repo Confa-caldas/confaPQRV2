@@ -23,6 +23,26 @@
   font-size: 0.95rem;
 }
 
+.report-filters-form {
+  margin-bottom: 1.5rem;
+}
+
+.filters-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filters-col {
+  display: flex;
+}
+
+.filters-colButtons {
+  display: flex;
+  align-items: center;
+}
+
 :host ::ng-deep {
   .p-accordion .p-accordion-header .p-accordion-header-link {
     background-color: #1ba2de;
