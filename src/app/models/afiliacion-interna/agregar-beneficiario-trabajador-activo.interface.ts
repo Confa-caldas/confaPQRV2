@@ -55,7 +55,7 @@ export interface AdjuntoNuevoRequestInterna {
   contenidoBase64?: string | null;
 }
 
-/** Request POST agregar-beneficiario-trabajador-activo (afiliación interna). */
+/** Request POST  agregar-beneficiario-trabajador-activo (afiliación interna). */
 export interface AgregarBeneficiarioTrabajadorActivoRequestInterna {
   idEmpresa: number;
   tipoDocumentoTrabajador: string;

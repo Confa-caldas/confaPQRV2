@@ -22,7 +22,7 @@ export class ModalGestionarActivacionEmpresaComponent implements OnChanges {
   formGroup = new FormGroup({
     numero_radicado: new FormControl<string | null>(null, [
       Validators.required,
-      Validators.minLength(15),
+      Validators.minLength(13),
     ]),
     observaciones: new FormControl<string | null>(null),
   });
