@@ -495,6 +495,9 @@ export class RequestDetailsAfiliationComponent implements OnInit {
   /** Opciones del dropdown motivo de rechazo (cargadas desde BD). */
   motivoRechazoOpciones: { label: string; value: string; codigo_motivo: string }[] = [];
   cargandoMotivosRechazo = false;
+  /** Opciones del dropdown motivo de gestión manual (cargadas desde BD, solo activos). */
+  motivoGestionManualOpciones: { label: string; value: number }[] = [];
+  cargandoMotivosGestionManual = false;
   /** Guardado en curso: actualizar estado gestión solicitud. */
   guardandoEstadoGestionSolicitud = false;
 
@@ -549,6 +552,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.gestionarEstadoAfiliadoForm = this.fb.group({
       estadoAfiliado: [null as number | null, Validators.required],
       motivoRechazo: [null as string | null],
+      numeroRadicadoGenesys: [null as string | null],
+      motivoGestionManual: [null as number | null],
     });
 
     this.adjuntoForm = this.fb.group({
@@ -722,14 +727,16 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
 
-  /** Escucha `estadoAfiliado`: motivo de rechazo solo con validación si es Rechazado. */
+  /** Escucha `estadoAfiliado`: motivo de rechazo solo si es Rechazado; radicado/motivo gestión manual solo si es Procesado. */
   private initGestionarEstadoAfiliadoListeners(): void {
     if (this.gestionarEstadoAfiliadoSub) {
       return;
     }
     const estadoCtrl = this.gestionarEstadoAfiliadoForm.get('estadoAfiliado');
     const motivoCtrl = this.gestionarEstadoAfiliadoForm.get('motivoRechazo');
-    if (!estadoCtrl || !motivoCtrl) {
+    const radicadoCtrl = this.gestionarEstadoAfiliadoForm.get('numeroRadicadoGenesys');
+    const motivoGestionCtrl = this.gestionarEstadoAfiliadoForm.get('motivoGestionManual');
+    if (!estadoCtrl || !motivoCtrl || !radicadoCtrl || !motivoGestionCtrl) {
       return;
     }
     this.gestionarEstadoAfiliadoSub = estadoCtrl.valueChanges.subscribe((val: number | null) => {
@@ -743,6 +750,21 @@ export class RequestDetailsAfiliationComponent implements OnInit {
         motivoCtrl.setValue(null, { emitEvent: false });
       }
       motivoCtrl.updateValueAndValidity({ emitEvent: false });
+
+      if (val != null && this.esEstadoGestionProcesado(Number(val))) {
+        radicadoCtrl.setValidators([Validators.required, Validators.maxLength(50)]);
+        motivoGestionCtrl.setValidators([Validators.required]);
+        if (this.motivoGestionManualOpciones.length === 0 && !this.cargandoMotivosGestionManual) {
+          this.cargarMotivosGestionManual();
+        }
+      } else {
+        radicadoCtrl.clearValidators();
+        radicadoCtrl.setValue(null, { emitEvent: false });
+        motivoGestionCtrl.clearValidators();
+        motivoGestionCtrl.setValue(null, { emitEvent: false });
+      }
+      radicadoCtrl.updateValueAndValidity({ emitEvent: false });
+      motivoGestionCtrl.updateValueAndValidity({ emitEvent: false });
     });
   }
 
@@ -758,9 +780,26 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     return idEstado === this.ID_ESTADO_GESTION_RECHAZADO;
   }
 
+  /** True si el id corresponde al estado Procesado del catálogo de gestión por persona. */
+  esEstadoGestionProcesado(idEstado: number): boolean {
+    if (!Number.isFinite(idEstado)) {
+      return false;
+    }
+    const row = this.estadoAfiliadoOpciones.find(o => o.value === idEstado);
+    if (row?.label && /procesad/i.test(row.label)) {
+      return true;
+    }
+    return idEstado === this.ID_ESTADO_GESTION_PROCESADO;
+  }
+
   get mostrarMotivoRechazoGestion(): boolean {
     const id = this.gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.value;
     return id != null && this.esEstadoGestionRechazado(Number(id));
+  }
+
+  get mostrarCamposProcesadoGestion(): boolean {
+    const id = this.gestionarEstadoAfiliadoForm.get('estadoAfiliado')?.value;
+    return id != null && this.esEstadoGestionProcesado(Number(id));
   }
 
   /** `codigo` BD para el id de estado del modal (parametros_estado_solicitud). */
@@ -1045,6 +1084,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     this.gestionarEstadoAfiliadoForm.reset({
       estadoAfiliado: null,
       motivoRechazo: null,
+      numeroRadicadoGenesys: null,
+      motivoGestionManual: null,
     });
     this.gestionarEstadoAfiliadoForm.get('motivoRechazo')?.clearValidators();
     this.gestionarEstadoAfiliadoForm.get('motivoRechazo')?.updateValueAndValidity({ emitEvent: false });
@@ -1095,6 +1136,42 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       },
       complete: () => {
         this.cargandoMotivosRechazo = false;
+      },
+    });
+  }
+
+  /** Carga catálogo de motivos de gestión manual desde el servicio (BD), solo activos. */
+  cargarMotivosGestionManual(): void {
+    this.cargandoMotivosGestionManual = true;
+    this.userService.getAfiMotivoGestionManualListPagination({ page: 1, page_size: 100 }).subscribe({
+      next: (res) => {
+        if (res.code === 200 && Array.isArray(res.data)) {
+          this.motivoGestionManualOpciones = res.data
+            .filter((m) => m.estado === true || m.estado === 1)
+            .map((m) => ({
+              label: (m.motivo_gestion ?? '').trim() || `Motivo #${m.id}`,
+              value: Number(m.id),
+            }));
+        } else {
+          this.motivoGestionManualOpciones = [];
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Motivos de gestión manual',
+            detail: res.message || 'No se pudieron cargar los motivos de gestión manual.',
+          });
+        }
+      },
+      error: (err) => {
+        console.error('getAfiMotivoGestionManualListPagination', err);
+        this.motivoGestionManualOpciones = [];
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los motivos de gestión manual. Intente de nuevo.',
+        });
+      },
+      complete: () => {
+        this.cargandoMotivosGestionManual = false;
       },
     });
   }
@@ -1278,6 +1355,23 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       return;
     }
 
+    const esProcesado = this.esEstadoGestionProcesado(idEstadoGestion);
+    if (
+      esProcesado &&
+      (raw.numeroRadicadoGenesys == null ||
+        String(raw.numeroRadicadoGenesys).trim() === '' ||
+        raw.motivoGestionManual == null)
+    ) {
+      this.gestionarEstadoAfiliadoForm.get('numeroRadicadoGenesys')?.markAsTouched();
+      this.gestionarEstadoAfiliadoForm.get('motivoGestionManual')?.markAsTouched();
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Ingrese el número de radicado y seleccione el motivo de gestión manual.',
+      });
+      return;
+    }
+
     const estadoAfiliadoCodigo = this.codigoEstadoAfiliadoPorId(idEstadoGestion);
     if (!estadoAfiliadoCodigo) {
       this.messageService.add({
@@ -1295,6 +1389,12 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       id_estado_solicitud: idEstadoGestion,
       estado_afiliado: estadoAfiliadoCodigo,
       id_motivo_rechazo: esRechazado ? Number(raw.motivoRechazo) : null,
+      ...(esProcesado
+        ? {
+            numero_radicado_genesys: String(raw.numeroRadicadoGenesys).trim(),
+            id_motivo_gestion_manual: Number(raw.motivoGestionManual),
+          }
+        : {}),
     };
 
     if (
