@@ -432,6 +432,9 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
   /** Id `parametros_estado_solicitud` para Inconsistencias RPA. */
   readonly ID_ESTADO_SOLICITUD_INCONSISTENCIAS_RPA = 9;
+  /** Ids `parametros_estado_solicitud` para Asignada / Reasignada. */
+  readonly ID_ESTADO_SOLICITUD_ASIGNADA = 2;
+  readonly ID_ESTADO_SOLICITUD_REASIGNADA = 3;
 
   /** Catálogo completo `parametros_estado_gestion_persona` para mostrar estado por integrante. */
   private readonly catalogoEstadoGestionPersona: Readonly<
@@ -810,7 +813,7 @@ export class RequestDetailsAfiliationComponent implements OnInit {
 
     if (
       contexto === 'beneficiario' &&
-      this.solicitudEnInconsistenciasRpa() &&
+      (this.solicitudEnInconsistenciasRpa() || this.solicitudAsignada()) &&
       this.trabajadorEnInconsistenciasRpa()
     ) {
       this.showSuccessMessage(
@@ -1017,7 +1020,12 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       indiceBeneficiario
     );
 
-    this.gestionarEstadoDesdeInconsistenciasRpa = this.solicitudEnInconsistenciasRpa();
+    const idIntegranteGestion = this.idEstadoGestionPersonaIntegrante(contexto, indiceBeneficiario);
+    const integranteEnInconsistencia =
+      Number(idIntegranteGestion) === this.ID_ESTADO_GESTION_INCONSISTENCIAS_RPA;
+    this.gestionarEstadoDesdeInconsistenciasRpa =
+      this.solicitudEnInconsistenciasRpa() ||
+      (this.solicitudAsignada() && integranteEnInconsistencia);
     // En inconsistencias RPA no aplica rechazo: solo Pendiente afiliación RPA o Procesado.
     this.gestionarEstadoSoloRechazoPermitido =
       this.gestionarEstadoDesdeInconsistenciasRpa ? false : soloRechazoPermitido;
@@ -1127,6 +1135,20 @@ export class RequestDetailsAfiliationComponent implements OnInit {
     return texto === 'inconsistencias rpa';
   }
 
+  /** True si la cabecera está Asignada (2) o Reasignada (3), o si tiene usuario_gestion como respaldo. */
+  solicitudAsignada(): boolean {
+    const id =
+      this.afiliationRequestDetails?.solicitud?.id_estado_solicitud ?? this.idEstadoSolicitudActual;
+    if (
+      Number(id) === this.ID_ESTADO_SOLICITUD_ASIGNADA ||
+      Number(id) === this.ID_ESTADO_SOLICITUD_REASIGNADA
+    ) {
+      return true;
+    }
+    const u = this.afiliationRequestDetails?.solicitud?.usuario_gestion;
+    return u != null && String(u).trim() !== '';
+  }
+
   /**
    * Visible si el integrante está en Pendiente inicial (id 5) / sin estado,
    * o si la solicitud y el integrante están en Inconsistencias RPA.
@@ -1144,8 +1166,8 @@ export class RequestDetailsAfiliationComponent implements OnInit {
       return true;
     }
     return (
-      this.solicitudEnInconsistenciasRpa() &&
-      n === this.ID_ESTADO_GESTION_INCONSISTENCIAS_RPA
+      n === this.ID_ESTADO_GESTION_INCONSISTENCIAS_RPA &&
+      (this.solicitudEnInconsistenciasRpa() || this.solicitudAsignada())
     );
   }
 
