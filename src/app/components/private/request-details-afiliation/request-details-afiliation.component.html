@@ -319,6 +319,59 @@
                 Motivo es obligatorio cuando el estado es Rechazado.
               </small>
             </div>
+
+            <div class="gestionar-estado-field multi" *ngIf="mostrarCamposProcesadoGestion">
+              <label class="label" for="numeroRadicadoGenesysInput">Número Radicado/Solicitud <span class="req">*</span></label>
+              <input
+                id="numeroRadicadoGenesysInput"
+                type="text"
+                class="data-field-input"
+                maxlength="50"
+                formControlName="numeroRadicadoGenesys"
+                placeholder="Número generado por Genesys" />
+              <small
+                *ngIf="
+                  gestionarEstadoAfiliadoForm.get('numeroRadicadoGenesys')?.hasError('required') &&
+                  gestionarEstadoAfiliadoForm.get('numeroRadicadoGenesys')?.touched
+                "
+                class="gestionar-estado-error error-label">
+                Número de radicado es obligatorio cuando el estado es Procesado.
+              </small>
+              <small
+                *ngIf="
+                  gestionarEstadoAfiliadoForm.get('numeroRadicadoGenesys')?.hasError('maxlength') &&
+                  gestionarEstadoAfiliadoForm.get('numeroRadicadoGenesys')?.touched
+                "
+                class="gestionar-estado-error error-label">
+                Máximo 50 caracteres.
+              </small>
+            </div>
+
+            <div class="gestionar-estado-field multi" *ngIf="mostrarCamposProcesadoGestion">
+              <label class="label" for="motivoGestionManualDd">Motivo gestión manual <span class="req">*</span></label>
+              <p-dropdown
+                id="motivoGestionManualDd"
+                formControlName="motivoGestionManual"
+                [options]="motivoGestionManualOpciones"
+                optionLabel="label"
+                optionValue="value"
+                [placeholder]="cargandoMotivosGestionManual ? 'Cargando motivos...' : 'Seleccione motivo'"
+                [loading]="cargandoMotivosGestionManual"
+                [disabled]="cargandoMotivosGestionManual"
+                [showClear]="true"
+                class="selector gestionar-estado-dropdown-wrap"
+                styleClass="gestionar-estado-dropdown"
+                [style]="{ width: '100%' }"
+                appendTo="body"></p-dropdown>
+              <small
+                *ngIf="
+                  gestionarEstadoAfiliadoForm.get('motivoGestionManual')?.invalid &&
+                  gestionarEstadoAfiliadoForm.get('motivoGestionManual')?.touched
+                "
+                class="gestionar-estado-error error-label">
+                Motivo es obligatorio cuando el estado es Procesado.
+              </small>
+            </div>
           </form>
         </div>
 
