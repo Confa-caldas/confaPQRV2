@@ -143,6 +143,46 @@ export class ReportDetailsAfiliationsComponent implements OnInit {
     return row.estadoSolicitud;
   }
 
+  /** Traduce la fila cruda del backend (columnas snake_case del SQL) al modelo camelCase que usa el HTML. */
+  private mapValidacionesDiariasRow(raw: any): ReporteValidacionesDiariasRow {
+    return {
+      diaMesAfiliacion: raw.fecha_afiliacion ?? raw.diaMesAfiliacion,
+      numeroRadicado: raw.numero_radicado ?? raw.numeroRadicado,
+      numeroDocumentoTrabajador: raw.numero_documento_trabajador ?? raw.numeroDocumentoTrabajador,
+      tipoFormulario: raw.tipo_formulario ?? raw.tipoFormulario,
+      estadoSolicitud: raw.estado_solicitud ?? raw.estadoSolicitud,
+      fechaProcesamientoAfiliacion: raw.fecha_procesamiento ?? raw.fechaProcesamientoAfiliacion,
+      fechaAsignacionRevision: raw.fecha_asignacion_revision ?? raw.fechaAsignacionRevision,
+      observacionFinal: raw.observacion_final ?? raw.observacionFinal,
+    };
+  }
+
+  /** Traduce la fila cruda del reporte "por responsable" (snake_case) al modelo camelCase. */
+  private mapAuxiliaresRow(raw: any): ReporteAuxiliaresRow {
+    return {
+      responsable: raw.responsable,
+      cantidadAsignadas: raw.cantidad_asignadas ?? raw.cantidadAsignadas,
+      cantidadReasignadas: raw.cantidad_reasignadas ?? raw.cantidadReasignadas,
+    };
+  }
+
+  /** Traduce la fila cruda del reporte "sin asignar" (snake_case) al modelo camelCase. */
+  private mapSinAsignarRow(raw: any): ReporteSinAsignarRow {
+    return {
+      fechaSolicitud: raw.fecha ?? raw.fechaSolicitud,
+      cantidadPendienteAsignacion: raw.cantidad ?? raw.cantidadPendienteAsignacion,
+    };
+  }
+
+  /** Traduce la fila cruda del reporte RPA (snake_case) al modelo camelCase. */
+  private mapRpaRow(raw: any): ReporteRpaRow {
+    return {
+      fecha: raw.fecha,
+      cantidadProcesadasAutomaticamente: raw.cantidad_procesadas_automaticamente ?? raw.cantidadProcesadasAutomaticamente,
+      cantidadDevueltasPorErrorRpa: raw.cantidad_devueltas_error_rpa ?? raw.cantidadDevueltasPorErrorRpa,
+    };
+  }
+
   /** Carga el reporte de validaciones diarias (paginado). */
   cargarReporteValidacionesDiarias(): void {
     this.loadingReporte1 = true;
@@ -157,10 +197,11 @@ export class ReportDetailsAfiliationsComponent implements OnInit {
       .subscribe({
         next: (response: BodyResponse<ReporteValidacionesDiariasRow[]>) => {
           if (response.code === 200) {
-            this.reporteValidacionesDiarias = (response.data ?? []).map(row => ({
-              ...row,
-              estadoSolicitud: this.resolverEstadoSolicitud(row),
-            }));
+            this.reporteValidacionesDiarias = (response.data ?? []).map(raw => {
+              const row = this.mapValidacionesDiariasRow(raw);
+              row.estadoSolicitud = this.resolverEstadoSolicitud(row);
+              return row;
+            });
             this.totalRowsReporte1 =
               response.total_count != null ? response.total_count : Number(response.message) || 0;
           } else {
@@ -199,8 +240,8 @@ export class ReportDetailsAfiliationsComponent implements OnInit {
       .pipe(finalize(() => (this.loadingReporte2 = false)))
       .subscribe({
         next: result => {
-          this.reporteAuxiliares = result.porResponsable?.data ?? [];
-          this.reporteSinAsignar = result.sinAsignar?.data ?? [];
+          this.reporteAuxiliares = (result.porResponsable?.data ?? []).map(raw => this.mapAuxiliaresRow(raw));
+          this.reporteSinAsignar = (result.sinAsignar?.data ?? []).map(raw => this.mapSinAsignarRow(raw));
           this.reportePorEstadoAfiliado = result.porEstadoAfiliado?.data ?? [];
           this.reporteIndividualPorEstado = result.individualPorEstado?.data ?? [];
           this.reporteMasivaPorEstado = result.masivaPorEstado?.data ?? [];
@@ -222,7 +263,7 @@ export class ReportDetailsAfiliationsComponent implements OnInit {
       .subscribe({
         next: (response: BodyResponse<ReporteRpaRow[]>) => {
           if (response.code === 200) {
-            this.reporteRpa = response.data ?? [];
+            this.reporteRpa = (response.data ?? []).map(raw => this.mapRpaRow(raw));
           } else {
             this.showMessage('error', 'Fallida', 'Operación fallida!');
           }
