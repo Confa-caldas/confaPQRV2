@@ -1192,7 +1192,12 @@ export class CreateAfiliationInternalComponent implements OnInit {
   }
 
   private limpiarSolicitudInterna(): void {
-    this.resetValidacionTrabajador(false);
+    // true: además de limpiar los flags, vuelve a habilitar tipo/número documento del
+    // trabajador (desbloquearIdentificacionTrabajador) por si habían quedado deshabilitados
+    // por bloquearIdentificacionTrabajador() en un intento de validación anterior fallido;
+    // sin esto, al "Regresar" y volver a consultar empresa los campos quedaban bloqueados
+    // aunque la validación fallida ya no aplicara.
+    this.resetValidacionTrabajador(true);
     this.respuestaValidarTrabajador = null;
     this.resetSeccionesGuardadas();
     this.catalogosSolicitudCargados = false;
@@ -3247,6 +3252,17 @@ export class CreateAfiliationInternalComponent implements OnInit {
         .toString()
         .trim();
       return trTipoB != null && trNumB !== '';
+    }
+    if (this.step === 2) {
+      // En este paso la empresa siempre está consultada (es requisito para llegar aquí), así que
+      // no cuenta como "dato que se perdería" al dar Regresar; solo importa el avance propio de
+      // la identificación del trabajador.
+      if (this.documentoTrabajadorValidado) {
+        return true;
+      }
+      const trTipo = this.identificacionTrabajadorForm.get('tipo_documento')?.value;
+      const trNum = (this.identificacionTrabajadorForm.get('numero_documento')?.value ?? '').toString().trim();
+      return trTipo != null && trNum !== '';
     }
     if (this.documentoTrabajadorValidado || this.step >= 4) {
       return true;
