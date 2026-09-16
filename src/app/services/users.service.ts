@@ -79,6 +79,11 @@ import {
   FilterPadresRpaNoProcesado,
   AsignarPadresRpaPayload,
   CambiarEstadoMasivoPadresRpaPayload,
+  FilterMonitorRpa,
+  MonitorRpaListItem,
+  SemaforoRpaItem,
+  FilterResumenMotivosRpa,
+  ResumenMotivoRpaItem,
   RequestStatusAfiliationList,
   UserListAfiliation,
   NovedadCalidadDatosDetalle,
@@ -253,6 +258,30 @@ export class Users {
   cambiarEstadoMasivoPadresRpa(payload: CambiarEstadoMasivoPadresRpaPayload) {
     return this.http.post<BodyResponse<null>>(
       `${environment.API_PUBLIC}${EndPointRoute.PADRES_RPA_NO_PROCESADO_CAMBIAR_ESTADO_MASIVO}`,
+      payload
+    );
+  }
+
+  /** Monitor de robots RPA (Gestor de Solicitudes): listado paginado con filtros de fecha, robot y estado. */
+  getMonitorRpaByFilter(payload: FilterMonitorRpa) {
+    return this.http.post<BodyResponse<MonitorRpaListItem[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.MONITOR_RPA_AFILIACION_FILTRAR}`,
+      payload
+    );
+  }
+
+  /** Semáforo del Monitor de robots RPA: una fila por cada robot activo, indicando si está procesando ahora mismo. */
+  getSemaforoRpa() {
+    return this.http.post<BodyResponse<SemaforoRpaItem[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.MONITOR_RPA_AFILIACION_SEMAFORO}`,
+      {}
+    );
+  }
+
+  /** Resumen del Monitor de robots RPA: pantalla_error/observación agrupados con conteo, mismos filtros que el listado. */
+  getResumenMotivosRpa(payload: FilterResumenMotivosRpa) {
+    return this.http.post<BodyResponse<ResumenMotivoRpaItem[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.MONITOR_RPA_AFILIACION_RESUMEN_MOTIVOS}`,
       payload
     );
   }

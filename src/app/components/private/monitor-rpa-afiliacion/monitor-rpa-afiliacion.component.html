@@ -1,0 +1,258 @@
+<div class="row mb-2 align-items-center">
+  <div class="col-10">
+    <div class="title-page">Monitor de robots RPA</div>
+  </div>
+  <div class="col-2 d-flex justify-content-end">
+    <p-button
+      icon="pi pi-refresh"
+      [styleClass]="'btn-icon-info semaforo-refresh'"
+      [loading]="cargandoSemaforo"
+      (click)="actualizarSemaforo()"></p-button>
+  </div>
+</div>
+
+<div class="semaforo-lista mb-3">
+  <div
+    class="semaforo-pill"
+    *ngFor="let s of semaforos"
+    [class.semaforo-pill--verde]="s.en_ejecucion"
+    [class.semaforo-pill--rojo]="!s.en_ejecucion">
+    <span class="semaforo-dot"></span>
+    <div class="semaforo-pill__texto">
+      <span class="semaforo-label">{{ s.nombre_robot }} · {{ s.en_ejecucion ? 'Ejecutando' : 'Sin ejecución' }}</span>
+      <span class="semaforo-fecha" *ngIf="s.ultima_ejecucion">
+        Última: {{ s.ultima_ejecucion | date: 'dd/MM/yy HH:mm' }}
+      </span>
+    </div>
+  </div>
+  <span class="semaforo-label" *ngIf="!cargandoSemaforo && semaforos === null">Semáforo no disponible</span>
+  <span class="semaforo-label" *ngIf="cargandoSemaforo && !semaforos">Consultando…</span>
+</div>
+
+<form [formGroup]="formGroup" (keydown.enter)="initPaginador()" (keydown.escape)="cleanForm()">
+  <div class="card filters-card mb-3">
+    <div class="filters-grid">
+      <div class="filters-cell">
+        <p-calendar
+          formControlName="fecha"
+          selectionMode="single"
+          [readonlyInput]="true"
+          [iconDisplay]="'input'"
+          [showIcon]="true"
+          [maxDate]="hoy"
+          [monthNavigator]="true"
+          [yearNavigator]="true"
+          [yearRange]="rangoAniosCalendario"
+          [showButtonBar]="true"
+          todayButtonStyleClass="p-button-text"
+          clearButtonStyleClass="p-button-text"
+          appendTo="body"
+          placeholder="Fecha"
+          class="calendar"></p-calendar>
+      </div>
+      <div class="filters-cell">
+        <p-dropdown
+          formControlName="nombre_robot"
+          [options]="robotOpciones"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          placeholder="Robot"></p-dropdown>
+      </div>
+      <div class="filters-cell">
+        <p-dropdown
+          formControlName="estado"
+          [options]="estadoOpciones"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          placeholder="Estado"></p-dropdown>
+      </div>
+      <div class="filters-cell filters-actions">
+        <p-button icon="pi pi-trash" [styleClass]="'btn-icon-info'" (click)="cleanForm()"></p-button>
+        <p-button icon="pi pi-search" [styleClass]="'btn-icon-info'" (click)="initPaginador()"></p-button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="card resumen-card mb-3" *ngIf="mostrarResumen">
+  <div class="resumen-header">
+    <div class="resumen-titulo">
+      {{
+        tipoAgrupadorResumen === 'robot'
+          ? 'Solicitudes en ejecución por robot'
+          : tipoAgrupadorResumen === 'transaccion'
+            ? 'Procesados por transacción'
+            : 'Motivos más frecuentes'
+      }}
+    </div>
+    <div class="resumen-stats">
+      <div class="resumen-stat">
+        <span class="resumen-stat__valor">{{ totalRadicadosResumen }}</span>
+        <span class="resumen-stat__label">Radicados</span>
+      </div>
+      <div class="resumen-stat">
+        <span class="resumen-stat__valor">{{ totalPersonasResumen }}</span>
+        <span class="resumen-stat__label">Personas</span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!cargandoResumen">
+    <div class="resumen-grupos" *ngIf="tipoAgrupadorResumen === 'motivo'; else resumenSimpleTpl">
+      <div class="resumen-grupo">
+        <div class="resumen-subtitulo">Afiliación por Módulo</div>
+        <ng-container
+          *ngTemplateOutlet="
+            tablaMotivos;
+            context: { $implicit: resumenModulo, campo: 'cantidad_radicados', etiqueta: 'Radicados' }
+          "></ng-container>
+      </div>
+      <div class="resumen-grupo">
+        <div class="resumen-subtitulo">Afiliación por Novedad</div>
+        <ng-container
+          *ngTemplateOutlet="
+            tablaMotivos;
+            context: { $implicit: resumenNovedad, campo: 'cantidad_personas', etiqueta: 'Personas' }
+          "></ng-container>
+      </div>
+    </div>
+    <ng-template #resumenSimpleTpl>
+      <table class="resumen-tabla" *ngIf="resumenSimple.length > 0">
+        <thead>
+          <tr>
+            <th>{{ tipoAgrupadorResumen === 'robot' ? 'Robot' : 'Transacción' }}</th>
+            <th class="resumen-tabla__col-cantidad">Radicados</th>
+            <th class="resumen-tabla__col-cantidad">Personas</th>
+            <th>Radicados</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of resumenSimple; let i = index" [class.resumen-tabla__fila--top]="i === 0">
+            <td>{{ m.grupo }}</td>
+            <td class="resumen-tabla__col-cantidad">
+              <span class="resumen-badge">{{ m.cantidad_radicados }}</span>
+            </td>
+            <td class="resumen-tabla__col-cantidad">
+              <span class="resumen-badge">{{ m.cantidad_personas }}</span>
+            </td>
+            <td class="resumen-tabla__col-radicados">
+              <button
+                type="button"
+                class="btn-ver-radicados"
+                *ngIf="m.radicados"
+                (click)="mostrarRadicados($event, m)">
+                Ver radicados ({{ m.cantidad_radicados }})
+              </button>
+              <span *ngIf="!m.radicados">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="resumen-vacio" *ngIf="resumenSimple.length === 0">Sin datos para este filtro.</div>
+    </ng-template>
+  </div>
+  <div class="resumen-vacio" *ngIf="cargandoResumen">Consultando…</div>
+</div>
+
+<ng-template #tablaMotivos let-motivos let-campo="campo" let-etiqueta="etiqueta">
+  <table class="resumen-tabla" *ngIf="motivos.length > 0">
+    <thead>
+      <tr>
+        <th>Pantalla error</th>
+        <th>Observación</th>
+        <th class="resumen-tabla__col-cantidad">{{ etiqueta }}</th>
+        <th>Radicados</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let m of motivos; let i = index" [class.resumen-tabla__fila--top]="i === 0">
+        <td>{{ m.pantalla_error || '—' }}</td>
+        <td>{{ m.observaciones || '—' }}</td>
+        <td class="resumen-tabla__col-cantidad">
+          <span class="resumen-badge">{{ m[campo] }}</span>
+        </td>
+        <td class="resumen-tabla__col-radicados">
+          <button
+            type="button"
+            class="btn-ver-radicados"
+            *ngIf="m.radicados"
+            (click)="mostrarRadicados($event, m)">
+            Ver radicados ({{ m.cantidad_radicados }})
+          </button>
+          <span *ngIf="!m.radicados">—</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="resumen-vacio" *ngIf="motivos.length === 0">Sin motivos registrados.</div>
+</ng-template>
+
+<div class="card table-card">
+  <p-table
+    [value]="rowList"
+    dataKey="id_solicitud"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    [loading]="loading"
+    [paginator]="false"
+    currentPageReportTemplate="{first} de {totalRecords}"
+    [tableStyle]="{ 'min-width': '90rem' }"
+    [scrollable]="true"
+    scrollHeight="500px">
+    <ng-template pTemplate="header">
+      <tr [style]="{ height: '50px' }">
+        <th style="min-width: 8rem">Número radicado</th>
+        <th style="min-width: 10rem">Robot / Responsable</th>
+        <th style="min-width: 8rem">Estado consultado</th>
+        <th style="min-width: 6rem">Cant. personas</th>
+        <th style="min-width: 8rem" *ngIf="mostrarColumnasResolucion">Ya resueltas</th>
+        <th style="min-width: 8rem" *ngIf="mostrarColumnasResolucion">Estado actual</th>
+        <th style="min-width: 8rem">Fecha ejecución</th>
+        <th style="min-width: 8rem">Hora inicio</th>
+        <th style="min-width: 8rem">Hora fin</th>
+        <th style="min-width: 14rem">Pantalla error / Observación</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td style="text-align: center">{{ row.numero_radicado }}</td>
+        <td style="text-align: center">{{ row.nombres_robot }}</td>
+        <td style="text-align: center">{{ row.estado_consultado }}</td>
+        <td style="text-align: center">{{ row.cantidad_personas }}</td>
+        <td style="text-align: center" *ngIf="mostrarColumnasResolucion">{{ row.cantidad_ya_resueltas }}</td>
+        <td style="text-align: center" *ngIf="mostrarColumnasResolucion">{{
+          row.cantidad_ya_resueltas > 0 ? row.estados_actuales : '—'
+        }}</td>
+        <td style="text-align: center">{{ row.fecha_ejecucion | date }}</td>
+        <td style="text-align: center">{{ row.hora_inicio_ejecucion || '—' }}</td>
+        <td style="text-align: center">{{ row.hora_fin_ejecucion || '—' }}</td>
+        <td style="text-align: center">{{ row.pantallas_error || row.observaciones || '—' }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="10" class="text-center py-4">No hay resultados para los filtros seleccionados.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-paginator
+    (onPageChange)="onPageChange($event)"
+    [first]="first"
+    [rows]="rows"
+    [totalRecords]="totalRows"
+    [rowsPerPageOptions]="[10, 20, 30]"></p-paginator>
+</div>
+
+<p-toast></p-toast>
+
+<p-overlayPanel #opRadicados [style]="{ 'max-width': '420px' }">
+  <div class="radicados-panel">
+    <div class="radicados-panel__titulo">{{ motivoPanelLabel }}</div>
+    <div class="radicados-panel__chips">
+      <span class="radicado-chip" *ngFor="let r of radicadosPanel">{{ r }}</span>
+    </div>
+  </div>
+</p-overlayPanel>
