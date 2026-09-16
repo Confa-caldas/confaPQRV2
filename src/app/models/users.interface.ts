@@ -1801,6 +1801,10 @@ export interface ActualizarEstadoGestionAfiliacionPayload {
   estado_afiliado?: string;
   /** Obligatorio solo cuando el estado es Rechazado; null en los demás. */
   id_motivo_rechazo?: number | null;
+  /** Obligatorio solo cuando el estado es Procesado; número generado por Genesys. */
+  numero_radicado_genesys?: string;
+  /** Obligatorio solo cuando el estado es Procesado; FK a parametros_motivo_gestion_manual.id. */
+  id_motivo_gestion_manual?: number;
 }
 
 /** Empresa en contexto de solicitud de afiliación (modelo BD). */

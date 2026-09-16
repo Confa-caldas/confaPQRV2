@@ -68,8 +68,17 @@ export class HttpRequestInterceptor implements HttpInterceptor {
     }
 
     let requestOut = requestIn;
+    // Comparación en minúsculas porque las llamadas directas al WS usan el dominio real
+    // "afiliacionEmpresaWS" (sin guiones, con mayúsculas), que no calzaba con el patrón
+    // 'afiliacion-empresa-ws'; se agrega también 'afiliacion-interna' para las rutas de la
+    // Lambda orquestadora (validar-empresa, validar-trabajador, ws-token, etc.), que antes
+    // no calzaban con ningún patrón y por eso su error real quedaba oculto tras "The Error".
+    const urlEnMinusculas = requestOut.url.toLowerCase();
     const esWsAfiliacionEmpresa =
-      requestOut.url.includes('afiliacion-empresa-ws') || requestOut.url.includes('p.confa.co/afiliacion');
+      urlEnMinusculas.includes('afiliacion-empresa-ws') ||
+      urlEnMinusculas.includes('p.confa.co/afiliacion') ||
+      urlEnMinusculas.includes('afiliacionempresaws') ||
+      urlEnMinusculas.includes('afiliacion-interna');
 
     if (token && !isS3Upload) {
       if (!requestOut.headers.has('Authorization')) {
