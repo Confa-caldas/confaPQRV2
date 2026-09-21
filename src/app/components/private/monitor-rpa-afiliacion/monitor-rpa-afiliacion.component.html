@@ -57,7 +57,8 @@
           optionLabel="label"
           optionValue="value"
           appendTo="body"
-          placeholder="Robot"></p-dropdown>
+          placeholder="Robot"
+          (onChange)="initPaginador()"></p-dropdown>
       </div>
       <div class="filters-cell">
         <p-dropdown
@@ -66,15 +67,38 @@
           optionLabel="label"
           optionValue="value"
           appendTo="body"
-          placeholder="Estado"></p-dropdown>
+          placeholder="Estado"
+          (onChange)="initPaginador()"></p-dropdown>
       </div>
       <div class="filters-cell filters-actions">
         <p-button icon="pi pi-trash" [styleClass]="'btn-icon-info'" (click)="cleanForm()"></p-button>
         <p-button icon="pi pi-search" [styleClass]="'btn-icon-info'" (click)="initPaginador()"></p-button>
       </div>
     </div>
+    <div class="modo-fecha-badge" [class.modo-fecha-badge--hoy]="esFechaHoy" [class.modo-fecha-badge--historico]="!esFechaHoy">
+      <ng-container *ngIf="esFechaHoy; else historicoTpl">
+        📊 Hoy (en progreso) — los números pueden seguir cambiando durante el día
+      </ng-container>
+      <ng-template #historicoTpl> 🔒 Histórico — congelado, no vuelve a cambiar </ng-template>
+    </div>
   </div>
 </form>
+
+<div class="card resumen-general-card mb-3" *ngIf="mostrarResumenGeneral">
+  <div class="resumen-general" *ngIf="!cargandoResumenGeneral && resumenGeneral; else resumenGeneralCargando">
+    <div class="resumen-general__item resumen-general__item--procesadas">
+      <span class="resumen-general__valor">{{ resumenGeneral.procesadas }}</span>
+      <span class="resumen-general__label">Procesadas</span>
+    </div>
+    <div class="resumen-general__item resumen-general__item--inconsistencias">
+      <span class="resumen-general__valor">{{ resumenGeneral.inconsistencias }}</span>
+      <span class="resumen-general__label">Inconsistencias</span>
+    </div>
+  </div>
+  <ng-template #resumenGeneralCargando>
+    <div class="resumen-general__cargando">Consultando totales del día…</div>
+  </ng-template>
+</div>
 
 <div class="card resumen-card mb-3" *ngIf="mostrarResumen">
   <div class="resumen-header">

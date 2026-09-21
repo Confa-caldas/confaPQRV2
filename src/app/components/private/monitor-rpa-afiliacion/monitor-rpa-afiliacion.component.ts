@@ -8,6 +8,8 @@ import {
   SemaforoRpaItem,
   FilterResumenMotivosRpa,
   ResumenMotivoRpaItem,
+  FilterReporteAfiliacionFecha,
+  ReporteRpaRow,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { PaginatorState } from 'primeng/paginator';
@@ -60,6 +62,10 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
   semaforos: SemaforoRpaItem[] | null = null;
   cargandoSemaforo = false;
 
+  /** Totales del día (procesadas vs inconsistencias), solo cuando el filtro de estado es "Todos". */
+  resumenGeneral: { procesadas: number; inconsistencias: number } | null = null;
+  cargandoResumenGeneral = false;
+
   /** Contenido del popover "Ver radicados" del resumen de motivos. */
   @ViewChild('opRadicados') opRadicados!: OverlayPanel;
   radicadosPanel: string[] = [];
@@ -73,6 +79,7 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
   ngOnInit(): void {
     this.searchRows();
     this.cargarResumenMotivos();
+    this.cargarResumenGeneral();
     this.actualizarSemaforo();
   }
 
@@ -162,6 +169,40 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
     });
   }
 
+  /**
+   * Totales del día (procesadas vs inconsistencias), para el cintillo que se muestra cuando el
+   * filtro de estado está en "Todos". Reutiliza afiliaciones.obtener_reporte_rpa_por_fecha (mismo
+   * dato que ya usa el reporte de afiliaciones), con la fecha del filtro actual como único día.
+   */
+  cargarResumenGeneral(): void {
+    if (this.mostrarResumen) {
+      this.resumenGeneral = null;
+      return;
+    }
+    const fecha = this.convertirFecha(this.formGroup.value.fecha ?? null);
+    if (!fecha) {
+      this.resumenGeneral = null;
+      return;
+    }
+    const payload: FilterReporteAfiliacionFecha = { i_date: fecha, f_date: fecha };
+    this.cargandoResumenGeneral = true;
+    this.userService.getReporteRpaAfiliacion(payload).subscribe({
+      next: (response: BodyResponse<ReporteRpaRow[]>) => {
+        this.cargandoResumenGeneral = false;
+        const fila = (response.code === 200 ? (response.data ?? []) : [])[0] as any;
+        this.resumenGeneral = {
+          procesadas: fila?.cantidad_procesadas_automaticamente ?? fila?.cantidadProcesadasAutomaticamente ?? 0,
+          inconsistencias: fila?.cantidad_devueltas_error_rpa ?? fila?.cantidadDevueltasPorErrorRpa ?? 0,
+        };
+      },
+      error: err => {
+        console.error(err);
+        this.cargandoResumenGeneral = false;
+        this.resumenGeneral = null;
+      },
+    });
+  }
+
   actualizarSemaforo(): void {
     this.cargandoSemaforo = true;
     this.userService.getSemaforoRpa().subscribe({
@@ -194,6 +235,28 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
   /** El panel de resumen solo tiene sentido cuando hay un estado puntual seleccionado (no "Todos"). */
   get mostrarResumen(): boolean {
     return !!this.formGroup.value.estado;
+  }
+
+  /** El cintillo de totales (procesadas/inconsistencias) solo aplica cuando el estado es "Todos". */
+  get mostrarResumenGeneral(): boolean {
+    return !this.formGroup.value.estado;
+  }
+
+  /**
+   * true cuando la fecha filtrada es HOY: el reporte está "en progreso" (logs_solicitud del día
+   * sigue llenándose, los números pueden seguir cambiando). false para cualquier día ya cerrado
+   * (histórico, congelado). Compara solo año/mes/día, sin hora.
+   */
+  get esFechaHoy(): boolean {
+    const fecha = this.formGroup.value.fecha;
+    if (!fecha) {
+      return false;
+    }
+    return (
+      fecha.getFullYear() === this.hoy.getFullYear() &&
+      fecha.getMonth() === this.hoy.getMonth() &&
+      fecha.getDate() === this.hoy.getDate()
+    );
   }
 
   /**
@@ -244,6 +307,7 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
     this.rows = 10;
     this.searchRows();
     this.cargarResumenMotivos();
+    this.cargarResumenGeneral();
   }
 
   cleanForm(): void {
@@ -254,6 +318,7 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
     this.formGroup.get('fecha')?.setValue(this.hoy);
     this.searchRows();
     this.cargarResumenMotivos();
+    this.cargarResumenGeneral();
   }
 
   private showMessage(state: string, title: string, detail: string): void {
