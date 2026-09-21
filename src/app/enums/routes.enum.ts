@@ -90,6 +90,7 @@ export enum EndPointRoute {
   MONITOR_RPA_AFILIACION_FILTRAR = 'monitor-rpa-afiliacion/filter',
   MONITOR_RPA_AFILIACION_SEMAFORO = 'monitor-rpa-afiliacion/semaforo',
   MONITOR_RPA_AFILIACION_RESUMEN_MOTIVOS = 'monitor-rpa-afiliacion/resumen-motivos',
+  MONITOR_RPA_AFILIACION_DETALLE_RADICADO = 'monitor-rpa-afiliacion/detalle-radicado',
   CREATE_USER = 'user/create',
   ASSIGN_USER_TO_REQUEST = 'request/assignuser',
   ASSIGN_USER_TO_REQUEST_AFILIATION = 'request-afiliation/assignuser-afiliation',

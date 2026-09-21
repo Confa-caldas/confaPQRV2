@@ -2106,6 +2106,21 @@ export interface ResumenMotivoRpaItem {
   total_personas: number;
 }
 
+/**
+ * Fila de detalle de un radicado tal como se le envía al robot RPA (backoffice-afi-monitor-rpa-detalle-radicado).
+ * Una fila por persona: el trabajador (con `_id_persona_beneficiario` en null) y una por cada beneficiario.
+ * Las columnas se nombran igual que las etiquetas visibles en el SQL de origen, por eso el índice de string.
+ */
+export interface DetalleRpaRadicadoRow {
+  _id_solicitud: number;
+  _id_persona_trabajador: number;
+  _id_persona_beneficiario: number | null;
+  _consecutivo_beneficiario: number | null;
+  _numero_grupo_familiar: number | null;
+  'Numero de radicado': string;
+  [campo: string]: string | number | boolean | null;
+}
+
 /** Valores válidos en BD: SI, NO, NA, PENDIENTE */
 export type ValoracionAdjunto = 'SI' | 'NO' | 'NA';
 export interface AdjuntoConValoracion {

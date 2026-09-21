@@ -10,10 +10,26 @@ import {
   ResumenMotivoRpaItem,
   FilterReporteAfiliacionFecha,
   ReporteRpaRow,
+  DetalleRpaRadicadoRow,
 } from '../../../models/users.interface';
 import { MessageService } from 'primeng/api';
 import { PaginatorState } from 'primeng/paginator';
 import { OverlayPanel } from 'primeng/overlaypanel';
+
+interface CampoDetalleRpa {
+  etiqueta: string;
+  valor: string | number | boolean | null;
+}
+
+interface SeccionDetalleRpa {
+  titulo: string;
+  campos: CampoDetalleRpa[];
+}
+
+interface PersonaDetalleRpa {
+  titulo: string;
+  secciones: SeccionDetalleRpa[];
+}
 
 @Component({
   selector: 'app-monitor-rpa-afiliacion',
@@ -70,6 +86,163 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
   @ViewChild('opRadicados') opRadicados!: OverlayPanel;
   radicadosPanel: string[] = [];
   motivoPanelLabel = '';
+
+  /**
+   * Modal de detalle de un radicado (solo disponible desde los chips de "Ver radicados" cuando el
+   * agrupador es 'motivo', es decir, el estado filtrado es Inconsistencia). Un radicado puede traer
+   * varias filas (una por beneficiario, o una sola si el trabajador no tiene beneficiarios) -- cada
+   * fila se muestra como una pestaña independiente dentro del modal.
+   */
+  detalleRadicadoVisible = false;
+  cargandoDetalleRadicado = false;
+  detalleRadicadoActual: string | null = null;
+  detalleTabIndex = 0;
+  detallePersonas: PersonaDetalleRpa[] = [];
+
+/** Campos de contexto que se muestran en TODAS las pestañas (la del trabajador y la de cada beneficiario). */
+  private static readonly SECCION_RADICADO_EMPRESA: { titulo: string; campos: { clave: string; etiqueta?: string }[] }[] = [
+    {
+      titulo: 'Radicado y empresa',
+      campos: [
+        { clave: 'Numero de radicado' },
+        { clave: 'Transaccion' },
+        { clave: 'estado_solicitud_actual', etiqueta: 'Estado actual de la solicitud' },
+        { clave: 'Tipo de identificacion empresa' },
+        { clave: 'Numero identificacion empresa' },
+        { clave: 'Ruta expediente S3' },
+      ],
+    },
+  ];
+
+  /** Campos del trabajador: van SOLO en su propia pestaña (no se repiten en cada beneficiario). */
+  private static readonly SECCIONES_TRABAJADOR: { titulo: string; campos: { clave: string; etiqueta?: string }[] }[] = [
+    {
+      titulo: 'Trabajador — datos personales',
+      campos: [
+        { clave: 'No.identificacion trabajador', etiqueta: 'Número de identificación' },
+        { clave: 'Primer nombre trabajador' },
+        { clave: 'Segundo nombre trabajador' },
+        { clave: 'Primer apellido' },
+        { clave: 'Segundo apellido' },
+        { clave: 'Fecha nacimiento trabajador' },
+        { clave: 'Fecha expedicion documento identidad' },
+        { clave: 'Fecha de recepcion de documentos' },
+        { clave: 'Genero' },
+        { clave: 'Nivel educativo' },
+        { clave: 'Cabeza de hogar' },
+        { clave: 'Estado civil' },
+        { clave: 'Orientacion sexual' },
+        { clave: 'Factor Vulnerabilidad' },
+        { clave: 'Pertenencia etnica' },
+        { clave: 'Telefono celular' },
+        { clave: 'Correo electronico' },
+        { clave: 'Autorizacion envio correo' },
+      ],
+    },
+    {
+      titulo: 'Trabajador — dirección de residencia',
+      campos: [
+        { clave: 'Pais residencia' },
+        { clave: 'Departamento residencia' },
+        { clave: 'Municipio residencia' },
+        { clave: 'Direccion residencia' },
+        { clave: 'Urbana/rural' },
+        { clave: 'Elemento' },
+        { clave: 'Tipo de via' },
+        { clave: 'Numero' },
+        { clave: 'Letra' },
+        { clave: 'Via Generadora' },
+        { clave: 'Barrio' },
+        { clave: 'Vive en casa propia?' },
+      ],
+    },
+    {
+      titulo: 'Trabajador — información laboral',
+      campos: [
+        { clave: 'Medio de pago' },
+        { clave: 'Clase trabajador' },
+        { clave: 'ocupacion_trabajador', etiqueta: 'Ocupación' },
+        { clave: 'tipo_salario', etiqueta: 'Tipo de salario' },
+        { clave: 'Horas laboradas en el mes' },
+        { clave: 'cargo_oficio_desempeniado', etiqueta: 'Cargo u oficio desempeñado' },
+        { clave: 'tipo_contrato_laboral', etiqueta: 'Tipo de contrato laboral' },
+        { clave: 'Fecha de terminacion del contrato' },
+        { clave: 'Sucursal asociada' },
+        { clave: 'Municipio de desempeno de labores' },
+        { clave: 'Fecha inicio de labores' },
+        { clave: 'Valor salario mensual' },
+      ],
+    },
+    {
+      titulo: 'Trabajador — cuenta bancaria',
+      campos: [
+        { clave: 'Tipo de cuenta trabajador' },
+        { clave: 'Numero de cuenta trabajador' },
+        { clave: 'Tipo de identificacion titular cuenta' },
+        { clave: 'Numero de identificacion titular cuenta' },
+        { clave: 'Titular de la cuenta' },
+        { clave: 'Banco trabajador' },
+      ],
+    },
+  ];
+
+  /** Campos que solo aplican cuando la fila trae un beneficiario (no cuando el trabajador va solo). */
+  private static readonly SECCIONES_BENEFICIARIO: { titulo: string; campos: { clave: string; etiqueta?: string }[] }[] = [
+    {
+      titulo: 'Beneficiario — datos generales',
+      campos: [
+        { clave: 'Tipo de beneficiario' },
+        { clave: 'Relacion con grupo familiar' },
+        { clave: 'Nuevo Beneficiario?' },
+        { clave: 'Nuevo grupo familiar?' },
+        { clave: 'Numero Grupo familiar' },
+        { clave: 'Tipo identificacion Beneficiario' },
+        { clave: 'No. identificacion Beneficiario' },
+        { clave: 'Primer nombre Beneficiario' },
+        { clave: 'Segundo nombre Beneficiario' },
+        { clave: 'Primer apellido Beneficiario' },
+        { clave: 'Segundo apellido Beneficiario' },
+        { clave: 'Fecha de nacimiento Beneficiario' },
+        { clave: 'Fecha expedicion documento identidad Beneficiario' },
+        { clave: 'Fecha de recepcion de documentos Beneficiario' },
+        { clave: 'Genero Beneficiario' },
+        { clave: 'Nivel educativo Beneficiario' },
+        { clave: 'ocupacion_beneficiario', etiqueta: 'Ocupación' },
+        { clave: 'Grado cursado' },
+        { clave: 'Conyuge labora?' },
+        { clave: 'Valor salario mensual Beneficiario' },
+        { clave: 'Telefono beneficiario' },
+        { clave: 'Correo beneficiario' },
+        { clave: 'Direccion es la misma del afiliado principal' },
+        { clave: 'Observaciones' },
+      ],
+    },
+    {
+      titulo: 'Beneficiario — certificado escolar e invalidez',
+      campos: [
+        { clave: 'Certificado escolar?' },
+        { clave: 'Fecha inicio vigencia certificado escolar' },
+        { clave: 'Fecha vencimiento certificado escolar' },
+        { clave: 'Persona con invalidez?' },
+        { clave: 'Fecha inicio invalidez' },
+        { clave: 'Fecha reporte invalidez' },
+      ],
+    },
+    {
+      titulo: 'Beneficiario — administrador del subsidio',
+      campos: [
+        { clave: 'Afiliado principal es el mismo administrador del subsidio' },
+        { clave: 'Tipo identificacion administrador del subsidio' },
+        { clave: 'No. identificacion administrador del subsidio' },
+        { clave: 'Nombre administrador del subsidio' },
+        { clave: 'Fecha nacimiento administrador del subsidio' },
+        { clave: 'Tipo de cuenta beneficiario' },
+        { clave: 'Numero de cuenta beneficiario' },
+        { clave: 'Banco beneficiario' },
+        { clave: 'Medio pago beneficiario' },
+      ],
+    },
+  ];
 
   constructor(
     private userService: Users,
@@ -284,14 +457,138 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
       .sort((a, b) => b.cantidad_radicados - a.cantidad_radicados);
   }
 
+  /** Extrae el número final de un radicado (ej. "RAD-96" -> 96) para poder ordenarlo numéricamente. */
+  private numeroRadicado(radicado: string): number {
+    const match = radicado.match(/(\d+)\s*$/);
+    return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+  }
+
   /** Abre el popover de radicados para un motivo del resumen (compartido entre Módulo y Novedad). */
   mostrarRadicados(event: Event, m: ResumenMotivoRpaItem): void {
     this.radicadosPanel = (m.radicados || '')
       .split(',')
       .map(r => r.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .sort((a, b) => this.numeroRadicado(a) - this.numeroRadicado(b));
     this.motivoPanelLabel = m.observaciones || m.pantalla_error || m.grupo || 'Motivo';
     this.opRadicados.toggle(event);
+  }
+
+  /**
+   * Los radicados del popover solo se pueden abrir en detalle cuando el agrupador es 'motivo',
+   * que es exclusivamente el caso del estado Inconsistencia (ver getters mostrarResumen/tipoAgrupadorResumen).
+   */
+  get detalleRadicadoHabilitado(): boolean {
+    return this.tipoAgrupadorResumen === 'motivo';
+  }
+
+  /** Abre el modal de detalle de un radicado puntual (info completa que se le envía al robot RPA). */
+  abrirDetalleRadicado(numeroRadicado: string): void {
+    if (!this.detalleRadicadoHabilitado) {
+      return;
+    }
+    this.opRadicados.hide();
+    this.detalleRadicadoActual = numeroRadicado;
+    this.detalleTabIndex = 0;
+    this.detallePersonas = [];
+    this.detalleRadicadoVisible = true;
+    this.cargandoDetalleRadicado = true;
+    this.userService.getDetalleRpaPorRadicado(numeroRadicado).subscribe({
+      next: (response: BodyResponse<DetalleRpaRadicadoRow[]>) => {
+        this.cargandoDetalleRadicado = false;
+        const filas = response.code === 200 ? (response.data ?? []) : [];
+        this.detallePersonas = this.construirPersonasDetalle(filas);
+        if (this.detallePersonas.length === 0) {
+          this.showMessage('warn', 'Sin datos', `No se encontró información para el radicado ${numeroRadicado}.`);
+        }
+      },
+      error: err => {
+        console.error(err);
+        this.cargandoDetalleRadicado = false;
+        this.detallePersonas = [];
+        this.showMessage('error', 'Error', 'No se pudo consultar el detalle del radicado.');
+      },
+    });
+  }
+
+  private valorCampo(fila: DetalleRpaRadicadoRow, clave: string): string | number | boolean | null {
+    const valor = (fila as Record<string, unknown>)[clave];
+    return valor === undefined ? null : (valor as string | number | boolean | null);
+  }
+
+  private nombreCompleto(fila: DetalleRpaRadicadoRow, claves: string[]): string {
+    return claves
+      .map(clave => this.valorCampo(fila, clave))
+      .filter(v => v !== null && v !== undefined && String(v).trim() !== '')
+      .join(' ')
+      .trim();
+  }
+
+  private mapearSecciones(
+    definiciones: { titulo: string; campos: { clave: string; etiqueta?: string }[] }[],
+    fila: DetalleRpaRadicadoRow
+  ): SeccionDetalleRpa[] {
+    return definiciones.map(seccion => ({
+      titulo: seccion.titulo,
+      campos: seccion.campos.map(campo => ({
+        etiqueta: campo.etiqueta ?? campo.clave,
+        valor: this.valorCampo(fila, campo.clave),
+      })),
+    }));
+  }
+
+  private tieneBeneficiario(fila: DetalleRpaRadicadoRow): boolean {
+    return fila._id_persona_beneficiario !== null && fila._id_persona_beneficiario !== undefined;
+  }
+
+  /**
+   * Arma las pestañas del modal: SIEMPRE una pestaña "Trabajador" (una sola, sin repetirla por cada
+   * beneficiario) y luego una pestaña por cada beneficiario que traiga el radicado, mostrando solo
+   * lo propio de cada uno (más el contexto de radicado/empresa, común a todas).
+   */
+  private construirPersonasDetalle(filas: DetalleRpaRadicadoRow[]): PersonaDetalleRpa[] {
+    if (filas.length === 0) {
+      return [];
+    }
+
+    const personas: PersonaDetalleRpa[] = [];
+    const primeraFila = filas[0];
+
+    const seccionesTrabajador = [
+      ...this.mapearSecciones(MonitorRpaAfiliacionComponent.SECCION_RADICADO_EMPRESA, primeraFila),
+      ...this.mapearSecciones(MonitorRpaAfiliacionComponent.SECCIONES_TRABAJADOR, primeraFila),
+    ];
+    const nombreTrabajador = this.nombreCompleto(primeraFila, [
+      'Primer nombre trabajador',
+      'Segundo nombre trabajador',
+      'Primer apellido',
+      'Segundo apellido',
+    ]);
+    personas.push({
+      titulo: nombreTrabajador ? `Trabajador — ${nombreTrabajador}` : 'Trabajador',
+      secciones: seccionesTrabajador,
+    });
+
+    filas
+      .filter(fila => this.tieneBeneficiario(fila))
+      .forEach(fila => {
+        const secciones = [
+          ...this.mapearSecciones(MonitorRpaAfiliacionComponent.SECCION_RADICADO_EMPRESA, fila),
+          ...this.mapearSecciones(MonitorRpaAfiliacionComponent.SECCIONES_BENEFICIARIO, fila),
+        ];
+        const nombreBeneficiario =
+          this.nombreCompleto(fila, [
+            'Primer nombre Beneficiario',
+            'Segundo nombre Beneficiario',
+            'Primer apellido Beneficiario',
+            'Segundo apellido Beneficiario',
+          ]) || 'Beneficiario';
+        const parentesco = this.valorCampo(fila, 'Tipo de beneficiario');
+        const titulo = parentesco ? `${nombreBeneficiario} (${parentesco})` : nombreBeneficiario;
+        personas.push({ titulo, secciones });
+      });
+
+    return personas;
   }
 
   onPageChange(event: PaginatorState): void {

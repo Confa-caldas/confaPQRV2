@@ -10,6 +10,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
+import { TabViewModule } from 'primeng/tabview';
+import { AccordionModule } from 'primeng/accordion';
 import { SharedModule } from '../../shared/shared.module';
 import { MonitorRpaAfiliacionComponent } from './monitor-rpa-afiliacion.component';
 
@@ -29,6 +32,9 @@ import { MonitorRpaAfiliacionComponent } from './monitor-rpa-afiliacion.componen
     OverlayPanelModule,
     SharedModule,
     ToastModule,
+    DialogModule,
+    TabViewModule,
+    AccordionModule,
   ],
   exports: [MonitorRpaAfiliacionComponent],
 })

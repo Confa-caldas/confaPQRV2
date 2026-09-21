@@ -84,6 +84,7 @@ import {
   SemaforoRpaItem,
   FilterResumenMotivosRpa,
   ResumenMotivoRpaItem,
+  DetalleRpaRadicadoRow,
   RequestStatusAfiliationList,
   UserListAfiliation,
   NovedadCalidadDatosDetalle,
@@ -283,6 +284,14 @@ export class Users {
     return this.http.post<BodyResponse<ResumenMotivoRpaItem[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.MONITOR_RPA_AFILIACION_RESUMEN_MOTIVOS}`,
       payload
+    );
+  }
+
+  /** Detalle completo (trabajador + beneficiarios) de un radicado, tal como se le envía al robot RPA. */
+  getDetalleRpaPorRadicado(numero_radicado: string) {
+    return this.http.post<BodyResponse<DetalleRpaRadicadoRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.MONITOR_RPA_AFILIACION_DETALLE_RADICADO}`,
+      { numero_radicado }
     );
   }
 

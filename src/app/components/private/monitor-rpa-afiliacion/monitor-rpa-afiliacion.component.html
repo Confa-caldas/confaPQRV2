@@ -275,8 +275,55 @@
 <p-overlayPanel #opRadicados [style]="{ 'max-width': '420px' }">
   <div class="radicados-panel">
     <div class="radicados-panel__titulo">{{ motivoPanelLabel }}</div>
+    <div class="radicados-panel__ayuda" *ngIf="detalleRadicadoHabilitado">
+      Haz clic en un radicado para ver el detalle enviado al robot.
+    </div>
     <div class="radicados-panel__chips">
-      <span class="radicado-chip" *ngFor="let r of radicadosPanel">{{ r }}</span>
+      <span
+        class="radicado-chip"
+        [class.radicado-chip--clickable]="detalleRadicadoHabilitado"
+        *ngFor="let r of radicadosPanel"
+        (click)="abrirDetalleRadicado(r)">
+        {{ r }}
+      </span>
     </div>
   </div>
 </p-overlayPanel>
+
+<p-dialog
+  header="Detalle enviado al robot RPA — {{ detalleRadicadoActual }}"
+  [(visible)]="detalleRadicadoVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: '96vw', maxWidth: '1600px', height: '92vh' }"
+  [maximizable]="true"
+  styleClass="detalle-rpa-dialog">
+  <div class="detalle-rpa__cargando" *ngIf="cargandoDetalleRadicado">Consultando información…</div>
+
+  <ng-container *ngIf="!cargandoDetalleRadicado">
+    <div class="detalle-rpa__vacio" *ngIf="detallePersonas.length === 0">
+      No se encontró información para este radicado.
+    </div>
+
+    <p-tabView
+      *ngIf="detallePersonas.length > 0"
+      [(activeIndex)]="detalleTabIndex"
+      styleClass="detalle-rpa__tabs">
+      <p-tabPanel *ngFor="let persona of detallePersonas" [header]="persona.titulo">
+        <p-accordion [multiple]="true" styleClass="detalle-rpa__acordeon">
+          <p-accordionTab
+            *ngFor="let seccion of persona.secciones; let i = index"
+            [header]="seccion.titulo"
+            [selected]="i < 2">
+            <div class="detalle-rpa__campos">
+              <div class="detalle-rpa__campo" *ngFor="let campo of seccion.campos">
+                <span class="detalle-rpa__etiqueta">{{ campo.etiqueta }}</span>
+                <span class="detalle-rpa__valor">{{ campo.valor === null || campo.valor === '' ? '—' : campo.valor }}</span>
+              </div>
+            </div>
+          </p-accordionTab>
+        </p-accordion>
+      </p-tabPanel>
+    </p-tabView>
+  </ng-container>
+</p-dialog>
