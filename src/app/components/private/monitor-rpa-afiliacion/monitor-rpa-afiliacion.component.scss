@@ -1,0 +1,673 @@
+@import '../../../../assets/styles/abstracts/variables.scss';
+
+tr {
+  position: relative;
+}
+
+.filters-card,
+.table-card,
+.resumen-card {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+}
+
+.resumen-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.resumen-titulo {
+  color: $color-text-black;
+  font-family: $font-medium, $font-light;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.resumen-stats {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.resumen-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 4.5rem;
+
+  &__valor {
+    color: #00aeef;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  &__label {
+    color: #6c757d;
+    font-family: $font-light;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+}
+
+.resumen-grupos {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media screen and (min-width: 992px) {
+  .resumen-grupos {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.resumen-grupo {
+  min-width: 0;
+}
+
+.resumen-subtitulo {
+  color: #6c757d;
+  font-family: $font-medium, $font-light;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.4rem;
+}
+
+.resumen-tabla-wrap {
+  overflow-x: auto;
+}
+
+.resumen-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    background-color: #f1f3f5;
+    color: $color-text-black;
+    font-family: $font-light;
+    font-weight: 600;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #eef0f2;
+    color: $color-text-black;
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: #fafbfc;
+  }
+
+  &__col-cantidad {
+    text-align: center;
+    width: 6.5rem;
+  }
+
+  &__col-radicados {
+    width: 9rem;
+    white-space: nowrap;
+  }
+
+  &__fila--top {
+    background-color: #eaf7ff !important;
+
+    td:first-child {
+      border-left: 3px solid #00aeef;
+    }
+  }
+}
+
+.resumen-badge {
+  display: inline-block;
+  min-width: 1.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background-color: #e7f1ff;
+  color: #0d6efd;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.resumen-vacio {
+  color: #6c757d;
+  font-family: $font-light;
+  font-size: 13px;
+  padding: 0.5rem 0;
+}
+
+.btn-ver-radicados {
+  border: none;
+  background: none;
+  padding: 0;
+  color: #00aeef;
+  font-family: $font-medium, $font-light;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    color: #0090c7;
+  }
+}
+
+.radicados-panel {
+  max-width: 480px;
+
+  &__titulo {
+    color: $color-text-black;
+    font-family: $font-medium, $font-light;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  &__chips {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.4rem;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .radicados-panel__chips {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.radicado-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  background-color: #f1f3f5;
+  border: 1px solid #dee2e6;
+  color: $color-text-black;
+  font-family: monospace;
+  font-size: 12px;
+  text-align: center;
+  white-space: nowrap;
+
+  &--clickable {
+    cursor: pointer;
+    background-color: #eaf7ff;
+    border-color: #a9def9;
+    color: #0090c7;
+    font-weight: 700;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: #d7f0ff;
+    }
+  }
+}
+
+.radicados-panel__ayuda {
+  color: #6c757d;
+  font-family: $font-light;
+  font-size: 11px;
+  margin-bottom: 0.5rem;
+}
+
+/*
+ * Especificidad reforzada (`.detalle-rpa__tabs.p-tabview ...`) por la misma razón que el acordeón:
+ * el `.p-tabview .p-tabview-nav .p-tabview-nav-link` genérico de _tabs.scss deja todas las pestañas
+ * en blanco liso, sin forma de distinguir cuál está activa (justo lo que se veía mal).
+ * Estilo tipo "pestaña de navegador": la activa queda blanca, unida al contenido y con
+ * borde inferior azul Confa; las inactivas quedan grises y más chicas, separadas por una línea.
+ */
+/* _tabs.scss (global) fija `.p-tabview-nav-content` a 600px de ancho y le pone `margin: 0 auto`,
+   pensado para otra pantalla -- aquí eso dejaba las pestañas apretadas a la izquierda con un hueco
+   en blanco al lado. Se libera para que ocupe todo el ancho del modal. */
+::ng-deep .detalle-rpa__tabs.p-tabview .p-tabview-nav-container {
+  width: 100%;
+}
+
+::ng-deep .detalle-rpa__tabs.p-tabview .p-tabview-nav-content {
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
+
+::ng-deep .detalle-rpa__tabs.p-tabview .p-tabview-nav {
+  background-color: transparent;
+  border-bottom: 2px solid #dee2e6;
+  margin: 0 0 1rem 0;
+  flex-wrap: wrap;
+  row-gap: 0.35rem;
+}
+
+/* El tema global hace `.p-tabview .p-tabview-nav li { flex: 1 }`, que estira cada pestaña a lo
+   ancho del contenedor -- por eso una pestaña sola se veía como una barra gigante cuando quedaba
+   sola en su línea. Aquí se anula para que cada pestaña mida solo lo que su texto necesita, y así
+   cuando no caben todas en una línea simplemente bajan completas a la siguiente (sin recortarse ni
+   depender de flechas de scroll). */
+::ng-deep .detalle-rpa__tabs.p-tabview .p-tabview-nav li {
+  flex: 0 0 auto;
+}
+
+::ng-deep .detalle-rpa__tabs.p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  background-color: #f1f3f5;
+  border: 1px solid #dee2e6;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  margin: 0 0.25rem -2px 0;
+  padding: 0.55rem 1.1rem;
+  color: #6c757d;
+  font-family: $font-medium, $font-light;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+::ng-deep .detalle-rpa__tabs.p-tabview .p-tabview-nav li:not(.p-highlight):hover .p-tabview-nav-link {
+  background-color: #e9ecef;
+  color: $color-text-black;
+}
+
+::ng-deep .detalle-rpa__tabs.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  background-color: #ffffff;
+  border-color: #00aeef #dee2e6 #ffffff;
+  border-bottom: 2px solid #ffffff;
+  color: #00aeef;
+  font-weight: 700;
+  box-shadow: 0 -2px 0 #00aeef inset;
+}
+
+::ng-deep .detalle-rpa-dialog {
+  display: flex;
+  flex-direction: column;
+
+  .p-dialog-header {
+    background-color: #f8f9fa;
+
+    .p-dialog-title {
+      font-family: $font-medium, $font-light;
+      font-size: 15px;
+      font-weight: 600;
+      color: $color-text-black;
+    }
+  }
+
+  .p-dialog-content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .p-tabview {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .p-tabview-nav {
+    flex-wrap: wrap;
+  }
+
+  .p-tabview-panels {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+}
+
+.detalle-rpa__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.detalle-rpa__header-titulo {
+  font-family: $font-medium, $font-light;
+  font-size: 15px;
+  font-weight: 600;
+  color: $color-text-black;
+}
+
+.detalle-rpa__header-meta {
+  color: #6c757d;
+  font-family: $font-light;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.detalle-rpa__cargando,
+.detalle-rpa__vacio {
+  text-align: center;
+  color: #6c757d;
+  font-family: $font-light;
+  font-size: 13px;
+  padding: 1.5rem 0;
+}
+
+/*
+ * Especificidad reforzada (`.detalle-rpa__acordeon.p-accordion ...`) a propósito: el tema global de
+ * PrimeNG (_tabs.scss) trae un `.p-accordion .p-accordion-header .p-accordion-header-link` genérico
+ * con fondo teal (#4b878d) que si no se supera en especificidad, gana la cascada y deja los
+ * acordeones con los colores por defecto en vez de los de Confa.
+ */
+::ng-deep .detalle-rpa__acordeon.p-accordion .p-accordion-tab {
+  margin-bottom: 0.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+::ng-deep .detalle-rpa__acordeon.p-accordion .p-accordion-header .p-accordion-header-link {
+  padding: 0.6rem 1rem;
+  background-color: #f1f3f5;
+  border: 1px solid #dee2e6;
+  border-left: 3px solid #00aeef;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+::ng-deep .detalle-rpa__acordeon.p-accordion .p-accordion-header .p-accordion-header-link .p-accordion-header-text {
+  color: $color-text-black;
+  font-family: $font-medium, $font-light;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+::ng-deep .detalle-rpa__acordeon.p-accordion .p-accordion-header .p-accordion-header-link .p-accordion-toggle-icon,
+::ng-deep .detalle-rpa__acordeon.p-accordion .p-accordion-header .p-accordion-header-link svg {
+  color: #00aeef;
+}
+
+::ng-deep .detalle-rpa__acordeon.p-accordion .p-accordion-header:not(.p-disabled):hover .p-accordion-header-link {
+  background-color: #eaf7ff;
+  border-color: #a9def9;
+  border-left-color: #00aeef;
+}
+
+::ng-deep .detalle-rpa__acordeon.p-accordion .p-accordion-header.p-highlight .p-accordion-header-link {
+  background-color: #eaf7ff;
+  border-color: #a9def9;
+  border-left: 3px solid #00aeef;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+::ng-deep .detalle-rpa__acordeon.p-accordion .p-accordion-header.p-highlight .p-accordion-header-link .p-accordion-header-text {
+  color: #0090c7;
+}
+
+::ng-deep .detalle-rpa__acordeon.p-accordion .p-accordion-content {
+  padding: 0.9rem 1rem;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.detalle-rpa__campos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem 1.5rem;
+}
+
+@media screen and (min-width: 1200px) {
+  .detalle-rpa__campos {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .detalle-rpa__campos {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detalle-rpa__campo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.detalle-rpa__etiqueta {
+  color: #6c757d;
+  font-family: $font-light;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.detalle-rpa__valor {
+  color: $color-text-black;
+  font-family: $font-medium, $font-light;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.filters-grid {
+  display: grid;
+  gap: 1rem 1.25rem;
+  width: 100%;
+  align-items: center;
+}
+
+.filters-cell {
+  min-width: 0;
+
+  ::ng-deep .p-dropdown,
+  ::ng-deep .p-dropdown .p-inputtext,
+  ::ng-deep .p-calendar,
+  ::ng-deep .p-calendar .p-inputtext {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  &.filters-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .filters-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media screen and (min-width: 1375px) {
+  .filters-grid {
+    gap: 1rem 1.5rem;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .filters-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+.resumen-general-card {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+}
+
+.resumen-general {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.resumen-general__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 7rem;
+  padding: 0.4rem 1.25rem;
+  border-radius: 10px;
+
+  &--procesadas {
+    background-color: #e6f7ec;
+  }
+
+  &--inconsistencias {
+    background-color: #fdecea;
+  }
+}
+
+.resumen-general__valor {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+
+  .resumen-general__item--procesadas & {
+    color: #1e6b3c;
+  }
+
+  .resumen-general__item--inconsistencias & {
+    color: #b3261e;
+  }
+}
+
+.resumen-general__label {
+  color: #6c757d;
+  font-family: $font-light;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 0.15rem;
+}
+
+.resumen-general__cargando {
+  text-align: center;
+  color: #6c757d;
+  font-family: $font-light;
+  font-size: 13px;
+  padding: 0.5rem 0;
+}
+
+.modo-fecha-badge {
+  display: inline-block;
+  margin-top: 0.85rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-family: $font-light;
+  font-size: 12px;
+  font-weight: 600;
+
+  &--hoy {
+    background-color: #fff4e5;
+    border: 1px solid #ffd8a8;
+    color: #9a5b00;
+  }
+
+  &--historico {
+    background-color: #e6f7ec;
+    border: 1px solid #b7e4c7;
+    color: #1e6b3c;
+  }
+}
+
+.semaforo-lista {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+@media screen and (max-width: 992px) {
+  .semaforo-lista {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .semaforo-lista {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.semaforo-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 10px;
+  background-color: #f1f3f5;
+  border: 1px solid #dee2e6;
+
+  &--verde {
+    background-color: #e6f7ec;
+    border-color: #b7e4c7;
+  }
+
+  &--rojo {
+    background-color: #fdecea;
+    border-color: #f5c2c0;
+  }
+}
+
+.semaforo-pill__texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.semaforo-fecha {
+  color: #6c757d;
+  font-family: $font-light;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.semaforo-label {
+  color: $color-text-black;
+  font-family: $font-light;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.semaforo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: #adb5bd;
+
+  .semaforo-pill--verde & {
+    background-color: $color-green;
+  }
+
+  .semaforo-pill--rojo & {
+    background-color: $color-red;
+  }
+}
+
+::ng-deep .semaforo-refresh.p-button {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+}
+

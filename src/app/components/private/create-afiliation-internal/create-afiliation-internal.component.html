@@ -24,6 +24,62 @@
           {{ solicitudPersonalForm.get('numero_documento')?.value }}
         </ng-template>
       </div>
+
+                <ng-container *ngIf="beneficiariosAgregados.length > 0">
+                  <hr class="cai-subsection-sep" />
+                  <h5 class="cai-subsection__title">Beneficiarios agregados</h5>
+                  <p class="cai-acc-intro">Revisa los beneficiarios registrados. Puedes editar o eliminar los que agregaste manualmente.</p>
+                  <div class="cai-table-wrap">
+                    <table class="cai-table">
+                      <thead>
+                        <tr>
+                          <th>Parentesco</th>
+                          <th>Tipo doc.</th>
+                          <th>Número</th>
+                          <th>Nombre</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let item of beneficiariosVisiblesPaginados">
+                          <td>{{ item.persona.parentesco }}</td>
+                          <td>{{ item.persona.tipoDocumento }}</td>
+                          <td>{{ item.persona.numeroDocumento }}</td>
+                          <td>{{ nombrePersonaACargo(item.persona) }}</td>
+                          <td>
+                            <ng-container *ngIf="!item.persona.esPrecargado">
+                              <div class="cai-benef-acciones">
+                                <button
+                                  type="button"
+                                  class="cai-benef-accion-btn cai-benef-accion-btn--edit"
+                                  (click)="editarBeneficiario(item.indexReal)"
+                                  title="Editar"
+                                  aria-label="Editar beneficiario">
+                                  <i class="pi pi-pencil" aria-hidden="true"></i>
+                                </button>
+                                <button
+                                  type="button"
+                                  class="cai-benef-accion-btn cai-benef-accion-btn--delete"
+                                  (click)="eliminarBeneficiario(item.indexReal)"
+                                  title="Eliminar"
+                                  aria-label="Eliminar beneficiario">
+                                  <i class="pi pi-trash" aria-hidden="true"></i>
+                                </button>
+                              </div>
+                            </ng-container>
+                            <span *ngIf="item.persona.esPrecargado" class="cai-field-hint">Precargado</span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="cai-benef-pagination" *ngIf="totalPaginasBeneficiarios > 1">
+                    <p-button type="button" icon="pi pi-chevron-left" [outlined]="true" [disabled]="paginaBeneficiariosActual <= 1" (click)="paginaBeneficiariosActual = paginaBeneficiariosActual - 1"></p-button>
+                    <span>Página {{ paginaBeneficiariosActual }} de {{ totalPaginasBeneficiarios }}</span>
+                    <p-button type="button" icon="pi pi-chevron-right" [outlined]="true" [disabled]="paginaBeneficiariosActual >= totalPaginasBeneficiarios" (click)="paginaBeneficiariosActual = paginaBeneficiariosActual + 1"></p-button>
+                  </div>
+                </ng-container>
+
                 <form
                   id="caiFormBeneficiarioInterno"
                   [formGroup]="formularioPersonaACargo"
@@ -326,61 +382,6 @@
                     </div>
                   </ng-container>
                 </form>
-
-                <ng-container *ngIf="beneficiariosAgregados.length > 0">
-                  <hr class="cai-subsection-sep" />
-                  <h5 class="cai-subsection__title">Beneficiarios agregados</h5>
-                  <p class="cai-acc-intro">Revisa los beneficiarios registrados. Puedes editar o eliminar los que agregaste manualmente.</p>
-                  <div class="cai-table-wrap">
-                    <table class="cai-table">
-                      <thead>
-                        <tr>
-                          <th>Parentesco</th>
-                          <th>Tipo doc.</th>
-                          <th>Número</th>
-                          <th>Nombre</th>
-                          <th>Acciones</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr *ngFor="let item of beneficiariosVisiblesPaginados">
-                          <td>{{ item.persona.parentesco }}</td>
-                          <td>{{ item.persona.tipoDocumento }}</td>
-                          <td>{{ item.persona.numeroDocumento }}</td>
-                          <td>{{ nombrePersonaACargo(item.persona) }}</td>
-                          <td>
-                            <ng-container *ngIf="!item.persona.esPrecargado">
-                              <div class="cai-benef-acciones">
-                                <button
-                                  type="button"
-                                  class="cai-benef-accion-btn cai-benef-accion-btn--edit"
-                                  (click)="editarBeneficiario(item.indexReal)"
-                                  title="Editar"
-                                  aria-label="Editar beneficiario">
-                                  <i class="pi pi-pencil" aria-hidden="true"></i>
-                                </button>
-                                <button
-                                  type="button"
-                                  class="cai-benef-accion-btn cai-benef-accion-btn--delete"
-                                  (click)="eliminarBeneficiario(item.indexReal)"
-                                  title="Eliminar"
-                                  aria-label="Eliminar beneficiario">
-                                  <i class="pi pi-trash" aria-hidden="true"></i>
-                                </button>
-                              </div>
-                            </ng-container>
-                            <span *ngIf="item.persona.esPrecargado" class="cai-field-hint">Precargado</span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div class="cai-benef-pagination" *ngIf="totalPaginasBeneficiarios > 1">
-                    <p-button type="button" icon="pi pi-chevron-left" [outlined]="true" [disabled]="paginaBeneficiariosActual <= 1" (click)="paginaBeneficiariosActual = paginaBeneficiariosActual - 1"></p-button>
-                    <span>Página {{ paginaBeneficiariosActual }} de {{ totalPaginasBeneficiarios }}</span>
-                    <p-button type="button" icon="pi pi-chevron-right" [outlined]="true" [disabled]="paginaBeneficiariosActual >= totalPaginasBeneficiarios" (click)="paginaBeneficiariosActual = paginaBeneficiariosActual + 1"></p-button>
-                  </div>
-                </ng-container>
     </ng-template>
 
     <!-- Paso 0: selección (misma jerarquía que create-request-internal) -->
@@ -670,6 +671,29 @@
         <p class="cai-confirmacion-radicado__radicado">
           Número de radicado: <strong>{{ numeroRadicado }}</strong>
         </p>
+        <p class="cai-confirmacion-radicado__hint" *ngIf="trabajadorAfiliadoNombre">
+          Trabajador afiliado: <strong>{{ trabajadorAfiliadoNombre }}</strong>
+          – {{ trabajadorAfiliadoTipoDocumento }} {{ trabajadorAfiliadoNumeroDocumento }}
+        </p>
+        <div *ngIf="beneficiariosAgregados.length > 0" class="cai-table-wrap">
+          <h6 class="fw-bold mb-2">Beneficiarios incluidos en la solicitud</h6>
+          <table class="cai-table">
+            <thead>
+              <tr>
+                <th>Beneficiario</th>
+                <th>Documento</th>
+                <th>Parentesco</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let b of beneficiariosAgregados">
+                <td>{{ nombrePersonaACargo(b) }}</td>
+                <td>{{ b.tipoDocumento }} {{ b.numeroDocumento }}</td>
+                <td>{{ b.parentesco }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p class="cai-confirmacion-radicado__hint" *ngIf="mensajeFinSemanaFestivo">{{ mensajeFinSemanaFestivo }}</p>
         <p class="cai-confirmacion-radicado__hint" *ngIf="!mensajeFinSemanaFestivo">
           Conserve el número de radicado para futuras consultas sobre esta solicitud.
@@ -1055,6 +1079,51 @@
                     [outlined]="true"
                     (click)="fileInputIdentidad.click()"></p-button>
                   <p class="cai-field-hint cai-upload-list__count">{{ archivosIdentidad.length }} de {{ maxArchivosPorTipoAdjunto }} archivos adjuntos</p>
+                </div>
+              </section>
+
+              <section class="cai-subsection" *ngIf="requiereAdjuntoRegistroCivilTrabajador">
+                <h5 class="cai-subsection__title">Registro civil *</h5>
+                <p class="cai-acc-intro">
+                  Formatos: PDF, PNG, JPG. Máximo 4 MB por archivo.
+                </p>
+                <input
+                  #fileInputRegistroCivil
+                  type="file"
+                  class="cai-upload-input-hidden"
+                  [accept]="acceptAdjuntosIdentidad"
+                  multiple
+                  (change)="seleccionarArchivoRegistroCivil($event)" />
+                <div
+                  *ngIf="archivosRegistroCivil.length === 0"
+                  class="cai-upload-zone"
+                  (dragover)="$event.preventDefault()"
+                  (drop)="onDropArchivosRegistroCivil($event)"
+                  (click)="fileInputRegistroCivil.click()"
+                  role="button"
+                  tabindex="0">
+                  <i class="pi pi-cloud-upload cai-upload-zone__icon" aria-hidden="true"></i>
+                  <p class="cai-upload-zone__title">Arrastra el archivo aquí o haz clic para seleccionar</p>
+                  <p class="cai-upload-zone__hint">PDF, PNG, JPEG o JPG — Máx. 4 MB. Hasta 3 archivos.</p>
+                  <p-button type="button" label="Seleccionar archivo" [outlined]="true" (click)="fileInputRegistroCivil.click(); $event.stopPropagation()"></p-button>
+                </div>
+                <div *ngIf="archivosRegistroCivil.length > 0" class="cai-upload-list">
+                  <div *ngFor="let archivo of archivosRegistroCivil; let i = index" class="cai-upload-file-card">
+                    <i class="pi pi-file cai-upload-file-card__icon" aria-hidden="true"></i>
+                    <div class="cai-upload-file-card__meta">
+                      <p class="cai-upload-file-card__name">{{ archivo.name }}</p>
+                      <p class="cai-upload-file-card__size">{{ (archivo.size / 1024 / 1024).toFixed(2) }} MB</p>
+                    </div>
+                    <p-button type="button" icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (click)="eliminarArchivoRegistroCivil(i)"></p-button>
+                  </div>
+                  <p-button
+                    *ngIf="archivosRegistroCivil.length < maxArchivosPorTipoAdjunto"
+                    type="button"
+                    label="Agregar otro archivo ({{ archivosRegistroCivil.length }}/{{ maxArchivosPorTipoAdjunto }})"
+                    icon="pi pi-plus"
+                    [outlined]="true"
+                    (click)="fileInputRegistroCivil.click()"></p-button>
+                  <p class="cai-field-hint cai-upload-list__count">{{ archivosRegistroCivil.length }} de {{ maxArchivosPorTipoAdjunto }} archivos adjuntos</p>
                 </div>
               </section>
 
@@ -1478,30 +1547,6 @@
                 </div>
               </div>
 
-              <ng-container *ngIf="beneficiariosPrecargadosVista.length">
-                <h5 class="cai-subsection__title">Beneficiarios precargados</h5>
-                <div class="cai-table-wrap">
-                  <table class="cai-table">
-                    <thead>
-                      <tr>
-                        <th>Parentesco</th>
-                        <th>Tipo doc.</th>
-                        <th>Número</th>
-                        <th>Nombre</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let b of beneficiariosPrecargadosVista">
-                        <td>{{ b.parentesco }}</td>
-                        <td>{{ b.tipoDocumento }}</td>
-                        <td>{{ b.numeroDocumento }}</td>
-                        <td>{{ b.nombreCompleto }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </ng-container>
-
               <ng-container *ngIf="opcionBeneficiarios === 'si'">
                 <hr class="cai-subsection-sep" />
                 <ng-container *ngTemplateOutlet="tplBeneficiarioInternoForm"></ng-container>
@@ -1528,6 +1573,50 @@
             styleClass="cai-global-btn cai-global-btn--secondary"
             [outlined]="true"
             (click)="regresarGlobalDesdeSolicitud()"></p-button>
+        </div>
+
+        <!-- Modal de reconfirmación de datos antes de radicar (trabajador / trabajador + beneficiarios) -->
+        <div *ngIf="mostrarModalConfirmacionDatos" class="cai-confirm-datos-overlay">
+          <div class="cai-confirm-datos-card">
+            <h5 class="cai-confirm-datos-card__title">Confirma los datos antes de radicar</h5>
+            <p class="cai-confirm-datos-card__hint">
+              Revisa que la siguiente información esté correcta. Si encuentras un error, cancela y corrígelo en el formulario.
+            </p>
+            <ul class="cai-confirm-datos-card__list">
+              <li>
+                <span>Documento del trabajador</span>
+                <strong>{{ confirmacionRadicacionTipoDocumento }} {{ confirmacionRadicacionNumeroDocumento }}</strong>
+              </li>
+              <li>
+                <span>Fecha de ingreso</span>
+                <strong>{{ confirmacionRadicacionFechaIngreso || 'Sin dato' }}</strong>
+              </li>
+              <li>
+                <span>Fecha de recepción de documentos</span>
+                <strong>{{ confirmacionRadicacionFechaRecepcionDocumentos || 'Sin dato' }}</strong>
+              </li>
+              <li>
+                <span>Horas laboradas en el mes</span>
+                <strong>{{ confirmacionRadicacionHorasLaboradas || 'Sin dato' }}</strong>
+              </li>
+              <li>
+                <span>Salario mensual</span>
+                <strong>{{ confirmacionRadicacionSalario ? ('$ ' + confirmacionRadicacionSalario) : 'Sin dato' }}</strong>
+              </li>
+            </ul>
+            <div class="cai-confirm-datos-card__actions">
+              <p-button
+                type="button"
+                label="Revisar de nuevo"
+                [outlined]="true"
+                (click)="cancelarConfirmacionDatosRadicacion()"></p-button>
+              <p-button
+                type="button"
+                label="Confirmar y radicar"
+                [style]="{ 'background-color': '#00aeef' }"
+                (click)="confirmarDatosYRadicar()"></p-button>
+            </div>
+          </div>
         </div>
       </div>
     </ng-container>
@@ -1812,23 +1901,29 @@
             <i class="pi pi-check-circle cai-confirmacion-radicado__icon" aria-hidden="true"></i>
           </div>
           <h4 class="cai-confirmacion-radicado__title">¡Solicitud enviada exitosamente!</h4>
-          <p class="cai-confirmacion-radicado__hint">{{ mensajeExitoRadicadoBeneficiarioInterna }}</p>
-          <div *ngIf="solicitudesCreadasBeneficiarioInterna.length === 1" class="cai-confirmacion-radicado__radicado">
-            Número de radicado: <strong>{{ solicitudesCreadasBeneficiarioInterna[0].numeroRadicado }}</strong>
-          </div>
-          <div *ngIf="solicitudesCreadasBeneficiarioInterna.length > 1" class="cai-table-wrap">
+          <p class="cai-confirmacion-radicado__radicado" *ngIf="radicadoUnicoBeneficiarioInterna">
+            Número de radicado: <strong>{{ radicadoUnicoBeneficiarioInterna }}</strong>
+          </p>
+          <p class="cai-confirmacion-radicado__hint" *ngIf="trabajadorActivoBeneficiario?.nombreCompleto">
+            Trabajador: <strong>{{ trabajadorActivoBeneficiario?.nombreCompleto }}</strong>
+            – {{ trabajadorActivoBeneficiario?.tipoDocumento }} {{ trabajadorActivoBeneficiario?.numeroDocumento }}
+          </p>
+          <div *ngIf="solicitudesCreadasBeneficiarioInterna.length > 0" class="cai-table-wrap">
+            <h6 class="fw-bold mb-2">Beneficiarios incluidos en la solicitud</h6>
             <table class="cai-table">
               <thead>
                 <tr>
-                  <th>Radicado</th>
+                  <th *ngIf="!radicadoUnicoBeneficiarioInterna">Radicado</th>
                   <th>Beneficiario</th>
+                  <th>Documento</th>
                   <th>Parentesco</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let s of solicitudesCreadasBeneficiarioInterna">
-                  <td>{{ s.numeroRadicado }}</td>
+                  <td *ngIf="!radicadoUnicoBeneficiarioInterna">{{ s.numeroRadicado }}</td>
                   <td>{{ s.nombreBeneficiario }}</td>
+                  <td>{{ s.tipoDocumentoBeneficiario }} {{ s.numeroDocumentoBeneficiario }}</td>
                   <td>{{ s.parentesco }}</td>
                 </tr>
               </tbody>

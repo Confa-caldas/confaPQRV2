@@ -111,6 +111,7 @@ const MAX_TAMANO_ADJUNTO_BYTES = 4 * 1024 * 1024;
 const ID_TIPO_ADJUNTO_DOCUMENTO_IDENTIDAD = 1;
 const ID_TIPO_ADJUNTO_PERMISO_TRABAJO = 2;
 const ID_TIPO_ADJUNTO_SOPORTE_DISCAPACIDAD = 4;
+const ID_TIPO_ADJUNTO_REGISTRO_CIVIL = 7;
 const EDAD_MINIMA_TRABAJADOR_AFILIACION = 12;
 const EDAD_MINIMA_TRABAJADOR_PARA_AFILIAR_CONYUGE = 18;
 const TEXTO_MODAL_CUERPO_RADICACION_DIA_NO_HABIL =
@@ -247,6 +248,14 @@ export class CreateAfiliationInternalComponent implements OnInit {
   identificacionTrabajadorBeneficiarioBloqueada = false;
   procesandoRadicadoBeneficiarioInterna = false;
   solicitudesCreadasBeneficiarioInterna: SolicitudCreadaBeneficiarioInterna[] = [];
+
+  /** Si todos los beneficiarios radicados comparten el mismo número de radicado, para mostrarlo una sola vez (igual que en la confirmación de trabajador). */
+  get radicadoUnicoBeneficiarioInterna(): string | null {
+    const radicados = Array.from(
+      new Set(this.solicitudesCreadasBeneficiarioInterna.map(s => s.numeroRadicado))
+    );
+    return radicados.length === 1 ? radicados[0] : null;
+  }
   mensajeExitoRadicadoBeneficiarioInterna = '';
 
   /** Checklist de validaciones mostradas tras consultar trabajador (paso 2). */
@@ -271,12 +280,18 @@ export class CreateAfiliationInternalComponent implements OnInit {
   mostrarConfirmacionRadicado = false;
   numeroRadicado = '';
   mensajeFinSemanaFestivo = '';
+  /** Datos del trabajador afiliado, para mostrarlos en la pantalla de confirmación del radicado. */
+  trabajadorAfiliadoNombre = '';
+  trabajadorAfiliadoTipoDocumento = '';
+  trabajadorAfiliadoNumeroDocumento = '';
 
   /** Flags y datos conservados para guardar-solicitud. */
   requiereAdjuntoDocumento = true;
   mensajeAdjuntoDocumento = '';
   requierePermisoLaboral = false;
   mensajePermisoLaboral = '';
+  /** true cuando la validación "registraduria" del trabajador trae data.requiereAdjuntoRegistroCivil (estado del documento requiere revisión manual). */
+  requiereAdjuntoRegistroCivilTrabajador = false;
   hayBeneficiariosPrecargadosDesdeBackend = false;
   beneficiariosPrecargarGuardar: BeneficiarioPrecargarAfiliacionInterna[] = [];
 
@@ -284,6 +299,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
   archivosIdentidad: File[] = [];
   /** Hasta 3 adjuntos de permiso de trabajo (menor con TI). */
   archivosPermisoTrabajo: File[] = [];
+  /** Hasta 3 adjuntos de registro civil (estado del documento del trabajador requiere revisión manual). */
+  archivosRegistroCivil: File[] = [];
 
   /** Referencias estables para p-calendar (evita que maxDate/minDate nuevos rompan la selección). */
   readonly fechaHoyCalendario = crearFechaFinDiaCalendario(new Date());
@@ -1392,6 +1409,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.mensajeAdjuntoDocumento = '';
     this.requierePermisoLaboral = false;
     this.mensajePermisoLaboral = '';
+    this.requiereAdjuntoRegistroCivilTrabajador = false;
     this.hayBeneficiariosPrecargadosDesdeBackend = false;
     this.beneficiariosPrecargarGuardar = [];
     this.limpiarAdjuntosTrabajador();
@@ -1706,6 +1724,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
           }
 
           this.validacionesTrabajador = this.mapearValidacionesTrabajador(data.validaciones);
+          const validacionRegistraduria = (data.validaciones ?? []).find(x => x.nombre === 'registraduria');
+          this.requiereAdjuntoRegistroCivilTrabajador = !!validacionRegistraduria?.data?.['requiereAdjuntoRegistroCivil'];
 
           if (data.puedeContinuar === false) {
             this.bloquearIdentificacionTrabajador();
@@ -1727,6 +1747,13 @@ export class CreateAfiliationInternalComponent implements OnInit {
           this.documentoTrabajadorValidado = true;
           this.respuestaValidarTrabajador = data;
           this.almacenarContextoGuardarDesdeDatosFormulario(data.datosFormulario ?? null);
+          if (this.requiereAdjuntoRegistroCivilTrabajador) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Registro civil',
+              detail: 'El estado del documento reportado por Registraduría requiere validación manual. Adjunta el registro civil para continuar.',
+            });
+          }
           this.resetSeccionesGuardadas();
           this.cargarCatalogosParaSolicitud(() => {
           this.patchSolicitudDesdeRespuesta(data);
@@ -1765,6 +1792,14 @@ export class CreateAfiliationInternalComponent implements OnInit {
         severity: 'warn',
         summary: 'Documento de identidad',
         detail: 'Debe adjuntar la copia del documento de identidad para continuar con el proceso.',
+      });
+      return;
+    }
+    if (this.requiereAdjuntoRegistroCivilTrabajador && this.archivosRegistroCivil.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Registro civil',
+        detail: 'Debe adjuntar el registro civil para continuar con el proceso.',
       });
       return;
     }
@@ -1899,6 +1934,9 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.mostrarConfirmacionRadicado = false;
     this.numeroRadicado = '';
     this.mensajeFinSemanaFestivo = '';
+    this.trabajadorAfiliadoNombre = '';
+    this.trabajadorAfiliadoTipoDocumento = '';
+    this.trabajadorAfiliadoNumeroDocumento = '';
     // Reinicio completo sin confirmación: la solicitud ya fue radicada.
     this.ejecutarVolverSeleccion();
   }
@@ -1953,6 +1991,60 @@ export class CreateAfiliationInternalComponent implements OnInit {
       return;
     }
 
+    this.mostrarModalConfirmacionRadicacion(idEmpresa);
+  }
+
+  /** Datos a reconfirmar antes de radicar (tipo/número de documento del trabajador, fecha de ingreso,
+   * fecha de recepción de documentos, horas laboradas y salario), para que el auxiliar detecte errores
+   * de digitación antes de enviar la solicitud. */
+  mostrarModalConfirmacionDatos = false;
+  confirmacionRadicacionTipoDocumento = '';
+  confirmacionRadicacionNumeroDocumento = '';
+  confirmacionRadicacionFechaIngreso = '';
+  confirmacionRadicacionFechaRecepcionDocumentos = '';
+  confirmacionRadicacionHorasLaboradas = '';
+  confirmacionRadicacionSalario = '';
+  private idEmpresaPendienteConfirmacionRadicacion: number | null = null;
+
+  private mostrarModalConfirmacionRadicacion(idEmpresa: number): void {
+    this.confirmacionRadicacionTipoDocumento = (this.solicitudPersonalForm.get('tipo_documento')?.value ?? '').toString().trim();
+    this.confirmacionRadicacionNumeroDocumento = (this.solicitudPersonalForm.get('numero_documento')?.value ?? '').toString().trim();
+
+    const fechaIngresoIso = valorComoInputDate(this.solicitudLaboralForm.get('fecha_ingreso_empresa')?.value);
+    this.confirmacionRadicacionFechaIngreso = fechaIngresoIso ? this.formatearFechaIsoParaMostrar(fechaIngresoIso) : '';
+
+    const fechaRecepcionIso = valorComoInputDate(this.solicitudLaboralForm.get('fecha_recepcion_documentos')?.value);
+    this.confirmacionRadicacionFechaRecepcionDocumentos = fechaRecepcionIso ? this.formatearFechaIsoParaMostrar(fechaRecepcionIso) : '';
+
+    const horas = this.solicitudLaboralForm.get('horas_mes')?.value;
+    this.confirmacionRadicacionHorasLaboradas = horas != null && horas !== '' ? String(horas) : '';
+
+    const salario = this.solicitudLaboralForm.get('salario_mensual')?.value;
+    this.confirmacionRadicacionSalario =
+      salario != null && salario !== '' ? Number(salario).toLocaleString('es-CO') : '';
+
+    this.idEmpresaPendienteConfirmacionRadicacion = idEmpresa;
+    this.mostrarModalConfirmacionDatos = true;
+  }
+
+  /** El auxiliar confirmó que los datos son correctos: se continúa con la radicación (comportamiento actual). */
+  confirmarDatosYRadicar(): void {
+    const idEmpresa = this.idEmpresaPendienteConfirmacionRadicacion;
+    this.mostrarModalConfirmacionDatos = false;
+    this.idEmpresaPendienteConfirmacionRadicacion = null;
+    if (idEmpresa == null) {
+      return;
+    }
+    this.continuarGuardarSolicitudConfirmada(idEmpresa);
+  }
+
+  /** El auxiliar detectó un error: se cierra el modal y se queda en la misma pantalla, sin radicar ni perder datos. */
+  cancelarConfirmacionDatosRadicacion(): void {
+    this.mostrarModalConfirmacionDatos = false;
+    this.idEmpresaPendienteConfirmacionRadicacion = null;
+  }
+
+  private continuarGuardarSolicitudConfirmada(idEmpresa: number): void {
     this.procesandoSolicitud = true;
     const listaArchivos = this.construirListaArchivosParaSubir();
 
@@ -1969,6 +2061,18 @@ export class CreateAfiliationInternalComponent implements OnInit {
       }
       this.numeroRadicado = radicado;
       this.mensajeFinSemanaFestivo = (resp.mensajeFinSemanaFestivo ?? '').toString().trim();
+      const nombreCompletoTrabajador = [
+        this.solicitudPersonalForm.get('primer_nombre')?.value,
+        this.solicitudPersonalForm.get('segundo_nombre')?.value,
+        this.solicitudPersonalForm.get('primer_apellido')?.value,
+        this.solicitudPersonalForm.get('segundo_apellido')?.value,
+      ]
+        .map(v => (v ?? '').toString().trim())
+        .filter(v => v.length > 0)
+        .join(' ');
+      this.trabajadorAfiliadoNombre = nombreCompletoTrabajador;
+      this.trabajadorAfiliadoTipoDocumento = (this.solicitudPersonalForm.get('tipo_documento')?.value ?? '').toString().trim();
+      this.trabajadorAfiliadoNumeroDocumento = (this.solicitudPersonalForm.get('numero_documento')?.value ?? '').toString().trim();
       this.mostrarConfirmacionRadicado = true;
       this.messageService.add({
         severity: 'success',
@@ -2831,6 +2935,23 @@ export class CreateAfiliationInternalComponent implements OnInit {
     }
   }
 
+  seleccionarArchivoRegistroCivil(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.agregarArchivosHasta3(this.archivosRegistroCivil, input.files);
+    input.value = '';
+  }
+
+  onDropArchivosRegistroCivil(event: DragEvent): void {
+    event.preventDefault();
+    this.agregarArchivosHasta3(this.archivosRegistroCivil, event.dataTransfer?.files);
+  }
+
+  eliminarArchivoRegistroCivil(index: number): void {
+    if (index >= 0 && index < this.archivosRegistroCivil.length) {
+      this.archivosRegistroCivil.splice(index, 1);
+    }
+  }
+
   seleccionarArchivoPersonaACargo(event: Event, tipoAdjuntoId: number): void {
     const input = event.target as HTMLInputElement;
     const item = this.documentosAdjuntosPersonaACargo.find(d => d.idTipoAdjunto === tipoAdjuntoId);
@@ -2892,7 +3013,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
       faltantes.push('Información personal');
     } else if (
       !this.esFormularioPersonalCompletoParaAvanzar() ||
-      (this.requiereAdjuntoDocumento && this.archivosIdentidad.length === 0)
+      (this.requiereAdjuntoDocumento && this.archivosIdentidad.length === 0) ||
+      (this.requiereAdjuntoRegistroCivilTrabajador && this.archivosRegistroCivil.length === 0)
     ) {
       faltantes.push('Información personal');
     }
@@ -3002,6 +3124,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
   private limpiarAdjuntosTrabajador(): void {
     this.archivosIdentidad = [];
     this.archivosPermisoTrabajo = [];
+    this.archivosRegistroCivil = [];
   }
 
   private limpiarEstadoBeneficiarios(): void {
@@ -4890,6 +5013,14 @@ export class CreateAfiliationInternalComponent implements OnInit {
       lista.push({
         file: archivo,
         idTipoAdjunto: ID_TIPO_ADJUNTO_PERMISO_TRABAJO,
+        consecutivoPersona: 1,
+        nombreArchivo: archivo.name,
+      });
+    });
+    this.archivosRegistroCivil.forEach(archivo => {
+      lista.push({
+        file: archivo,
+        idTipoAdjunto: ID_TIPO_ADJUNTO_REGISTRO_CIVIL,
         consecutivoPersona: 1,
         nombreArchivo: archivo.name,
       });

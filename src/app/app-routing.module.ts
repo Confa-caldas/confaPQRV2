@@ -344,6 +344,15 @@ const routes: Routes = [
       ),
   },
   {
+    path: RoutesApp.MONITOR_RPA_AFILIACION,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/monitor-rpa-afiliacion/monitor-rpa-afiliacion.module').then(
+        m => m.MonitorRpaAfiliacionModule
+      ),
+  },
+  {
     path: RoutesApp.SEARCH_UPDATES_DATA,
     canActivate: [sessionGuard],
     component: LayoutComponent,

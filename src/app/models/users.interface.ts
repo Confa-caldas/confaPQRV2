@@ -2031,6 +2031,96 @@ export interface CambiarEstadoMasivoPadresRpaPayload {
   radicadoOtroPadre?: string | null;
 }
 
+/** Fila del Monitor de robots RPA (Gestor de Solicitudes), agrupada por radicado + estado consultado. */
+export interface MonitorRpaListItem {
+  id_solicitud: number;
+  numero_radicado: string;
+  /**
+   * Uno o varios nombres separados por coma. Si el responsable actual es un robot se
+   * muestra tal cual (ROBOT_1, ROBOT_2...); si ya fue reprocesada manualmente, muestra
+   * el nombre completo del colaborador (afiliaciones.parametros_responsable).
+   */
+  nombres_robot: string;
+  id_estado_consultado: number;
+  /** Estado que cumplió el filtro (actual o histórico, según corresponda). */
+  estado_consultado: string;
+  /** Cuántas personas del radicado caen en este estado_consultado. */
+  cantidad_personas: number;
+  /** De esas personas, cuántas ya cambiaron de estado desde entonces (reprocesadas). */
+  cantidad_ya_resueltas: number;
+  /** Estado(s) actuales únicos de esas personas, cuando difiere de estado_consultado. */
+  estados_actuales: string | null;
+  fecha_ejecucion: string | null;
+  hora_inicio_ejecucion: string | null;
+  hora_fin_ejecucion: string | null;
+  /** Motivos únicos concatenados con " | " cuando difieren entre personas del mismo radicado. */
+  pantallas_error: string | null;
+  observaciones: string | null;
+  total_count: number;
+}
+
+export interface FilterMonitorRpa {
+  fecha_inicio?: string | null;
+  fecha_fin?: string | null;
+  nombre_robot?: string | null;
+  /** Código de afiliaciones.parametros_estado_gestion_persona: 'En ejecución RPA' | 'Procesado' | 'Inconsistencias RPA'. */
+  estado?: string | null;
+  page: number;
+  page_size: number;
+}
+
+/** Fila de afiliaciones.obtener_semaforo_rpa_por_robot(): una por cada robot activo (catálogo dinámico). */
+export interface SemaforoRpaItem {
+  nombre_robot: string;
+  en_ejecucion: boolean;
+  /** Fecha y hora de la última persona que ese robot tocó (cualquier estado). */
+  ultima_ejecucion: string | null;
+}
+
+/** Mismos filtros del Monitor de robots RPA, sin paginación (para el resumen de motivos). */
+export interface FilterResumenMotivosRpa {
+  fecha_inicio?: string | null;
+  fecha_fin?: string | null;
+  nombre_robot?: string | null;
+  estado?: string | null;
+}
+
+/** Fila de afiliaciones.obtener_resumen_motivos_rpa_by_filtro(). El agrupador (columna "grupo") cambia según tipo_agrupador. */
+export interface ResumenMotivoRpaItem {
+  /**
+   * 'motivo' (Inconsistencia: agrupa por transacción + pantalla_error + observación),
+   * 'transaccion' (Procesado: agrupa solo por transacción) o
+   * 'robot' (En ejecución: agrupa por robot).
+   */
+  tipo_agrupador: 'motivo' | 'transaccion' | 'robot';
+  /** Según tipo_agrupador: 'Afiliación por Módulo'/'Afiliación por novedad', o el nombre del robot. */
+  grupo: string;
+  pantalla_error: string | null;
+  observaciones: string | null;
+  cantidad_personas: number;
+  cantidad_radicados: number;
+  /** Números de radicado de este grupo, separados por coma, para poder buscarlos directamente. */
+  radicados: string | null;
+  /** Total general del filtro actual (igual en todas las filas). */
+  total_radicados: number;
+  total_personas: number;
+}
+
+/**
+ * Fila de detalle de un radicado tal como se le envía al robot RPA (backoffice-afi-monitor-rpa-detalle-radicado).
+ * Una fila por persona: el trabajador (con `_id_persona_beneficiario` en null) y una por cada beneficiario.
+ * Las columnas se nombran igual que las etiquetas visibles en el SQL de origen, por eso el índice de string.
+ */
+export interface DetalleRpaRadicadoRow {
+  _id_solicitud: number;
+  _id_persona_trabajador: number;
+  _id_persona_beneficiario: number | null;
+  _consecutivo_beneficiario: number | null;
+  _numero_grupo_familiar: number | null;
+  'Numero de radicado': string;
+  [campo: string]: string | number | boolean | null;
+}
+
 /** Valores válidos en BD: SI, NO, NA, PENDIENTE */
 export type ValoracionAdjunto = 'SI' | 'NO' | 'NA';
 export interface AdjuntoConValoracion {
