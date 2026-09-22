@@ -72,6 +72,30 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
   transferenciaStatusOptions: { label: string; value: number }[] = [];
   showRequestStatus: boolean = false;
 
+  // Nombres de los estados de traslado tal como los envía el backend (en minúsculas).
+  // Toda la lógica de este componente compara por nombre y no por id, para evitar
+  // hardcodear valores del backend (ver resolveRequestStatusId).
+  private readonly TRASLADO_NO_TERMINO = 'no termino';
+  private readonly TRASLADO_APLICADO_CON_SALDO = 'aplicado con saldo';
+  private readonly TRASLADO_APLICADO_SIN_SALDO = 'aplicado sin saldo';
+  private readonly TRASLADO_PENDIENTE_REVISION = 'aplicado pendiente revisión saldo';
+  private readonly TRASLADO_SALDO_CON_DESCUENTOS = 'aplicado saldo con descuentos';
+  private readonly TRASLADO_NO_APLICADO = 'no aplicado';
+
+  // Estados de traslado que representan un traslado aplicado
+  // (resuelven la solicitud como "Tramitada")
+  private readonly TRASLADO_ESTADOS_APLICADOS = [
+    this.TRASLADO_APLICADO_CON_SALDO,
+    this.TRASLADO_APLICADO_SIN_SALDO,
+    this.TRASLADO_SALDO_CON_DESCUENTOS,
+  ];
+
+  // Estados de traslado válidos como destino de gestión (los que se cargan en el combo)
+  private readonly TRASLADO_DESTINOS_GESTION = [
+    ...this.TRASLADO_ESTADOS_APLICADOS,
+    this.TRASLADO_NO_APLICADO,
+  ];
+
   // Propiedades para manejo de archivos adjuntos
   selectedAttachmentFile: File | null = null;
   errorSizeAttachmentFile = false;
@@ -134,12 +158,18 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     this.messageService.add({ severity: state, summary: title, detail: message });
   }
 
-  getPaymentMethodRequestDetails(request_id: number) {
+  /**
+   * @param onLoaded Se ejecuta cuando el detalle ya está en `requestDetails`. Necesario para
+   *   cualquier acción que dependa del estado recargado (p. ej. activar la pestaña
+   *   "Tramitar solicitud", que solo existe si `internal_management` es true).
+   */
+  getPaymentMethodRequestDetails(request_id: number, onLoaded?: () => void) {
     this.userService.getPaymentMethodRequestDetails(request_id).subscribe({
       next: (response: BodyResponse<PaymentMethodRequestDetails>) => {
         if (response.code === 200) {
           this.requestDetails = response.data;
           this.updateFormValidators();
+          onLoaded?.();
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -188,30 +218,8 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     });
 
     // Suscripción para medioPagoStatus: además de actualizar estado, filtrará las opciones de traslado
-    this.processForm.get('medioPagoStatus')!.valueChanges.subscribe(medioVal => {
-      // Identificar ids por label (si no están cargadas las opciones, mantener las opciones completas)
-      const aplicadoId = this.medioPagoStatusOptions.find(opt => opt.label.toLowerCase() === 'aplicado')?.value;
-      const noAplicadoId = this.medioPagoStatusOptions.find(opt => opt.label.toLowerCase() === 'no aplicado')?.value;
-
-      if (medioVal === aplicadoId) {
-        // Permitir solo las opciones Aplicado con saldo y Aplicado sin saldo
-        this.trasladoStatusFiltered = this.trasladoStatusOptions.filter(
-          opt => opt.label.toLowerCase() === 'aplicado con saldo' || opt.label.toLowerCase() === 'aplicado sin saldo'
-        );
-      } else if (medioVal === noAplicadoId) {
-        // Permitir solo No aplicado
-        this.trasladoStatusFiltered = this.trasladoStatusOptions.filter(opt => opt.label.toLowerCase() === 'no aplicado');
-      } else {
-        // Si no hay selección o valores inesperados, mostrar todas
-        this.trasladoStatusFiltered = [...this.trasladoStatusOptions];
-      }
-
-      // Si el valor seleccionado actualmente en traslado no está dentro del filtrado, limpiarlo
-      const trasladoControl = this.processForm.get('trasladoStatus')!;
-      if (trasladoControl && !this.trasladoStatusFiltered.some(opt => opt.value === trasladoControl.value)) {
-        trasladoControl.setValue(null);
-      }
-
+    this.processForm.get('medioPagoStatus')!.valueChanges.subscribe(() => {
+      this.refreshTrasladoOptions();
       this.updateRequestStatusState();
     });
 
@@ -247,6 +255,32 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     });
   }
 
+  // Habilita el botón "Gestionar Solicitud" (asignar la solicitud a gestión interna)
+  get canManageRequest(): boolean {
+    if (!this.requestDetails || this.requestDetails.internal_management) return false;
+
+    const traslado = this.requestDetails.transfer_process_status_name?.toLowerCase() ?? '';
+    const medioPago = this.requestDetails.payment_method_process_status_name?.toLowerCase() ?? '';
+    const solicitud = this.requestDetails.payment_method_status_name?.toLowerCase() ?? '';
+
+    const radicadaSinTerminar =
+      solicitud === 'radicada' &&
+      (medioPago === this.TRASLADO_NO_TERMINO || traslado === this.TRASLADO_NO_TERMINO);
+
+    const aplicadoSinTransferencia =
+      (traslado === this.TRASLADO_APLICADO_CON_SALDO ||
+        traslado === this.TRASLADO_PENDIENTE_REVISION) &&
+      !this.requestDetails.transfer_status_name;
+
+    return radicadaSinTerminar || aplicadoSinTransferencia;
+  }
+
+  // Estados de origen desde los que el gestor puede cambiar el estado de traslado
+  get canEditTrasladoStatus(): boolean {
+    const traslado = this.requestDetails?.transfer_process_status_name?.toLowerCase() ?? '';
+    return traslado === this.TRASLADO_NO_TERMINO || traslado === this.TRASLADO_PENDIENTE_REVISION;
+  }
+
   // Update form validators based on request status
   private updateFormValidators(): void {
     if (!this.requestDetails) return;
@@ -264,7 +298,7 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
       medioPagoControl.setValue(null);
     }
 
-    if (this.requestDetails.transfer_process_status_name.toLowerCase() === 'no termino') {
+    if (this.canEditTrasladoStatus) {
       trasladoControl.setValidators([Validators.required]);
     } else {
       trasladoControl.clearValidators();
@@ -292,6 +326,61 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     trasladoControl.updateValueAndValidity();
     requestStatusControl.updateValueAndValidity();
     pagoStatusControl.updateValueAndValidity();
+  }
+
+  /**
+   * Recalcula las opciones del combo de traslado según el estado de origen de la solicitud
+   * y el medio de pago elegido. Los ids se buscan por nombre en los catálogos cargados.
+   */
+  private refreshTrasladoOptions(): void {
+    const origen = this.requestDetails?.transfer_process_status_name?.toLowerCase() ?? '';
+
+    if (origen === this.TRASLADO_PENDIENTE_REVISION) {
+      // El traslado ya se aplicó: solo puede reclasificarse hacia otro estado aplicado.
+      // El combo de medio de pago no se renderiza aquí, así que no hay cascada que aplicar.
+      this.trasladoStatusFiltered = this.trasladoStatusOptions.filter(opt =>
+        this.TRASLADO_ESTADOS_APLICADOS.includes(opt.label.toLowerCase())
+      );
+    } else {
+      // El medio de pago se toma del combo o, si no era editable (ya venía aplicado),
+      // del estado actual: así la cascada también aplica cuando el combo está oculto.
+      const medioVal = this.resolveProcessStatusId(
+        'medioPagoStatus',
+        this.requestDetails?.payment_method_process_status_id
+      );
+
+      // Identificar ids por label (si no están cargadas las opciones, mostrar todas)
+      const aplicadoId = this.medioPagoStatusOptions.find(
+        opt => opt.label.toLowerCase() === 'aplicado'
+      )?.value;
+      const noAplicadoId = this.medioPagoStatusOptions.find(
+        opt => opt.label.toLowerCase() === this.TRASLADO_NO_APLICADO
+      )?.value;
+
+      if (medioVal === aplicadoId) {
+        // Permitir solo los estados de traslado aplicados
+        this.trasladoStatusFiltered = this.trasladoStatusOptions.filter(opt =>
+          this.TRASLADO_ESTADOS_APLICADOS.includes(opt.label.toLowerCase())
+        );
+      } else if (medioVal === noAplicadoId) {
+        // Permitir solo No aplicado
+        this.trasladoStatusFiltered = this.trasladoStatusOptions.filter(
+          opt => opt.label.toLowerCase() === this.TRASLADO_NO_APLICADO
+        );
+      } else {
+        // Si no hay selección o valores inesperados, mostrar todas
+        this.trasladoStatusFiltered = [...this.trasladoStatusOptions];
+      }
+    }
+
+    // Si el valor seleccionado actualmente en traslado no está dentro del filtrado, limpiarlo
+    const trasladoControl = this.processForm.get('trasladoStatus')!;
+    if (
+      trasladoControl &&
+      !this.trasladoStatusFiltered.some(opt => opt.value === trasladoControl.value)
+    ) {
+      trasladoControl.setValue(null);
+    }
   }
 
   // Crear el método updateRequestStatusState():
@@ -376,6 +465,9 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
               label: item.payment_method_process_status_name,
               value: item.payment_method_process_status_id,
             }));
+          // Los catálogos se piden en paralelo y la cascada necesita ambos:
+          // se recalcula aquí también para no depender del orden de respuesta.
+          this.refreshTrasladoOptions();
         }
       },
       error: (err: any) => {
@@ -393,18 +485,17 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
       next: (response: BodyResponse<TransferProcessStatusList[]>) => {
         if (response.code === 200) {
           this.trasladoStatusOptions = response.data
-            .filter(
-              item =>
-                item.transfer_process_status_name.toLowerCase() === 'aplicado con saldo' ||
-                item.transfer_process_status_name.toLowerCase() === 'aplicado sin saldo' ||
-                item.transfer_process_status_name.toLowerCase() === 'no aplicado'
+            .filter(item =>
+              this.TRASLADO_DESTINOS_GESTION.includes(
+                item.transfer_process_status_name.toLowerCase()
+              )
             )
             .map(item => ({
               label: item.transfer_process_status_name,
               value: item.transfer_process_status_id,
             }));
-          // Inicializar la lista filtrada con todas las opciones por defecto
-          this.trasladoStatusFiltered = [...this.trasladoStatusOptions];
+          // Inicializar la lista filtrada según el estado de origen y el medio de pago actual
+          this.refreshTrasladoOptions();
         }
       },
       error: (err: any) => {
@@ -485,17 +576,21 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
               'Solicitud Asignada',
               `La solicitud ${this.filingNumber} ha sido asignada a ${this.loggedUserName}`
             );
-            // Recargar los detalles de la solicitud para reflejar el cambio
-            this.getPaymentMethodRequestDetails(this.request_id);
-            setTimeout(() => {
-              this.activeTabIndex = 3;
+            // Recargar los detalles y, una vez llegue el nuevo estado, abrir la pestaña
+            // de gestión. Se encadena al callback en lugar de usar un setTimeout fijo:
+            // la pestaña índice 3 solo existe después de que internal_management sea true.
+            this.getPaymentMethodRequestDetails(this.request_id, () => {
               try {
+                // Materializa el p-tabPanel de "Tramitar solicitud" antes de seleccionarlo;
+                // si el índice aún no existe, p-tabView descarta el activeIndex.
+                this.changeDetectorRef.detectChanges();
+                this.activeTabIndex = 3;
                 this.loadProcessLists();
                 this.changeDetectorRef.detectChanges();
               } catch (e) {
-                console.error('Error al forzar la detección de cambios:', e);
+                console.error('Error al abrir la pestaña de gestión:', e);
               }
-            }, 300);
+            });
           } else {
             this.showSuccessMessage('error', 'Error', 'No se pudo asignar la solicitud');
           }
@@ -513,13 +608,27 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
   }
 
   /**
+   * Devuelve el valor elegido por el usuario en el combo o, si el combo no se renderizó
+   * (su *ngIf depende del estado de origen), el estado que ya tiene la solicitud.
+   *
+   * Evita enviar 0 —"sin dato"— por un estado que simplemente no era editable en ese flujo:
+   * al gestionar desde "Aplicado pendiente revisión saldo" solo se muestra el combo de
+   * traslado, así que el medio de pago debe viajar con su valor actual y no en 0.
+   */
+  private resolveProcessStatusId(controlName: string, currentId?: number): number {
+    return this.processForm.get(controlName)?.value ?? currentId ?? 0;
+  }
+
+  /**
    * Resuelve el ID del estado de la solicitud (payment_method_status_id) que se enviará en el payload.
    *
    * Reglas:
    * 1. Si el usuario seleccionó manualmente un estado en el dropdown (caso "No aplicado" + "No aplicado"),
    *    se respeta esa selección.
-   * 2. Si "Estado gestión medio de pago" = "Aplicado" y "Estado gestión traslado" es "Aplicado con saldo"
-   *    o "Aplicado sin saldo", se resuelve automáticamente como "Tramitada".
+   * 2. Si "Estado gestión medio de pago" = "Aplicado" y "Estado gestión traslado" es uno de los
+   *    estados aplicados (ver TRASLADO_ESTADOS_APLICADOS), se resuelve como "Tramitada".
+   *    Cada uno de esos dos valores se toma del combo o, si no era editable en el flujo,
+   *    del estado actual de la solicitud (ver resolveProcessStatusId).
    * 3. En cualquier otro caso, retorna 0 (comportamiento previo).
    *
    * Los IDs se buscan por nombre en los catálogos cargados para evitar hardcodear valores del backend.
@@ -535,19 +644,23 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
     )?.value;
 
     const trasladoIdsAplicado = this.trasladoStatusOptions
-      .filter(
-        opt =>
-          opt.label.toLowerCase() === 'aplicado con saldo' ||
-          opt.label.toLowerCase() === 'aplicado sin saldo'
-      )
+      .filter(opt => this.TRASLADO_ESTADOS_APLICADOS.includes(opt.label.toLowerCase()))
       .map(opt => opt.value);
 
     const tramitadaId = this.allRequestStatuses.find(
       opt => opt.label.toLowerCase() === 'tramitada'
     )?.value;
 
-    const medioPagoValue = this.processForm.get('medioPagoStatus')?.value;
-    const trasladoValue = this.processForm.get('trasladoStatus')?.value;
+    // Se cae al estado actual cuando el combo no era editable en este flujo, para que
+    // "ya venía aplicado" cuente igual que "el usuario acaba de aplicarlo".
+    const medioPagoValue = this.resolveProcessStatusId(
+      'medioPagoStatus',
+      this.requestDetails?.payment_method_process_status_id
+    );
+    const trasladoValue = this.resolveProcessStatusId(
+      'trasladoStatus',
+      this.requestDetails?.transfer_process_status_id
+    );
 
     const esTramitada =
       medioPagoValue === medioPagoAplicadoId && trasladoIdsAplicado.includes(trasladoValue);
@@ -566,8 +679,14 @@ export class PaymentMethodRequestDetailsComponent implements OnInit {
       const payload: AnswerPaymentMethodRequest = {
         request_id: this.request_id,
         payment_method_status_id: this.resolveRequestStatusId(),
-        payment_method_process_status_id: this.processForm.get('medioPagoStatus')?.value || 0,
-        transfer_process_status_id: this.processForm.get('trasladoStatus')?.value || 0,
+        payment_method_process_status_id: this.resolveProcessStatusId(
+          'medioPagoStatus',
+          this.requestDetails?.payment_method_process_status_id
+        ),
+        transfer_process_status_id: this.resolveProcessStatusId(
+          'trasladoStatus',
+          this.requestDetails?.transfer_process_status_id
+        ),
         observations: this.processForm.get('observations')?.value || '',
         internal_management_user: this.user,
         transfer_status_id: this.processForm.get('pagoStatus')?.value || 0,

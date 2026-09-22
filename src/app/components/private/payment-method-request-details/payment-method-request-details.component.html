@@ -64,14 +64,7 @@
   <div class="process-container-row-generals">
     <div class="container-button">
       <p-button
-        *ngIf="
-          !requestDetails.internal_management &&
-          ((requestDetails.payment_method_status_name === 'Radicada' &&
-            (requestDetails.payment_method_process_status_name === 'No termino' ||
-              requestDetails.transfer_process_status_name === 'No termino')) ||
-            (requestDetails.transfer_process_status_name === 'Aplicado con saldo' &&
-              requestDetails.transfer_status_name === null))
-        "
+        *ngIf="canManageRequest"
         label="Gestionar Solicitud"
         [style]="{ 'border-radius': '10px' }"
         (onClick)="assignRequest()">
@@ -446,9 +439,7 @@
                 </p-message>
               </div>
 
-              <div
-                class="process-container-col"
-                *ngIf="requestDetails.transfer_process_status_name === 'No termino'">
+              <div class="process-container-col" *ngIf="canEditTrasladoStatus">
                 <label class="process-container-label"> Estado gestión traslado </label>
                 <p-dropdown
                   formControlName="trasladoStatus"
