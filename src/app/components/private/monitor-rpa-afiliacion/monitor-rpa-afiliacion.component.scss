@@ -329,6 +329,28 @@ tr {
   }
 }
 
+.detalle-rpa__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.detalle-rpa__header-titulo {
+  font-family: $font-medium, $font-light;
+  font-size: 15px;
+  font-weight: 600;
+  color: $color-text-black;
+}
+
+.detalle-rpa__header-meta {
+  color: #6c757d;
+  font-family: $font-light;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .detalle-rpa__cargando,
 .detalle-rpa__vacio {
   text-align: center;

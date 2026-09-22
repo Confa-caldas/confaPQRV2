@@ -291,13 +291,23 @@
 </p-overlayPanel>
 
 <p-dialog
-  header="Detalle enviado al robot RPA — {{ detalleRadicadoActual }}"
   [(visible)]="detalleRadicadoVisible"
   [modal]="true"
   [dismissableMask]="true"
   [style]="{ width: '96vw', maxWidth: '1600px', height: '92vh' }"
   [maximizable]="true"
   styleClass="detalle-rpa-dialog">
+  <ng-template pTemplate="header">
+    <div class="detalle-rpa__header">
+      <span class="detalle-rpa__header-titulo">Detalle enviado al robot RPA — {{ detalleRadicadoActual }}</span>
+      <span class="detalle-rpa__header-meta" *ngIf="!cargandoDetalleRadicado && (detalleOrigenRadicacion || detalleRadicadoPor)">
+        <span *ngIf="detalleOrigenRadicacion">{{ detalleOrigenRadicacion }}</span>
+        <span *ngIf="detalleOrigenRadicacion && detalleRadicadoPor"> · </span>
+        <span *ngIf="detalleRadicadoPor">Radicado por: {{ detalleRadicadoPor }}</span>
+      </span>
+    </div>
+  </ng-template>
+
   <div class="detalle-rpa__cargando" *ngIf="cargandoDetalleRadicado">Consultando información…</div>
 
   <ng-container *ngIf="!cargandoDetalleRadicado">

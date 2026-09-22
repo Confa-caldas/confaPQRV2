@@ -98,6 +98,9 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
   detalleRadicadoActual: string | null = null;
   detalleTabIndex = 0;
   detallePersonas: PersonaDetalleRpa[] = [];
+  /** Origen y responsable de la radicación: van en el encabezado del modal (aplican a todo el radicado, no a una persona puntual). */
+  detalleOrigenRadicacion: string | null = null;
+  detalleRadicadoPor: string | null = null;
 
 /** Campos de contexto que se muestran en TODAS las pestañas (la del trabajador y la de cada beneficiario). */
   private static readonly SECCION_RADICADO_EMPRESA: { titulo: string; campos: { clave: string; etiqueta?: string }[] }[] = [
@@ -491,6 +494,8 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
     this.detalleRadicadoActual = numeroRadicado;
     this.detalleTabIndex = 0;
     this.detallePersonas = [];
+    this.detalleOrigenRadicacion = null;
+    this.detalleRadicadoPor = null;
     this.detalleRadicadoVisible = true;
     this.cargandoDetalleRadicado = true;
     this.userService.getDetalleRpaPorRadicado(numeroRadicado).subscribe({
@@ -498,6 +503,8 @@ export class MonitorRpaAfiliacionComponent implements OnInit {
         this.cargandoDetalleRadicado = false;
         const filas = response.code === 200 ? (response.data ?? []) : [];
         this.detallePersonas = this.construirPersonasDetalle(filas);
+        this.detalleOrigenRadicacion = filas.length ? (this.valorCampo(filas[0], 'Origen de radicacion') as string | null) : null;
+        this.detalleRadicadoPor = filas.length ? (this.valorCampo(filas[0], 'Radicado por') as string | null) : null;
         if (this.detallePersonas.length === 0) {
           this.showMessage('warn', 'Sin datos', `No se encontró información para el radicado ${numeroRadicado}.`);
         }
