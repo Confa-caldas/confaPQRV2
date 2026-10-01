@@ -39,6 +39,9 @@
                   [options]="applicantList"
                   optionLabel="applicant_type_name"
                   (onChange)="changeRequest()"
+                  appendTo="body"
+                  scrollHeight="400px"
+                  [panelStyle]="{ 'max-height': 'none' }"
                   placeholder="*Tipo del solicitante"></p-dropdown>
   
                 <label class="container-select-invalid">
@@ -61,6 +64,8 @@
                   optionLabel="request_type_name"
                   placeholder="*Tú solicitud esta asociada con"
                   optionValue="request_type_id"
+                  appendTo="body"
+                  scrollHeight="400px"
                   [panelStyle]="{ 'max-height': 'none' }"
                   (onChange)="onRequestTypeSelected($event)"></p-dropdown>
   

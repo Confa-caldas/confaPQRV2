@@ -2799,10 +2799,16 @@ export class CreateAfiliationInternalComponent implements OnInit {
   }
 
   debeMostrarPermisoTrabajo(): boolean {
-    return this.requierePermisoLaboral || (this.esTipoDocumentoTI() && this.esMenorDeEdad());
+    return this.requierePermisoLaboral || (this.esTipoDocumentoDistintoDeCC() && this.esMenorDeEdad());
   }
 
-  esTipoDocumentoTI(): boolean {
+  /**
+   * True si el tipo de documento del trabajador es distinto de Cédula de Ciudadanía (CC). En Colombia
+   * la CC solo se expide a partir de los 18 años, así que un trabajador con CC no puede ser menor de
+   * edad; cualquier otro tipo (TI, CE, RC, PEP, etc., incluido extranjero) sí puede corresponder a un
+   * menor y por lo tanto puede requerir permiso de trabajo si la fecha de nacimiento lo indica.
+   */
+  esTipoDocumentoDistintoDeCC(): boolean {
     const tipo = (
       this.solicitudPersonalForm.get('tipo_documento')?.value ??
       this.identificacionTrabajadorForm.get('tipo_documento')?.value ??
@@ -2811,7 +2817,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
       .toString()
       .trim()
       .toUpperCase();
-    return tipo === 'TI' || tipo === 'T';
+    return tipo !== '' && tipo !== 'CC' && tipo !== 'C';
   }
 
   esMenorDeEdad(): boolean {
@@ -3210,6 +3216,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
         continue;
       }
       destino.push(file);
+      this.validarArchivoLegible(file, destino);
     }
     if (omitidosPorLimite) {
       this.messageService.add({
@@ -3239,6 +3246,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
         continue;
       }
       destino.push(file);
+      this.validarArchivoLegible(file, destino);
     }
     if (omitidosPorLimite) {
       this.messageService.add({
@@ -4994,8 +5002,34 @@ export class CreateAfiliationInternalComponent implements OnInit {
         const base64 = result.includes(',') ? result.split(',')[1] : result;
         resolve(base64 ?? '');
       };
-      reader.onerror = () => reject(reader.error);
+      // Se identifica el archivo en el mensaje de error para diagnosticar sin depender de que el
+      // usuario indique cuál adjunto falló (ej. archivos "solo en línea" de OneDrive que el
+      // navegador no logra leer).
+      reader.onerror = () => reject(new Error(`No se pudo leer el archivo "${file.name}".`));
       reader.readAsDataURL(file);
+    });
+  }
+
+  /**
+   * Intenta leer el archivo apenas se adjunta (en vez de esperar hasta radicar) para detectar de una
+   * vez si el navegador no puede acceder a él (ej. archivo "solo en línea" de OneDrive/Google Drive
+   * no descargado, o movido/borrado) y que el usuario pueda corregirlo mientras aún recuerda cuál
+   * era, sin perder el resto del formulario ya diligenciado. Si la lectura falla, se retira el
+   * archivo de la lista para no dejar un adjunto "fantasma" que luego volvería a fallar al radicar.
+   */
+  private validarArchivoLegible(file: File, destino: File[]): void {
+    this.archivoABase64(file).catch(() => {
+      const index = destino.indexOf(file);
+      if (index >= 0) {
+        destino.splice(index, 1);
+      }
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo no disponible',
+        detail:
+          `No se pudo leer el archivo "${file.name}". Si está guardado en OneDrive o Google Drive, ` +
+          'verifique que esté descargado en este equipo e intente adjuntarlo de nuevo.'
+      });
     });
   }
 
