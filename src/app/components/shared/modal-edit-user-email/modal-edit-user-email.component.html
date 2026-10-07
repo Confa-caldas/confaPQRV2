@@ -1,0 +1,43 @@
+<p-dialog [(visible)]="visible" [style]="{ width: '40vw' }" [modal]="true" (onHide)="close(false)">
+  <ng-template pTemplate="headless">
+    <div class="modal-content">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+      <div class="my-4 px-5 text-center">Editar correo del usuario</div>
+
+      <div class="my-3 px-5" *ngIf="user">
+        <div><strong>Usuario:</strong> {{ user.primer_nombre }} {{ user.primer_apellido }}</div>
+        <div><strong>Documento:</strong> {{ user.tipo_documento }} - {{ user.numero_documento }}</div>
+        <div><strong>Empresa:</strong> {{ user.razon_social }} (NIT {{ user.numero_documento_empresa }})</div>
+        <div><strong>Correo actual:</strong> {{ user.correo }}</div>
+      </div>
+
+      <form [formGroup]="formGroup">
+        <div class="my-4 px-5">
+          <label>*Correo nuevo</label>
+          <input
+            type="email"
+            formControlName="correo_nuevo"
+            pInputText
+            placeholder="Escriba el correo nuevo" />
+          <label class="invalid">{{ emailErrorMessage() }}</label>
+        </div>
+      </form>
+
+      <div class="my-4 px-5 d-flex justify-content-evenly">
+        <p-button label="Cancelar" severity="secondary" [disabled]="saving" (click)="close(false)"></p-button>
+        <p-button
+          label="Guardar cambio"
+          [disabled]="formGroup.invalid || saving"
+          [loading]="saving"
+          (click)="save()"></p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

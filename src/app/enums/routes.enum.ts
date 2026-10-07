@@ -68,6 +68,8 @@ export enum RoutesApp {
   ENTITY_ACCOUNT_TYPE = 'entity-account-type',
   PAYMENT_METHOD_REQUEST = 'payment-method-request',
   PAYMENT_METHOD_REQUEST_DETAILS = 'payment-method-request-details',
+  /** User management (afiliación empresa): search by NIT/document and edit user email. */
+  USER_MANAGEMENT = 'user-management',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
@@ -358,4 +360,8 @@ export enum EndPointRoute {
   REPORT_AFI_SIN_ASIGNAR = 'reportes-afiliacion/sin-asignar-por-fecha/filter',
   REPORT_AFI_POR_ESTADO = 'reportes-afiliacion/por-estado/filter',
   REPORT_AFI_RPA = 'reportes-afiliacion/rpa/filter',
+  /** User management (afiliación empresa): search by NIT and/or user document. */
+  USER_MANAGEMENT_SEARCH = 'gestion-usuarios/buscar',
+  /** User management: update email (backend keeps an audit history). */
+  USER_MANAGEMENT_UPDATE_EMAIL = 'gestion-usuarios/actualizar-correo',
 }

@@ -161,6 +161,10 @@ import {
   ReporteSinAsignarRow,
   ReportePorEstadoAfiliadoRow,
   ReporteRpaRow,
+  UserManagementSearchFilter,
+  UserManagementRow,
+  UpdateUserEmailPayload,
+  UpdateUserEmailResult,
 } from '../models/users.interface';
 import { MD5 } from 'crypto-js';
 @Injectable({
@@ -2194,6 +2198,22 @@ export class Users {
   getReporteRpaAfiliacion(payload: FilterReporteAfiliacionFecha) {
     return this.http.post<BodyResponse<ReporteRpaRow[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REPORT_AFI_RPA}`,
+      payload
+    );
+  }
+
+  /** User management (afiliación empresa): search by company NIT and/or user document. */
+  getUserManagementList(payload: UserManagementSearchFilter) {
+    return this.http.post<BodyResponse<UserManagementRow[]>>(
+      `${environment.API_PUBLIC}${EndPointRoute.USER_MANAGEMENT_SEARCH}`,
+      payload
+    );
+  }
+
+  /** User management: update the user's email (backend keeps an audit history of the change). */
+  updateUserEmail(payload: UpdateUserEmailPayload) {
+    return this.http.put<BodyResponse<UpdateUserEmailResult>>(
+      `${environment.API_PUBLIC}${EndPointRoute.USER_MANAGEMENT_UPDATE_EMAIL}`,
       payload
     );
   }

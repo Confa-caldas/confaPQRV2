@@ -512,6 +512,15 @@ const routes: Routes = [
       import('./components/private/bank/bank.module').then(m => m.BankModule),
   },
   {
+    path: RoutesApp.USER_MANAGEMENT,
+    canActivate: [sessionGuard],
+    component: LayoutComponent,
+    loadChildren: () =>
+      import('./components/private/user-management/user-management.module').then(
+        m => m.UserManagementModule
+      ),
+  },
+  {
     path: RoutesApp.AFILIATION_ACCOUNT_TYPE,
     canActivate: [sessionGuard],
     component: LayoutComponent,

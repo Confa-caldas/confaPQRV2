@@ -2385,3 +2385,42 @@ export interface ReporteRpaRow {
   cantidadProcesadasAutomaticamente?: number;
   cantidadDevueltasPorErrorRpa?: number;
 }
+
+/** User management (afiliación empresa): search filter. At least one of the two is mandatory. */
+export interface UserManagementSearchFilter {
+  numero_documento_empresa?: string;
+  numero_documento_usuario?: string;
+}
+
+/** User management: row returned by the search (user data + the company it's associated to). */
+export interface UserManagementRow {
+  id_usuario: number;
+  tipo_documento: string;
+  numero_documento: string;
+  correo: string;
+  primer_nombre: string;
+  primer_apellido: string;
+  telefono: string;
+  esta_activo: boolean;
+  correo_confirmado: boolean;
+  fecha_creacion: string;
+  id_empresa: number;
+  tipo_documento_empresa: string;
+  numero_documento_empresa: string;
+  razon_social: string;
+  nombre_comercial: string;
+  cuenta_confirmada: boolean;
+  es_principal: boolean;
+  asociacion_activa: boolean;
+}
+
+export interface UpdateUserEmailPayload {
+  id_usuario: number;
+  correo_nuevo: string;
+}
+
+export interface UpdateUserEmailResult {
+  id_usuario: number;
+  correo_anterior: string;
+  correo_nuevo: string;
+}

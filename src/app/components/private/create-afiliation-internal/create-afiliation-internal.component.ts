@@ -74,7 +74,7 @@ import {
 } from '../../../utils/beneficiario-adjuntos.util';
 import { CALENDARIO_LOCALE_ES } from '../../../utils/calendar-locale-es.util';
 import { parseFechaInputDate, validarFechasNacimientoYExpedicion, valorComoInputDate } from '../../../utils/fecha-input.util';
-import { validadorCelularColombia } from '../../../shared/validators/celular-colombia.validator';
+import { REGEX_CELULAR_COLOMBIA, validadorCelularColombia } from '../../../shared/validators/celular-colombia.validator';
 import {
   MENSAJE_DIRECCION_INVALIDA,
   validatorsDireccionColombia,
@@ -1652,10 +1652,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
       segundo_apellido: v(pick('segundo_apellido', 'segundoApellido')),
       fecha_nacimiento: v(pick('fecha_nacimiento', 'fechaNacimiento')),
       fecha_expedicion: v(pick('fecha_expedicion_doc', 'fechaExpedicion')),
-      // Solo se bloquea como precargado si quedó un celular válido (10 dígitos exactos);
-      // si Genesys trae menos de 10, se deja editable para que la persona lo corrija/borre.
-      celular: telNorm.length === 10,
-      confirmar_celular: telNorm.length === 10,
+      // Solo se bloquea como precargado si quedó un celular realmente válido (10 dígitos
+      // E inicia en 3 o 6); si Genesys trae menos de 10 dígitos, o 10 pero con un prefijo
+      // invalido (ej. empieza en 2), se deja editable para que la persona lo corrija.
+      celular: REGEX_CELULAR_COLOMBIA.test(telNorm),
+      confirmar_celular: REGEX_CELULAR_COLOMBIA.test(telNorm),
       correo: v(correo),
       confirmar_correo: v(correo),
       genero: v(pick('genero')),

@@ -1,0 +1,82 @@
+<div class="row mb-2">
+  <div class="col-12">
+    <div class="title-page">Gestión de usuarios</div>
+  </div>
+</div>
+
+<form [formGroup]="formGroup" class="row align-items-end mb-3">
+  <div class="col-4">
+    <label>NIT de la empresa</label>
+    <input
+      type="text"
+      formControlName="numero_documento_empresa"
+      pInputText
+      placeholder="Ej: 900123456" />
+  </div>
+  <div class="col-4">
+    <label>Documento del usuario</label>
+    <input
+      type="text"
+      formControlName="numero_documento_usuario"
+      pInputText
+      placeholder="Ej: 1053846567" />
+  </div>
+  <div class="col-4 d-flex gap-2">
+    <p-button label="Buscar" [loading]="searching" (click)="search()"></p-button>
+    <p-button label="Limpiar" severity="secondary" [disabled]="searching" (click)="clear()"></p-button>
+  </div>
+  <div class="col-12">
+    <label class="invalid">{{ filterErrorMessage }}</label>
+  </div>
+</form>
+
+<div class="row mt-auto">
+  <div class="col-12">
+    <p-table
+      [value]="users"
+      [scrollable]="true"
+      scrollHeight="600px"
+      [paginator]="true"
+      [rows]="10"
+      [showCurrentPageReport]="true"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      currentPageReportTemplate="{first} de {totalRecords}">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Documento usuario</th>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Empresa (NIT)</th>
+          <th>Administrador</th>
+          <th>Estado</th>
+          <th style="width: 5%"></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ row.tipo_documento }} - {{ row.numero_documento }}</td>
+          <td>{{ row.primer_nombre }} {{ row.primer_apellido }}</td>
+          <td>{{ row.correo }}</td>
+          <td>{{ row.razon_social }} ({{ row.numero_documento_empresa }})</td>
+          <td>{{ row.es_principal ? 'Sí' : 'No' }}</td>
+          <td>{{ row.esta_activo ? 'Activo' : 'Inactivo' }}</td>
+          <td>
+            <p-button icon="pi pi-pencil" [styleClass]="'btn-icon-warning'" (click)="editEmail(row)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">No hay registros para mostrar.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+<p-toast></p-toast>
+<app-modal-edit-user-email
+  *ngIf="showEditModal"
+  [visible]="showEditModal"
+  [user]="selectedUser"
+  (setRta)="closeEditModal()"
+  (emailUpdated)="onEmailUpdated($event)"></app-modal-edit-user-email>
