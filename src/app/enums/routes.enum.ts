@@ -211,6 +211,8 @@ export enum EndPointRoute {
   REQUEST_AFILIATION_VALIDAR_REQUISITOS_GESTION_PERSONA = 'afiliacion-validacion/persona/validar',
   /** POST body `{ tipo_documento, numero_documento }` — Lambda orquestadora: empresa apta para solicitud interna. */
   AFILIACION_INTERNA_VALIDAR_EMPRESA = 'afiliacion-interna/empresa/validar',
+  /** POST body `{ id_empresa, correo_empresa }` — exclusivo afiliación interna: guarda correo de empresa stub sin correo. */
+  AFILIACION_INTERNA_ACTUALIZAR_CORREO_EMPRESA = 'afiliacion-interna/empresa/correo',
   /** POST — valida trabajador y devuelve `datosFormulario` + `camposVisibles` para el paso de solicitud. */
   AFILIACION_INTERNA_VALIDAR_TRABAJADOR = 'afiliacion-interna/trabajador/validar',
   AFILIACION_INTERNA_CONSULTAR_TRABAJADOR_ACTIVO = 'afiliacion-interna/trabajador/activo',

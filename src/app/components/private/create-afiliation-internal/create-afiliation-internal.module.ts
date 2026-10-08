@@ -12,6 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { SharedModule } from '../../shared/shared.module';
 import { ValidacionNumeroDocumentoDirective } from '../../../shared/directives/validacion-numero-documento.directive';
@@ -38,6 +39,7 @@ import { CorreoMinusculasDirective } from '../../../shared/directives/correo-min
     AccordionModule,
     CalendarModule,
     InputNumberModule,
+    DialogModule,
     SharedModule,
   ],
   exports: [CreateAfiliationInternalComponent],

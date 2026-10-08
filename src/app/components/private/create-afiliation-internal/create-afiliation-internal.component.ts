@@ -215,9 +215,17 @@ export class CreateAfiliationInternalComponent implements OnInit {
   step: PasoAfiliacionInterna = 0;
 
   consultaEmpresaForm: FormGroup;
+  /** Exclusivo de afiliación interna: correo de empresa stub, solo cuando empresaRequiereCorreo. */
+  correoEmpresaForm: FormGroup;
+  empresaRequiereCorreo = false;
+  guardandoCorreoEmpresa = false;
   identificacionTrabajadorForm: FormGroup;
   /** Flujo beneficiario interno: consulta empresa (independiente del flujo trabajador). */
   consultaEmpresaBeneficiarioForm: FormGroup;
+  /** Exclusivo de afiliación interna (flujo beneficiario): correo de empresa stub. */
+  correoEmpresaBeneficiarioForm: FormGroup;
+  empresaRequiereCorreoBeneficiario = false;
+  guardandoCorreoEmpresaBeneficiario = false;
   /** Flujo beneficiario interno: identificación del trabajador activo. */
   identificacionTrabajadorBeneficiarioForm: FormGroup;
   /** Flujo beneficiario interno: fecha de recepción de documentos (obligatoria, solo afiliación interna). */
@@ -408,6 +416,12 @@ export class CreateAfiliationInternalComponent implements OnInit {
       numero_documento: ['', Validators.required],
     });
 
+    // Exclusivo de afiliación interna: formulario propio, independiente de consultaEmpresaForm,
+    // para no afectar la validez del botón "Consultar" mientras este campo no aplique.
+    this.correoEmpresaForm = this.fb.group({
+      correo_empresa: ['', [Validators.required, Validators.email]],
+    });
+
     this.identificacionTrabajadorForm = this.fb.group({
       tipo_documento: [null, Validators.required],
       numero_documento: ['', Validators.required],
@@ -416,6 +430,10 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.consultaEmpresaBeneficiarioForm = this.fb.group({
       tipo_documento: [null as number | null, Validators.required],
       numero_documento: ['', Validators.required],
+    });
+
+    this.correoEmpresaBeneficiarioForm = this.fb.group({
+      correo_empresa: ['', [Validators.required, Validators.email]],
     });
 
     this.identificacionTrabajadorBeneficiarioForm = this.fb.group({
@@ -668,6 +686,18 @@ export class CreateAfiliationInternalComponent implements OnInit {
     return s || '—';
   }
 
+  /**
+   * Exclusivo de afiliación interna (flujo beneficiario): tipo y número de documento tal como se
+   * consultaron, para mostrarlos junto al campo de correo cuando se oculta la tarjeta "Consultar".
+   */
+  get tipoYNumeroDocumentoEmpresaBeneficiarioConsultada(): string {
+    const raw = this.consultaEmpresaBeneficiarioForm.getRawValue();
+    const row = this.tiposDocumentoEmpresa.find(t => t.id === raw.tipo_documento);
+    const tipoDoc = (row?.tipo_documento && String(row.tipo_documento).trim()) || '';
+    const numDoc = String(raw.numero_documento ?? '').trim();
+    return `${tipoDoc} ${numDoc}`.trim();
+  }
+
   /** Flujo agregar beneficiario a trabajador activo (step 3, subpaso formulario). */
   get esFlujoBeneficiarioTrabajadorActivoInterno(): boolean {
     return this.step === 3 && this.pasoBeneficiarioSub === 3;
@@ -678,6 +708,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
       tipo_documento: null,
       numero_documento: '',
     });
+    this.empresaRequiereCorreoBeneficiario = false;
+    this.correoEmpresaBeneficiarioForm.reset({ correo_empresa: '' });
   }
 
   private reiniciarIdentificacionTrabajadorBeneficiario(): void {
@@ -728,6 +760,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const numDoc = String(raw.numero_documento ?? '').trim();
 
     this.idEmpresaBeneficiarioInterna = null;
+    this.empresaRequiereCorreoBeneficiario = false;
     this.validandoEmpresaBeneficiario = true;
     this.afiliacionInterna
       .validarEmpresa(tipoDoc, numDoc)
@@ -756,6 +789,12 @@ export class CreateAfiliationInternalComponent implements OnInit {
             this.idEmpresaBeneficiarioInterna = this.normalizarIdEmpresa(
               payload.datosEmpresa?.idEmpresa ?? payload.datosEmpresa?.id_empresa
             );
+            if (payload.requiereCorreoEmpresa) {
+              // Empresa nueva (stub sin correo): se detiene aquí, no avanza de subpaso todavía.
+              this.empresaRequiereCorreoBeneficiario = true;
+              this.correoEmpresaBeneficiarioForm.reset({ correo_empresa: '' });
+              return;
+            }
             this.reiniciarIdentificacionTrabajadorBeneficiario();
             this.pasoBeneficiarioSub = 2;
             return;
@@ -779,6 +818,57 @@ export class CreateAfiliationInternalComponent implements OnInit {
           });
         },
       });
+  }
+
+  /**
+   * Exclusivo de afiliación interna (flujo beneficiario): guarda el correo de la empresa stub
+   * y, si se guarda bien, continúa el avance que `consultarEmpresaBeneficiario()` dejó en pausa.
+   */
+  guardarCorreoEmpresaBeneficiarioYContinuar(): void {
+    this.correoEmpresaBeneficiarioForm.markAllAsTouched();
+    if (
+      this.correoEmpresaBeneficiarioForm.invalid ||
+      this.guardandoCorreoEmpresaBeneficiario ||
+      !this.idEmpresaBeneficiarioInterna
+    ) {
+      return;
+    }
+    const correo = String(this.correoEmpresaBeneficiarioForm.getRawValue().correo_empresa ?? '').trim();
+    this.guardandoCorreoEmpresaBeneficiario = true;
+    this.afiliacionInterna
+      .actualizarCorreoEmpresa(this.idEmpresaBeneficiarioInterna, correo)
+      .pipe(finalize(() => (this.guardandoCorreoEmpresaBeneficiario = false)))
+      .subscribe({
+        next: res => {
+          if (res.code !== 200) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Correo de empresa',
+              detail: res.message || 'No se pudo guardar el correo de la empresa.',
+            });
+            return;
+          }
+          this.empresaRequiereCorreoBeneficiario = false;
+          this.reiniciarIdentificacionTrabajadorBeneficiario();
+          this.pasoBeneficiarioSub = 2;
+        },
+        error: (err: { error?: { message?: string }; message?: string }) => {
+          const detail =
+            err?.error?.message ||
+            err?.message ||
+            'Error de comunicación al guardar el correo de la empresa.';
+          this.messageService.add({ severity: 'error', summary: 'Correo de empresa', detail });
+        },
+      });
+  }
+
+  /**
+   * Exclusivo de afiliación interna (flujo beneficiario): cierra el modal de correo sin guardar
+   * nada y sin avanzar de subpaso -- vuelve a dejar visible la consulta de empresa.
+   */
+  cancelarCorreoEmpresaBeneficiario(): void {
+    this.empresaRequiereCorreoBeneficiario = false;
+    this.correoEmpresaBeneficiarioForm.reset({ correo_empresa: '' });
   }
 
   consultarTrabajadorActivoBeneficiario(): void {
@@ -1186,6 +1276,19 @@ export class CreateAfiliationInternalComponent implements OnInit {
     return s || '—';
   }
 
+  /**
+   * Exclusivo de afiliación interna (flujo trabajador): tipo y número de documento tal como se
+   * consultaron, para mostrarlos junto al campo de correo cuando se oculta la tarjeta "Consultar"
+   * y así no perder de vista a qué empresa corresponde el correo que se está capturando.
+   */
+  get tipoYNumeroDocumentoEmpresaConsultada(): string {
+    const raw = this.consultaEmpresaForm.getRawValue();
+    const row = this.tiposDocumentoEmpresa.find(t => t.id === raw.tipo_documento);
+    const tipoDoc = (row?.tipo_documento && String(row.tipo_documento).trim()) || '';
+    const numDoc = String(raw.numero_documento ?? '').trim();
+    return `${tipoDoc} ${numDoc}`.trim();
+  }
+
   private normalizarIdEmpresa(raw: unknown): number | null {
     if (raw === undefined || raw === null || raw === '') {
       return null;
@@ -1199,6 +1302,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
       tipo_documento: null,
       numero_documento: '',
     });
+    this.empresaRequiereCorreo = false;
+    this.correoEmpresaForm.reset({ correo_empresa: '' });
   }
 
   private reiniciarIdentificacionTrabajador(): void {
@@ -1347,6 +1452,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const numDoc = String(raw.numero_documento ?? '').trim();
 
     this.idEmpresaAfiliacionInterna = null;
+    this.empresaRequiereCorreo = false;
     this.validandoEmpresa = true;
     this.afiliacionInterna
       .validarEmpresa(tipoDoc, numDoc)
@@ -1375,6 +1481,12 @@ export class CreateAfiliationInternalComponent implements OnInit {
             this.idEmpresaAfiliacionInterna = this.normalizarIdEmpresa(
               payload.datosEmpresa?.idEmpresa ?? payload.datosEmpresa?.id_empresa
             );
+            if (payload.requiereCorreoEmpresa) {
+              // Empresa nueva (stub sin correo): se detiene aquí, no avanza de paso todavía.
+              this.empresaRequiereCorreo = true;
+              this.correoEmpresaForm.reset({ correo_empresa: '' });
+              return;
+            }
             this.reiniciarIdentificacionTrabajador();
             this.step = 2;
             return;
@@ -1398,6 +1510,53 @@ export class CreateAfiliationInternalComponent implements OnInit {
           });
         },
       });
+  }
+
+  /**
+   * Exclusivo de afiliación interna (flujo trabajador): guarda el correo de la empresa stub
+   * y, si se guarda bien, continúa el avance que `consultarEmpresa()` dejó en pausa.
+   */
+  guardarCorreoEmpresaYContinuar(): void {
+    this.correoEmpresaForm.markAllAsTouched();
+    if (this.correoEmpresaForm.invalid || this.guardandoCorreoEmpresa || !this.idEmpresaAfiliacionInterna) {
+      return;
+    }
+    const correo = String(this.correoEmpresaForm.getRawValue().correo_empresa ?? '').trim();
+    this.guardandoCorreoEmpresa = true;
+    this.afiliacionInterna
+      .actualizarCorreoEmpresa(this.idEmpresaAfiliacionInterna, correo)
+      .pipe(finalize(() => (this.guardandoCorreoEmpresa = false)))
+      .subscribe({
+        next: res => {
+          if (res.code !== 200) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Correo de empresa',
+              detail: res.message || 'No se pudo guardar el correo de la empresa.',
+            });
+            return;
+          }
+          this.empresaRequiereCorreo = false;
+          this.reiniciarIdentificacionTrabajador();
+          this.step = 2;
+        },
+        error: (err: { error?: { message?: string }; message?: string }) => {
+          const detail =
+            err?.error?.message ||
+            err?.message ||
+            'Error de comunicación al guardar el correo de la empresa.';
+          this.messageService.add({ severity: 'error', summary: 'Correo de empresa', detail });
+        },
+      });
+  }
+
+  /**
+   * Exclusivo de afiliación interna (flujo trabajador): cierra el modal de correo sin guardar
+   * nada y sin avanzar de paso -- vuelve a dejar visible la consulta de empresa.
+   */
+  cancelarCorreoEmpresa(): void {
+    this.empresaRequiereCorreo = false;
+    this.correoEmpresaForm.reset({ correo_empresa: '' });
   }
 
   /** Limpia validación de trabajador en paso 2 (checklist, bloqueo, flags de guardado). */
