@@ -918,6 +918,13 @@ export class CreateAfiliationInternalComponent implements OnInit {
             return;
           }
           if (data.activo === true) {
+            this.beneficiariosAgregados = [];
+            this.validacionesBeneficiario = [];
+            this.datosBeneficiario = null;
+            this.datosPersonaACargoValidada = null;
+            this.errorValidacionBeneficiario = '';
+            this.indiceBeneficiarioEditando = null;
+            this.opcionBeneficiarios = null;
             this.trabajadorActivoBeneficiario = {
               ...data,
               activo: true,
