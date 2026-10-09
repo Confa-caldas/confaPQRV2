@@ -4759,9 +4759,10 @@ export class CreateAfiliationInternalComponent implements OnInit {
       // Preserva el grupo familiar real de Genesys (ej. cónyuge + hijastro agrupados) para no
       // perderlo al validar otros beneficiarios ni al guardar la solicitud.
       datosBeneficiario:
-        p.numeroGrupoFamiliar != null || administradorSubsidioPrecarga
+        p.numeroGrupoFamiliar != null || administradorSubsidioPrecarga || esc(p.personaConDiscapacidad)
           ? {
               numeroGrupoFamiliar: p.numeroGrupoFamiliar ?? undefined,
+              personaConDiscapacidad: esc(p.personaConDiscapacidad),
               ...(administradorSubsidioPrecarga ?? {}),
             }
           : undefined,
@@ -5559,6 +5560,14 @@ export class CreateAfiliationInternalComponent implements OnInit {
       if (x) {
         ext.fechaReporteInvalidez = x;
       }
+    }
+    // Precargados: datosPrecargados nunca trae personaDiscapacidad (no la pide el formulario,
+    // ya que no es editable), así que se toma de datosBeneficiario (calculada por el backend desde
+    // Genesys). Solo para precargados: en un beneficiario manual, "base.personaDiscapacidad" ya
+    // viene del formulario (incluyendo los casos donde se fuerza "Si" por discapacidad obligatoria),
+    // y no debe sobreescribirse con este valor.
+    if (b.esPrecargado && s(db?.['personaConDiscapacidad'])) {
+      ext.personaDiscapacidad = s(db!['personaConDiscapacidad']);
     }
 
     const tipoAdm = s(db?.['tipoIdentificacionAdministradorSubsidio']);

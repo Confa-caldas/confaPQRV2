@@ -177,6 +177,8 @@ export interface BeneficiarioPrecargarAfiliacionInterna {
   fechaInicioVigenciaCertificadoEscolar?: string;
   fechaFinVigenciaCertificadoEscolar?: string;
   fechaReporteInvalidez?: string;
+  /** Persona con discapacidad ("Si"/"No"), calculada por el backend desde ind_inv de Genesys. */
+  personaConDiscapacidad?: string;
   /** Administrador del subsidio real (Genesys) de este beneficiario precargado; formato Genesys (ej. "C", "T"). */
   tipoDocBeneficiarioPago?: string;
   docBeneficiarioPago?: string;
