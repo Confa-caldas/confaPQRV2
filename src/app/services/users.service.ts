@@ -437,6 +437,14 @@ export class Users {
     );
   }
 
+  /** Marca una novedad de calidad de datos como Procesada (por id_novedad). No permite re-procesar una ya procesada. */
+  marcarNovedadCalidadDatosProcesada(idNovedad: number) {
+    return this.http.patch<BodyResponse<unknown>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_PROCESAR}/${idNovedad}`,
+      {}
+    );
+  }
+
   getRequestHistoric(payload: Pagination) {
     return this.http.post<BodyResponse<RequestHistoric[]>>(
       `${environment.API_PUBLIC}${EndPointRoute.REQUEST_HISTORIC}`,

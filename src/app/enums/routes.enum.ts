@@ -197,6 +197,10 @@ export enum EndPointRoute {
   NOVEDAD_CALIDAD_DATOS_CONSULTAR_PERSONA = 'novedad-afiliation/consultar-persona',
   /** Guardar novedad calidad de datos (originales + valores nuevos o null por campo) */
   NOVEDAD_CALIDAD_DATOS_GUARDAR = 'novedad-afiliation/guardar-novedad',
+  /** Marcar novedad calidad de datos como Procesada (por id_novedad). Ruta propia (no bajo
+   * novedad-afiliation): ese segmento ya pertenece al stack config_afiliations, que está en el
+   * límite de recursos de CloudFormation; esta función vive en config_afiliations_1. */
+  NOVEDAD_CALIDAD_DATOS_PROCESAR = 'novedad-afiliation-procesar',
   /** Actualizar datos de persona trabajador en solicitud de afiliación (CE/PPT) */
   REQUEST_AFILIATION_UPDATE_PERSONA = 'requests-afiliation/update-persona',
   REQUEST_AFILIATION_VALIDAR_ADJUNTO = 'requests-afiliation/adjunto/validar',
