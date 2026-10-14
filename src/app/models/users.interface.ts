@@ -1749,6 +1749,11 @@ export interface Solicitud {
   numero_radicado: string;
   /** Radicado Genesys (si el detalle lo trae a nivel de solicitud). */
   numero_radicado_genesys?: string | null;
+  /** Canal de radicación: "Afiliacion web" | "Mi perfil" | "Afiliacion interna". */
+  origen_radicacion?: string | null;
+  /** Solo viene informado cuando origen_radicacion es "Afiliacion interna". Nombre del responsable
+   * (afiliaciones.parametros_responsable) o, si no está cargado, el usuario de red tal cual. */
+  nombre_responsable_radicacion?: string | null;
   usuario_gestion: string | null;
   fecha_radicacion: string;
   fecha_modificacion: string | null;
