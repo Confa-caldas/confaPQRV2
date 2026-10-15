@@ -3380,6 +3380,26 @@ get empresaDocumento(): string {
   return `${e.tipo_documento} ${e.numero_documento}`;
 }
 
+/** Etiqueta amigable de solicitud.origen_radicacion (canal por el que se radicó). */
+get origenRadicacionLabel(): string {
+  const origen = (this.afiliationRequestDetails?.solicitud?.origen_radicacion || '').trim();
+  switch (origen) {
+    case 'Afiliacion web':
+      return 'Portal de afiliación empresa';
+    case 'Mi perfil':
+      return 'Mi Perfil';
+    case 'Afiliacion interna':
+      return 'Afiliación interna (Gestor de solicitudes)';
+    default:
+      return origen || '—';
+  }
+}
+
+/** True si la solicitud se radicó desde afiliación interna (muestra "Radicado por"). */
+get esOrigenAfiliacionInterna(): boolean {
+  return (this.afiliationRequestDetails?.solicitud?.origen_radicacion || '').trim() === 'Afiliacion interna';
+}
+
   /** Muestra en modal el objeto del integrante (trabajador o beneficiario) serializado como en la respuesta del detalle. */
   abrirResumenIntegranteAfiliacionWs(tipo: 'trabajador' | 'beneficiario', indiceBeneficiario?: number): void {
     const d = this.afiliationRequestDetails;

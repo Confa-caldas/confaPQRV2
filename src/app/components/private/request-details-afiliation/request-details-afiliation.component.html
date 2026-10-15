@@ -105,36 +105,57 @@
         </div>
       </p-card>
 
-      <!-- 3) Asignado a -->
-      <p-card>
-        <ng-template pTemplate="header">
-          <div class="card-title">Asignado a</div>
-        </ng-template>
+      <!-- 3) Asignado a + 4) Origen de la radicación: agrupadas en su propia columna para que
+           se peguen entre sí sin depender de la altura de "Solicitante". -->
+      <div class="asignado-origen-col">
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="card-title">Asignado a</div>
+          </ng-template>
 
-        <div class="info-list">
-          <div class="info-row">
-            <span class="info-label">Responsable</span>
-            <span class="info-value">
-              {{ d.solicitud.usuario_gestion || '—' }}
-            </span>
-          </div>
+          <div class="info-list">
+            <div class="info-row">
+              <span class="info-label">Responsable</span>
+              <span class="info-value">
+                {{ d.solicitud.usuario_gestion || '—' }}
+              </span>
+            </div>
 
-          <div class="info-row">
-            <span class="info-label">Días en gestión</span>
-            <span class="info-value">—</span>
-          </div>
+            <div class="info-row">
+              <span class="info-label">Días en gestión</span>
+              <span class="info-value">—</span>
+            </div>
 
-          <div class="info-row">
-            <span class="info-label">Última actualización</span>
-            <span class="info-value">
-              {{
-                d.solicitud.fecha_modificacion || d.solicitud.fecha_creacion
-                  | date: 'yyyy-MM-dd HH:mm'
-              }}
-            </span>
+            <div class="info-row">
+              <span class="info-label">Última actualización</span>
+              <span class="info-value">
+                {{
+                  d.solicitud.fecha_modificacion || d.solicitud.fecha_creacion
+                    | date: 'yyyy-MM-dd HH:mm'
+                }}
+              </span>
+            </div>
           </div>
-        </div>
-      </p-card>
+        </p-card>
+
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="card-title">Origen de la radicación</div>
+          </ng-template>
+
+          <div class="info-list">
+            <div class="info-row">
+              <span class="info-label">Canal</span>
+              <span class="info-value">{{ origenRadicacionLabel }}</span>
+            </div>
+
+            <div class="info-row" *ngIf="esOrigenAfiliacionInterna">
+              <span class="info-label">Radicado por</span>
+              <span class="info-value">{{ d.solicitud.nombre_responsable_radicacion || '—' }}</span>
+            </div>
+          </div>
+        </p-card>
+      </div>
     </div>
 
     <!-- Timeline debajo, como lo tenías -->

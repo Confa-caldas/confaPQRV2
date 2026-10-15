@@ -1749,6 +1749,11 @@ export interface Solicitud {
   numero_radicado: string;
   /** Radicado Genesys (si el detalle lo trae a nivel de solicitud). */
   numero_radicado_genesys?: string | null;
+  /** Canal de radicación: "Afiliacion web" | "Mi perfil" | "Afiliacion interna". */
+  origen_radicacion?: string | null;
+  /** Solo viene informado cuando origen_radicacion es "Afiliacion interna". Nombre del responsable
+   * (afiliaciones.parametros_responsable) o, si no está cargado, el usuario de red tal cual. */
+  nombre_responsable_radicacion?: string | null;
   usuario_gestion: string | null;
   fecha_radicacion: string;
   fecha_modificacion: string | null;
@@ -2384,4 +2389,43 @@ export interface ReporteRpaRow {
   fecha?: string;
   cantidadProcesadasAutomaticamente?: number;
   cantidadDevueltasPorErrorRpa?: number;
+}
+
+/** User management (afiliación empresa): search filter. At least one of the two is mandatory. */
+export interface UserManagementSearchFilter {
+  numero_documento_empresa?: string;
+  numero_documento_usuario?: string;
+}
+
+/** User management: row returned by the search (user data + the company it's associated to). */
+export interface UserManagementRow {
+  id_usuario: number;
+  tipo_documento: string;
+  numero_documento: string;
+  correo: string;
+  primer_nombre: string;
+  primer_apellido: string;
+  telefono: string;
+  esta_activo: boolean;
+  correo_confirmado: boolean;
+  fecha_creacion: string;
+  id_empresa: number;
+  tipo_documento_empresa: string;
+  numero_documento_empresa: string;
+  razon_social: string;
+  nombre_comercial: string;
+  cuenta_confirmada: boolean;
+  es_principal: boolean;
+  asociacion_activa: boolean;
+}
+
+export interface UpdateUserEmailPayload {
+  id_usuario: number;
+  correo_nuevo: string;
+}
+
+export interface UpdateUserEmailResult {
+  id_usuario: number;
+  correo_anterior: string;
+  correo_nuevo: string;
 }

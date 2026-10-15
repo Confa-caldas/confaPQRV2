@@ -68,6 +68,8 @@ export enum RoutesApp {
   ENTITY_ACCOUNT_TYPE = 'entity-account-type',
   PAYMENT_METHOD_REQUEST = 'payment-method-request',
   PAYMENT_METHOD_REQUEST_DETAILS = 'payment-method-request-details',
+  /** User management (afiliación empresa): search by NIT/document and edit user email. */
+  USER_MANAGEMENT = 'user-management',
 }
 export enum EndPointRoute {
   USERS_LIST = 'db/users',
@@ -195,6 +197,10 @@ export enum EndPointRoute {
   NOVEDAD_CALIDAD_DATOS_CONSULTAR_PERSONA = 'novedad-afiliation/consultar-persona',
   /** Guardar novedad calidad de datos (originales + valores nuevos o null por campo) */
   NOVEDAD_CALIDAD_DATOS_GUARDAR = 'novedad-afiliation/guardar-novedad',
+  /** Marcar novedad calidad de datos como Procesada (por id_novedad). Ruta propia (no bajo
+   * novedad-afiliation): ese segmento ya pertenece al stack config_afiliations, que está en el
+   * límite de recursos de CloudFormation; esta función vive en config_afiliations_1. */
+  NOVEDAD_CALIDAD_DATOS_PROCESAR = 'novedad-afiliation-procesar',
   /** Actualizar datos de persona trabajador en solicitud de afiliación (CE/PPT) */
   REQUEST_AFILIATION_UPDATE_PERSONA = 'requests-afiliation/update-persona',
   REQUEST_AFILIATION_VALIDAR_ADJUNTO = 'requests-afiliation/adjunto/validar',
@@ -209,6 +215,8 @@ export enum EndPointRoute {
   REQUEST_AFILIATION_VALIDAR_REQUISITOS_GESTION_PERSONA = 'afiliacion-validacion/persona/validar',
   /** POST body `{ tipo_documento, numero_documento }` — Lambda orquestadora: empresa apta para solicitud interna. */
   AFILIACION_INTERNA_VALIDAR_EMPRESA = 'afiliacion-interna/empresa/validar',
+  /** POST body `{ id_empresa, correo_empresa }` — exclusivo afiliación interna: guarda correo de empresa stub sin correo. */
+  AFILIACION_INTERNA_ACTUALIZAR_CORREO_EMPRESA = 'afiliacion-interna/empresa/correo',
   /** POST — valida trabajador y devuelve `datosFormulario` + `camposVisibles` para el paso de solicitud. */
   AFILIACION_INTERNA_VALIDAR_TRABAJADOR = 'afiliacion-interna/trabajador/validar',
   AFILIACION_INTERNA_CONSULTAR_TRABAJADOR_ACTIVO = 'afiliacion-interna/trabajador/activo',
@@ -358,4 +366,8 @@ export enum EndPointRoute {
   REPORT_AFI_SIN_ASIGNAR = 'reportes-afiliacion/sin-asignar-por-fecha/filter',
   REPORT_AFI_POR_ESTADO = 'reportes-afiliacion/por-estado/filter',
   REPORT_AFI_RPA = 'reportes-afiliacion/rpa/filter',
+  /** User management (afiliación empresa): search by NIT and/or user document. */
+  USER_MANAGEMENT_SEARCH = 'gestion-usuarios/buscar',
+  /** User management: update email (backend keeps an audit history). */
+  USER_MANAGEMENT_UPDATE_EMAIL = 'gestion-usuarios/actualizar-correo',
 }

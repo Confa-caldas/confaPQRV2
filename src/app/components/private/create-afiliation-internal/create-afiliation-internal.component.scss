@@ -206,6 +206,60 @@ $cai-main-content-max: 1200px;
   box-sizing: border-box;
 }
 
+/* Misma causa que arriba pero en la tarjeta raíz `.container`: su `.p-card` interno (PrimeNG) no
+   tenía ancho forzado y se encogía/expandía según el contenido (ej. texto del dropdown), dando una
+   transición de tamaño rara al cambiar el tipo de documento. */
+:host ::ng-deep p-card.container .p-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Modal "Correo electrónico de la empresa": el header/ícono por defecto de PrimeNG (gris-azulado)
+   no combina con el resto de la pantalla -- se reemplaza por el mismo lenguaje visual (tipografía,
+   color y bordes) que usan las demás tarjetas de este componente. */
+:host ::ng-deep .cai-correo-empresa-dialog.p-dialog {
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+}
+
+:host ::ng-deep .cai-correo-empresa-dialog .p-dialog-header {
+  background: $color-white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: clamp(1.1rem, 2vw, 1.4rem) clamp(1.35rem, 2.5vw, 1.75rem) 1rem;
+}
+
+:host ::ng-deep .cai-correo-empresa-dialog .p-dialog-header .p-dialog-title {
+  font-family: $font-bold;
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  color: $color-text-black;
+}
+
+:host ::ng-deep .cai-correo-empresa-dialog .p-dialog-content {
+  padding: clamp(1.35rem, 2.5vw, 1.75rem);
+}
+
+.cai-form-actions--modal {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  border-top: none;
+  padding-top: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+/* El botón "Cancelar" no debe verse apagado/deshabilitado (como con severity+text): mismo estilo
+   outlined legible que ya usa el botón "Volver" del resto de este componente, pero más compacto
+   para no competir visualmente con la acción principal. */
+:host ::ng-deep .cai-form-actions--modal .cai-btn-cancelar-modal {
+  min-width: auto;
+  width: auto;
+  padding: 0.5rem 1.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
 /* Columna única bajo `container-content` (selección de trámite + pasos siguientes). */
 .cai-main-inner {
   width: 100%;
@@ -217,6 +271,16 @@ $cai-main-content-max: 1200px;
 .cai-form-card__body {
   padding: clamp(1.35rem, 2.5vw, 1.85rem) clamp(1.5rem, 3vw, 2.5rem) clamp(1.5rem, 2.5vw, 2rem);
   box-sizing: border-box;
+}
+
+/* Dentro de un p-dialog (modal correo de empresa): el contenido del diálogo ya trae su propio
+   padding, así que aquí no se repite para no duplicar espacio. */
+.cai-form-card__body--modal {
+  padding: 0;
+}
+
+.cai-empresa-banner--modal {
+  margin-bottom: 1.25rem;
 }
 
 .cai-form-card__body--text {

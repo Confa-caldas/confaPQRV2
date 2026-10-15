@@ -39,6 +39,10 @@ import { catchError, retryWhen, delay, take, tap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import JSZip from 'jszip';
 
+/** Catálogo afiliaciones.parametros_novedad_estado (novedad_calidad_datos_detalle.estado). */
+const ID_ESTADO_NOVEDAD_PENDIENTE = 1;
+const ID_ESTADO_NOVEDAD_PROCESADO = 2;
+
 @Component({
   selector: 'app-updates-data-details',
   templateUrl: './updates-data-details.component.html',
@@ -57,6 +61,8 @@ export class UpdatesDataDetailsComponent implements OnInit {
   afiliationRequestDetails?: AfiliacionRequestDetailsData;
   /** Detalle de novedad calidad de datos (tabla gestor.novedad_calidad_datos_detalle). */
   novedadDetalle?: NovedadCalidadDatosDetalle;
+  visibleDialogProcesarNovedad = false;
+  procesandoNovedad = false;
   requestHistoric: RequestHistoric[] = [];
   requestHistoricAttach: RequestHistoric[] = [];
   ingredient!: string;
@@ -583,6 +589,49 @@ loading = false;
   /** Navega de vuelta a la vista de consulta de novedades de calidad de datos. */
   regresar(): void {
     this.router.navigate([RoutesApp.SEARCH_UPDATES_DATA]);
+  }
+
+  get estadoNovedadLabel(): string {
+    return this.novedadDetalle?.estado === ID_ESTADO_NOVEDAD_PROCESADO ? 'Procesado' : 'Pendiente';
+  }
+
+  /** Solo se puede gestionar (marcar como Procesada) mientras la novedad siga Pendiente. */
+  get puedeProcesarNovedad(): boolean {
+    return this.novedadDetalle?.estado === ID_ESTADO_NOVEDAD_PENDIENTE;
+  }
+
+  abrirConfirmacionProcesarNovedad(): void {
+    this.visibleDialogProcesarNovedad = true;
+  }
+
+  cerrarConfirmacionProcesarNovedad(confirmado: boolean): void {
+    this.visibleDialogProcesarNovedad = false;
+    if (confirmado) {
+      this.procesarNovedadCalidadDatos();
+    }
+  }
+
+  private procesarNovedadCalidadDatos(): void {
+    if (!this.novedadDetalle) return;
+
+    this.procesandoNovedad = true;
+    this.userService.marcarNovedadCalidadDatosProcesada(this.novedadDetalle.id_novedad).subscribe({
+      next: (response: BodyResponse<unknown>) => {
+        this.procesandoNovedad = false;
+        if (response.code !== 200) {
+          this.showSuccessMessage('error', 'Fallida', response.message || 'No se pudo procesar la novedad.');
+          return;
+        }
+        this.showSuccessMessage('success', 'Exitoso', 'Novedad marcada como procesada.');
+        this.getNovedadDetails(this.request_id);
+      },
+      error: (err: any) => {
+        this.procesandoNovedad = false;
+        console.error(err);
+        const mensaje = err?.error?.message || 'Error al procesar la novedad.';
+        this.showSuccessMessage('error', 'Error', mensaje);
+      },
+    });
   }
 
 get trabajadorNombreCompleto(): string {
