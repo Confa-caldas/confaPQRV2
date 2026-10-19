@@ -513,6 +513,16 @@ label { font-weight: bold; margin-bottom: 0.5em; color: #555; }
 .adjunto-descripcion-input {
   width: 100%; min-height: 52px; padding: 0.4rem 0.5rem; font-size: 0.85rem; border: 1px solid #ced4da; border-radius: 6px; resize: vertical; box-sizing: border-box;
 }
+/* Descripción del adjunto en modo solo lectura: que se vea el texto completo (puede ser largo y sin
+   espacios). display:block en vez de flex evita que el texto, al ser un hijo directo del contenedor
+   flex, se trate como "anonymous flex item" con min-width:auto y no respete el word-break del padre. */
+.adjunto-desc-readonly {
+  display: block;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  height: auto;
+}
 .adjunto-desc-sino { color: #6c757d; font-size: 0.9rem; }
 .adjuntos-actions {
   display: flex;

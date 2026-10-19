@@ -807,6 +807,9 @@ export interface FilterNovedad {
   doc_id?: string | null;
   applicant_name?: string | null;
   novedad_status_id?: number | number[] | null;
+  /** Qué campo difiere entre Genesys y Registraduría (selección única): TIPO_DOCUMENTO, NOMBRE,
+   * APELLIDO, FECHA_EXPEDICION, FECHA_NACIMIENTO. */
+  tipo_novedad?: string | null;
   page?: number;
   page_size?: number;
 }
@@ -1711,10 +1714,25 @@ export interface NovedadCalidadDatosDetalle {
   fecha_expedicion_novedad: string | null;
   fecha_nacimiento_novedad: string | null;
   estado: number;
+  /** Solo viene en la respuesta del listado (POST novedad-afiliation/filter); el detalle usa `estado`. */
+  estado_id?: number;
+  estado_nombre?: string;
   fecha_hora_registro: string;
   usuario_registro: string;
   fecha_hora_procesado: string | null;
   usuario_proceso: string | null;
+}
+
+/** Una novedad que no se pudo marcar como Procesada al procesar un lote. */
+export interface NovedadProcesarMasivoFallida {
+  id_novedad: number;
+  motivo: string;
+}
+
+/** Respuesta de POST novedad-afiliation-procesar-masivo. */
+export interface NovedadProcesarMasivoRespuesta {
+  procesadas: number[];
+  fallidas: NovedadProcesarMasivoFallida[];
 }
 
 /** Novedad de calidad por integrante; `diferencias` indica qué campos comparar (llaves `*_novedad`). */

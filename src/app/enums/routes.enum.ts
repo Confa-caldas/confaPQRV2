@@ -201,6 +201,9 @@ export enum EndPointRoute {
    * novedad-afiliation): ese segmento ya pertenece al stack config_afiliations, que está en el
    * límite de recursos de CloudFormation; esta función vive en config_afiliations_1. */
   NOVEDAD_CALIDAD_DATOS_PROCESAR = 'novedad-afiliation-procesar',
+  /** Marcar varias novedades de calidad de datos como Procesadas en un solo request (body: { ids: number[] }).
+   * Mismo stack/criterio que NOVEDAD_CALIDAD_DATOS_PROCESAR (config_afiliations_1). */
+  NOVEDAD_CALIDAD_DATOS_PROCESAR_MASIVO = 'novedad-afiliation-procesar-masivo',
   /** Actualizar datos de persona trabajador en solicitud de afiliación (CE/PPT) */
   REQUEST_AFILIATION_UPDATE_PERSONA = 'requests-afiliation/update-persona',
   REQUEST_AFILIATION_VALIDAR_ADJUNTO = 'requests-afiliation/adjunto/validar',

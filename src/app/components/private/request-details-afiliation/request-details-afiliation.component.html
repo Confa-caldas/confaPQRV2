@@ -826,7 +826,7 @@
                         placeholder="Indique el motivo o descripción"></textarea>
                       <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
                     </ng-container>
-                    <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
+                    <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text adjunto-desc-readonly">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
                   </td>
                   <td>
                     <div class="adjuntos-actions">
@@ -1745,7 +1745,7 @@
                               placeholder="Indique el motivo o descripción"></textarea>
                             <span *ngIf="!showDescripcionValoracion(item.valoracion)" class="adjunto-desc-sino">—</span>
                           </ng-container>
-                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
+                          <div *ngIf="!esAdjuntoPendienteValidacion(item)" class="process-container-text adjunto-desc-readonly">{{ item.adjunto.observacion_validacion || item.descripcion || '—' }}</div>
                         </td>
                         <td>
                           <div class="adjuntos-actions">

@@ -94,6 +94,7 @@ import {
   FilterNovedad,
   NovedadList,
   NovedadStatusList,
+  NovedadProcesarMasivoRespuesta,
   ParametroTipoDocumentoPersona,
   ParametroEstadoCivil,
   ParametroGenero,
@@ -442,6 +443,15 @@ export class Users {
     return this.http.patch<BodyResponse<unknown>>(
       `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_PROCESAR}/${idNovedad}`,
       {}
+    );
+  }
+
+  /** Marca varias novedades de calidad de datos como Procesadas en un solo request. Cada id se valida
+   * por separado en el backend: si alguna ya estaba procesada o falla, no afecta a las demás. */
+  marcarNovedadesCalidadDatosProcesadasMasivo(ids: number[]) {
+    return this.http.post<BodyResponse<NovedadProcesarMasivoRespuesta>>(
+      `${environment.API_PUBLIC}${EndPointRoute.NOVEDAD_CALIDAD_DATOS_PROCESAR_MASIVO}`,
+      { ids }
     );
   }
 
