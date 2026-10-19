@@ -183,6 +183,8 @@ export interface BeneficiarioPrecargarAfiliacionInterna {
   tipoDocBeneficiarioPago?: string;
   docBeneficiarioPago?: string;
   nombreBeneficiarioPago?: string;
+  /** true si este beneficiario ya existe en Genesys (por definición, al venir del grupo familiar del trabajador en Genesys). */
+  existeEnGenesys?: boolean | null;
   [key: string]: unknown;
 }
 
@@ -204,6 +206,8 @@ export interface DatosBeneficiarioAfiliacionInterna {
   nuevoGrupoFamiliar?: string | null;
   numeroGrupoFamiliar?: number | null;
   revisionBack?: boolean;
+  /** true si el beneficiario ya existe en Genesys (persona o personaACargo); false si es nuevo. */
+  existeEnGenesys?: boolean | null;
   [key: string]: unknown;
 }
 
@@ -215,6 +219,8 @@ export interface DatosFormularioAfiliacionInterna {
   direccionCalculada?: DireccionCalculadaAfiliacionInterna | null;
   beneficiariosPrecargar?: BeneficiarioPrecargarAfiliacionInterna[] | null;
   datosBeneficiario?: DatosBeneficiarioAfiliacionInterna | null;
+  /** Solo en respuesta de validar-trabajador: true si el TRABAJADOR ya existe en Genesys; false si es nuevo. */
+  existeEnGenesys?: boolean | null;
   [key: string]: unknown;
 }
 
