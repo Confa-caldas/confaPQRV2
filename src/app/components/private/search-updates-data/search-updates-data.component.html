@@ -114,7 +114,16 @@
     [exportHeader]="'customExportHeader'">
     <ng-template pTemplate="header">
       <tr [style]="{ height: '50px' }">
-        <th style="width: 3rem" pTooltip="Solo se pueden seleccionar novedades en estado Pendiente" tooltipPosition="top"><i class="pi pi-check-square"></i></th>
+        <th
+          style="width: 3rem; text-align: center"
+          pTooltip="Selecciona todas las novedades en estado Pendiente de esta página"
+          tooltipPosition="top">
+          <input
+            *ngIf="hayPendientesEnPagina()"
+            type="checkbox"
+            [checked]="todasPendientesSeleccionadas()"
+            (change)="toggleSeleccionarTodasPendientes($any($event.target).checked)" />
+        </th>
         <th style="width: 5%">Detalle</th>
         <th pSortableColumn="id_novedad" style="min-width: 7rem">
           Id Novedad<p-sortIcon field="id_novedad"></p-sortIcon>

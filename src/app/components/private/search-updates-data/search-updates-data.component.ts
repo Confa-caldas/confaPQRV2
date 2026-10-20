@@ -541,6 +541,31 @@ export class SearchUpdatesDataComponent implements OnInit {
     return novedad?.estado_id === ID_ESTADO_NOVEDAD_PENDIENTE;
   }
 
+  /** Novedades Pendiente de la página actual (las únicas seleccionables). */
+  private novedadesPendientesPagina(): NovedadCalidadDatosDetalle[] {
+    return this.novedadList.filter(n => this.esNovedadPendiente(n));
+  }
+
+  /** true si ya están seleccionadas todas las Pendiente de la página actual (para marcar el checkbox del encabezado). */
+  todasPendientesSeleccionadas(): boolean {
+    const pendientes = this.novedadesPendientesPagina();
+    return pendientes.length > 0 && pendientes.every(n => this.selectedNovedades.includes(n));
+  }
+
+  /** true si hay al menos una novedad Pendiente en la página actual (para mostrar/ocultar el checkbox "seleccionar todas"). */
+  hayPendientesEnPagina(): boolean {
+    return this.novedadesPendientesPagina().length > 0;
+  }
+
+  /** Selecciona o deselecciona todas las novedades Pendiente de la página actual. */
+  toggleSeleccionarTodasPendientes(checked: boolean): void {
+    if (checked) {
+      this.selectedNovedades = [...this.novedadesPendientesPagina()];
+    } else {
+      this.selectedNovedades = [];
+    }
+  }
+
   abrirConfirmacionProcesarMasivo(): void {
     if (this.selectedNovedades.length === 0) return;
     this.visibleDialogProcesarMasivo = true;
