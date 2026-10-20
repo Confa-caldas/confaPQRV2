@@ -527,6 +527,83 @@
           </div>
         </form>
       </p-card>
+
+      <!-- Empresa nueva (stub sin correo, creada vía Mi Perfil): modal obligatorio, no se puede
+           cerrar sin guardar (sin X, sin click afuera, sin Escape) -- solo "Cancelar" (vuelve a la
+           consulta, sin avanzar) o "Guardar correo y continuar" (avanza solo si se guarda bien). -->
+      <p-dialog
+        [visible]="empresaRequiereCorreo"
+        header="Correo electrónico de la empresa"
+        styleClass="cai-correo-empresa-dialog"
+        [modal]="true"
+        [closable]="false"
+        [closeOnEscape]="false"
+        [dismissableMask]="false"
+        [style]="{ width: 'min(480px, 92vw)' }">
+        <div class="cai-empresa-banner cai-empresa-banner--modal" role="status">
+          <i class="pi pi-building cai-empresa-banner__icon" aria-hidden="true"></i>
+          <span class="cai-empresa-banner__text">
+            Empresa: <strong>{{ razonSocialEmpresa }}</strong>
+            <ng-container *ngIf="tipoYNumeroDocumentoEmpresaConsultada">
+              — {{ tipoYNumeroDocumentoEmpresaConsultada }}</ng-container
+            >
+          </span>
+        </div>
+        <form [formGroup]="correoEmpresaForm" class="cai-form-card__body cai-form-card__body--modal">
+          <div class="cai-form-grid">
+            <div class="cai-form-field">
+              <label class="cai-form-label" for="caiCorreoEmp">Correo electrónico de la empresa*</label>
+              <span class="cai-input-icon-wrap">
+                <i class="pi pi-envelope cai-input-icon-wrap__icon" aria-hidden="true"></i>
+                <input
+                  id="caiCorreoEmp"
+                  pInputText
+                  type="email"
+                  formControlName="correo_empresa"
+                  maxlength="200"
+                  class="cai-input-plain cai-input-plain--full cai-input-with-icon"
+                  (keydown.enter)="$event.preventDefault(); guardarCorreoEmpresaYContinuar()" />
+              </span>
+              <div class="cai-form-field__errors" aria-live="polite">
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    correoEmpresaForm.get('correo_empresa')?.errors?.['required'] &&
+                    correoEmpresaForm.get('correo_empresa')?.touched
+                  ">
+                  El correo electrónico de la empresa es obligatorio.
+                </span>
+                <span
+                  class="cai-form-field__error"
+                  *ngIf="
+                    correoEmpresaForm.get('correo_empresa')?.errors?.['email'] &&
+                    !correoEmpresaForm.get('correo_empresa')?.errors?.['required'] &&
+                    correoEmpresaForm.get('correo_empresa')?.touched
+                  ">
+                  El correo no tiene un formato válido.
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="cai-form-actions cai-form-actions--modal">
+            <p-button
+              type="button"
+              label="Guardar correo y continuar"
+              icon="pi pi-check"
+              [loading]="guardandoCorreoEmpresa"
+              [disabled]="guardandoCorreoEmpresa"
+              [style]="{ 'background-color': '#00aeef' }"
+              (click)="guardarCorreoEmpresaYContinuar()"></p-button>
+            <p-button
+              type="button"
+              label="Cancelar"
+              styleClass="cai-btn-cancelar-modal"
+              [outlined]="true"
+              [disabled]="guardandoCorreoEmpresa"
+              (click)="cancelarCorreoEmpresa()"></p-button>
+          </div>
+        </form>
+      </p-dialog>
     </ng-container>
 
     <!-- Paso 2: identificación del trabajador (flujo trabajador, empresa ya validada) -->
@@ -1708,6 +1785,83 @@
             </div>
           </form>
         </p-card>
+
+        <!-- Empresa nueva (stub sin correo, creada vía Mi Perfil): modal obligatorio, no se puede
+             cerrar sin guardar (sin X, sin click afuera, sin Escape) -- solo "Cancelar" (vuelve a la
+             consulta, sin avanzar) o "Guardar correo y continuar" (avanza solo si se guarda bien). -->
+        <p-dialog
+          [visible]="empresaRequiereCorreoBeneficiario"
+          header="Correo electrónico de la empresa"
+          styleClass="cai-correo-empresa-dialog"
+          [modal]="true"
+          [closable]="false"
+          [closeOnEscape]="false"
+          [dismissableMask]="false"
+          [style]="{ width: 'min(480px, 92vw)' }">
+          <div class="cai-empresa-banner cai-empresa-banner--modal" role="status">
+            <i class="pi pi-building cai-empresa-banner__icon" aria-hidden="true"></i>
+            <span class="cai-empresa-banner__text">
+              Empresa: <strong>{{ razonSocialEmpresaBeneficiario }}</strong>
+              <ng-container *ngIf="tipoYNumeroDocumentoEmpresaBeneficiarioConsultada">
+                — {{ tipoYNumeroDocumentoEmpresaBeneficiarioConsultada }}</ng-container
+              >
+            </span>
+          </div>
+          <form [formGroup]="correoEmpresaBeneficiarioForm" class="cai-form-card__body cai-form-card__body--modal">
+            <div class="cai-form-grid">
+              <div class="cai-form-field">
+                <label class="cai-form-label" for="caiCorreoEmpBen">Correo electrónico de la empresa*</label>
+                <span class="cai-input-icon-wrap">
+                  <i class="pi pi-envelope cai-input-icon-wrap__icon" aria-hidden="true"></i>
+                  <input
+                    id="caiCorreoEmpBen"
+                    pInputText
+                    type="email"
+                    formControlName="correo_empresa"
+                    maxlength="200"
+                    class="cai-input-plain cai-input-plain--full cai-input-with-icon"
+                    (keydown.enter)="$event.preventDefault(); guardarCorreoEmpresaBeneficiarioYContinuar()" />
+                </span>
+                <div class="cai-form-field__errors" aria-live="polite">
+                  <span
+                    class="cai-form-field__error"
+                    *ngIf="
+                      correoEmpresaBeneficiarioForm.get('correo_empresa')?.errors?.['required'] &&
+                      correoEmpresaBeneficiarioForm.get('correo_empresa')?.touched
+                    ">
+                    El correo electrónico de la empresa es obligatorio.
+                  </span>
+                  <span
+                    class="cai-form-field__error"
+                    *ngIf="
+                      correoEmpresaBeneficiarioForm.get('correo_empresa')?.errors?.['email'] &&
+                      !correoEmpresaBeneficiarioForm.get('correo_empresa')?.errors?.['required'] &&
+                      correoEmpresaBeneficiarioForm.get('correo_empresa')?.touched
+                    ">
+                    El correo no tiene un formato válido.
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="cai-form-actions cai-form-actions--modal">
+              <p-button
+                type="button"
+                label="Guardar correo y continuar"
+                icon="pi pi-check"
+                [loading]="guardandoCorreoEmpresaBeneficiario"
+                [disabled]="guardandoCorreoEmpresaBeneficiario"
+                [style]="{ 'background-color': '#00aeef' }"
+                (click)="guardarCorreoEmpresaBeneficiarioYContinuar()"></p-button>
+              <p-button
+                type="button"
+                label="Cancelar"
+                styleClass="cai-btn-cancelar-modal"
+                [outlined]="true"
+                [disabled]="guardandoCorreoEmpresaBeneficiario"
+                (click)="cancelarCorreoEmpresaBeneficiario()"></p-button>
+            </div>
+          </form>
+        </p-dialog>
       </ng-container>
 
       <!-- Subpaso 3.2: consulta trabajador activo -->

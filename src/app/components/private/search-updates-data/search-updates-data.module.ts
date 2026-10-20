@@ -13,6 +13,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CalendarModule } from 'primeng/calendar';
 import { TooltipModule } from 'primeng/tooltip';
+import { DialogModule } from 'primeng/dialog';
 
 @NgModule({
   declarations: [SearchUpdatesDataComponent],
@@ -30,6 +31,7 @@ import { TooltipModule } from 'primeng/tooltip';
     ReactiveFormsModule,
     CalendarModule,
     TooltipModule,
+    DialogModule,
   ],
   exports: [SearchUpdatesDataComponent],
 })

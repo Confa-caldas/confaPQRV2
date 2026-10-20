@@ -69,6 +69,38 @@
     border-radius: 4px;
   }
 }
+.comparison-estado-bar {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.comparison-estado-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  &.comparison-estado-badge-pendiente {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffe8a1;
+  }
+  &.comparison-estado-badge-procesado {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #a3cfbb;
+  }
+}
+.comparison-estado-auditoria {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
 .comparison-duplicado-banner {
   width: 100%;
   max-width: 900px;
@@ -113,6 +145,7 @@
   max-width: 900px;
   display: flex;
   justify-content: center;
+  gap: 16px;
 }
 @media (max-width: 768px) {
   .comparison-grid {

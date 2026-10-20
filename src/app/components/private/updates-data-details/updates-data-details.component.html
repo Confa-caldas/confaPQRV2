@@ -8,6 +8,18 @@
   <p class="comparison-loading" *ngIf="loading && !novedadDetalle">Cargando detalle de la novedad...</p>
   <p class="comparison-empty" *ngIf="!loading && !novedadDetalle">No hay datos de novedad para mostrar. Verifique el identificador o regrese al listado.</p>
 
+  <div class="comparison-estado-bar" *ngIf="novedadDetalle && !loading">
+    <span
+      class="comparison-estado-badge"
+      [class.comparison-estado-badge-pendiente]="puedeProcesarNovedad"
+      [class.comparison-estado-badge-procesado]="!puedeProcesarNovedad">
+      {{ estadoNovedadLabel }}
+    </span>
+    <span class="comparison-estado-auditoria" *ngIf="!puedeProcesarNovedad && novedadDetalle.usuario_proceso">
+      Procesado por {{ novedadDetalle.usuario_proceso }} el {{ novedadDetalle.fecha_hora_procesado | date:'dd/MM/yyyy HH:mm:ss' }}
+    </span>
+  </div>
+
   <div class="comparison-duplicado-banner" *ngIf="novedadDetalle && !loading && esDuplicado()">
     Duplicado
   </div>
@@ -91,7 +103,22 @@
       (onClick)="regresar()"
       [style]="{ 'border-radius': '8px' }"
       severity="secondary" />
+    <p-button
+      *ngIf="novedadDetalle && !loading && puedeProcesarNovedad"
+      label="Marcar como Procesada"
+      icon="pi pi-check"
+      (onClick)="abrirConfirmacionProcesarNovedad()"
+      [loading]="procesandoNovedad"
+      [style]="{ 'border-radius': '8px' }"
+      severity="success" />
   </div>
 </div>
+
+<app-modal-dinamic
+  *ngIf="visibleDialogProcesarNovedad"
+  [select]="true"
+  [visible]="visibleDialogProcesarNovedad"
+  message="¿Seguro que desea marcar esta novedad como Procesada? Esta acción no se puede deshacer."
+  (setRta)="cerrarConfirmacionProcesarNovedad($event)"></app-modal-dinamic>
 
 <p-toast />

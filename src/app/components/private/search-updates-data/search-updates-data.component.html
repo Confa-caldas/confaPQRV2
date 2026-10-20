@@ -1,8 +1,14 @@
-<div class="row mb-2">
-  <div class="col-10">
+<div class="row mb-2 novedades-header-row">
+  <div class="novedades-header-titulo">
     <div class="title-page">Consultar de novedades de calidad de datos</div>
   </div>
-  <div class="col-2 text-end">
+  <div class="novedades-acciones-header">
+    <p-button
+      *ngIf="selectedNovedades.length > 0"
+      [label]="'Marcar seleccionadas como Procesadas (' + selectedNovedades.length + ')'"
+      icon="pi pi-check"
+      (onClick)="abrirConfirmacionProcesarMasivo()"
+      [style]="{ 'border-radius': '6px' }"></p-button>
     <p-button
       label="Crear nueva novedad"
       icon="pi pi-user"
@@ -64,6 +70,16 @@
                 optionValue="id"
                 placeholder="Estado de la novedad"></p-multiSelect>
             </div>
+            <div class="filters-cell">
+            <p-dropdown
+                formControlName="tipo_novedad"
+                [style]="{ height: '28px', 'align-items': 'center', 'border-radius': '5px' }"
+                [options]="tiposNovedad"
+                optionLabel="label"
+                optionValue="value"
+                [showClear]="true"
+                placeholder="Tipo de novedad"></p-dropdown>
+            </div>
             <div class="filters-cell filters-actions">
             <p-button
                 icon="pi pi-trash"
@@ -94,10 +110,20 @@
     scrollHeight="500px"
     [virtualScroll]="false"
     [virtualScrollItemSize]="80"
-    [(selection)]="selectedRequests"
+    [(selection)]="selectedNovedades"
     [exportHeader]="'customExportHeader'">
     <ng-template pTemplate="header">
       <tr [style]="{ height: '50px' }">
+        <th
+          style="width: 3rem; text-align: center"
+          pTooltip="Selecciona todas las novedades en estado Pendiente de esta página"
+          tooltipPosition="top">
+          <input
+            *ngIf="hayPendientesEnPagina()"
+            type="checkbox"
+            [checked]="todasPendientesSeleccionadas()"
+            (change)="toggleSeleccionarTodasPendientes($any($event.target).checked)" />
+        </th>
         <th style="width: 5%">Detalle</th>
         <th pSortableColumn="id_novedad" style="min-width: 7rem">
           Id Novedad<p-sortIcon field="id_novedad"></p-sortIcon>
@@ -122,6 +148,13 @@
     </ng-template>
     <ng-template pTemplate="body" let-row>
       <tr>
+        <td style="text-align: center">
+          <p-tableCheckbox
+            [value]="row"
+            [disabled]="!esNovedadPendiente(row)"
+            [pTooltip]="esNovedadPendiente(row) ? '' : 'Ya está Procesada, no se puede volver a seleccionar'"
+            tooltipPosition="top" />
+        </td>
         <td style="text-align: center">
           <p-button
             icon="pi pi-eye"
@@ -174,3 +207,75 @@
   [informative]="informative"
   [severity]="severity"
   (setRta)="closeDialogAlert($event)"></app-modal-alert>
+
+<app-modal-dinamic
+  *ngIf="visibleDialogProcesarMasivo"
+  [select]="true"
+  [visible]="visibleDialogProcesarMasivo"
+  [message]="'¿Seguro que desea marcar ' + selectedNovedades.length + ' novedad(es) seleccionada(s) como Procesada(s)? Esta acción no se puede deshacer.'"
+  (setRta)="cerrarConfirmacionProcesarMasivo($event)"></app-modal-dinamic>
+
+<p-dialog
+  [(visible)]="visibleDialogResultadoMasivo"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [draggable]="false"
+  (onHide)="cerrarResultadoMasivo()">
+  <ng-template pTemplate="headless">
+    <div class="modal-content" *ngIf="resultadoMasivo">
+      <div class="login-form-header">
+        <div class="login-form-header__item login-form-header__item_1"></div>
+        <div class="login-form-header__item login-form-header__item_2"></div>
+        <div class="login-form-header__item login-form-header__item_3"></div>
+        <div class="login-form-header__item login-form-header__item_4"></div>
+        <div class="login-form-header__item login-form-header__item_5"></div>
+        <div class="login-form-header__item login-form-header__item_6"></div>
+      </div>
+
+      <div class="row my-4 px-5">
+        <div class="col-12 text-center">
+          <h5>Resultado del procesamiento masivo</h5>
+        </div>
+      </div>
+
+      <div class="row my-3 px-5">
+        <div class="col-12 resultado-masivo-resumen">
+          <span class="resultado-masivo-badge resultado-masivo-badge--ok">
+            <i class="pi pi-check-circle"></i> {{ resultadoMasivo.procesadas.length }} procesada(s)
+          </span>
+          <span
+            class="resultado-masivo-badge resultado-masivo-badge--error"
+            *ngIf="resultadoMasivo.fallidas.length > 0">
+            <i class="pi pi-times-circle"></i> {{ resultadoMasivo.fallidas.length }} no procesada(s)
+          </span>
+        </div>
+      </div>
+
+      <div class="row my-3 px-5" *ngIf="resultadoMasivo.procesadas.length > 0">
+        <div class="col-12 resultado-masivo-lista">
+          <h6><i class="pi pi-check-circle resultado-masivo-icono-ok"></i> Procesadas correctamente</h6>
+          <ul>
+            <li *ngFor="let n of resultadoMasivo.procesadas">N° Radicado: <strong>{{ n.numero_radicado }}</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="row my-3 px-5" *ngIf="resultadoMasivo.fallidas.length > 0">
+        <div class="col-12 resultado-masivo-lista">
+          <h6><i class="pi pi-times-circle resultado-masivo-icono-error"></i> No se pudieron procesar</h6>
+          <ul>
+            <li *ngFor="let f of resultadoMasivo.fallidas">
+              N° Radicado: <strong>{{ f.novedad.numero_radicado }}</strong> — {{ f.motivo }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="row my-4 px-5">
+        <div class="col-12 d-flex justify-content-evenly">
+          <p-button label="Cerrar" severity="secondary" (click)="cerrarResultadoMasivo()"></p-button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

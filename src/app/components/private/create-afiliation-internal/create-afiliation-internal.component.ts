@@ -74,7 +74,7 @@ import {
 } from '../../../utils/beneficiario-adjuntos.util';
 import { CALENDARIO_LOCALE_ES } from '../../../utils/calendar-locale-es.util';
 import { parseFechaInputDate, validarFechasNacimientoYExpedicion, valorComoInputDate } from '../../../utils/fecha-input.util';
-import { validadorCelularColombia } from '../../../shared/validators/celular-colombia.validator';
+import { REGEX_CELULAR_COLOMBIA, validadorCelularColombia } from '../../../shared/validators/celular-colombia.validator';
 import {
   MENSAJE_DIRECCION_INVALIDA,
   validatorsDireccionColombia,
@@ -215,9 +215,17 @@ export class CreateAfiliationInternalComponent implements OnInit {
   step: PasoAfiliacionInterna = 0;
 
   consultaEmpresaForm: FormGroup;
+  /** Exclusivo de afiliación interna: correo de empresa stub, solo cuando empresaRequiereCorreo. */
+  correoEmpresaForm: FormGroup;
+  empresaRequiereCorreo = false;
+  guardandoCorreoEmpresa = false;
   identificacionTrabajadorForm: FormGroup;
   /** Flujo beneficiario interno: consulta empresa (independiente del flujo trabajador). */
   consultaEmpresaBeneficiarioForm: FormGroup;
+  /** Exclusivo de afiliación interna (flujo beneficiario): correo de empresa stub. */
+  correoEmpresaBeneficiarioForm: FormGroup;
+  empresaRequiereCorreoBeneficiario = false;
+  guardandoCorreoEmpresaBeneficiario = false;
   /** Flujo beneficiario interno: identificación del trabajador activo. */
   identificacionTrabajadorBeneficiarioForm: FormGroup;
   /** Flujo beneficiario interno: fecha de recepción de documentos (obligatoria, solo afiliación interna). */
@@ -408,6 +416,12 @@ export class CreateAfiliationInternalComponent implements OnInit {
       numero_documento: ['', Validators.required],
     });
 
+    // Exclusivo de afiliación interna: formulario propio, independiente de consultaEmpresaForm,
+    // para no afectar la validez del botón "Consultar" mientras este campo no aplique.
+    this.correoEmpresaForm = this.fb.group({
+      correo_empresa: ['', [Validators.required, Validators.email]],
+    });
+
     this.identificacionTrabajadorForm = this.fb.group({
       tipo_documento: [null, Validators.required],
       numero_documento: ['', Validators.required],
@@ -416,6 +430,10 @@ export class CreateAfiliationInternalComponent implements OnInit {
     this.consultaEmpresaBeneficiarioForm = this.fb.group({
       tipo_documento: [null as number | null, Validators.required],
       numero_documento: ['', Validators.required],
+    });
+
+    this.correoEmpresaBeneficiarioForm = this.fb.group({
+      correo_empresa: ['', [Validators.required, Validators.email]],
     });
 
     this.identificacionTrabajadorBeneficiarioForm = this.fb.group({
@@ -668,6 +686,18 @@ export class CreateAfiliationInternalComponent implements OnInit {
     return s || '—';
   }
 
+  /**
+   * Exclusivo de afiliación interna (flujo beneficiario): tipo y número de documento tal como se
+   * consultaron, para mostrarlos junto al campo de correo cuando se oculta la tarjeta "Consultar".
+   */
+  get tipoYNumeroDocumentoEmpresaBeneficiarioConsultada(): string {
+    const raw = this.consultaEmpresaBeneficiarioForm.getRawValue();
+    const row = this.tiposDocumentoEmpresa.find(t => t.id === raw.tipo_documento);
+    const tipoDoc = (row?.tipo_documento && String(row.tipo_documento).trim()) || '';
+    const numDoc = String(raw.numero_documento ?? '').trim();
+    return `${tipoDoc} ${numDoc}`.trim();
+  }
+
   /** Flujo agregar beneficiario a trabajador activo (step 3, subpaso formulario). */
   get esFlujoBeneficiarioTrabajadorActivoInterno(): boolean {
     return this.step === 3 && this.pasoBeneficiarioSub === 3;
@@ -678,6 +708,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
       tipo_documento: null,
       numero_documento: '',
     });
+    this.empresaRequiereCorreoBeneficiario = false;
+    this.correoEmpresaBeneficiarioForm.reset({ correo_empresa: '' });
   }
 
   private reiniciarIdentificacionTrabajadorBeneficiario(): void {
@@ -728,6 +760,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const numDoc = String(raw.numero_documento ?? '').trim();
 
     this.idEmpresaBeneficiarioInterna = null;
+    this.empresaRequiereCorreoBeneficiario = false;
     this.validandoEmpresaBeneficiario = true;
     this.afiliacionInterna
       .validarEmpresa(tipoDoc, numDoc)
@@ -756,6 +789,12 @@ export class CreateAfiliationInternalComponent implements OnInit {
             this.idEmpresaBeneficiarioInterna = this.normalizarIdEmpresa(
               payload.datosEmpresa?.idEmpresa ?? payload.datosEmpresa?.id_empresa
             );
+            if (payload.requiereCorreoEmpresa) {
+              // Empresa nueva (stub sin correo): se detiene aquí, no avanza de subpaso todavía.
+              this.empresaRequiereCorreoBeneficiario = true;
+              this.correoEmpresaBeneficiarioForm.reset({ correo_empresa: '' });
+              return;
+            }
             this.reiniciarIdentificacionTrabajadorBeneficiario();
             this.pasoBeneficiarioSub = 2;
             return;
@@ -779,6 +818,57 @@ export class CreateAfiliationInternalComponent implements OnInit {
           });
         },
       });
+  }
+
+  /**
+   * Exclusivo de afiliación interna (flujo beneficiario): guarda el correo de la empresa stub
+   * y, si se guarda bien, continúa el avance que `consultarEmpresaBeneficiario()` dejó en pausa.
+   */
+  guardarCorreoEmpresaBeneficiarioYContinuar(): void {
+    this.correoEmpresaBeneficiarioForm.markAllAsTouched();
+    if (
+      this.correoEmpresaBeneficiarioForm.invalid ||
+      this.guardandoCorreoEmpresaBeneficiario ||
+      !this.idEmpresaBeneficiarioInterna
+    ) {
+      return;
+    }
+    const correo = String(this.correoEmpresaBeneficiarioForm.getRawValue().correo_empresa ?? '').trim();
+    this.guardandoCorreoEmpresaBeneficiario = true;
+    this.afiliacionInterna
+      .actualizarCorreoEmpresa(this.idEmpresaBeneficiarioInterna, correo)
+      .pipe(finalize(() => (this.guardandoCorreoEmpresaBeneficiario = false)))
+      .subscribe({
+        next: res => {
+          if (res.code !== 200) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Correo de empresa',
+              detail: res.message || 'No se pudo guardar el correo de la empresa.',
+            });
+            return;
+          }
+          this.empresaRequiereCorreoBeneficiario = false;
+          this.reiniciarIdentificacionTrabajadorBeneficiario();
+          this.pasoBeneficiarioSub = 2;
+        },
+        error: (err: { error?: { message?: string }; message?: string }) => {
+          const detail =
+            err?.error?.message ||
+            err?.message ||
+            'Error de comunicación al guardar el correo de la empresa.';
+          this.messageService.add({ severity: 'error', summary: 'Correo de empresa', detail });
+        },
+      });
+  }
+
+  /**
+   * Exclusivo de afiliación interna (flujo beneficiario): cierra el modal de correo sin guardar
+   * nada y sin avanzar de subpaso -- vuelve a dejar visible la consulta de empresa.
+   */
+  cancelarCorreoEmpresaBeneficiario(): void {
+    this.empresaRequiereCorreoBeneficiario = false;
+    this.correoEmpresaBeneficiarioForm.reset({ correo_empresa: '' });
   }
 
   consultarTrabajadorActivoBeneficiario(): void {
@@ -828,6 +918,13 @@ export class CreateAfiliationInternalComponent implements OnInit {
             return;
           }
           if (data.activo === true) {
+            this.beneficiariosAgregados = [];
+            this.validacionesBeneficiario = [];
+            this.datosBeneficiario = null;
+            this.datosPersonaACargoValidada = null;
+            this.errorValidacionBeneficiario = '';
+            this.indiceBeneficiarioEditando = null;
+            this.opcionBeneficiarios = null;
             this.trabajadorActivoBeneficiario = {
               ...data,
               activo: true,
@@ -1186,6 +1283,19 @@ export class CreateAfiliationInternalComponent implements OnInit {
     return s || '—';
   }
 
+  /**
+   * Exclusivo de afiliación interna (flujo trabajador): tipo y número de documento tal como se
+   * consultaron, para mostrarlos junto al campo de correo cuando se oculta la tarjeta "Consultar"
+   * y así no perder de vista a qué empresa corresponde el correo que se está capturando.
+   */
+  get tipoYNumeroDocumentoEmpresaConsultada(): string {
+    const raw = this.consultaEmpresaForm.getRawValue();
+    const row = this.tiposDocumentoEmpresa.find(t => t.id === raw.tipo_documento);
+    const tipoDoc = (row?.tipo_documento && String(row.tipo_documento).trim()) || '';
+    const numDoc = String(raw.numero_documento ?? '').trim();
+    return `${tipoDoc} ${numDoc}`.trim();
+  }
+
   private normalizarIdEmpresa(raw: unknown): number | null {
     if (raw === undefined || raw === null || raw === '') {
       return null;
@@ -1199,6 +1309,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
       tipo_documento: null,
       numero_documento: '',
     });
+    this.empresaRequiereCorreo = false;
+    this.correoEmpresaForm.reset({ correo_empresa: '' });
   }
 
   private reiniciarIdentificacionTrabajador(): void {
@@ -1347,6 +1459,7 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const numDoc = String(raw.numero_documento ?? '').trim();
 
     this.idEmpresaAfiliacionInterna = null;
+    this.empresaRequiereCorreo = false;
     this.validandoEmpresa = true;
     this.afiliacionInterna
       .validarEmpresa(tipoDoc, numDoc)
@@ -1375,6 +1488,12 @@ export class CreateAfiliationInternalComponent implements OnInit {
             this.idEmpresaAfiliacionInterna = this.normalizarIdEmpresa(
               payload.datosEmpresa?.idEmpresa ?? payload.datosEmpresa?.id_empresa
             );
+            if (payload.requiereCorreoEmpresa) {
+              // Empresa nueva (stub sin correo): se detiene aquí, no avanza de paso todavía.
+              this.empresaRequiereCorreo = true;
+              this.correoEmpresaForm.reset({ correo_empresa: '' });
+              return;
+            }
             this.reiniciarIdentificacionTrabajador();
             this.step = 2;
             return;
@@ -1398,6 +1517,53 @@ export class CreateAfiliationInternalComponent implements OnInit {
           });
         },
       });
+  }
+
+  /**
+   * Exclusivo de afiliación interna (flujo trabajador): guarda el correo de la empresa stub
+   * y, si se guarda bien, continúa el avance que `consultarEmpresa()` dejó en pausa.
+   */
+  guardarCorreoEmpresaYContinuar(): void {
+    this.correoEmpresaForm.markAllAsTouched();
+    if (this.correoEmpresaForm.invalid || this.guardandoCorreoEmpresa || !this.idEmpresaAfiliacionInterna) {
+      return;
+    }
+    const correo = String(this.correoEmpresaForm.getRawValue().correo_empresa ?? '').trim();
+    this.guardandoCorreoEmpresa = true;
+    this.afiliacionInterna
+      .actualizarCorreoEmpresa(this.idEmpresaAfiliacionInterna, correo)
+      .pipe(finalize(() => (this.guardandoCorreoEmpresa = false)))
+      .subscribe({
+        next: res => {
+          if (res.code !== 200) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Correo de empresa',
+              detail: res.message || 'No se pudo guardar el correo de la empresa.',
+            });
+            return;
+          }
+          this.empresaRequiereCorreo = false;
+          this.reiniciarIdentificacionTrabajador();
+          this.step = 2;
+        },
+        error: (err: { error?: { message?: string }; message?: string }) => {
+          const detail =
+            err?.error?.message ||
+            err?.message ||
+            'Error de comunicación al guardar el correo de la empresa.';
+          this.messageService.add({ severity: 'error', summary: 'Correo de empresa', detail });
+        },
+      });
+  }
+
+  /**
+   * Exclusivo de afiliación interna (flujo trabajador): cierra el modal de correo sin guardar
+   * nada y sin avanzar de paso -- vuelve a dejar visible la consulta de empresa.
+   */
+  cancelarCorreoEmpresa(): void {
+    this.empresaRequiereCorreo = false;
+    this.correoEmpresaForm.reset({ correo_empresa: '' });
   }
 
   /** Limpia validación de trabajador en paso 2 (checklist, bloqueo, flags de guardado). */
@@ -1652,10 +1818,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
       segundo_apellido: v(pick('segundo_apellido', 'segundoApellido')),
       fecha_nacimiento: v(pick('fecha_nacimiento', 'fechaNacimiento')),
       fecha_expedicion: v(pick('fecha_expedicion_doc', 'fechaExpedicion')),
-      // Solo se bloquea como precargado si quedó un celular válido (10 dígitos exactos);
-      // si Genesys trae menos de 10, se deja editable para que la persona lo corrija/borre.
-      celular: telNorm.length === 10,
-      confirmar_celular: telNorm.length === 10,
+      // Solo se bloquea como precargado si quedó un celular realmente válido (10 dígitos
+      // E inicia en 3 o 6); si Genesys trae menos de 10 dígitos, o 10 pero con un prefijo
+      // invalido (ej. empieza en 2), se deja editable para que la persona lo corrija.
+      celular: REGEX_CELULAR_COLOMBIA.test(telNorm),
+      confirmar_celular: REGEX_CELULAR_COLOMBIA.test(telNorm),
       correo: v(correo),
       confirmar_correo: v(correo),
       genero: v(pick('genero')),
@@ -4599,9 +4766,17 @@ export class CreateAfiliationInternalComponent implements OnInit {
       // Preserva el grupo familiar real de Genesys (ej. cónyuge + hijastro agrupados) para no
       // perderlo al validar otros beneficiarios ni al guardar la solicitud.
       datosBeneficiario:
-        p.numeroGrupoFamiliar != null || administradorSubsidioPrecarga
+        p.numeroGrupoFamiliar != null ||
+        administradorSubsidioPrecarga ||
+        esc(p.personaConDiscapacidad) ||
+        typeof p.existeEnGenesys === 'boolean'
           ? {
               numeroGrupoFamiliar: p.numeroGrupoFamiliar ?? undefined,
+              personaConDiscapacidad: esc(p.personaConDiscapacidad),
+              // No podemos dejar de guardar este dato: los precargados vienen del grupo familiar del
+              // trabajador en Genesys, así que por definición ya existen ahí (normalmente true), pero se
+              // toma el valor real ya calculado por el backend en vez de asumirlo.
+              existeEnGenesys: typeof p.existeEnGenesys === 'boolean' ? p.existeEnGenesys : undefined,
               ...(administradorSubsidioPrecarga ?? {}),
             }
           : undefined,
@@ -5172,6 +5347,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const s = (v: unknown): string => (v == null ? '' : String(v).trim());
     let result: TrabajadorGuardarSolicitudInterna = { ...base };
 
+    // Al igual que con los beneficiarios, ambos valores (true/false) importan: se envía siempre que venga definido.
+    if (typeof df?.existeEnGenesys === 'boolean') {
+      result.existeEnGenesys = df.existeEnGenesys;
+    }
+
     const cargoForm = s(laboral.cargo_desempenado);
     if (cargoForm !== '') {
       result.cargoOficioDesempenado = cargoForm;
@@ -5375,6 +5555,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
     if (db?.revisionBack === true) {
       ext.revisionBack = true;
     }
+    // A diferencia de los flags de arriba (donde false es "no aplica" y se puede omitir), aquí ambos
+    // valores importan por igual (nuevo vs. ya existía): se envía siempre que venga definido, no solo si es true.
+    if (typeof db?.existeEnGenesys === 'boolean') {
+      ext.existeEnGenesys = db.existeEnGenesys;
+    }
 
     if (s(db?.['gradoCursado'])) {
       ext.gradoCursado = s(db!['gradoCursado']);
@@ -5399,6 +5584,14 @@ export class CreateAfiliationInternalComponent implements OnInit {
       if (x) {
         ext.fechaReporteInvalidez = x;
       }
+    }
+    // Precargados: datosPrecargados nunca trae personaDiscapacidad (no la pide el formulario,
+    // ya que no es editable), así que se toma de datosBeneficiario (calculada por el backend desde
+    // Genesys). Solo para precargados: en un beneficiario manual, "base.personaDiscapacidad" ya
+    // viene del formulario (incluyendo los casos donde se fuerza "Si" por discapacidad obligatoria),
+    // y no debe sobreescribirse con este valor.
+    if (b.esPrecargado && s(db?.['personaConDiscapacidad'])) {
+      ext.personaDiscapacidad = s(db!['personaConDiscapacidad']);
     }
 
     const tipoAdm = s(db?.['tipoIdentificacionAdministradorSubsidio']);

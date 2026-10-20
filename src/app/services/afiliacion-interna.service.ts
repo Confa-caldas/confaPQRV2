@@ -62,6 +62,19 @@ export class AfiliacionInternaService {
   }
 
   /**
+   * Exclusivo de afiliación interna: guarda el correo de una empresa stub (sin datos de contacto)
+   * para usarlo como destinatario del certificado. Solo debe llamarse cuando `validarEmpresa()`
+   * devolvió `requiereCorreoEmpresa: true`.
+   */
+  actualizarCorreoEmpresa(idEmpresa: number, correoEmpresa: string): Observable<BodyResponse<{ exitoso: boolean; mensaje?: string }>> {
+    const body = { id_empresa: idEmpresa, correo_empresa: correoEmpresa };
+    return this.http.post<BodyResponse<{ exitoso: boolean; mensaje?: string }>>(
+      `${environment.API_PUBLIC}${EndPointRoute.AFILIACION_INTERNA_ACTUALIZAR_CORREO_EMPRESA}`,
+      body
+    );
+  }
+
+  /**
    * Valida trabajador y obtiene datos prellenados para la solicitud.
    * Va directo al WS (mismo patrón que guardar-solicitud): la Lambda orquestadora reenvía a
    * `p.confa.co/.../validar-trabajador`, y esa consulta puede superar los 29-30s fijos de timeout

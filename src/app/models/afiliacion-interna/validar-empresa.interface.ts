@@ -24,4 +24,6 @@ export interface ValidarEmpresaResponse {
   mensaje?: string | null;
   puedeContinuar: boolean;
   datosEmpresa?: DatosEmpresaAfiliacionInterna | null;
+  /** Exclusivo de afiliación interna: true si la empresa es un stub sin correo registrado. */
+  requiereCorreoEmpresa?: boolean;
 }

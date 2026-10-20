@@ -31,6 +31,7 @@ import { ModalResponsibleModule } from './modal-responsible/modal-responsible.mo
 import { ModalAfiliationNotificationModule } from './modal-afiliation-notification/modal-afiliation-notification.module';
 import { ModalAfiliationCertificateModule } from './modal-afiliation-certificate/modal-afiliation-certificate.module';
 import { ModalBankModule } from './modal-bank/modal-bank.module';
+import { ModalEditUserEmailModule } from './modal-edit-user-email/modal-edit-user-email.module';
 import { ModalAfiliationAccountTypeModule } from './modal-afiliation-account-type/modal-afiliation-account-type.module';
 import { ModalBankAccountAssociationModule } from './modal-bank-account-association/modal-bank-account-association.module';
 import { ModalInputDocumentModule } from './modal-input-document/modal-input-document.module';
@@ -90,6 +91,7 @@ import { ModalSuccessfulTransferModule } from './modal-successful-transfer/modal
     ModalAssignUserModule,
     ModalGestionarActivacionEmpresaModule,
     ModalSuccessfulTransferModule,
+    ModalEditUserEmailModule,
   ],
   exports: [
     ModalDinamicModule,
@@ -132,6 +134,7 @@ import { ModalSuccessfulTransferModule } from './modal-successful-transfer/modal
     ModalAssignUserModule,
     ModalGestionarActivacionEmpresaModule,
     ModalSuccessfulTransferModule,
+    ModalEditUserEmailModule,
   ],
 })
 export class SharedModule {}
