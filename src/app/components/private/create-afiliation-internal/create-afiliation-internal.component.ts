@@ -4769,7 +4769,8 @@ export class CreateAfiliationInternalComponent implements OnInit {
         p.numeroGrupoFamiliar != null ||
         administradorSubsidioPrecarga ||
         esc(p.personaConDiscapacidad) ||
-        typeof p.existeEnGenesys === 'boolean'
+        typeof p.existeEnGenesys === 'boolean' ||
+        typeof p.precargadoPorFecharet === 'boolean'
           ? {
               numeroGrupoFamiliar: p.numeroGrupoFamiliar ?? undefined,
               personaConDiscapacidad: esc(p.personaConDiscapacidad),
@@ -4777,6 +4778,12 @@ export class CreateAfiliationInternalComponent implements OnInit {
               // trabajador en Genesys, así que por definición ya existen ahí (normalmente true), pero se
               // toma el valor real ya calculado por el backend en vez de asumirlo.
               existeEnGenesys: typeof p.existeEnGenesys === 'boolean' ? p.existeEnGenesys : undefined,
+              // Precargado por fecharet (misma fecha de retiro que el trabajador): el backend ya forzó
+              // requiereAdjuntoRegistroCivil/requiereAdjuntoDocumentoSoporte en false para estos casos;
+              // solo se conservan y se reenvían tal cual al guardar, sin recalcular nada en el front.
+              precargadoPorFecharet: typeof p.precargadoPorFecharet === 'boolean' ? p.precargadoPorFecharet : undefined,
+              requiereAdjuntoRegistroCivil: p.requiereAdjuntoRegistroCivil === true,
+              requiereAdjuntoDocumentoSoporte: p.requiereAdjuntoDocumentoSoporte === true,
               ...(administradorSubsidioPrecarga ?? {}),
             }
           : undefined,
@@ -5554,6 +5561,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
     }
     if (db?.revisionBack === true) {
       ext.revisionBack = true;
+    }
+    // Solo se envía true para beneficiarios precargados (misma fecha de retiro que el trabajador);
+    // en cualquier otro caso se omite y el backend lo trata como false, sin ningún cambio de comportamiento.
+    if (db?.precargadoPorFecharet === true) {
+      ext.precargadoPorFecharet = true;
     }
     // A diferencia de los flags de arriba (donde false es "no aplica" y se puede omitir), aquí ambos
     // valores importan por igual (nuevo vs. ya existía): se envía siempre que venga definido, no solo si es true.

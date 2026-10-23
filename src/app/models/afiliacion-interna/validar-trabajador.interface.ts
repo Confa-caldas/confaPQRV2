@@ -185,6 +185,16 @@ export interface BeneficiarioPrecargarAfiliacionInterna {
   nombreBeneficiarioPago?: string;
   /** true si este beneficiario ya existe en Genesys (por definición, al venir del grupo familiar del trabajador en Genesys). */
   existeEnGenesys?: boolean | null;
+  /**
+   * true únicamente si este beneficiario precargado coincide en fecha de retiro con el trabajador
+   * (reafiliación conjunta). Calculado por el backend; debe conservarse y reenviarse tal cual al
+   * guardar (mismo patrón que requiereAdjuntoRegistroCivil/requiereAdjuntoDocumentoSoporte).
+   */
+  precargadoPorFecharet?: boolean;
+  /** Para precargados: viene en false desde el backend cuando precargadoPorFecharet es true. */
+  requiereAdjuntoRegistroCivil?: boolean;
+  /** Para precargados: viene en false desde el backend cuando precargadoPorFecharet es true. */
+  requiereAdjuntoDocumentoSoporte?: boolean;
   [key: string]: unknown;
 }
 
@@ -208,6 +218,8 @@ export interface DatosBeneficiarioAfiliacionInterna {
   revisionBack?: boolean;
   /** true si el beneficiario ya existe en Genesys (persona o personaACargo); false si es nuevo. */
   existeEnGenesys?: boolean | null;
+  /** true si el beneficiario fue precargado por coincidir su fecha de retiro con la del trabajador (ver BeneficiarioPrecargarAfiliacionInterna.precargadoPorFecharet). */
+  precargadoPorFecharet?: boolean | null;
   [key: string]: unknown;
 }
 

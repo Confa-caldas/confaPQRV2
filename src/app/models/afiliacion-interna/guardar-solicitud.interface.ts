@@ -76,6 +76,8 @@ export interface BeneficiarioGuardarSolicitudInterna {
   requiereAdjuntoRegistroCivil?: boolean;
   requiereAdjuntoDocumentoSoporte?: boolean;
   revisionBack?: boolean;
+  /** Eco de BeneficiarioPrecargarAfiliacionInterna.precargadoPorFecharet; solo aplica a beneficiarios precargados. */
+  precargadoPorFecharet?: boolean;
   paisResidencia?: string;
   autorizacionEnvioCorreo?: boolean;
   orientacionSexual?: string;
