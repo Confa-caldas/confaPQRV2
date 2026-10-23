@@ -2007,7 +2007,7 @@ getRequestDetails(request_details: number) {
     });
     this.beneficioEditableExtrasPorIndice = list.map((b) => {
       const tipo = (b.persona?.tipo_documento ?? '').toString().trim().toUpperCase();
-      return tipo === 'CC' || tipo === 'TI' || tipo === 'RC';
+      return tipo === 'CE' || tipo === 'PPT' || tipo === 'CC' || tipo === 'TI' || tipo === 'RC';
     });
     this.snapshotBeneficiarios = list.map((b) => ({
       parentesco: b.beneficiario?.parentesco != null ? String(b.beneficiario.parentesco).trim() || null : null,
@@ -2071,7 +2071,7 @@ getRequestDetails(request_details: number) {
     );
   }
 
-  /** True si el beneficiario en el índice dado tiene habilitada la edición de campos adicionales (era CC/TI/RC al cargar): grupo familiar, invalidez, admin subsidios. */
+  /** True si el beneficiario en el índice dado tiene habilitada la edición de campos adicionales (era CE/PPT/CC/TI/RC al cargar): grupo familiar, invalidez, admin subsidios. */
   beneficioPuedeEditarExtras(index: number): boolean {
     return (
       this.beneficioEditableExtrasPorIndice[index] === true &&
