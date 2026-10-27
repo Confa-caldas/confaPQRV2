@@ -4766,10 +4766,24 @@ export class CreateAfiliationInternalComponent implements OnInit {
       // Preserva el grupo familiar real de Genesys (ej. cónyuge + hijastro agrupados) para no
       // perderlo al validar otros beneficiarios ni al guardar la solicitud.
       datosBeneficiario:
-        p.numeroGrupoFamiliar != null || administradorSubsidioPrecarga || esc(p.personaConDiscapacidad)
+        p.numeroGrupoFamiliar != null ||
+        administradorSubsidioPrecarga ||
+        esc(p.personaConDiscapacidad) ||
+        typeof p.existeEnGenesys === 'boolean' ||
+        typeof p.precargadoPorFecharet === 'boolean'
           ? {
               numeroGrupoFamiliar: p.numeroGrupoFamiliar ?? undefined,
               personaConDiscapacidad: esc(p.personaConDiscapacidad),
+              // No podemos dejar de guardar este dato: los precargados vienen del grupo familiar del
+              // trabajador en Genesys, así que por definición ya existen ahí (normalmente true), pero se
+              // toma el valor real ya calculado por el backend en vez de asumirlo.
+              existeEnGenesys: typeof p.existeEnGenesys === 'boolean' ? p.existeEnGenesys : undefined,
+              // Precargado por fecharet (misma fecha de retiro que el trabajador): el backend ya forzó
+              // requiereAdjuntoRegistroCivil/requiereAdjuntoDocumentoSoporte en false para estos casos;
+              // solo se conservan y se reenvían tal cual al guardar, sin recalcular nada en el front.
+              precargadoPorFecharet: typeof p.precargadoPorFecharet === 'boolean' ? p.precargadoPorFecharet : undefined,
+              requiereAdjuntoRegistroCivil: p.requiereAdjuntoRegistroCivil === true,
+              requiereAdjuntoDocumentoSoporte: p.requiereAdjuntoDocumentoSoporte === true,
               ...(administradorSubsidioPrecarga ?? {}),
             }
           : undefined,
@@ -5340,6 +5354,11 @@ export class CreateAfiliationInternalComponent implements OnInit {
     const s = (v: unknown): string => (v == null ? '' : String(v).trim());
     let result: TrabajadorGuardarSolicitudInterna = { ...base };
 
+    // Al igual que con los beneficiarios, ambos valores (true/false) importan: se envía siempre que venga definido.
+    if (typeof df?.existeEnGenesys === 'boolean') {
+      result.existeEnGenesys = df.existeEnGenesys;
+    }
+
     const cargoForm = s(laboral.cargo_desempenado);
     if (cargoForm !== '') {
       result.cargoOficioDesempenado = cargoForm;
@@ -5542,6 +5561,16 @@ export class CreateAfiliationInternalComponent implements OnInit {
     }
     if (db?.revisionBack === true) {
       ext.revisionBack = true;
+    }
+    // Solo se envía true para beneficiarios precargados (misma fecha de retiro que el trabajador);
+    // en cualquier otro caso se omite y el backend lo trata como false, sin ningún cambio de comportamiento.
+    if (db?.precargadoPorFecharet === true) {
+      ext.precargadoPorFecharet = true;
+    }
+    // A diferencia de los flags de arriba (donde false es "no aplica" y se puede omitir), aquí ambos
+    // valores importan por igual (nuevo vs. ya existía): se envía siempre que venga definido, no solo si es true.
+    if (typeof db?.existeEnGenesys === 'boolean') {
+      ext.existeEnGenesys = db.existeEnGenesys;
     }
 
     if (s(db?.['gradoCursado'])) {

@@ -25,6 +25,9 @@ import { PaginatorState } from 'primeng/paginator';
 import { forkJoin } from 'rxjs';
 import { Table } from 'primeng/table';
 
+/** Catálogo afiliaciones.parametros_novedad_estado (novedad_calidad_datos_detalle.estado). */
+const ID_ESTADO_NOVEDAD_PENDIENTE = 1;
+
 @Component({
   selector: 'app-search-updates-data',
   templateUrl: './search-updates-data.component.html',
@@ -59,6 +62,15 @@ export class SearchUpdatesDataComponent implements OnInit {
   novedadStatusList: NovedadStatusList[] = [];
   formGroup: FormGroup<any> = new FormGroup<any>({});
   mensajeReasignacion: string = '';
+
+  /** Catálogo fijo (no viene de BD): qué campo difiere entre Genesys y Registraduría. Selección única. */
+  tiposNovedad: { value: string; label: string }[] = [
+    { value: 'TIPO_DOCUMENTO', label: 'Tipo de documento' },
+    { value: 'NOMBRE', label: 'Nombre' },
+    { value: 'APELLIDO', label: 'Apellido' },
+    { value: 'FECHA_EXPEDICION', label: 'Fecha de expedición' },
+    { value: 'FECHA_NACIMIENTO', label: 'Fecha de nacimiento' },
+  ];
   //paginador
   first: number = 0;
   page: number = 1;
@@ -72,6 +84,16 @@ export class SearchUpdatesDataComponent implements OnInit {
 
   visibleModalSearchPerson = false;
 
+  // Procesar varias novedades a la vez (solo las que estén en estado Pendiente)
+  selectedNovedades: NovedadCalidadDatosDetalle[] = [];
+  visibleDialogProcesarMasivo = false;
+  procesandoMasivo = false;
+  visibleDialogResultadoMasivo = false;
+  resultadoMasivo: {
+    procesadas: NovedadCalidadDatosDetalle[];
+    fallidas: { novedad: NovedadCalidadDatosDetalle; motivo: string }[];
+  } | null = null;
+
   constructor(
     private userService: Users,
     private router: Router,
@@ -83,6 +105,7 @@ export class SearchUpdatesDataComponent implements OnInit {
       doc_id: new FormControl(null),
       applicant_name: new FormControl(null),
       novedad_status_id: new FormControl(null),
+      tipo_novedad: new FormControl(null),
     });
 
     this.formGroup.get('novedad_status_id')?.valueChanges.subscribe(value => {
@@ -212,6 +235,10 @@ export class SearchUpdatesDataComponent implements OnInit {
         this.formGroup.controls['novedad_status_id'].value.length > 0
           ? this.formGroup.controls['novedad_status_id'].value
           : filtros['novedad_status_id'] || null,
+      tipo_novedad:
+        this.formGroup.controls['tipo_novedad'].value
+          ? this.formGroup.controls['tipo_novedad'].value
+          : filtros['tipo_novedad'] || null,
       page: this.page,
       page_size: this.rows,
     };
@@ -235,6 +262,8 @@ export class SearchUpdatesDataComponent implements OnInit {
             return { ...item, filing_date: transformedDate };
           });
           this.totalRows = Number(response.message ?? 0);
+          // Las filas son objetos nuevos en cada recarga; limpiar selección para no arrastrar referencias viejas.
+          this.selectedNovedades = [];
         } else {
           this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
         }
@@ -503,5 +532,93 @@ export class SearchUpdatesDataComponent implements OnInit {
   onGuardarNovedad(): void {
     this.closeModalSearchPerson();
     this.initPaginador();
+  }
+
+  /** Solo las novedades Pendiente se pueden seleccionar para procesar; las ya Procesadas no.
+   * Ojo: el listado (novedad-afiliation/filter) devuelve el estado en `estado_id`, no en `estado`
+   * (ese nombre solo lo usa el detalle, novedad-afiliation/details/{id}). */
+  esNovedadPendiente(novedad: NovedadCalidadDatosDetalle): boolean {
+    return novedad?.estado_id === ID_ESTADO_NOVEDAD_PENDIENTE;
+  }
+
+  /** Novedades Pendiente de la página actual (las únicas seleccionables). */
+  private novedadesPendientesPagina(): NovedadCalidadDatosDetalle[] {
+    return this.novedadList.filter(n => this.esNovedadPendiente(n));
+  }
+
+  /** true si ya están seleccionadas todas las Pendiente de la página actual (para marcar el checkbox del encabezado). */
+  todasPendientesSeleccionadas(): boolean {
+    const pendientes = this.novedadesPendientesPagina();
+    return pendientes.length > 0 && pendientes.every(n => this.selectedNovedades.includes(n));
+  }
+
+  /** true si hay al menos una novedad Pendiente en la página actual (para mostrar/ocultar el checkbox "seleccionar todas"). */
+  hayPendientesEnPagina(): boolean {
+    return this.novedadesPendientesPagina().length > 0;
+  }
+
+  /** Selecciona o deselecciona todas las novedades Pendiente de la página actual. */
+  toggleSeleccionarTodasPendientes(checked: boolean): void {
+    if (checked) {
+      this.selectedNovedades = [...this.novedadesPendientesPagina()];
+    } else {
+      this.selectedNovedades = [];
+    }
+  }
+
+  abrirConfirmacionProcesarMasivo(): void {
+    if (this.selectedNovedades.length === 0) return;
+    this.visibleDialogProcesarMasivo = true;
+  }
+
+  cerrarConfirmacionProcesarMasivo(confirmado: boolean): void {
+    this.visibleDialogProcesarMasivo = false;
+    if (confirmado) {
+      this.procesarSeleccionadasMasivo();
+    }
+  }
+
+  procesarSeleccionadasMasivo(): void {
+    const seleccionadas = this.selectedNovedades;
+    if (seleccionadas.length === 0) return;
+
+    const ids = seleccionadas.map(n => n.id_novedad);
+    this.procesandoMasivo = true;
+
+    this.userService.marcarNovedadesCalidadDatosProcesadasMasivo(ids).subscribe({
+      next: response => {
+        this.procesandoMasivo = false;
+        if (response.code !== 200 || !response.data) {
+          this.showSuccessMessage('error', 'Fallida', response.message || 'No se pudieron procesar las novedades.');
+          return;
+        }
+
+        const porId = new Map(seleccionadas.map(n => [n.id_novedad, n]));
+        const procesadas = response.data.procesadas
+          .map(id => porId.get(id))
+          .filter((n): n is NovedadCalidadDatosDetalle => !!n);
+        const fallidas = response.data.fallidas
+          .map(f => {
+            const novedad = porId.get(f.id_novedad);
+            return novedad ? { novedad, motivo: f.motivo } : null;
+          })
+          .filter((f): f is { novedad: NovedadCalidadDatosDetalle; motivo: string } => !!f);
+
+        this.resultadoMasivo = { procesadas, fallidas };
+        this.visibleDialogResultadoMasivo = true;
+        this.selectedNovedades = [];
+        this.searhNovedades();
+      },
+      error: (err: any) => {
+        this.procesandoMasivo = false;
+        const mensaje = err?.error?.message || 'Error al procesar las novedades seleccionadas.';
+        this.showSuccessMessage('error', 'Error', mensaje);
+      },
+    });
+  }
+
+  cerrarResultadoMasivo(): void {
+    this.visibleDialogResultadoMasivo = false;
+    this.resultadoMasivo = null;
   }
 }

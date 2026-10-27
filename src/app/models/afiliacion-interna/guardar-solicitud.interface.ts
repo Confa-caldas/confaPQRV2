@@ -51,6 +51,8 @@ export interface TrabajadorGuardarSolicitudInterna {
   numeroIdentificacionTitularCuenta?: string;
   titularCuenta?: string;
   nombreEntidadBancariaTexto?: string;
+  /** true si el trabajador ya existía en Genesys al validar (calculado en validar-trabajador). */
+  existeEnGenesys?: boolean | null;
 }
 
 export interface BeneficiarioGuardarSolicitudInterna {
@@ -74,6 +76,8 @@ export interface BeneficiarioGuardarSolicitudInterna {
   requiereAdjuntoRegistroCivil?: boolean;
   requiereAdjuntoDocumentoSoporte?: boolean;
   revisionBack?: boolean;
+  /** Eco de BeneficiarioPrecargarAfiliacionInterna.precargadoPorFecharet; solo aplica a beneficiarios precargados. */
+  precargadoPorFecharet?: boolean;
   paisResidencia?: string;
   autorizacionEnvioCorreo?: boolean;
   orientacionSexual?: string;
@@ -96,6 +100,8 @@ export interface BeneficiarioGuardarSolicitudInterna {
   tipoIdentificacionAdministradorSubsidio?: string;
   numeroIdentificacionAdministradorSubsidio?: string;
   nombreCompletoAdministradorSubsidio?: string;
+  /** true si el beneficiario ya existía en Genesys al validar (calculado en validar-beneficiario). */
+  existeEnGenesys?: boolean | null;
 }
 
 export interface AdjuntoGuardarSolicitudInterna {

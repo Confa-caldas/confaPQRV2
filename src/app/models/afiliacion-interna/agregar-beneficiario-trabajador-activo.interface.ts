@@ -42,6 +42,8 @@ export interface BeneficiarioNuevoRequestInterna {
   tipoIdentificacionAdministradorSubsidio?: string | null;
   numeroIdentificacionAdministradorSubsidio?: string | null;
   nombreCompletoAdministradorSubsidio?: string | null;
+  /** true si el beneficiario ya existía en Genesys al validar (calculado en validar-beneficiario). */
+  existeEnGenesys?: boolean | null;
 }
 
 /** Adjunto en base64 para agregar-beneficiario-trabajador-activo. */
