@@ -82,6 +82,8 @@ export class RequestPendingComponent implements OnInit {
   visibleDialogProgress: boolean = false;
   isSpinnerVisible = false;
   hasPendingChanges: boolean = false;
+  /** Evita envíos múltiples del formulario (doble clic, Enter mantenido). */
+  isSubmitting = false;
 
   useIaAttach: boolean = false;
 
@@ -325,7 +327,8 @@ export class RequestPendingComponent implements OnInit {
         const usuarioAcepta = await this.showAdjuntarArchivoModal(); // Mostrar modal
 
         if (!usuarioAcepta) {
-          // Si el usuario cancela, salir
+          // Si el usuario cancela, salir y permitir un nuevo envío
+          this.isSubmitting = false;
           return;
         }
       }
@@ -354,6 +357,7 @@ export class RequestPendingComponent implements OnInit {
           // Actualiza el registro cuando la operación sea exitosa
           this.actualizarLogProceso(response.data);
         } else {
+          this.isSubmitting = false;
           setTimeout(() => {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
           }, 1000);
@@ -361,6 +365,8 @@ export class RequestPendingComponent implements OnInit {
       },
       error: (err: any) => {
         console.log(err);
+        this.isSubmitting = false;
+        this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
       },
       complete: () => {
         console.log('La suscripción ha sido completada post.');
@@ -998,6 +1004,13 @@ async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): P
   } */
 
   sendRequest() {
+    if (this.isSubmitting) {
+      return;
+    }
+    this.isSubmitting = true;
+    // Quita el foco del botón para que Enter mantenido no lo vuelva a disparar
+    (document.activeElement as HTMLElement | null)?.blur();
+
     const payload: RequestFormListPending = {
       token_url: this.token,
       request_id: this.pendingRequest.request_id,

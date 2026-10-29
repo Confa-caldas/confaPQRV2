@@ -723,6 +723,8 @@
                     <p-button label="Anterior" (click)="irAAnterior()"></p-button>
                     <p-button
                       label="Guardar Formulario"
+                      [disabled]="isSubmitting"
+                      [loading]="isSubmitting"
                       (click)="saveForm()"
                       class="confirm-btn yes"></p-button>
                     <p-button

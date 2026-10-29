@@ -105,6 +105,8 @@ export class FormCompanyComponent implements OnInit {
   visibleDialogProgress: boolean = false;
   isSpinnerVisible = false;
   hasPendingChanges: boolean = false;
+  /** Evita envíos múltiples del formulario (doble clic, Enter mantenido). */
+  isSubmitting = false;
 
   useIaAttach: boolean = false;
 
@@ -1690,6 +1692,7 @@ export class FormCompanyComponent implements OnInit {
 
           // this.actualizarLogProceso(response.data);
         } else {
+          this.isSubmitting = false;
           setTimeout(() => {
             this.showSuccessMessage('error', 'Failed', 'Operation failed!');
           }, 1000);
@@ -1697,6 +1700,8 @@ export class FormCompanyComponent implements OnInit {
       },
       error: (err: any) => {
         console.error('Error updating company:', err);
+        this.isSubmitting = false;
+        this.showSuccessMessage('error', 'Failed', 'Operation failed!');
       },
       complete: () => {
         console.log('Subscription completed.');
@@ -2569,6 +2574,13 @@ Tipo de Solicitud: Afiliación empresa`,
   }
 
   saveForm() {
+    if (this.isSubmitting) {
+      return;
+    }
+    this.isSubmitting = true;
+    // Quita el foco del botón para que Enter mantenido no lo vuelva a disparar
+    (document.activeElement as HTMLElement | null)?.blur();
+
     const updatedGeneralInfo = !this.isCorrectData;
     const updatedLegalRep = !this.isCorrectLegalRepresentativeData;
     const updatedEconomic = !this.isCorrectEconomicActivityData;

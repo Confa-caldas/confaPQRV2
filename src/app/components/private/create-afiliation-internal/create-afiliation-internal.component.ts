@@ -990,6 +990,9 @@ export class CreateAfiliationInternalComponent implements OnInit {
   }
 
   radicarBeneficiariosInterna(): void {
+    if (this.procesandoRadicadoBeneficiarioInterna) {
+      return;
+    }
     if (this.beneficiariosAgregados.length === 0) {
       this.messageService.add({
         severity: 'warn',
