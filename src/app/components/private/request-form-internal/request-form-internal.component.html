@@ -506,7 +506,8 @@
           <p-button
             [style]="{ 'border-radius': '20px', 'background-color': '#00aeef', width: '275px' }"
             label="Enviar formulario"
-            [disabled]="requestForm.invalid"
+            [disabled]="requestForm.invalid || isSubmitting"
+            [loading]="isSubmitting"
             (click)="sendRequest()"
             class="card-form-button"></p-button>
         </div>

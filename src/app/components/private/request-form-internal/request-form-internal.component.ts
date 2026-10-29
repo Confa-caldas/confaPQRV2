@@ -79,6 +79,8 @@ export class RequestFormInternalComponent implements OnInit, OnDestroy {
   visibleDialogProgress: boolean = false;
   isSpinnerVisible = false;
   hasPendingChanges: boolean = false;
+  /** Evita envíos múltiples del formulario (doble clic, Enter mantenido). */
+  isSubmitting = false;
   currentUploadFileName = '';
   currentUploadIndex = 0;
   totalUploadCount = 0;
@@ -685,7 +687,8 @@ export class RequestFormInternalComponent implements OnInit, OnDestroy {
         const usuarioAcepta = await this.showAdjuntarArchivoModal(); // Mostrar modal
 
         if (!usuarioAcepta) {
-          // Si el usuario cancela, salir
+          // Si el usuario cancela, salir y permitir un nuevo envío
+          this.liberarEnvio();
           return;
         }
       }
@@ -720,6 +723,7 @@ export class RequestFormInternalComponent implements OnInit, OnDestroy {
             void this.attachApplicantFiles(response.data);
           }
         } else {
+          this.liberarEnvio();
           setTimeout(() => {
             this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
           }, 1000);
@@ -727,11 +731,21 @@ export class RequestFormInternalComponent implements OnInit, OnDestroy {
       },
       error: (err: any) => {
         console.log(err);
+        this.liberarEnvio();
+        this.showSuccessMessage('error', 'Fallida', 'Operación fallida!');
       },
       complete: () => {
         console.log('La suscripción ha sido completada post.');
       },
     });
+  }
+
+  /** Habilita de nuevo el envío cuando la solicitud no se creó (error o cancelación). */
+  private liberarEnvio(): void {
+    this.isSubmitting = false;
+    if (this.isSpinnerVisible) {
+      this.endAttachmentUploadUi();
+    }
   }
 
   actualizarLogProceso (request_id: number){
@@ -1183,6 +1197,12 @@ async retry<T>(operation: () => Promise<T>, retries: number, delayMs: number): P
 
 
   sendRequest() {
+    if (this.isSubmitting) {
+      return;
+    }
+    this.isSubmitting = true;
+    // Quita el foco del botón para que Enter mantenido no lo vuelva a disparar
+    (document.activeElement as HTMLElement | null)?.blur();
 
     const contactos = this.requestForm.get('contactos')?.value;
 
