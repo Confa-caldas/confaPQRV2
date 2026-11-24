@@ -173,6 +173,8 @@ export interface BeneficiarioPrecargarAfiliacionInterna {
    * agrupamiento (ej. cónyuge + hijastro) al validar otros beneficiarios ni al guardar la solicitud. */
   numeroGrupoFamiliar?: number;
   gradoCursado?: string;
+  /** Nivel educativo de Genesys (ej. BASICA_SECUNDARIA); interno, no se muestra. */
+  nivelEducativo?: string;
   certificadoEscolar?: string;
   fechaInicioVigenciaCertificadoEscolar?: string;
   fechaFinVigenciaCertificadoEscolar?: string;

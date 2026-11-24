@@ -92,6 +92,8 @@ export interface BeneficiarioGuardarSolicitudInterna {
   dirViaGeneradora?: string;
   dirBarrio?: string;
   gradoCursado?: string;
+  /** Nivel educativo de Genesys (ej. BASICA_SECUNDARIA); si no viene, el backend guarda "Ninguno". */
+  nivelEducativo?: string;
   certificadoEscolar?: string;
   fechaInicioVigenciaCertificadoEscolar?: string;
   fechaFinVigenciaCertificadoEscolar?: string;

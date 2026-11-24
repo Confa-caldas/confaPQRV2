@@ -34,6 +34,8 @@ export interface BeneficiarioNuevoRequestInterna {
   dirViaGeneradora?: string | null;
   dirBarrio?: string | null;
   gradoCursado?: string | null;
+  /** El backend lo recibe como nivelEducativoBeneficiario (alias nivelEducativo). */
+  nivelEducativo?: string | null;
   certificadoEscolar?: string | null;
   fechaInicioVigenciaCertificadoEscolar?: string | null;
   fechaFinVigenciaCertificadoEscolar?: string | null;
