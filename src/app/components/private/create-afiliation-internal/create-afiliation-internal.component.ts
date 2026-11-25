@@ -4769,11 +4769,25 @@ export class CreateAfiliationInternalComponent implements OnInit {
         p.numeroGrupoFamiliar != null ||
         administradorSubsidioPrecarga ||
         esc(p.personaConDiscapacidad) ||
+        esc(p.gradoCursado) ||
+        esc(p.nivelEducativo) ||
+        esc(p.certificadoEscolar) ||
+        esc(p.fechaInicioVigenciaCertificadoEscolar) ||
+        esc(p.fechaFinVigenciaCertificadoEscolar) ||
+        esc(p.fechaReporteInvalidez) ||
         typeof p.existeEnGenesys === 'boolean' ||
         typeof p.precargadoPorFecharet === 'boolean'
           ? {
               numeroGrupoFamiliar: p.numeroGrupoFamiliar ?? undefined,
               personaConDiscapacidad: esc(p.personaConDiscapacidad),
+              // Datos escolares de Genesys (paridad con afiliación web): sin esto los precargados
+              // no reenvían grado/nivel/certificado al guardar y el backend guarda los valores por defecto.
+              gradoCursado: esc(p.gradoCursado),
+              nivelEducativo: esc(p.nivelEducativo),
+              certificadoEscolar: esc(p.certificadoEscolar),
+              fechaInicioVigenciaCertificadoEscolar: esc(p.fechaInicioVigenciaCertificadoEscolar),
+              fechaFinVigenciaCertificadoEscolar: esc(p.fechaFinVigenciaCertificadoEscolar),
+              fechaReporteInvalidez: esc(p.fechaReporteInvalidez),
               // No podemos dejar de guardar este dato: los precargados vienen del grupo familiar del
               // trabajador en Genesys, así que por definición ya existen ahí (normalmente true), pero se
               // toma el valor real ya calculado por el backend en vez de asumirlo.
@@ -5575,6 +5589,9 @@ export class CreateAfiliationInternalComponent implements OnInit {
 
     if (s(db?.['gradoCursado'])) {
       ext.gradoCursado = s(db!['gradoCursado']);
+    }
+    if (s(db?.['nivelEducativo'])) {
+      ext.nivelEducativo = s(db!['nivelEducativo']);
     }
     if (s(db?.['certificadoEscolar'])) {
       ext.certificadoEscolar = s(db!['certificadoEscolar']);
